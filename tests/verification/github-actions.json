@@ -1,0 +1,67 @@
+{
+  "reviewed_at": "2026-10-10",
+  "timezone": "Europe/Brussels",
+  "repository": "infojouwdriver-commits/jd",
+  "verified_code_commit": "6d49bdb02019d190198291668f21114fa0654884",
+  "workflow_run": {
+    "id": 38003707634,
+    "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634",
+    "conclusion": "success"
+  },
+  "jobs": [
+    {
+      "id": 114067540136,
+      "name": "verify",
+      "conclusion": "success",
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634/job/114067540136"
+    },
+    {
+      "id": 114067540346,
+      "name": "native-database",
+      "conclusion": "success",
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634/job/114067540346"
+    }
+  ],
+  "native_acceptance": {
+    "passed": 22,
+    "checks": [
+      "PostgreSQL has no published host port",
+      "Reconstructed schema and full deployment migration sequence applied on native PostgreSQL",
+      "Gateway database login is not superuser and does not bypass RLS or inherit service privileges",
+      "PostgREST publishes only a random loopback port",
+      "JWT switches real PostgREST to non-superuser service role under RLS",
+      "Service role writes and reads business data",
+      "Browser role cannot read tables or invoke restored PUBLIC function",
+      "Concurrent completion retries create one trip, force server owner and lock completed trip",
+      "Subsequent completion retry returns the original record",
+      "Browser role cannot invoke completion RPC",
+      "Native MFA claim accepts once, rejects replay and browser role",
+      "Native shared rate bucket enforces limit and denies browser RPC",
+      "Actual root Dockerfile builds the production standalone image",
+      "Standalone startup passes real preflight/readiness as UID10001 with read-only filesystem",
+      "Real application phone login validates bcrypt and issues secure cookies with browser role",
+      "Cookie session resolves authenticated driver through real database",
+      "Real application completion persists original offline times, exact owner/vehicle/price and zero coordinates without Chiron",
+      "Two application retries return the original completed record without duplication or repricing",
+      "Application refuses edits to the locked completed trip",
+      "Real database-backed driver authorization denies admin routes and another owner trip",
+      "Logout revokes existing access token against real PostgreSQL and clears cookies",
+      "Actual app fails closed with 503 when real PostgREST rate storage is unavailable"
+    ],
+    "images": {
+      "postgres": "postgres:16.15-bookworm",
+      "postgrest": "postgrest/postgrest:v13.0.8"
+    },
+    "engine": "Actual standalone Docker application + native PostgreSQL + official PostgREST",
+    "data": "Synthetic only; inferred schema, not Zoer authoritative",
+    "chiron_tested": false
+  },
+  "scope_limits": [
+    "Synthetic data and inferred staging schema only",
+    "Caddy/TLS and target hosting not tested",
+    "Native phone binaries, background persistence and physical devices not accepted",
+    "Chiron disabled; no provider acceptance",
+    "Production data migration, encrypted restore and legal acceptance not completed"
+  ],
+  "trial_site_updated": false
+}

@@ -1,35 +1,26 @@
 {
-  "status": "release_candidate_requires_target_server_acceptance",
-  "changes": [
-    "standalone container deployment",
-    "private PostgREST network",
-    "server-only database role after application authorization",
-    "atomic trip completion with persistent retry key",
-    "administrator TOTP and one-time claim",
-    "startup configuration and database schema access checks",
-    "encrypted backup procedure"
-  ],
+  "status": "release_candidate_requires_target_server_device_provider_acceptance",
+  "verified_code_commit": "6d49bdb02019d190198291668f21114fa0654884",
+  "evidence": "tests/verification/github-actions.json",
   "verified": {
     "typescript": true,
     "next_production_build": true,
-    "security_tests": 10,
-    "totp_tests": 2,
-    "postgres_wasm_release_checks": 7,
-    "preflight_checks": 5,
-    "compose_yaml_parsed": true,
-    "backup_shell_syntax": true,
-    "http_security_tests": 9,
-    "application_superuser_password_excluded": true
+    "root_node_test_cases": 32,
+    "pglite_privilege_assertions": 11,
+    "mobile_test_cases": 7,
+    "http_security_checks": 9,
+    "production_auth_checks_with_simulated_postgrest": 17,
+    "native_docker_application_and_database_checks": 22,
+    "production_dependency_advisories": 0,
+    "repository_credential_export_scan": true
   },
   "not_verified": [
-    "Docker image build/runtime",
-    "native PostgreSQL + actual PostgREST integration",
-    "authoritative Zoer schema fidelity",
-    "Chiron provider acceptance",
-    "full user interface and PDF regression",
-    "production load and restore rehearsal",
-    "legal/regulatory acceptance"
+    "Synthetic data and inferred staging schema only",
+    "Caddy/TLS and target hosting not tested",
+    "Native phone binaries, background persistence and physical devices not accepted",
+    "Chiron disabled; no provider acceptance",
+    "Production data migration, encrypted restore and legal acceptance not completed"
   ],
   "trial_site_updated": false,
-  "original_records_in_archive": false
+  "original_records_committed": false
 }
