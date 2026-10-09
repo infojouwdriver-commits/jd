@@ -1,0 +1,22 @@
+{
+  "name": "jouw-driver-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "configure": "node scripts/configure.mjs",
+    "android:init": "npm run configure && cap add android && node scripts/native-permissions.mjs android && cap sync android",
+    "ios:init": "npm run configure && cap add ios && node scripts/native-permissions.mjs ios && cap sync ios",
+    "sync": "npm run configure && cap sync",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@capacitor/core": "7.6.9",
+    "@capacitor/android": "7.6.9",
+    "@capacitor/ios": "7.6.9",
+    "@capacitor-community/background-geolocation": "1.2.26",
+    "@capacitor/local-notifications": "7.0.7"
+  },
+  "devDependencies": { "@capacitor/cli": "7.6.9" },
+  "engines": { "node": ">=22.18.0 <25" }
+}

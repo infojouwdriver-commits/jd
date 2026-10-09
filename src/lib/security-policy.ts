@@ -39,6 +39,7 @@ export function calendarMonthDeadline(now: Date): Date {
   return deadline;
 }
 export function safeChironUrl(input: string): string {
+  if (process.env.NODE_ENV === "production" && process.env.CHIRON_TRANSMISSION_ENABLED !== "true") throw new Error("Chiron transmission disabled");
   const url = new URL(input);
   if (url.protocol !== 'https:' || url.username || url.password || url.port || !['mow.api.vlaanderen.be', 'mow-acc.api.vlaanderen.be'].includes(url.hostname)) throw new Error('Chiron destination not permitted');
   return url.toString();

@@ -84,7 +84,7 @@ export const PUT = requestMiddleware(async (request, context) => {
   }
 
   const newPrice = parseFloat(body.price);
-  if (isNaN(newPrice) || newPrice < 0) {
+  if (typeof body.price !== 'number' || !Number.isFinite(newPrice) || newPrice < 0 || newPrice > 100000) {
     return createErrorResponse({
       errorMessage: "السعر غير صالح",
       status: 400,

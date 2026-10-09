@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+/node_modules
 .pnpm-store/
 
 # Build outputs
@@ -62,3 +63,16 @@ temp/
 *.tsbuildinfo
 .env.local
 .env.production
+
+# Private imports, credentials and generated staging files
+run/
+private-data/
+private-exports/
+database-export*.json
+database-export*.sql
+database-structure-and-data.sql
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision

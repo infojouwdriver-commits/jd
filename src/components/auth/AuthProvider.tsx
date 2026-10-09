@@ -5,11 +5,14 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { User } from '@/types/auth';
 import { api } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
+import { tripJournal } from '@/lib/trip-journal';
+import { stopAllMobileLocationWatches } from '@/lib/mobile-location';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, otp?: string) => Promise<void>;
   googleLogin: (access_token: string) => Promise<void>;
   register: (email: string, password: string, passcode: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -52,8 +55,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const login = async (email: string, password: string) => {
-    await api.post('/auth/login', { email, password });
+  const login = async (email: string, password: string, otp?: string) => {
+    await api.post('/auth/login', { email, password, otp });
     await refreshUser();
   };
 
@@ -62,6 +65,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = async () => {
+    if (user) {
+      try {
+        if ((await tripJournal().list(user.sub, 'active')).length || sessionStorage.getItem('active_trip')) {
+          toast.warning('أنه الرحلة النشطة قبل تسجيل الخروج / End the active trip before signing out');
+          return;
+        }
+      } catch {
+        toast.error('تعذّر التحقق من حفظ الرحلة؛ أبقِ التطبيق مفتوحاً / Cannot verify saved trips');
+        return;
+      }
+    }
+    await stopAllMobileLocationWatches();
+    // Unsent encrypted trips stay scoped to this driver and resume on their next login.
     sessionStorage.removeItem('active_trip');
     sessionStorage.removeItem('offline_trips');
     localStorage.removeItem('active_trip');

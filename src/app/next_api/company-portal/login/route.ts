@@ -1,3 +1,4 @@
+import {isPlatformAdmin} from '@/lib/security-policy';
 
 
 import { NextRequest } from 'next/server';
@@ -36,6 +37,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
         status: 401,
       });
     }
+
+    if (user.is_active === false || user.status === 'disabled') return createErrorResponse({errorMessage:'Account unavailable',status:401});
+    if (isPlatformAdmin(String(user.id), process.env.PLATFORM_ADMIN_IDS)) return createErrorResponse({errorMessage:'Use administrator MFA login',status:401});
 
     // 2. Reject Google-only accounts
     if (user.auth_provider === 'google' || !user.password || user.password === 'NOT-SET') {

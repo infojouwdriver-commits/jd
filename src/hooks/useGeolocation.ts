@@ -1,377 +1,109 @@
-
 "use client";
-
-import { useState, useEffect, useCallback, useRef } from "react";
-
-export interface GeolocationPoint {
-  lat: number;
-  lon: number;
-  accuracy?: number;
-  speed?: number;
-  timestamp: number;
-}
-
-interface GeolocationState {
-  location: GeolocationPoint | null;
-  error: string | null;
-  permissionState: "prompt" | "granted" | "denied" | "unknown";
-  isWatching: boolean;
-  isLocating: boolean;
-  accuracy: number | null;
-}
-
-interface UseGeolocationOptions {
-  onLocationUpdate?: (point: GeolocationPoint) => void;
-  language?: "nl" | "fr" | "ar";
-}
-
-const ERROR_MESSAGES = {
-  nl: {
-    notSupported: "Browser ondersteunt geen geolocatie",
-    denied: "Locatietoegang geweigerd. Schakel GPS in via browserinstellingen",
-    unavailable: "Locatie-informatie niet beschikbaar. Controleer GPS-instellingen",
-    timeout: "Locatieverzoek time-out. Probeer opnieuw",
-    unknown: "Kan locatie niet bepalen",
-  },
-  fr: {
-    notSupported: "Le navigateur ne prend pas en charge la géolocalisation",
-    denied: "Accès à la localisation refusé. Activez le GPS dans les paramètres du navigateur",
-    unavailable: "Informations de localisation non disponibles. Vérifiez les paramètres GPS",
-    timeout: "Délai d'attente de localisation dépassé. Réessayez",
-    unknown: "Impossible de déterminer la localisation",
-  },
-  ar: {
-    notSupported: "المتصفح لا يدعم تحديد الموقع الجغرافي",
-    denied: "تم رفض الوصول إلى الموقع. يرجى تفعيل GPS من إعدادات المتصفح",
-    unavailable: "معلومات الموقع غير متاحة. تحقق من إعدادات GPS",
-    timeout: "انتهت مهلة طلب الموقع. حاول مرة أخرى",
-    unknown: "تعذر تحديد الموقع",
-  },
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { isNativeMobile, isFreshAccurateLocation, watchMobileLocation, type MobileLocationPoint } from '@/lib/mobile-location';
+export type GeolocationPoint = MobileLocationPoint;
+interface UseGeolocationOptions { onLocationUpdate?: (point: GeolocationPoint) => void; language?: 'nl' | 'fr' | 'ar' }
+const messages = {
+  nl: { denied: 'Locatietoegang geweigerd. Controleer de app-instellingen.', unavailable: 'GPS niet beschikbaar. Controleer de locatie en meldingsmachtigingen.', timeout: 'Geen actuele GPS-locatie. Probeer opnieuw.' },
+  fr: { denied: 'Accès à la localisation refusé. Vérifiez les paramètres.', unavailable: 'GPS indisponible. Vérifiez les autorisations de localisation et notifications.', timeout: 'Aucune position GPS récente. Réessayez.' },
+  ar: { denied: 'تم رفض إذن الموقع. تحقق من إعدادات التطبيق.', unavailable: 'GPS غير متاح. تحقق من أذونات الموقع والإشعارات.', timeout: 'لم نحصل على موقع GPS حديث. حاول مجدداً.' },
 };
-
-// watchPosition trick: Android responds faster to watch than getCurrentPosition
-function getPositionViaWatch(timeoutMs: number): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) => {
-    let watchId: number;
-    let resolved = false;
-
-    const timer = setTimeout(() => {
-      if (!resolved) {
-        navigator.geolocation.clearWatch(watchId);
-        reject({ code: 3, message: "Watch timeout" });
-      }
-    }, timeoutMs);
-
-    watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timer);
-          navigator.geolocation.clearWatch(watchId);
-          resolve(pos);
-        }
-      },
-      (err) => {
-        if (!resolved) {
-          resolved = true;
-          clearTimeout(timer);
-          navigator.geolocation.clearWatch(watchId);
-          reject(err);
-        }
-      },
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 }
-    );
-  });
-}
-
 export function useGeolocation(options: UseGeolocationOptions = {}) {
-  const { onLocationUpdate, language = "nl" } = options;
-  const msgs = ERROR_MESSAGES[language] ?? ERROR_MESSAGES["nl"];
-
-  const [state, setState] = useState<GeolocationState>({
-    location: null,
-    error: null,
-    permissionState: "unknown",
-    isWatching: false,
-    isLocating: false,
-    accuracy: null,
-  });
-
-  const watchIdRef = useRef<number | null>(null);
-  const abortRef = useRef<boolean>(false);
-  const lastLocationRef = useRef<GeolocationPoint | null>(null);
-
-  // Check permission state
-  const checkPermission = useCallback(async () => {
-    if (!navigator.permissions) return "prompt" as const;
-    try {
-      const result = await navigator.permissions.query({ name: "geolocation" });
-      setState((prev) => ({ ...prev, permissionState: result.state }));
-      result.onchange = () => {
-        setState((prev) => ({ ...prev, permissionState: result.state }));
-      };
-      return result.state;
-    } catch {
-      return "prompt" as const;
-    }
+  const [state, setState] = useState({ location: null as GeolocationPoint | null, error: null as string | null,
+    permissionState: 'unknown' as 'prompt' | 'granted' | 'denied' | 'unknown', isWatching: false, isLocating: false, accuracy: null as number | null });
+  const last = useRef<GeolocationPoint | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+  const generation = useRef(0);
+  const mounted = useRef(true);
+  const optionsRef = useRef(options); optionsRef.current = options;
+  const update = useCallback((point: GeolocationPoint) => {
+    if (!mounted.current) return;
+    last.current = point;
+    setState(prev => ({ ...prev, location: point, error: null, permissionState: 'granted', accuracy: point.accuracy ?? null }));
   }, []);
-
-  // Multi-strategy location fetch with Android-optimized fallbacks
-  const getLocation = useCallback(
-    (showToast = false): Promise<GeolocationPoint | null> => {
-      return new Promise((resolve) => {
-        if (!navigator.geolocation) {
-          setState((prev) => ({ ...prev, error: msgs.notSupported }));
-          resolve(null);
-          return;
-        }
-
-        setState((prev) => ({ ...prev, isLocating: true, error: null }));
-
-        const handleSuccess = (pos: GeolocationPosition) => {
-          const point: GeolocationPoint = {
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            speed: pos.coords.speed ?? undefined,
-            timestamp: Date.now(),
-          };
-          lastLocationRef.current = point;
-          setState((prev) => ({
-            ...prev,
-            location: point,
-            error: null,
-            permissionState: "granted",
-            isLocating: false,
-            accuracy: pos.coords.accuracy,
-          }));
-          onLocationUpdate?.(point);
-          resolve(point);
-        };
-
-        const handleFinalError = (err: GeolocationPositionError) => {
-          // If we have a cached location, use it silently
-          if (lastLocationRef.current) {
-            setState((prev) => ({ ...prev, isLocating: false }));
-            resolve(lastLocationRef.current);
-            return;
-          }
-
-          let errorMsg = msgs.unknown;
-          if (err.code === err.PERMISSION_DENIED) {
-            errorMsg = msgs.denied;
-            setState((prev) => ({
-              ...prev,
-              permissionState: "denied",
-              error: errorMsg,
-              isLocating: false,
-            }));
-          } else if (err.code === err.POSITION_UNAVAILABLE) {
-            errorMsg = msgs.unavailable;
-            setState((prev) => ({ ...prev, error: errorMsg, isLocating: false }));
-          } else if (err.code === err.TIMEOUT) {
-            errorMsg = msgs.timeout;
-            setState((prev) => ({ ...prev, error: errorMsg, isLocating: false }));
-          } else {
-            setState((prev) => ({ ...prev, error: errorMsg, isLocating: false }));
-          }
-          resolve(null);
-        };
-
-        // Strategy 1: Try cached position first (instant)
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            // Use cached immediately, but keep trying for better accuracy
-            if (pos.coords.accuracy < 300) {
-              handleSuccess(pos);
-              return;
-            }
-            // Cached but low accuracy - use it and try to improve
-            const quickPoint: GeolocationPoint = {
-              lat: pos.coords.latitude,
-              lon: pos.coords.longitude,
-              accuracy: pos.coords.accuracy,
-              speed: pos.coords.speed ?? undefined,
-              timestamp: Date.now(),
-            };
-            lastLocationRef.current = quickPoint;
-            setState((prev) => ({
-              ...prev,
-              location: quickPoint,
-              error: null,
-              permissionState: "granted",
-              accuracy: pos.coords.accuracy,
-            }));
-
-            // Strategy 2: Race GPS vs watchPosition trick
-            let raceSettled = false;
-
-            const settleRace = (finalPos: GeolocationPosition) => {
-              if (!raceSettled) {
-                raceSettled = true;
-                handleSuccess(finalPos);
-              }
-            };
-
-            // GPS attempt
-            navigator.geolocation.getCurrentPosition(
-              settleRace,
-              () => {
-                // GPS failed, watchPosition trick
-                if (!raceSettled) {
-                  getPositionViaWatch(8000)
-                    .then(settleRace)
-                    .catch(() => {
-                      if (!raceSettled) {
-                        raceSettled = true;
-                        // Use the cached position we already have
-                        setState((prev) => ({ ...prev, isLocating: false }));
-                        resolve(quickPoint);
-                      }
-                    });
-                }
-              },
-              { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-            );
-
-            // watchPosition trick starts after 2s delay
-            setTimeout(() => {
-              if (!raceSettled) {
-                getPositionViaWatch(6000)
-                  .then(settleRace)
-                  .catch(() => {});
-              }
-            }, 2000);
-          },
-          () => {
-            // No cached position - go straight to GPS + watchPosition race
-            let raceSettled = false;
-
-            const settleRace = (pos: GeolocationPosition) => {
-              if (!raceSettled) {
-                raceSettled = true;
-                handleSuccess(pos);
-              }
-            };
-
-            // GPS attempt
-            navigator.geolocation.getCurrentPosition(
-              settleRace,
-              (err) => {
-                if (!raceSettled) {
-                  // Try watchPosition trick
-                  getPositionViaWatch(10000)
-                    .then(settleRace)
-                    .catch(() => {
-                      if (!raceSettled) {
-                        raceSettled = true;
-                        // Last resort: very permissive
-                        navigator.geolocation.getCurrentPosition(
-                          handleSuccess,
-                          handleFinalError,
-                          { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
-                        );
-                      }
-                    });
-                }
-              },
-              { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
-            );
-
-            // Low accuracy fallback after 3s
-            setTimeout(() => {
-              if (!raceSettled) {
-                navigator.geolocation.getCurrentPosition(
-                  settleRace,
-                  () => {},
-                  { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
-                );
-              }
-            }, 3000);
-          },
-          { enableHighAccuracy: false, timeout: 2000, maximumAge: 60000 }
-        );
-      });
-    },
-    [msgs, onLocationUpdate]
-  );
-
-  // Start watching position continuously
-  const startWatching = useCallback(
-    (onUpdate: (point: GeolocationPoint) => void) => {
-      if (!navigator.geolocation) return;
-      if (watchIdRef.current !== null) return;
-
-      abortRef.current = false;
-
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        (pos) => {
-          if (abortRef.current) return;
-          const point: GeolocationPoint = {
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            speed: pos.coords.speed ?? undefined,
-            timestamp: Date.now(),
-          };
-          lastLocationRef.current = point;
-          setState((prev) => ({
-            ...prev,
-            location: point,
-            error: null,
-            permissionState: "granted",
-            isWatching: true,
-            accuracy: pos.coords.accuracy,
-          }));
-          onUpdate(point);
-        },
-        (err) => {
-          if (abortRef.current) return;
-          if (err.code === err.PERMISSION_DENIED) {
-            setState((prev) => ({
-              ...prev,
-              permissionState: "denied",
-              error: msgs.denied,
-              isWatching: false,
-            }));
-          }
-          // For other errors during watch, keep last known location
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 5000,
-        }
-      );
-
-      setState((prev) => ({ ...prev, isWatching: true }));
-    },
-    [msgs]
-  );
-
-  // Stop watching position
+  const fail = useCallback((error: { code?: string | number }) => {
+    if (!mounted.current) return;
+    const denied = error.code === 1 || error.code === 'NOT_AUTHORIZED';
+    const text = messages[optionsRef.current.language ?? 'nl'];
+    setState(prev => ({ ...prev, error: denied ? text.denied : error.code === 3 ? text.timeout : text.unavailable,
+      permissionState: denied ? 'denied' : prev.permissionState, isLocating: false }));
+  }, []);
   const stopWatching = useCallback(() => {
-    abortRef.current = true;
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    setState((prev) => ({ ...prev, isWatching: false }));
+    generation.current++;
+    stopRef.current?.(); stopRef.current = null;
+    if (mounted.current) setState(prev => ({ ...prev, isWatching: false }));
   }, []);
-
-  useEffect(() => {
-    checkPermission();
-    return () => {
-      stopWatching();
+  const startWatching = useCallback((onUpdate: (point: GeolocationPoint) => void, watchOptions: { background?: boolean } = {}) => {
+    stopWatching();
+    const current = generation.current;
+    const accept = (point: GeolocationPoint) => { if (generation.current !== current) return; update(point); onUpdate(point); };
+    const reject = (error: { code?: string | number }) => {
+      if (generation.current !== current) return;
+      if (error.code === 1 || error.code === 'NOT_AUTHORIZED') stopWatching();
+      fail(error);
     };
-  }, [checkPermission, stopWatching]);
-
-  return {
-    ...state,
-    getLocation,
-    startWatching,
-    stopWatching,
-    checkPermission,
-    lastLocation: lastLocationRef.current,
-  };
+    try {
+      if (isNativeMobile()) {
+        const watch = watchMobileLocation(accept, reject, watchOptions);
+        stopRef.current = () => { void watch.stop().catch(() => fail({})); };
+        void watch.ready.then(() => { if (generation.current === current) setState(prev => ({ ...prev, isWatching: true })); }).catch(reject);
+      } else {
+        if (!navigator.geolocation) { reject({}); return; }
+        const id = navigator.geolocation.watchPosition(pos => accept({ lat: pos.coords.latitude, lon: pos.coords.longitude,
+          accuracy: pos.coords.accuracy, speed: pos.coords.speed != null && pos.coords.speed >= 0 ? pos.coords.speed : undefined,
+          timestamp: pos.timestamp }), reject, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+        stopRef.current = () => navigator.geolocation.clearWatch(id);
+        setState(prev => ({ ...prev, isWatching: true }));
+      }
+    } catch { reject({}); }
+  }, [stopWatching, update, fail]);
+  const getLocation = useCallback(async (_showToast = false): Promise<GeolocationPoint | null> => {
+    setState(prev => ({ ...prev, isLocating: true, error: null }));
+    try {
+      const point = await new Promise<GeolocationPoint>((resolve, reject) => {
+        if (isNativeMobile()) {
+          let stop: (() => void) | undefined;
+          let settled = false;
+          const finish = (point?: GeolocationPoint, error?: { code?: string | number }) => {
+            if (settled) return; settled = true; clearTimeout(timer); stop?.();
+            if (point) resolve(point); else reject(error ?? { code: 3 });
+          };
+          const timer = setTimeout(() => finish(undefined, { code: 3 }), 15000);
+          try {
+            const watch = watchMobileLocation(point => { if (isFreshAccurateLocation(point)) finish(point); }, error => finish(undefined, error));
+            stop = () => { void watch.stop().catch(() => {}); };
+            void watch.ready.catch(error => finish(undefined, error));
+            if (settled) stop();
+          } catch (error) { finish(undefined, error as { code?: string | number }); }
+        } else if (navigator.geolocation) {
+          let id: number | undefined;
+          let settled = false;
+          const finish = (point?: GeolocationPoint, error?: { code?: number }) => {
+            if (settled) return; settled = true; clearTimeout(timer);
+            if (id !== undefined) navigator.geolocation.clearWatch(id);
+            if (point) resolve(point); else reject(error ?? { code: 3 });
+          };
+          const timer = setTimeout(() => finish(undefined, { code: 3 }), 15000);
+          id = navigator.geolocation.watchPosition(pos => {
+            const point = { lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy,
+              speed: pos.coords.speed ?? undefined, timestamp: pos.timestamp };
+            if (isFreshAccurateLocation(point)) finish(point);
+          }, error => finish(undefined, error), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+          if (settled) navigator.geolocation.clearWatch(id);
+        } else reject({});
+      });
+      update(point); optionsRef.current.onLocationUpdate?.(point); return point;
+    } catch (error) { fail(error as { code?: string | number }); return null; }
+    finally { if (mounted.current) setState(prev => ({ ...prev, isLocating: false })); }
+  }, [update, fail]);
+  const checkPermission = useCallback(async () => {
+    if (isNativeMobile() || !navigator.permissions) return 'prompt' as const;
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      if (mounted.current) setState(prev => ({ ...prev, permissionState: permission.state }));
+      return permission.state;
+    } catch { return 'prompt' as const; }
+  }, []);
+  useEffect(() => { mounted.current = true; void checkPermission(); return () => { mounted.current = false; stopWatching(); }; }, [checkPermission, stopWatching]);
+  return { ...state, getLocation, startWatching, stopWatching, checkPermission, lastLocation: last.current };
 }

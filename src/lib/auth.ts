@@ -102,7 +102,8 @@ export async function generateAdminUserToken(): Promise<string> {
 
 export async function generateToken(
   user: Omit<User, "isAdmin">,
-  expiresIn: number = ACCESS_TOKEN_EXPIRE_TIME
+  expiresIn: number = ACCESS_TOKEN_EXPIRE_TIME,
+  mfaVerified: boolean = false
 ): Promise<string> {
   const { adminRole, userRole } = getAuthRoles();
   const system = String(user.sub) === "0";
@@ -113,7 +114,7 @@ export async function generateToken(
     isAdmin: false,
   };
 
-  return new SignJWT(payload)
+  return new SignJWT({...payload, amr:mfaVerified ? "otp" : "password"})
     .setProtectedHeader({ alg: "HS256" })
     .setIssuer("jouw-driver")
     .setAudience("jouw-driver")

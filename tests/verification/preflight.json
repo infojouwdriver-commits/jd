@@ -1,0 +1,25 @@
+{
+  "passed": 5,
+  "checks": [
+    {
+      "name": "valid private transport",
+      "status": "passed"
+    },
+    {
+      "name": "unverified schema",
+      "status": "passed"
+    },
+    {
+      "name": "missing admin MFA",
+      "status": "passed"
+    },
+    {
+      "name": "public plaintext gateway",
+      "status": "passed"
+    },
+    {
+      "name": "trial cannot be released",
+      "status": "passed"
+    }
+  ]
+}

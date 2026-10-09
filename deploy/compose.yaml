@@ -1,0 +1,87 @@
+services:
+  edge:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN}
+      TLS_EMAIL: ${TLS_EMAIL:?Set TLS_EMAIL}
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "tls_data:/data", "tls_config:/config"]
+    depends_on: [app]
+    networks: [frontend]
+    security_opt: ["no-new-privileges:true"]
+  app:
+    build: {context: ..}
+    restart: unless-stopped
+    environment:
+      POSTGREST_URL: http://postgrest:3000
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?Set NEXT_PUBLIC_APP_URL}
+      POSTGREST_SCHEMA: ${POSTGREST_SCHEMA:?Set POSTGREST_SCHEMA}
+      SCHEMA_USER: ${SCHEMA_USER:?Set SCHEMA_USER}
+      SCHEMA_ADMIN_USER: ${SCHEMA_ADMIN_USER:?Set SCHEMA_ADMIN_USER}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      HASH_SALT_KEY: ${HASH_SALT_KEY:?Set HASH_SALT_KEY}
+      RATE_LIMIT_SECRET: ${RATE_LIMIT_SECRET:?Set RATE_LIMIT_SECRET}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY}
+      PLATFORM_ADMIN_IDS: ${PLATFORM_ADMIN_IDS:?Set PLATFORM_ADMIN_IDS}
+      PRIVACY_CONTROLLER_NAME: ${PRIVACY_CONTROLLER_NAME:?Set PRIVACY_CONTROLLER_NAME}
+      PRIVACY_CONTROLLER_ADDRESS: ${PRIVACY_CONTROLLER_ADDRESS:?Set PRIVACY_CONTROLLER_ADDRESS}
+      PRIVACY_CONTACT_EMAIL: ${PRIVACY_CONTACT_EMAIL:?Set PRIVACY_CONTACT_EMAIL}
+      TRIP_RETENTION_YEARS: ${TRIP_RETENTION_YEARS:?Set TRIP_RETENTION_YEARS}
+      ADMIN_TOTP_SECRETS_JSON: ${ADMIN_TOTP_SECRETS_JSON:?Set ADMIN_TOTP_SECRETS_JSON}
+      CHIRON_TRANSMISSION_ENABLED: ${CHIRON_TRANSMISSION_ENABLED:?Set CHIRON_TRANSMISSION_ENABLED}
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:?Set DEPLOYMENT_MODE}
+      SCHEMA_VALIDATED: ${SCHEMA_VALIDATED:?Set SCHEMA_VALIDATED}
+      TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+      RESEND_KEY: ${RESEND_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      POSTGREST_INTERNAL_NETWORK: "true"
+      TRUST_PROXY: "true"
+    networks: [frontend, database]
+    read_only: true
+    tmpfs: ["/tmp", "/app/.next/cache:uid=10001,gid=10001"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on: [postgrest]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/privacy-policy').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  postgrest:
+    image: ${POSTGREST_IMAGE:?Set tested POSTGREST_IMAGE version}
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: ${PGRST_DB_URI:?Set private gateway database URI}
+      PGRST_DB_SCHEMAS: ${POSTGREST_SCHEMA:?Set POSTGREST_SCHEMA}
+      PGRST_JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      PGRST_JWT_AUD: jouw-driver
+      PGRST_DB_POOL: "10"
+    networks: [database]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      db: {condition: service_healthy}
+  db:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: ["database_data:/var/lib/postgresql/data"]
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+networks:
+  frontend: {}
+  database: {internal: true}
+volumes:
+  database_data: {}
+  tls_data: {}
+  tls_config: {}

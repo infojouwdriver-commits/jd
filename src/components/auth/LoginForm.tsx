@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 
 const loginSchema = z.object({
+  otp: z.string().optional(),
   email: z.string().email("يرجى إدخال بريد إلكتروني صالح"),
   password: z.string().min(1, "يرجى إدخال كلمة المرور"),
 });
@@ -47,7 +48,7 @@ export function LoginForm({
     try {
       setIsLoading(true);
       setError(null);
-      await login(data.email, data.password);
+      await login(data.email, data.password, data.otp);
       onSuccess?.();
     } catch (error: unknown) {
       const message =
@@ -129,6 +130,10 @@ export function LoginForm({
             )}
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="otp">رمز تطبيق المصادقة — لحساب الإدارة</label>
+            <Input id="otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} {...register("otp")} disabled={isLoading} />
+          </div>
           <Button
             type="submit"
             className="my-[10px] w-full"

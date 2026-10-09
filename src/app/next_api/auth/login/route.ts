@@ -1,3 +1,4 @@
+import {verifyAdministratorMfa} from '@/lib/admin-mfa';
 
 import { NextRequest } from "next/server";
 import { requestMiddleware, validateRequestBody, getRequestIp } from "@/lib/api-utils";
@@ -8,6 +9,7 @@ import { REFRESH_TOKEN_EXPIRE_TIME } from "@/constants/auth";
 import { z } from "zod";
 
 const loginSchema = z.object({
+  otp: z.string().optional(),
   email: z.string().email("Please provide a valid email address"),
   password: z.string().min(1, "Please provide the password."),
 });
@@ -26,7 +28,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
     const users = await usersCrud.findMany({ email: validatedData.email });
     const user = users?.[0];
 
-    if (!user) {
+    if (!user || user.is_active === false || user.status === "disabled") {
       return createErrorResponse({
         errorMessage: "Invalid email or password",
         status: 401,
@@ -53,11 +55,12 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
       });
     }
 
+    const mfaVerified = await verifyAdministratorMfa(user.id, validatedData.otp);
     const accessToken = await generateToken({
       sub: user.id,
       role: user.role,
       email: user.email,
-    });
+    }, undefined, mfaVerified);
 
     const refreshToken = await generateRandomString();
     const hashedRefreshToken = await pbkdf2Hash(refreshToken);
@@ -72,6 +75,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
 
     const refreshTokenData = {
       user_id: user.id,
+      mfa_verified: mfaVerified,
       session_id: sessionId,
       token: hashedRefreshToken,
       expires_at: new Date(
@@ -83,6 +87,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
 
     return createAuthResponse({ accessToken, refreshToken });
   } catch (error) {
+    if (error instanceof Response) return createErrorResponse({errorMessage:"Invalid administrator verification code",status:error.status});
     if (error instanceof z.ZodError) {
       return createErrorResponse({
         errorMessage: error.errors[0].message,

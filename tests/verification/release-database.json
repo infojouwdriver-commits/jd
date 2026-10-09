@@ -1,0 +1,18 @@
+{
+  "passed": 11,
+  "checks": [
+    "release migrations applied",
+    "server user overrides payload owner",
+    "retry does not duplicate trip",
+    "restored function PUBLIC execute does not leak to browser",
+    "browser role cannot read business table",
+    "browser role cannot invoke atomic save",
+    "service role can execute safe retry",
+    "MFA code cannot be consumed twice",
+    "database rate counter enforces shared bucket",
+    "invalid rate key fails closed",
+    "browser role cannot bypass rate counter RPC"
+  ],
+  "engine": "PGlite PostgreSQL WASM",
+  "docker_tested": false
+}

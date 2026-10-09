@@ -1,3 +1,4 @@
+import {isPlatformAdmin} from '@/lib/security-policy';
 
 import { NextRequest } from "next/server";
 import { requestMiddleware, validateRequestBody, getRequestIp } from "@/lib/api-utils";
@@ -225,6 +226,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
         status: 401,
       });
     }
+
+    if (user.is_active === false || user.status === 'disabled') return createErrorResponse({errorMessage:'Account unavailable',status:401});
+    if (isPlatformAdmin(String(user.id), process.env.PLATFORM_ADMIN_IDS)) return createErrorResponse({errorMessage:'Use administrator MFA login',status:401});
 
     if (driver?.status && driver.status !== "active") {
       return createErrorResponse({

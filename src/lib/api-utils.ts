@@ -10,6 +10,7 @@ import { AUTH_CODE } from "@/constants/auth";
 import { User } from "@/types/auth";
 
 export interface JWTPayload extends User {
+  amr?: string;
   iat: number;
   exp: number;
 }
@@ -258,7 +259,6 @@ export function validateEnv(): void {
   const requiredVars = [
     "POSTGREST_URL",
     "POSTGREST_SCHEMA",
-    "POSTGREST_API_KEY",
   ];
 
   const missing = requiredVars.filter((varName) => !process.env[varName]);
@@ -406,7 +406,11 @@ export function requestMiddleware(
         params.payload = tokenResult.payload;
       }
 
-      if (params.payload) await authorizeEndpoint(request, params.payload);
+      if (params.payload) {
+        await authorizeEndpoint(request, params.payload);
+        const {generateAdminUserToken} = await import('./auth');
+        params.token = await generateAdminUserToken();
+      }
       const response = await handler(request, params);
 
       if (response instanceof Response) {
