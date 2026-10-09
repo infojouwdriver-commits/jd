@@ -1,0 +1,22 @@
+(node:13) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/e2a75e390d62/secure-project/src/lib/security-policy.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/e2a75e390d62/secure-project/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ reject attacker domains and suffix confusion (1.117825ms)
+✔ admin role is granted only by exact server configuration (0.178142ms)
+✔ public read cannot authorize anonymous writes (0.148769ms)
+✔ driver cannot enter admin paths, manager cannot edit platform settings (0.128469ms)
+✔ cross-user objects denied (0.113356ms)
+✔ calendar month deadlines handle leap years and month ends (0.496801ms)
+✔ SSRF, non-HTTPS, credentials and custom ports denied (0.327411ms)
+✔ nested credentials are removed from responses (0.865012ms)
+✔ risky legacy integrations fail closed (0.221666ms)
+✔ secret encryption authenticates contents and field context (1.560345ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 127.679969

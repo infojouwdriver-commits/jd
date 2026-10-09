@@ -1,0 +1,442 @@
+[
+  {
+    "path": "/next_api/admin/users",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/admin/users/route.ts"
+  },
+  {
+    "path": "/next_api/ai-assistant/chat",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/ai-assistant/chat/route.ts"
+  },
+  {
+    "path": "/next_api/ai-assistant/search",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/ai-assistant/search/route.ts"
+  },
+  {
+    "path": "/next_api/approval-requests",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/approval-requests/route.ts"
+  },
+  {
+    "path": "/next_api/auth/driver-login",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/driver-login/route.ts"
+  },
+  {
+    "path": "/next_api/auth/google-login",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/google-login/route.ts"
+  },
+  {
+    "path": "/next_api/auth/login",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/login/route.ts"
+  },
+  {
+    "path": "/next_api/auth/logout",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/logout/route.ts"
+  },
+  {
+    "path": "/next_api/auth/refresh",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/refresh/route.ts"
+  },
+  {
+    "path": "/next_api/auth/register",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/register/route.ts"
+  },
+  {
+    "path": "/next_api/auth/reset-password",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/reset-password/route.ts"
+  },
+  {
+    "path": "/next_api/auth/send-verification",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/send-verification/route.ts"
+  },
+  {
+    "path": "/next_api/auth/user",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/auth/user/route.ts"
+  },
+  {
+    "path": "/next_api/chiron/sync",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/chiron/sync/route.ts"
+  },
+  {
+    "path": "/next_api/chiron-settings/mapping",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/chiron-settings/mapping/route.ts"
+  },
+  {
+    "path": "/next_api/chiron-settings/mappings",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/chiron-settings/mappings/route.ts"
+  },
+  {
+    "path": "/next_api/chiron-settings",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/chiron-settings/route.ts"
+  },
+  {
+    "path": "/next_api/chiron-sync/retry",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/chiron-sync/retry/route.ts"
+  },
+  {
+    "path": "/next_api/companies/[id]/pricing",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/companies/[id]/pricing/route.ts"
+  },
+  {
+    "path": "/next_api/companies",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/companies/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/drivers",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/drivers/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/login",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/login/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/password",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/password/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/register",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/register/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/set-password",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/set-password/route.ts"
+  },
+  {
+    "path": "/next_api/company-portal/vehicles",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/company-portal/vehicles/route.ts"
+  },
+  {
+    "path": "/next_api/contracts",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/contracts/route.ts"
+  },
+  {
+    "path": "/next_api/contracts/send-signature-link",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/contracts/send-signature-link/route.ts"
+  },
+  {
+    "path": "/next_api/contracts/sign",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/contracts/sign/route.ts"
+  },
+  {
+    "path": "/next_api/contracts/signatures",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/contracts/signatures/route.ts"
+  },
+  {
+    "path": "/next_api/contracts/verify-token",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/contracts/verify-token/route.ts"
+  },
+  {
+    "path": "/next_api/distributors/assign-company",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/distributors/assign-company/route.ts"
+  },
+  {
+    "path": "/next_api/distributors/my-companies",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/distributors/my-companies/route.ts"
+  },
+  {
+    "path": "/next_api/distributors",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/distributors/route.ts"
+  },
+  {
+    "path": "/next_api/driver-profile",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/driver-profile/route.ts"
+  },
+  {
+    "path": "/next_api/driver-registration/approve",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/driver-registration/approve/route.ts"
+  },
+  {
+    "path": "/next_api/driver-registration/list",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/driver-registration/list/route.ts"
+  },
+  {
+    "path": "/next_api/driver-registration",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/driver-registration/route.ts"
+  },
+  {
+    "path": "/next_api/drivers/me",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/drivers/me/route.ts"
+  },
+  {
+    "path": "/next_api/drivers/pricing",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/drivers/pricing/route.ts"
+  },
+  {
+    "path": "/next_api/drivers/profile",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/drivers/profile/route.ts"
+  },
+  {
+    "path": "/next_api/drivers",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/drivers/route.ts"
+  },
+  {
+    "path": "/next_api/drivers/vehicles",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/drivers/vehicles/route.ts"
+  },
+  {
+    "path": "/next_api/example",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/example/route.ts"
+  },
+  {
+    "path": "/next_api/expenses",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/expenses/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/admin/breach-incidents",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/admin/breach-incidents/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/admin/data-subject-requests",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/admin/data-subject-requests/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/admin/data-transfers",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/admin/data-transfers/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/consents",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/consents/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/cookie-categories",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/cookie-categories/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/data-subject-requests",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/data-subject-requests/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/export",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/export/route.ts"
+  },
+  {
+    "path": "/next_api/gdpr/privacy-policy",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/gdpr/privacy-policy/route.ts"
+  },
+  {
+    "path": "/next_api/homepage-ad-slots",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/homepage-ad-slots/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/generate-company-invoice",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/generate-company-invoice/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/generate-recurring",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/generate-recurring/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/my-invoices",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/my-invoices/route.ts"
+  },
+  {
+    "path": "/next_api/invoices",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/send",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/send/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/share-link",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/share-link/route.ts"
+  },
+  {
+    "path": "/next_api/invoices/view",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/invoices/view/route.ts"
+  },
+  {
+    "path": "/next_api/messages/driver",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/messages/driver/route.ts"
+  },
+  {
+    "path": "/next_api/messages/mark-read",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/messages/mark-read/route.ts"
+  },
+  {
+    "path": "/next_api/messages/replies",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/messages/replies/route.ts"
+  },
+  {
+    "path": "/next_api/messages",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/messages/route.ts"
+  },
+  {
+    "path": "/next_api/messages/statistics",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/messages/statistics/route.ts"
+  },
+  {
+    "path": "/next_api/notifications/driver",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/notifications/driver/route.ts"
+  },
+  {
+    "path": "/next_api/notifications/mark-read",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/notifications/mark-read/route.ts"
+  },
+  {
+    "path": "/next_api/notifications",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/notifications/route.ts"
+  },
+  {
+    "path": "/next_api/platform-contracts",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/platform-contracts/route.ts"
+  },
+  {
+    "path": "/next_api/public-stats",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/public-stats/route.ts"
+  },
+  {
+    "path": "/next_api/stats",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/stats/route.ts"
+  },
+  {
+    "path": "/next_api/test-trips/acceptance-test",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/test-trips/acceptance-test/route.ts"
+  },
+  {
+    "path": "/next_api/test-trips/latest-report",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/test-trips/latest-report/route.ts"
+  },
+  {
+    "path": "/next_api/test-trips",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/test-trips/route.ts"
+  },
+  {
+    "path": "/next_api/test-trips/send",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/test-trips/send/route.ts"
+  },
+  {
+    "path": "/next_api/trips/end",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/end/route.ts"
+  },
+  {
+    "path": "/next_api/trips/export-pdf",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/export-pdf/route.ts"
+  },
+  {
+    "path": "/next_api/trips/generate-invoice",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/generate-invoice/route.ts"
+  },
+  {
+    "path": "/next_api/trips/retry-sync",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/retry-sync/route.ts"
+  },
+  {
+    "path": "/next_api/trips",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/route.ts"
+  },
+  {
+    "path": "/next_api/trips/start",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/start/route.ts"
+  },
+  {
+    "path": "/next_api/trips/summary",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/trips/summary/route.ts"
+  },
+  {
+    "path": "/next_api/vehicles",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/vehicles/route.ts"
+  },
+  {
+    "path": "/next_api/websocket",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/websocket/route.ts"
+  },
+  {
+    "path": "/next_api/zoer_health",
+    "protection": "central-request-guard",
+    "file": "src/app/next_api/zoer_health/route.ts"
+  },
+  {
+    "path": "/zoer_proxy/[...path]",
+    "protection": "disabled-legacy-proxy",
+    "file": "src/app/zoer_proxy/[...path]/route.ts"
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "dependency-audit-before": {
+    "counts": {
+      "info": 0,
+      "low": 17,
+      "moderate": 78,
+      "high": 86,
+      "critical": 7
+    },
+    "remaining_advisories": []
+  },
+  "audit-production": {
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "remaining_advisories": []
+  },
+  "audit-all": {
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 1,
+      "critical": 0
+    },
+    "remaining_advisories": [
+      {
+        "package": "braces",
+        "severity": "high",
+        "title": "braces vulnerable to stack-exhaustion denial of service through deeply nested patterns",
+        "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
+      }
+    ]
+  }
+}

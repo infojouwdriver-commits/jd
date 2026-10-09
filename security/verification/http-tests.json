@@ -1,0 +1,41 @@
+{
+  "passed": 9,
+  "checks": [
+    {
+      "path": "/next_api/companies",
+      "status": 401
+    },
+    {
+      "path": "/next_api/companies",
+      "status": 401
+    },
+    {
+      "path": "/next_api/auth/login",
+      "status": 403
+    },
+    {
+      "path": "/next_api/auth/login",
+      "status": 403
+    },
+    {
+      "path": "/next_api/auth/login",
+      "status": 415
+    },
+    {
+      "path": "/next_api/ai-assistant/chat",
+      "status": 503
+    },
+    {
+      "path": "/next_api/invoices/view?token=legacy",
+      "status": 503
+    },
+    {
+      "path": "/zoer_proxy/anything",
+      "status": 410
+    },
+    {
+      "path": "/privacy-policy",
+      "status": 200
+    }
+  ]
+}
