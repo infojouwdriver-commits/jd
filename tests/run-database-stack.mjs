@@ -3,6 +3,9 @@
 import {spawn} from 'node:child_process';
 import {randomBytes,randomUUID} from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {exportSchema} from '../scripts/export-schema.mjs';
 import assert from 'node:assert/strict';
 import {SignJWT,jwtVerify} from 'jose';
 import bcrypt from 'bcryptjs';
@@ -13,6 +16,7 @@ const database=`${prefix}-db`,gateway=`${prefix}-api`,network=`${prefix}-interna
 const config={schema:'public',user_role:'jd_browser',admin_role:'jd_service',gateway_role:'jd_gateway',gateway_password:randomBytes(32).toString('hex')};
 const jwtSecret=randomBytes(48).toString('hex');const postgresPassword=randomBytes(32).toString('hex');
 const checks=[];let base;
+let schemaExportWork;
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function docker(args,{input,env,timeout=180000}={}) {
  return new Promise((resolve,reject)=>{
@@ -52,6 +56,13 @@ try {
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
  for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
+ // Exercise the exporter against real pg_dump, not the historical app.sql source.
+ schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
+ fs.writeFileSync(path.join(schemaExportWork,'pg_dump'), `#!/bin/sh\nexec docker exec --env PGOPTIONS ${database} pg_dump -U postgres -d jd_test "$@"\n`, {mode:0o700});
+ const exported=await exportSchema({directory:path.join(schemaExportWork,'result'),schema:'public',env:{...process.env,PATH:schemaExportWork+path.delimiter+process.env.PATH,PGHOST:'127.0.0.1',PGDATABASE:'jd_test',PGUSER:'postgres'}});
+ const exportedDdl=fs.readFileSync(path.join(schemaExportWork,'result/database-schema.sql'),'utf8');
+ assert.ok(exported.schemaOnly&&exported.readOnlyConnection);assert.match(exportedDdl,/CREATE TABLE public\.trips/);assert.match(exportedDdl,/CREATE FUNCTION public\.security_save_completed_trip/);assert.match(exportedDdl,/CREATE POLICY/);assert.doesNotMatch(exportedDdl,/-- Data for Name:/);
+ checks.push('Read-only live schema exporter saves native pg_dump tables, functions and RLS without row data');
  const gatewayPrivileges=JSON.parse(await psql("SELECT jsonb_build_object('superuser',rolsuper,'bypassrls',rolbypassrls,'inherit',rolinherit) FROM pg_roles WHERE rolname='jd_gateway';"));assert.deepEqual(gatewayPrivileges,{superuser:false,bypassrls:false,inherit:false});checks.push('Gateway database login is not superuser and does not bypass RLS or inherit service privileges');
  await docker(['create','--name',gateway,'--network',front,'--network-alias','postgrest','--publish','127.0.0.1::3000','--cap-drop','ALL','--security-opt','no-new-privileges:true','--env','PGRST_DB_URI','--env','PGRST_DB_SCHEMAS','--env','PGRST_JWT_SECRET','--env','PGRST_JWT_AUD',images.postgrest],{env:{PGRST_DB_URI:`postgres://jd_gateway:${config.gateway_password}@db:5432/jd_test`,PGRST_DB_SCHEMAS:'public',PGRST_JWT_SECRET:jwtSecret,PGRST_JWT_AUD:'jouw-driver'}});
  await docker(['network','connect',network,gateway]);
@@ -113,6 +124,7 @@ try {
  await docker(['stop',gateway],{timeout:30000});assert.equal((await appApi('/next_api/trips','GET',undefined,undefined,access)).status,503);checks.push('Actual app fails closed with 503 when real PostgREST rate storage is unavailable');
  console.log(JSON.stringify({passed:checks.length,checks,images,engine:'Actual standalone Docker application + native PostgreSQL + official PostgREST',data:'Synthetic only; inferred schema, not Zoer authoritative',chiron_tested:false},null,2));
 }finally {
+ if(schemaExportWork)fs.rmSync(schemaExportWork,{recursive:true,force:true});
  // Only remove resources whose cryptographically random task-specific names we created.
  for(const name of [application,gateway,database])await docker(['rm','--force','--volumes',name],{timeout:20000}).catch(()=>{});
  await docker(['image','rm','--force',appImage],{timeout:20000}).catch(()=>{});
