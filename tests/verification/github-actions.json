@@ -2,31 +2,32 @@
   "reviewed_at": "2026-10-10",
   "timezone": "Europe/Brussels",
   "repository": "infojouwdriver-commits/jd",
-  "verified_code_commit": "6d49bdb02019d190198291668f21114fa0654884",
+  "verified_code_commit": "0b547a0330ab3a7018d2dac37b4986d7834f66b9",
   "workflow_run": {
-    "id": 38003707634,
-    "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634",
+    "id": 38006527876,
+    "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876",
     "conclusion": "success"
   },
   "jobs": [
     {
-      "id": 114067540136,
+      "id": 114076473638,
       "name": "verify",
       "conclusion": "success",
-      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634/job/114067540136"
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876/job/114076473638"
     },
     {
-      "id": 114067540346,
+      "id": 114076473790,
       "name": "native-database",
       "conclusion": "success",
-      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38003707634/job/114067540346"
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876/job/114076473790"
     }
   ],
   "native_acceptance": {
-    "passed": 22,
+    "passed": 23,
     "checks": [
       "PostgreSQL has no published host port",
       "Reconstructed schema and full deployment migration sequence applied on native PostgreSQL",
+      "Read-only live schema exporter saves native pg_dump tables, functions and RLS without row data",
       "Gateway database login is not superuser and does not bypass RLS or inherit service privileges",
       "PostgREST publishes only a random loopback port",
       "JWT switches real PostgREST to non-superuser service role under RLS",

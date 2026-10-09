@@ -1,16 +1,16 @@
 {
   "status": "release_candidate_requires_target_server_device_provider_acceptance",
-  "verified_code_commit": "6d49bdb02019d190198291668f21114fa0654884",
+  "verified_code_commit": "0b547a0330ab3a7018d2dac37b4986d7834f66b9",
   "evidence": "tests/verification/github-actions.json",
   "verified": {
     "typescript": true,
     "next_production_build": true,
-    "root_node_test_cases": 32,
+    "root_node_test_cases": 33,
     "pglite_privilege_assertions": 11,
     "mobile_test_cases": 7,
     "http_security_checks": 9,
     "production_auth_checks_with_simulated_postgrest": 17,
-    "native_docker_application_and_database_checks": 22,
+    "native_docker_application_and_database_checks": 23,
     "production_dependency_advisories": 0,
     "repository_credential_export_scan": true
   },
