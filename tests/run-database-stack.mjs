@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {exportSchema} from '../scripts/export-schema.mjs';
+import {backupRestoreAcceptance} from './backup-restore-acceptance.mjs';
 import assert from 'node:assert/strict';
 import {SignJWT,jwtVerify} from 'jose';
 import bcrypt from 'bcryptjs';
@@ -121,6 +122,7 @@ try {
  assert.equal((await appApi('/next_api/companies','GET',undefined,cookie)).status,403);assert.equal((await appApi('/next_api/trips?id='+again.trip.id,'PUT',{price:99},cookie)).status,404);checks.push('Real database-backed driver authorization denies admin routes and another owner trip');
  const logout=await appApi('/next_api/auth/logout','POST',{},cookie);assert.equal(logout.status,200);assert.ok(logout.response.headers.getSetCookie().every(c=>/Max-Age=0/.test(c)));
  assert.equal((await appApi('/next_api/trips','GET',undefined,undefined,access)).status,401);checks.push('Logout revokes existing access token against real PostgreSQL and clears cookies');
+ checks.push(...await backupRestoreAcceptance({docker,source:database,image:images.postgres,prefix}));
  await docker(['stop',gateway],{timeout:30000});assert.equal((await appApi('/next_api/trips','GET',undefined,undefined,access)).status,503);checks.push('Actual app fails closed with 503 when real PostgREST rate storage is unavailable');
  console.log(JSON.stringify({passed:checks.length,checks,images,engine:'Actual standalone Docker application + native PostgreSQL + official PostgREST',data:'Synthetic only; inferred schema, not Zoer authoritative',chiron_tested:false},null,2));
 }finally {

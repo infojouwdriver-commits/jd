@@ -68,5 +68,9 @@ jobs:
         run: |
           npm install --global pnpm@11.25.0
           pnpm install --frozen-lockfile
-      - name: Standalone Docker app, native PostgreSQL and PostgREST acceptance
+      - name: Install age from the Ubuntu package repository
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install --yes age
+      - name: Standalone Docker app, native PostgreSQL, encrypted restore and PostgREST acceptance
         run: node tests/run-database-stack.mjs
