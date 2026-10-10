@@ -1,0 +1,26 @@
+{
+  "version": "20261010-v1",
+  "source": "independent application contract; not a replica of Zoer",
+  "relations": [
+    ["company_users", "user_id", "users"],
+    ["company_users", "company_id", "companies"],
+    ["drivers", "user_id", "users"],
+    ["drivers", "company_id", "companies"],
+    ["drivers", "current_vehicle_id", "vehicles"],
+    ["drivers", "assigned_vehicle_id", "vehicles"],
+    ["vehicles", "company_id", "companies"],
+    ["trips", "user_id", "users"],
+    ["trips", "company_id", "companies"],
+    ["trips", "driver_id", "drivers"],
+    ["trips", "vehicle_id", "vehicles"],
+    ["invoices", "user_id", "users"],
+    ["invoices", "company_id", "companies"],
+    ["invoices", "trip_id", "trips"]
+  ],
+  "checks": [
+    ["trips", "coordinates", "(start_lat IS NULL OR start_lat BETWEEN -90 AND 90) AND (end_lat IS NULL OR end_lat BETWEEN -90 AND 90) AND (start_lon IS NULL OR start_lon BETWEEN -180 AND 180) AND (end_lon IS NULL OR end_lon BETWEEN -180 AND 180)"],
+    ["trips", "nonnegative", "(price IS NULL OR price >= 0) AND (distance_km IS NULL OR distance_km >= 0) AND (duration_minutes IS NULL OR duration_minutes >= 0)"],
+    ["trips", "time_order", "end_time IS NULL OR (start_time IS NOT NULL AND end_time >= start_time)"],
+    ["trips", "completed_identity", "status IS DISTINCT FROM 'completed' OR (user_id IS NOT NULL AND company_id IS NOT NULL AND driver_id IS NOT NULL AND vehicle_id IS NOT NULL AND start_time IS NOT NULL AND end_time IS NOT NULL)"]
+  ]
+}

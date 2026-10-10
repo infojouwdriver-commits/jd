@@ -1,13 +1,14 @@
 // Run from deploy: node --env-file=.env ../scripts/apply-release.mjs
 // Restore and review the target database first. Password values travel via stdin only.
 import fs from 'node:fs';import {spawn} from 'node:child_process';
+import {contractSql} from './independent-schema.mjs';
 const env=process.env;const names={schema:env.POSTGREST_SCHEMA,user_role:env.SCHEMA_USER,admin_role:env.SCHEMA_ADMIN_USER,gateway_role:env.GATEWAY_DB_ROLE};
 for(const [key,value] of Object.entries(names))if(!/^[a-z_][a-z0-9_]{0,62}$/.test(value||''))throw new Error(`Invalid ${key}`);
 if((env.GATEWAY_DB_PASSWORD||'').length<32)throw new Error('Gateway password needs 32 random characters');
 if(env.DEPLOYMENT_MODE==='production'&&env.SCHEMA_VALIDATED!=='true')throw new Error('Review and validate restored schema before production migrations');
 const values={...names,gateway_password:env.GATEWAY_DB_PASSWORD};const literal=v=>"'"+v.replaceAll("'","''")+"'";const identifier=v=>'"'+v.replaceAll('"','""')+'"';
-const files=['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'];
-for(const file of files){let sql=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');for(const [k,v]of Object.entries(values)){sql=sql.replaceAll(`:'${k}'`,literal(v)).replaceAll(`:"${k}"`,identifier(v));}
+const files=['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql',...(env.SCHEMA_SOURCE==='independent'?['independent-contract',...(env.INDEPENDENT_SCHEMA_VALIDATE==='true'?['independent-validate']:[])]:[]),'migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'];
+for(const file of files){let sql=file.startsWith('independent-')?contractSql(names.schema,{validate:file==='independent-validate'}):fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');for(const [k,v]of Object.entries(values)){sql=sql.replaceAll(`:'${k}'`,literal(v)).replaceAll(`:"${k}"`,identifier(v));}
  await new Promise((resolve,reject)=>{const p=spawn('docker',['compose','exec','-T','db','sh','-c','exec psql -U postgres -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'],{stdio:['pipe','ignore','pipe']});let diagnostic='';p.stderr.on('data',()=>{diagnostic='PostgreSQL rejected migration; inspect privately on the staging server'});p.on('error',reject);p.on('exit',code=>code?reject(new Error(`${file}: ${diagnostic||'migration failed'}`)):resolve());p.stdin.on('error',reject);p.stdin.end(sql);});
  console.log('Applied '+file);
 }

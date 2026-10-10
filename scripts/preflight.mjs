@@ -12,6 +12,7 @@ for (const key of ['APP_ORIGIN','POSTGREST_URL']) {
 }
 if (!['staging','production'].includes(env.DEPLOYMENT_MODE || '')) errors.push('Set DEPLOYMENT_MODE to staging or production');
 if (env.DEPLOYMENT_MODE==='production' && env.SCHEMA_VALIDATED!=='true') errors.push('Production requires a verified schema and SCHEMA_VALIDATED=true');
+if (env.DEPLOYMENT_MODE==='production' && !['independent','zoer-verified'].includes(env.SCHEMA_SOURCE||'')) errors.push('Production requires SCHEMA_SOURCE=independent or zoer-verified');
 if(env.TRIAL_MODE==='true') errors.push('Hosted trial configuration cannot be used for this release');
 if(!/^[0-9]+(?:,[0-9]+)*$/.test(env.PLATFORM_ADMIN_IDS||'')) errors.push('PLATFORM_ADMIN_IDS must be reviewed numeric user IDs');
 if (env.TRUST_PROXY!=='true') errors.push('Configure a trusted proxy that overwrites x-real-ip, then set TRUST_PROXY=true');
