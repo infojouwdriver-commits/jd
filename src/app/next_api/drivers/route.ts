@@ -4,7 +4,7 @@ import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/api-utils";
 import { generateAdminUserToken } from '@/lib/auth';
-import bcrypt from 'bcryptjs';
+import { parseDriverFields, mutateDriverAccount, driverValidationError } from '@/lib/driver-account';
 
 // GET - Fetch drivers (admin sees all, distributor sees only their companies' drivers)
 export const GET = requestMiddleware(async (request, context) => {
@@ -74,6 +74,7 @@ export const GET = requestMiddleware(async (request, context) => {
 
     return createSuccessResponse(drivers);
   } catch (error: any) {
+    const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({
       errorMessage: error.message || "فشل تحميل السائقين",
@@ -86,22 +87,8 @@ export const GET = requestMiddleware(async (request, context) => {
 export const POST = requestMiddleware(async (request, context) => {
   const body = await validateRequestBody(request);
   
-  const {
-    company_id,
-    full_name,
-    national_id,
-    driver_license,
-    capacity_certificate_number,
-    phone,
-    password
-  } = body;
-
-  if (!company_id || !full_name || !phone || !password) {
-    return createErrorResponse({
-      errorMessage: "الشركة والاسم ورقم الهاتف وكلمة المرور مطلوبة",
-      status: 400,
-    });
-  }
+  const {company_id, ...driverBody} = body;
+  if (!Number.isSafeInteger(Number(company_id)) || Number(company_id) <= 0) return createErrorResponse({errorMessage:'الشركة مطلوبة',status:400});
 
   try {
     const adminToken = await generateAdminUserToken();
@@ -146,26 +133,7 @@ export const POST = requestMiddleware(async (request, context) => {
       }
     }
 
-    const usersCrud = new CrudOperations("users", adminToken);
-    
-    const phoneEmail = `${phone.replace(/\s+/g, '')}@driver.local`;
-    const existingUsers = await usersCrud.findMany({ email: phoneEmail });
-    if (existingUsers && existingUsers.length > 0) {
-      return createErrorResponse({
-        errorMessage: "رقم الهاتف مستخدم بالفعل",
-        status: 400,
-      });
-    }
-    
-    const hashedPassword = await hashString(password);
-    
-    const newUser = await usersCrud.create({
-      email: phoneEmail,
-      password: hashedPassword,
-      role: 'app20251225073911jaqqaxdfir_v1_user',
-      user_type: 'driver'
-    });
-
+    const fields = parseDriverFields(driverBody, true);
     let created_by_distributor_id = null;
     if (!context.payload?.isAdmin) {
       const distributorsCrud = new CrudOperations("distributors", adminToken);
@@ -178,25 +146,10 @@ export const POST = requestMiddleware(async (request, context) => {
       }
     }
 
-    const driversCrud = new CrudOperations("drivers", adminToken);
-    const newDriver = await driversCrud.create({
-      user_id: newUser.id,
-      company_id: parseInt(company_id),
-      full_name,
-      national_id: national_id || null,
-      driver_license: driver_license || null,
-      capacity_certificate_number: capacity_certificate_number || null,
-      phone: phone || null,
-      status: 'active',
-      created_by_distributor_id
-    });
-
-    return createSuccessResponse({
-      ...newDriver,
-      login_phone: phone,
-      login_info: `يمكن للسائق تسجيل الدخول باستخدام رقم الهاتف: ${phone}`
-    }, 201);
+    const result = await mutateDriverAccount(adminToken, 'create', {companyId:Number(company_id), fields, distributorId:created_by_distributor_id});
+    return createSuccessResponse({...result.driver,login_phone:fields.phone},201);
   } catch (error: any) {
+    const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({
       errorMessage: error.message || "فشل إضافة السائق",
@@ -229,6 +182,8 @@ export const PUT = requestMiddleware(async (request, context) => {
       });
     }
 
+    const approvedFields = parseDriverFields(body);
+    if (!context.payload?.isAdmin && approvedFields.password) return createErrorResponse({errorMessage:'Password changes require an administrator',status:403});
     if (!context.payload?.isAdmin) {
       const distributorsCrud = new CrudOperations("distributors", adminToken);
       const distributors = await distributorsCrud.findMany({
@@ -243,7 +198,8 @@ export const PUT = requestMiddleware(async (request, context) => {
       }
       
       const distributor_id = distributors[0].id;
-      
+      const links = await new CrudOperations('distributor_companies', adminToken).findMany({distributor_id,company_id:existing.company_id,is_active:true});
+      if (!links.length) return createErrorResponse({errorMessage:'هذه الشركة غير مرتبطة بحسابك',status:403});
       const approvalRequestsCrud = new CrudOperations("approval_requests", adminToken);
       const approvalRequest = await approvalRequestsCrud.create({
         request_type: 'update',
@@ -251,7 +207,7 @@ export const PUT = requestMiddleware(async (request, context) => {
         entity_id: id,
         requested_by_user_id: context.payload?.sub,
         distributor_id,
-        request_data: JSON.stringify(body),
+        request_data: JSON.stringify(approvedFields),
         current_data: JSON.stringify(existing),
         request_reason: 'طلب تعديل بيانات السائق',
         status: 'pending'
@@ -272,39 +228,11 @@ export const PUT = requestMiddleware(async (request, context) => {
       });
     }
 
-    if (body.phone && body.phone !== existing.phone) {
-      const usersCrud = new CrudOperations("users", adminToken);
-      const phoneEmail = `${body.phone.replace(/\s+/g, '')}@driver.local`;
-      
-      const existingUsers = await usersCrud.findMany({ email: phoneEmail });
-      if (existingUsers && existingUsers.length > 0) {
-        return createErrorResponse({
-          errorMessage: "رقم الهاتف مستخدم بالفعل",
-          status: 400,
-        });
-      }
-      
-      await usersCrud.update(existing.user_id, {
-        email: phoneEmail
-      });
-    }
-
-    if (body.password) {
-      const usersCrud = new CrudOperations("users", adminToken);
-      const hashedPassword = await hashString(body.password);
-      await usersCrud.update(existing.user_id, {
-        password: hashedPassword
-      });
-      delete body.password;
-    }
-
-    const updated = await driversCrud.update(id, {
-      ...body,
-      updated_at: new Date().toISOString(),
-    });
-
-    return createSuccessResponse(updated);
+    const fields = parseDriverFields(body);
+    const updated = await mutateDriverAccount(adminToken, 'update', {id, fields});
+    return createSuccessResponse(updated.driver);
   } catch (error: any) {
+    const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({
       errorMessage: error.message || "فشل تحديث السائق",
@@ -350,7 +278,8 @@ export const DELETE = requestMiddleware(async (request, context) => {
       }
       
       const distributor_id = distributors[0].id;
-      
+      const links = await new CrudOperations('distributor_companies', adminToken).findMany({distributor_id,company_id:existing.company_id,is_active:true});
+      if (!links.length) return createErrorResponse({errorMessage:'هذه الشركة غير مرتبطة بحسابك',status:403});
       const approvalRequestsCrud = new CrudOperations("approval_requests", adminToken);
       const approvalRequest = await approvalRequestsCrud.create({
         request_type: 'delete',
@@ -379,12 +308,10 @@ export const DELETE = requestMiddleware(async (request, context) => {
       });
     }
 
-    const usersCrud = new CrudOperations("users", adminToken);
-    await usersCrud.delete(existing.user_id);
-    await driversCrud.delete(id);
-    
-    return createSuccessResponse({ id });
+    await mutateDriverAccount(adminToken, 'deactivate', {id});
+    return createSuccessResponse({id,status:'inactive',message:'تم تعطيل حساب السائق مع الحفاظ على سجل الرحلات'});
   } catch (error: any) {
+    const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({
       errorMessage: error.message || "فشل حذف السائق",

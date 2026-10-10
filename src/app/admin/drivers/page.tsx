@@ -88,6 +88,7 @@ export default function AdminDriversPage() {
   const router = useRouter();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -168,11 +169,16 @@ export default function AdminDriversPage() {
   };
 
   const handleCreateDriver = async () => {
+    if (saving) return;
     if (!newDriver.company_id || !newDriver.full_name || !newDriver.phone || !newDriver.password) {
       toast.error('الشركة والاسم ورقم الهاتف وكلمة المرور مطلوبة');
       return;
     }
 
+    if (newDriver.password.length < 12 || new TextEncoder().encode(newDriver.password).length > 72) {
+      toast.error('استخدم كلمة مرور من 12 حرفاً على الأقل، بحد أقصى 72 بايت'); return;
+    }
+    setSaving(true);
     try {
       await api.post('/drivers', {
         ...newDriver,
@@ -197,6 +203,8 @@ export default function AdminDriversPage() {
       fetchDrivers();
     } catch (error) {
       toast.error(getErrorMessage(error, 'فشل إضافة السائق'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -216,6 +224,7 @@ export default function AdminDriversPage() {
   };
 
   const handleUpdateDriver = async () => {
+    if (saving) return;
     if (!selectedDriver) return;
 
     if (!editDriver.full_name) {
@@ -223,9 +232,12 @@ export default function AdminDriversPage() {
       return;
     }
 
+    if (editDriver.password && (editDriver.password.length < 12 || new TextEncoder().encode(editDriver.password).length > 72)) {
+      toast.error('استخدم كلمة مرور من 12 حرفاً على الأقل، بحد أقصى 72 بايت'); return;
+    }
+    setSaving(true);
     try {
       const updateData: any = {
-        company_id: parseInt(editDriver.company_id),
         full_name: editDriver.full_name,
         national_id: editDriver.national_id || null,
         driver_license: editDriver.driver_license || null,
@@ -246,6 +258,8 @@ export default function AdminDriversPage() {
       fetchDrivers();
     } catch (error) {
       toast.error(getErrorMessage(error, 'فشل تحديث بيانات السائق'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -255,16 +269,20 @@ export default function AdminDriversPage() {
   };
 
   const confirmDeleteDriver = async () => {
+    if (saving) return;
     if (!selectedDriver) return;
 
+    setSaving(true);
     try {
       await api.delete(`/drivers?id=${selectedDriver.id}`);
-      toast.success('تم حذف السائق وحساب المستخدم المرتبط به بنجاح');
+      toast.success('تم إيقاف السائق وإلغاء وصول الحساب مع الاحتفاظ بسجل الرحلات');
       setDeleteDialogOpen(false);
       setSelectedDriver(null);
       fetchDrivers();
     } catch (error) {
-      toast.error(getErrorMessage(error, 'فشل حذف السائق'));
+      toast.error(getErrorMessage(error, 'فشل إيقاف السائق'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -429,7 +447,7 @@ export default function AdminDriversPage() {
                     </ul>
                   </div>
                   <Button
-                    onClick={handleCreateDriver}
+                    disabled={saving} aria-busy={saving} onClick={handleCreateDriver}
                     className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600"
                   >
                     إنشاء حساب السائق
@@ -629,6 +647,7 @@ export default function AdminDriversPage() {
               <Label>الشركة *</Label>
               <Select
                 value={editDriver.company_id}
+                disabled
                 onValueChange={(value) => setEditDriver({ ...editDriver, company_id: value })}
               >
                 <SelectTrigger className="rounded-2xl mt-2">
@@ -718,7 +737,7 @@ export default function AdminDriversPage() {
               </Select>
             </div>
             <Button
-              onClick={handleUpdateDriver}
+              disabled={saving} aria-busy={saving} onClick={handleUpdateDriver}
               className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600"
             >
               حفظ التغييرات
@@ -730,18 +749,18 @@ export default function AdminDriversPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من حذف هذا السائق؟</AlertDialogTitle>
+            <AlertDialogTitle>هل تريد إيقاف هذا السائق؟</AlertDialogTitle>
             <AlertDialogDescription>
-              هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع بيانات السائق وحساب المستخدم المرتبط به بشكل نهائي.
+              سيُلغى وصول السائق إلى التطبيق. ستبقى الرحلات والبيانات التاريخية محفوظة للمراجعة.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-2xl">إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteDriver}
+              disabled={saving} aria-busy={saving} onClick={confirmDeleteDriver}
               className="rounded-2xl bg-red-600 hover:bg-red-700"
             >
-              حذف
+              إيقاف السائق
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

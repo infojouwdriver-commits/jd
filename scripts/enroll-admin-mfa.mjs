@@ -1,0 +1,4 @@
+import crypto from 'node:crypto';import fs from 'node:fs';
+const [id,output]=process.argv.slice(2);if(!/^\d+$/.test(id||'')||!output)throw new Error('Usage: node scripts/enroll-admin-mfa.mjs USER_ID NEW_PRIVATE_OUTPUT_FILE');
+let bits=0,acc=0,secret='';const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';for(const byte of crypto.randomBytes(20)){acc=(acc<<8)|byte;bits+=8;while(bits>=5){bits-=5;secret+=alphabet[(acc>>bits)&31]}}if(bits)secret+=alphabet[(acc<<(5-bits))&31];
+fs.writeFileSync(output,JSON.stringify({user_id:id,environment_value:{[id]:secret},enrollment_uri:`otpauth://totp/JOUW%20DRIVER:admin-${id}?secret=${secret}&issuer=JOUW%20DRIVER&algorithm=SHA1&digits=6&period=30`},null,2),{flag:'wx',mode:0o600});console.log('Private enrollment file created. Transfer it securely to the administrator and keep the server value in a secret manager.');

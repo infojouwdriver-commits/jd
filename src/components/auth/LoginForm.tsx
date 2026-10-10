@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 
 const loginSchema = z.object({
+  otp: z.string().optional(),
   email: z.string().email("يرجى إدخال بريد إلكتروني صالح"),
   password: z.string().min(1, "يرجى إدخال كلمة المرور"),
 });
@@ -47,7 +48,7 @@ export function LoginForm({
     try {
       setIsLoading(true);
       setError(null);
-      await login(data.email, data.password);
+      await login(data.email, data.password, data.otp);
       onSuccess?.();
     } catch (error: unknown) {
       const message =
@@ -66,7 +67,7 @@ export function LoginForm({
         <div className="text-center text-2xl font-semibold">مرحبًا بعودتك</div>
       </div>
       <div className="p-6 pt-0">
-        <div>
+        <div className="hidden">
           <GoogleLoginButton
             onSuccess={onSuccess}
             onError={(message) => setError(message)}
@@ -86,9 +87,7 @@ export function LoginForm({
           )}
 
           <div className="space-y-2">
-            <div className="mb-[4px] h-[22px] text-sm font-medium">
-              البريد الإلكتروني
-            </div>
+            <label htmlFor="email" className="mb-1 block text-sm font-medium">البريد الإلكتروني</label>
             <Input
               id="email"
               type="email"
@@ -104,7 +103,7 @@ export function LoginForm({
 
           <div className="space-y-2">
             <div className="mb-[4px] flex h-[22px] items-center justify-between text-sm font-medium">
-              <span>كلمة المرور</span>
+              <label htmlFor="password">كلمة المرور</label>
               {onForgotPassword && (
                 <button
                   type="button"
@@ -129,6 +128,10 @@ export function LoginForm({
             )}
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="otp">رمز تطبيق المصادقة — لحساب الإدارة</label>
+            <Input id="otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} {...register("otp")} disabled={isLoading} />
+          </div>
           <Button
             type="submit"
             className="my-[10px] w-full"

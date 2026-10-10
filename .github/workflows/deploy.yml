@@ -1,0 +1,67 @@
+name: Deploy verified server image
+on:
+  workflow_dispatch:
+    inputs:
+      image_digest:
+        description: 'Exact GHCR image@sha256 digest from verified release summary'
+        type: string
+        required: true
+      release_revision:
+        description: 'Full 40-character commit SHA used to build the image'
+        type: string
+        required: true
+      target:
+        description: 'Protected deployment environment'
+        type: choice
+        options: [staging, production]
+        default: staging
+permissions:
+  contents: read
+concurrency:
+  group: deploy-${{ inputs.target }}
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Validate immutable revision and image
+        env:
+          IMAGE: ${{ inputs.image_digest }}
+          REVISION: ${{ inputs.release_revision }}
+        run: |
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          expected="ghcr.io/${GITHUB_REPOSITORY,,}@sha256:"
+          [[ "$IMAGE" == "$expected"* ]]
+          digest="${IMAGE#"$expected"}"
+          [[ "$digest" =~ ^[a-f0-9]{64}$ ]]
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ inputs.release_revision }}
+          persist-credentials: false
+      - name: Deploy using pinned SSH host identity
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          IMAGE: ${{ inputs.image_digest }}
+          REVISION: ${{ inputs.release_revision }}
+          TARGET: ${{ inputs.target }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/jd_deploy"
+          printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          trap 'rm -f "$HOME/.ssh/jd_deploy" release.tar.gz' EXIT
+          git archive --format=tar.gz -o release.tar.gz HEAD deploy scripts migrations
+          ssh_args=(-i "$HOME/.ssh/jd_deploy" -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p /srv/jouw-driver/releases/$REVISION"
+          scp "${ssh_args[@]}" release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$REVISION/release.tar.gz"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "cd /srv/jouw-driver/releases/$REVISION && tar -xzf release.tar.gz && node --env-file=/srv/jouw-driver/.env deploy/rollout.mjs '$IMAGE' '$REVISION' '$TARGET'"

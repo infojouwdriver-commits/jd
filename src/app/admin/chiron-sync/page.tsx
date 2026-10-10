@@ -44,7 +44,7 @@ export default function ChironSyncPage() {
     if (!isLoading && !user) {
       router.push('/login');
     }
-    if (!isLoading && user?.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (!isLoading && user && !user.isAdmin) {
       router.push('/');
     }
   }, [user, isLoading, router]);
@@ -63,7 +63,7 @@ export default function ChironSyncPage() {
   };
 
   useEffect(() => {
-    if (user?.role === 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (user?.isAdmin === true) {
       fetchFailedTrips();
     }
   }, [user]);
@@ -89,7 +89,7 @@ export default function ChironSyncPage() {
     );
   }
 
-  if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+  if (!user || !user?.isAdmin) {
     return null;
   }
 

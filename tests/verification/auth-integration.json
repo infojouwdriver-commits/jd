@@ -1,0 +1,23 @@
+{
+  "passed": 17,
+  "checks": [
+    "Administrator password alone is rejected",
+    "Administrator password and OTP succeeds",
+    "Production cookies secure and HTTP only",
+    "Consumed administrator OTP cannot be replayed",
+    "MFA verified administrator refresh succeeds",
+    "Refresh preserves administrator MFA claim",
+    "Rotated refresh cookie cannot be replayed",
+    "Password-only admin access is denied in production",
+    "Driver cannot enter admin company endpoint",
+    "Client admin role claims do not grant platform authority",
+    "Driver cannot edit another driver trip",
+    "Driver can edit own unlocked trip",
+    "Disabled user cannot obtain login cookies",
+    "Disabled driver cannot use existing access token",
+    "Account-wide revocation blocks old access token",
+    "Production rate storage failure closes access",
+    "Database receives server service tokens, never browser roles"
+  ],
+  "database": "Simulated PostgREST; real production Next HTTP handlers"
+}

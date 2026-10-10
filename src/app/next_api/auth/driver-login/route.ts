@@ -1,3 +1,4 @@
+import {isPlatformAdmin} from '@/lib/security-policy';
 
 import { NextRequest } from "next/server";
 import { requestMiddleware, validateRequestBody, getRequestIp } from "@/lib/api-utils";
@@ -226,6 +227,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
       });
     }
 
+    if (user.is_active === false || user.status === 'disabled') return createErrorResponse({errorMessage:'Account unavailable',status:401});
+    if (isPlatformAdmin(String(user.id), process.env.PLATFORM_ADMIN_IDS)) return createErrorResponse({errorMessage:'Use administrator MFA login',status:401});
+
     if (driver?.status && driver.status !== "active") {
       return createErrorResponse({
         errorMessage: "Your account is disabled. Please contact support.",
@@ -238,15 +242,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
       user?.password || ""
     );
 
-    let isValidCredentialPassword = false;
-    if (credential?.password_hash) {
-      isValidCredentialPassword = await verifyPasswordAgainstHash(
-        validated.password,
-        credential.password_hash
-      );
-    }
-
-    if (!isValidUserPassword && !isValidCredentialPassword) {
+    // The linked user is the authoritative credential. A stale legacy mirror
+    // must never revive a password after the manager resets it.
+    if (!isValidUserPassword) {
       return createErrorResponse({
         errorMessage: "Invalid phone number or password",
         status: 401,

@@ -1,69 +1,16 @@
-
-#!/bin/bash
-
-# ============================================
-# Android APK/AAB Build Script — Jouw Driver
-# ============================================
-# Usage: bash capacitor-build.sh [debug|release|aab]
-# Default: debug
-
-set -e
-
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/mobile"
 BUILD_TYPE=${1:-debug}
-APP_NAME="JouwDriver"
-
-echo "========================================"
-echo "  Jouw Driver — Android Build"
-echo "  Type: $BUILD_TYPE"
-echo "========================================"
-
-# Step 1: Sync Capacitor (server mode — no static export needed)
-echo ""
-echo "[1/3] Syncing Capacitor assets..."
-npx cap sync android
-
-# Step 2: Build Android
-echo ""
-echo "[2/3] Building Android..."
+case "$BUILD_TYPE" in debug|release|aab) ;; *) echo 'Usage: bash capacitor-build.sh [debug|release|aab]' >&2; exit 1;; esac
+npm run configure
+[[ -f android/gradlew ]] || { echo 'Initialize first: cd mobile && npm ci && npm run android:init' >&2; exit 1; }
+npm exec -- cap sync android
+node scripts/native-permissions.mjs android
 cd android
-
-if [ "$BUILD_TYPE" = "release" ]; then
-  echo "Building Release APK..."
-  ./gradlew assembleRelease
-  OUTPUT_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
-  echo ""
-  echo "[3/3] APK built successfully!"
-  echo "Output: android/$OUTPUT_PATH"
-  echo ""
-  echo "Next steps to sign the APK:"
-  echo "  1. Generate keystore (if not done):"
-  echo "     keytool -genkey -v -keystore jouwdriver.keystore -alias jouwdriver -keyalg RSA -keysize 2048 -validity 10000"
-  echo "  2. Sign: jarsigner -keystore jouwdriver.keystore $OUTPUT_PATH jouwdriver"
-  echo "  3. Align: zipalign -v 4 $OUTPUT_PATH ../jouwdriver-release.apk"
-
-elif [ "$BUILD_TYPE" = "aab" ]; then
-  echo "Building Release AAB (Google Play)..."
-  ./gradlew bundleRelease
-  OUTPUT_PATH="app/build/outputs/bundle/release/app-release.aab"
-  echo ""
-  echo "[3/3] AAB built successfully!"
-  echo "Output: android/$OUTPUT_PATH"
-  echo "Upload this file to Google Play Console."
-
-else
-  echo "Building Debug APK..."
-  ./gradlew assembleDebug
-  OUTPUT_PATH="app/build/outputs/apk/debug/app-debug.apk"
-  echo ""
-  echo "[3/3] Debug APK built successfully!"
-  echo "Output: android/$OUTPUT_PATH"
-  echo ""
-  echo "Install on connected device:"
-  echo "  adb install android/$OUTPUT_PATH"
-fi
-
-cd ..
-echo ""
-echo "========================================"
-echo "  Build Complete!"
-echo "========================================"
+case "$BUILD_TYPE" in
+  debug) ./gradlew assembleDebug;;
+  release) ./gradlew assembleRelease;;
+  aab) ./gradlew bundleRelease;;
+esac
+echo 'Build task finished. Release outputs require verified signing before distribution.'

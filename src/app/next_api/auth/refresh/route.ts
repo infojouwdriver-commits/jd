@@ -1,3 +1,4 @@
+import {isPlatformAdmin} from '@/lib/security-policy';
 import {claimOnce} from "@/lib/security-session";
 
 import { NextRequest } from "next/server";
@@ -44,6 +45,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
 
     const user = await usersCrud.findById(refreshTokenRecord.user_id);
     if (!user || user.is_active === false || user.status === 'disabled' || (user.security_revoked_before && Date.parse(refreshTokenRecord.created_at) <= Date.parse(user.security_revoked_before))) return createErrorResponse({errorMessage:'Session revoked', status:401});
+    if (isPlatformAdmin(String(user.id),process.env.PLATFORM_ADMIN_IDS) && refreshTokenRecord.mfa_verified!==true) return createErrorResponse({errorMessage:'Administrator MFA login required',status:401});
     if (!await claimOnce('refresh', refreshTokenRecord.id)) return createErrorResponse({errorMessage:'Refresh token already used', status:401});
 
     const newRefreshToken = await generateRandomString();
@@ -51,6 +53,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
 
     await refreshTokensCrud.create({
       token: hashedNewRefreshToken,
+      mfa_verified: refreshTokenRecord.mfa_verified===true,
       user_id: refreshTokenRecord.user_id,
       session_id: refreshTokenRecord.session_id,
       expires_at: new Date(
@@ -73,7 +76,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
       sub: user.id,
       role: user.role,
       email: user.email,
-    });
+    }, undefined, refreshTokenRecord.mfa_verified===true);
 
     return createAuthResponse({
       accessToken,

@@ -38,7 +38,7 @@ export default function CompanySettingsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user?.isAdmin) {
+    if (!isLoading && user && !user.isAdmin) {
       router.push('/dashboard');
     }
   }, [user, isLoading, router]);

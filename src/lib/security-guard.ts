@@ -11,9 +11,16 @@ export async function authorizeEndpoint(request: NextRequest, payload: JWTPayloa
   if (user.security_revoked_before && payload.iat * 1000 <= Date.parse(user.security_revoked_before)) throw new Response(null, {status: 401});
   payload.isAdmin = isPlatformAdmin(String(user.id), process.env.PLATFORM_ADMIN_IDS);
   const path = request.nextUrl.pathname;
-  if (payload.isAdmin) return;
+  if (payload.isAdmin) {
+    if (process.env.NODE_ENV === "production" && payload.amr !== "otp") throw new Response(null,{status:401});
+    return;
+  }
   if (!memberEndpoint(path, request.method, user.user_type || 'driver')) throw new Response(null, {status: 403});
   const token = await generateAdminUserToken();
+  if (user.user_type === 'driver') {
+    const drivers = await new CrudOperations('drivers', token).findMany({user_id: user.id});
+    if (!drivers?.length || drivers.some(driver => driver.status !== 'active')) throw new Response(null, {status: 401});
+  }
   if (path.startsWith('/next_api/trips/') || (path === '/next_api/trips' && request.method !== 'GET')) {
     const id = request.nextUrl.searchParams.get('id');
     if (id) {

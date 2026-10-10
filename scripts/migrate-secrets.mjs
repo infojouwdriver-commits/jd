@@ -5,7 +5,7 @@ const env = process.env;
 if (!env.POSTGREST_URL || !env.POSTGREST_SCHEMA || !env.SCHEMA_ADMIN_USER || !env.JWT_SECRET || !env.DATA_ENCRYPTION_KEY) throw new Error('Missing migration environment');
 const url = new URL(env.POSTGREST_URL);
 if (url.protocol !== 'https:' && !['localhost','127.0.0.1'].includes(url.hostname)) throw new Error('HTTPS required');
-const token = await new SignJWT({sub:'0',role:env.SCHEMA_ADMIN_USER}).setProtectedHeader({alg:'HS256'}).setIssuedAt().setExpirationTime('5m').sign(new TextEncoder().encode(env.JWT_SECRET));
+const token = await new SignJWT({sub:'0',role:env.SCHEMA_ADMIN_USER}).setProtectedHeader({alg:'HS256'}).setAudience('jouw-driver').setIssuedAt().setExpirationTime('5m').sign(new TextEncoder().encode(env.JWT_SECRET));
 const headers = {'Authorization':`Bearer ${token}`, 'Postgrest-API-Key':env.POSTGREST_API_KEY || '', 'Accept-Profile':env.POSTGREST_SCHEMA, 'Content-Profile':env.POSTGREST_SCHEMA, 'Content-Type':'application/json'};
 const apply = process.argv.includes('--apply');
 for (const table of ['companies','chiron_settings']) {

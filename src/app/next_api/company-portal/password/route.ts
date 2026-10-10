@@ -15,8 +15,8 @@ export const PUT = requestMiddleware(async (request, context) => {
       return createErrorResponse({ errorMessage: 'Company ID and password are required', status: 400 });
     }
 
-    if (password.length < 4) {
-      return createErrorResponse({ errorMessage: 'Password must be at least 4 characters', status: 400 });
+    if (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) {
+      return createErrorResponse({ errorMessage: 'Password must be at least 12 characters and at most 72 UTF-8 bytes', status: 400 });
     }
 
     const adminToken = await generateAdminUserToken();
@@ -31,7 +31,7 @@ export const PUT = requestMiddleware(async (request, context) => {
     if (!context.payload?.isAdmin) {
       const companyUsersCrud = new CrudOperations('company_users', adminToken);
       const links = await companyUsersCrud.findMany({ user_id: parseInt(context.payload?.sub || '0') });
-      const isLinked = links?.some((l: any) => l.company_id === company_id);
+      const isLinked = links?.some((l: any) => String(l.company_id) === String(company_id));
       if (!isLinked) {
         return createErrorResponse({ errorMessage: 'Unauthorized', status: 403 });
       }
@@ -57,8 +57,8 @@ export const POST = requestMiddleware(async (request, context) => {
     const body = await validateRequestBody(request);
     const { password } = body;
 
-    if (!password || password.length < 4) {
-      return createErrorResponse({ errorMessage: 'Password must be at least 4 characters', status: 400 });
+    if (!password || typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password, 'utf8') > 72) {
+      return createErrorResponse({ errorMessage: 'Password must be at least 12 characters and at most 72 UTF-8 bytes', status: 400 });
     }
 
     const adminToken = await generateAdminUserToken();

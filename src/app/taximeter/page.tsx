@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
 
 interface TripData {
+  completionRequestKey: string;
   startLat: number;
   startLon: number;
   startAddress: string;
@@ -124,6 +125,7 @@ export default function TaximeterPage() {
       const position = await getCurrentPosition();
       
       const newTripData: TripData = {
+        completionRequestKey: crypto.randomUUID(),
         startLat: position.lat,
         startLon: position.lon,
         startAddress: startAddress || 'موقع غير محدد',
@@ -160,6 +162,8 @@ export default function TaximeterPage() {
 
       // Send trip to backend
       await api.post('/trips/end', {
+        completion_request_key: tripData.completionRequestKey,
+        ride_type: 'INTERNAL',
         start_lat: tripData.startLat,
         start_lon: tripData.startLon,
         end_lat: position.lat,

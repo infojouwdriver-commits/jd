@@ -36,14 +36,10 @@ export const GET = requestMiddleware(async (request, context) => {
     
     let tripInvoices: any[] = [];
     if (tripIds.length > 0) {
-      const allInvoices = await invoicesCrud.findMany(
-        { invoice_category: 'trip' },
-        { limit: 1000, offset: 0 }
-      );
-      
-      tripInvoices = allInvoices.filter((invoice: any) => 
-        invoice.trip_id && tripIds.includes(invoice.trip_id)
-      );
+      // Query only invoices belonging to displayed trips; a global first-1000
+      // scan silently lost receipts for drivers after the database grew.
+      const groups = await Promise.all(tripIds.map((trip_id: number) => invoicesCrud.findMany({trip_id, invoice_category:'trip'})));
+      tripInvoices = groups.flat();
     }
 
     const tripsWithInvoices = trips.map((trip: any) => {
@@ -84,7 +80,7 @@ export const PUT = requestMiddleware(async (request, context) => {
   }
 
   const newPrice = parseFloat(body.price);
-  if (isNaN(newPrice) || newPrice < 0) {
+  if (typeof body.price !== 'number' || !Number.isFinite(newPrice) || newPrice < 0 || newPrice > 100000) {
     return createErrorResponse({
       errorMessage: "السعر غير صالح",
       status: 400,

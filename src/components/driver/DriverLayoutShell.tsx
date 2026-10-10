@@ -68,7 +68,7 @@ function TabItem({
   badge?: number;
 }) {
   return (
-    <Link href={href} className="dp-tab-item" data-active={isActive}>
+    <Link href={href} className="dp-tab-item" data-active={isActive} aria-current={isActive ? 'page' : undefined}>
       <div className="relative">
         <Icon
           className="h-[22px] w-[22px]"
@@ -97,6 +97,8 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
   const t = driverTranslations[language];
   const [driverInfo, setDriverInfo] = useState<DriverInfo | null>(null);
   const [loadingDriver, setLoadingDriver] = useState(true);
+  const [driverError, setDriverError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [showSplash, setShowSplash] = useState(true);
@@ -115,11 +117,13 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      setLoadingDriver(true);
+      setDriverError(false);
       try {
         const info = await api.get<DriverInfo>("/drivers/me");
         setDriverInfo(info);
       } catch (error) {
-        console.error("Operation failed");
+        setDriverError(true);
       } finally {
         setLoadingDriver(false);
       }
@@ -128,7 +132,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
     if (user) {
       loadDriverInfo();
     }
-  }, [user]);
+  }, [user, reloadKey]);
 
   useEffect(() => {
     const checkVehicleSelection = async () => {
@@ -194,6 +198,10 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
         onComplete={() => setShowSplash(false)}
       />
     );
+  }
+
+  if (user && driverError) {
+    return <div className="dp-root flex min-h-[100dvh] flex-col items-center justify-center gap-4 p-6 text-center" role="alert"><p>{language === 'ar' ? 'تعذّر تحميل حساب السائق. تحقق من الاتصال وأعد المحاولة.' : language === 'fr' ? 'Impossible de charger votre profil. Vérifiez votre connexion.' : 'Profiel laden mislukt. Controleer uw verbinding.'}</p><button type="button" className="dp-accent-bg rounded-xl px-6 py-3" onClick={() => setReloadKey(key => key + 1)}>{language === 'ar' ? 'إعادة المحاولة' : language === 'fr' ? 'Réessayer' : 'Opnieuw proberen'}</button><button type="button" onClick={logout}>{t.logout}</button></div>;
   }
 
   if (!user || !driverInfo) {

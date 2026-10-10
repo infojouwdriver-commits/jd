@@ -43,6 +43,7 @@ export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
   };
 
   const handleSave = async () => {
+    if (loading) return;
     if (!form.full_name || !form.phone) {
       toast.error('Full name and phone are required');
       return;
@@ -51,10 +52,14 @@ export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
       toast.error('Password is required for new drivers');
       return;
     }
+    if (form.password && (form.password.length < 12 || new TextEncoder().encode(form.password).length > 72)) {
+      toast.error('Use at least 12 characters, up to 72 UTF-8 bytes'); return;
+    }
     setLoading(true);
     try {
       if (editingDriver) {
-        await api.put(`/company-portal/drivers?id=${editingDriver.id}`, form);
+        const { password, ...profile } = form;
+        await api.put(`/company-portal/drivers?id=${editingDriver.id}`, { ...profile, ...(password ? { password } : {}) });
         toast.success('Driver updated successfully');
       } else {
         await api.post('/company-portal/drivers', form);
@@ -70,10 +75,11 @@ export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
   };
 
   const handleDelete = async (id: number) => {
+    if (deletingId !== null || !window.confirm('Deactivate this driver? Their trip history will be retained.')) return;
     setDeletingId(id);
     try {
       await api.delete(`/company-portal/drivers?id=${id}`);
-      toast.success('Driver removed');
+      toast.success('Driver deactivated; trip history retained');
       onRefresh();
     } catch (err: any) {
       toast.error(err.message || 'Failed to delete driver');

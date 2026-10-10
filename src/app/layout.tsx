@@ -53,11 +53,11 @@ export default async function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body
-        className="min-h-screen overflow-y-auto overflow-x-hidden antialiased overscroll-none select-none"
+        className="min-h-screen overflow-y-auto overflow-x-hidden antialiased overscroll-none"
         style={{
           WebkitTapHighlightColor: "transparent",
           WebkitTouchCallout: "none",
-          touchAction: "pan-y",
+          touchAction: "manipulation",
         }}
       >
         <ThemeProvider

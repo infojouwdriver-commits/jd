@@ -24,6 +24,9 @@ import { useGeolocation, GeolocationPoint } from '@/hooks/useGeolocation';
 import { useAddressSearch } from '@/hooks/useAddressSearch';
 import GpsLocationButton from '@/components/GpsLocationButton';
 import RouteMap from '@/components/RouteMap';
+import { tripJournal } from '@/lib/trip-journal';
+import { addMeterPoint, emptyMeter, type MeterState } from '@/lib/trip-meter';
+import { isFreshAccurateLocation, clearNativeTripPoints } from '@/lib/mobile-location';
 
 interface PricingConfig {
   company_id: number; company_name: string;
@@ -31,11 +34,13 @@ interface PricingConfig {
   chiron_mode: 'TEST' | 'PRODUCTION';
 }
 interface TripData {
+  completionRequestKey: string;
   startLat: number; startLon: number; startAddress: string; endAddress: string;
   startTime: string; distance: number; duration: number; proposedPrice: number;
   passengerName?: string; paymentMethod?: string; rideType: 'INTERNAL' | 'EXTERNAL';
   externalSource?: 'BOLT' | 'UBER' | 'HEETCH'; externalRideNumber?: string;
 }
+interface SavedTrip { trip: TripData; meter: MeterState; estimatedDistance: number; estimatedDuration: number; }
 interface LocationPoint { lat: number; lon: number; timestamp: number; speed?: number; accuracy?: number }
 interface RouteCoords { startLat: number; startLon: number; endLat: number; endLon: number }
 type RideType = 'INTERNAL' | 'BOLT' | 'UBER' | 'HEETCH';
@@ -456,6 +461,10 @@ export default function TaximeterPage() {
   const [showEndSuggestions, setShowEndSuggestions] = useState(false);
   const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [storageReady, setStorageReady] = useState(false);
+  const [pendingTrips, setPendingTrips] = useState(0);
+  const [syncingTrips, setSyncingTrips] = useState(false);
+  const [storageError, setStorageError] = useState(false);
   const [showPriceProposal, setShowPriceProposal] = useState(false);
   const [showEndTripDialog, setShowEndTripDialog] = useState(false);
   const [completedTripId, setCompletedTripId] = useState<number | null>(null);
@@ -469,14 +478,45 @@ export default function TaximeterPage() {
   const [routeCoords, setRouteCoords] = useState<RouteCoords | null>(null);
   const [showMap, setShowMap] = useState(true);
   const locationHistoryRef = useRef<LocationPoint[]>([]);
+  const meterRef = useRef<MeterState>(emptyMeter());
+  const activeTripRef = useRef<TripData | null>(null);
+  const persistenceRef = useRef<Promise<void>>(Promise.resolve());
+  const endingRef = useRef(false);
+  const startingRef = useRef(false);
 
-  const { location: currentLocation, error: gpsError, permissionState: gpsPermissionState, isLocating: gpsIsLocating, accuracy: gpsAccuracy, getLocation, startWatching, stopWatching } = useGeolocation({ language });
+  const replayingForEndRef = useRef(false);
+  const { location: currentLocation, error: gpsError, permissionState: gpsPermissionState, isLocating: gpsIsLocating, accuracy: gpsAccuracy, getLocation, startWatching, stopWatching, replayWatching } = useGeolocation({ language });
   const startSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
   const endSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
 
   useEffect(() => { if (!authLoading && !user) router.push('/driver-login'); }, [user, authLoading, router]);
 
+  const syncPendingTrips = useCallback(async () => {
+    if (!user || !navigator.onLine) return;
+    setSyncingTrips(true);
+    try {
+      const result = await tripJournal().sync(user.sub, async payload => {
+        const response = await api.post('/trips/end', payload);
+        // Clear only after server acknowledgement. A failure leaves the queued
+        // idempotent payload available so cleanup can be retried safely.
+        await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
+        setCompletedTripId(response.id);
+        if (response.warning) toast.warning(response.warning);
+      });
+      setPendingTrips(result.remaining);
+      if (result.sent) toast.success(language === 'ar' ? `تمت مزامنة ${result.sent} رحلة` : language === 'fr' ? `${result.sent} trajet(s) synchronisé(s)` : `${result.sent} rit(ten) gesynchroniseerd`);
+    } catch { setStorageError(true); }
+    finally { setSyncingTrips(false); }
+  }, [user, language]);
+
   useEffect(() => {
+    if (!pendingTrips || !isOnline || !user) return;
+    const timer = window.setInterval(() => void syncPendingTrips(), 30_000);
+    return () => window.clearInterval(timer);
+  }, [pendingTrips, isOnline, user?.sub, syncPendingTrips]);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
     const fetchDailyEarnings = async () => {
       if (!user) return;
       try {
@@ -493,12 +533,13 @@ export default function TaximeterPage() {
     const handleOnline = () => {
       setIsOnline(true);
       toast.success(language === 'nl' ? 'Internetverbinding hersteld' : language === 'ar' ? 'تم استعادة الاتصال بالإنترنت' : 'Connexion Internet rétablie');
+      void syncPendingTrips();
     };
     const handleOffline = () => { setIsOnline(false); toast.warning(t.noInternet); };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
-  }, [language, t]);
+  }, [language, t, syncPendingTrips]);
 
   useEffect(() => {
     const loadPricing = async () => {
@@ -512,16 +553,25 @@ export default function TaximeterPage() {
   useEffect(() => { setPaymentMethod(selectedRideType !== 'INTERNAL' ? 'app' : ''); }, [selectedRideType]);
 
   useEffect(() => {
-    if (tripActive && selectedRideType === 'INTERNAL') {
-      locationHistoryRef.current = currentLocation ? [{ lat: currentLocation.lat, lon: currentLocation.lon, timestamp: Date.now() }] : [];
+    const nativeTrip = activeTripRef.current;
+    if (tripActive && selectedRideType === 'INTERNAL' && user && nativeTrip) {
       startWatching((point: GeolocationPoint) => {
-        locationHistoryRef.current = [...locationHistoryRef.current, { lat: point.lat, lon: point.lon, timestamp: point.timestamp, speed: point.speed, accuracy: point.accuracy }];
-        setActualTripDistance(calculateActualDistance(locationHistoryRef.current));
-        setLocationHistory([...locationHistoryRef.current]);
-      });
+        if (endingRef.current && !replayingForEndRef.current) return;
+        meterRef.current = addMeterPoint(meterRef.current, point);
+        setActualTripDistance(meterRef.current.distanceKm);
+        // Keep a bounded display history. Billing uses the incremental meter, not this array.
+        locationHistoryRef.current = [...locationHistoryRef.current.slice(-199), point];
+        setLocationHistory(locationHistoryRef.current);
+        const trip = activeTripRef.current;
+        if (trip && user) {
+          const snapshot: SavedTrip = { trip, meter: meterRef.current, estimatedDistance, estimatedDuration };
+          persistenceRef.current = persistenceRef.current.then(() => tripJournal().save(user.sub, 'active', trip.completionRequestKey, snapshot)).catch(() => { setStorageError(true); });
+        }
+      }, { background: true, trip: { owner: user.sub, key: nativeTrip.completionRequestKey,
+        after: meterRef.current.lastPoint?.timestamp ?? 0 } });
     } else { stopWatching(); }
     return () => { stopWatching(); };
-  }, [tripActive, selectedRideType]);
+  }, [tripActive, selectedRideType, user?.sub, startWatching, stopWatching]);
 
   // Obtain location when the driver explicitly starts a trip or requests location.
 
@@ -600,9 +650,13 @@ export default function TaximeterPage() {
   };
 
   const startTrip = async () => {
-    if (selectedRideType === 'INTERNAL') {
+    if (!user || !storageReady || storageError || activeTripRef.current || startingRef.current) return;
+    startingRef.current = true;
+    setLoading(true);
+    try {
+    let startLocation = currentLocation;
       let loc = currentLocation;
-      if (!loc) {
+      if (!loc || !isFreshAccurateLocation(loc)) {
         const point = await getLocation(true);
         if (!point) {
           toast.error(language === 'nl' ? 'Sta locatietoegang toe om rit te starten' : language === 'ar' ? 'اسمح بالوصول إلى الموقع لبدء الرحلة' : "Autoriser l'accès à la localisation pour démarrer le trajet");
@@ -610,6 +664,8 @@ export default function TaximeterPage() {
         }
         loc = point;
       }
+      startLocation = loc;
+    if (selectedRideType === 'INTERNAL') {
       if (!startAddress || !endAddress) {
         toast.error(language === 'nl' ? 'Voer adressen in' : language === 'ar' ? 'أدخل العناوين' : 'Entrez les adresses');
         return;
@@ -620,10 +676,9 @@ export default function TaximeterPage() {
         return;
       }
     }
-    setLoading(true);
-    try {
       const tripStartData: TripData = {
-        startLat: currentLocation?.lat || 0, startLon: currentLocation?.lon || 0,
+        completionRequestKey: crypto.randomUUID(),
+        startLat: startLocation?.lat ?? 0, startLon: startLocation?.lon ?? 0,
         startAddress: startAddress || '', endAddress: endAddress || '',
         startTime: new Date().toISOString(), distance: 0, duration: 0,
         proposedPrice: selectedRideType === 'INTERNAL' ? parseFloat(proposedPrice) : 0,
@@ -633,14 +688,17 @@ export default function TaximeterPage() {
         externalSource: selectedRideType !== 'INTERNAL' ? selectedRideType : undefined,
         externalRideNumber: externalRideNumber || undefined,
       };
+      meterRef.current = emptyMeter();
+      if (startLocation) meterRef.current = addMeterPoint(meterRef.current, startLocation);
+      await tripJournal().save(user.sub, 'active', tripStartData.completionRequestKey, { trip: tripStartData, meter: meterRef.current, estimatedDistance, estimatedDuration } satisfies SavedTrip);
+      activeTripRef.current = tripStartData;
       setTripData(tripStartData); setTripActive(true); setShowPriceProposal(false);
       setActualTripDistance(0); locationHistoryRef.current = [];
-      sessionStorage.setItem('active_trip', JSON.stringify(tripStartData));
       toast.success(language === 'nl' ? 'Rit gestart' : language === 'ar' ? 'بدأت الرحلة' : 'Trajet démarré');
     } catch (error) {
       toast.error(language === 'nl' ? 'Rit starten mislukt' : language === 'ar' ? 'فشل بدء الرحلة' : 'Échec du démarrage du trajet');
     }
-    finally { setLoading(false); }
+    finally { startingRef.current = false; setLoading(false); }
   };
 
   const showEndDialog = () => {
@@ -650,22 +708,28 @@ export default function TaximeterPage() {
   };
 
   const endTrip = async () => {
-    if (!tripData) return;
+    if (!tripData || !user || loading || endingRef.current) return;
     const priceValue = parseFloat(finalPrice);
     if (isNaN(priceValue) || priceValue <= 0) {
       toast.error(language === 'nl' ? 'Voer geldige prijs in' : language === 'ar' ? 'أدخل سعراً صحيحاً' : 'Entrez un prix valide');
       return;
     }
-    let endLoc = currentLocation;
-    if (!endLoc) { const point = await getLocation(false); if (point) endLoc = point; }
+    endingRef.current = true;
     setLoading(true);
     try {
-      const actualDistance = selectedRideType === 'INTERNAL' ? actualTripDistance : 0;
+      replayingForEndRef.current = true;
+      try { await replayWatching(); } finally { replayingForEndRef.current = false; }
+      let endLoc = currentLocation;
+      if (!endLoc || !isFreshAccurateLocation(endLoc)) endLoc = await getLocation(false);
+      if (!endLoc || !isFreshAccurateLocation(endLoc)) throw new Error(language === 'ar' ? 'تعذّر تحديد موقع نهاية الرحلة بدقة. أبقِ الرحلة مفتوحة وحاول مجدداً.' : language === 'fr' ? 'Position de fin indisponible. Gardez le trajet ouvert et réessayez.' : 'Eindlocatie niet beschikbaar. Houd de rit open en probeer opnieuw.');
+      const actualDistance = selectedRideType === 'INTERNAL' ? meterRef.current.distanceKm : 0;
       const endTime = new Date();
       const actualDuration = Math.floor((endTime.getTime() - new Date(tripData.startTime).getTime()) / 60000);
       const tripPayload: any = {
+        completion_request_key: tripData.completionRequestKey,
+        start_time: tripData.startTime, end_time: endTime.toISOString(),
         start_lat: tripData.startLat, start_lon: tripData.startLon,
-        end_lat: endLoc?.lat || tripData.startLat, end_lon: endLoc?.lon || tripData.startLon,
+        end_lat: endLoc?.lat ?? tripData.startLat, end_lon: endLoc?.lon ?? tripData.startLon,
         start_address: tripData.startAddress, end_address: tripData.endAddress,
         distance_km: parseFloat(actualDistance.toFixed(2)), duration_minutes: actualDuration,
         price: priceValue, passenger_name: tripData.passengerName || null,
@@ -678,27 +742,22 @@ export default function TaximeterPage() {
         tripPayload.driver_adjusted_price = priceValue !== tripData.proposedPrice ? priceValue : null;
         tripPayload.actual_distance_km = parseFloat(actualDistance.toFixed(2)); tripPayload.actual_duration_minutes = actualDuration;
       }
-      if (!isOnline) {
-        const offlineTrips = JSON.parse(sessionStorage.getItem('offline_trips') || '[]');
-        offlineTrips.push({ ...tripPayload, timestamp: new Date().toISOString() });
-        sessionStorage.setItem('offline_trips', JSON.stringify(offlineTrips));
-        toast.warning(language === 'nl' ? 'Rit lokaal opgeslagen' : language === 'ar' ? 'تم حفظ الرحلة محلياً' : 'Trajet enregistré localement');
-      } else {
-        const response = await api.post('/trips/end', tripPayload);
-        if (response.warning) toast.warning(response.warning);
-        else toast.success(language === 'nl' ? 'Rit beëindigd en verzonden naar Chiron' : language === 'ar' ? 'انتهت الرحلة وأُرسلت إلى Chiron' : 'Trajet terminé et envoyé à Chiron');
-        setCompletedTripId(response.id);
-      }
-      sessionStorage.removeItem('active_trip'); stopWatching();
+      await persistenceRef.current;
+      await tripJournal().complete(user.sub, tripPayload);
+      await stopWatching();
+      activeTripRef.current = null;
+      setPendingTrips((await tripJournal().list(user.sub, 'completed')).length);
+      toast.success(language === 'ar' ? 'انتهت الرحلة وحُفظت بأمان على هذا الجهاز' : language === 'fr' ? 'Trajet terminé et enregistré sur cet appareil' : 'Rit beëindigd en op dit apparaat opgeslagen');
       setTripActive(false); setTripData(null); setStartAddress(''); setEndAddress('');
       setPassengerName(''); setProposedPrice(''); setFinalPrice(''); setPaymentMethod('');
       setExternalRideNumber(''); setShowEndTripDialog(false); setEstimatedDistance(0);
       setEstimatedDuration(0); setLocationHistory([]); setActualTripDistance(0);
       locationHistoryRef.current = []; setSelectedRideType('INTERNAL'); setRouteCoords(null);
+      void syncPendingTrips();
     } catch (error: any) {
       toast.error(error.message || (language === 'nl' ? 'Rit beëindigen mislukt' : language === 'ar' ? 'فشل إنهاء الرحلة' : 'Échec de la fin du trajet'));
     }
-    finally { setLoading(false); }
+    finally { endingRef.current = false; setLoading(false); }
   };
 
   const generateInvoice = async () => {
@@ -720,17 +779,35 @@ export default function TaximeterPage() {
   };
 
   useEffect(() => {
-    const savedTrip = sessionStorage.getItem('active_trip');
-    if (savedTrip) {
-      const parsed = JSON.parse(savedTrip);
-      setTripData(parsed); setTripActive(true); setStartAddress(parsed.startAddress);
-      setEndAddress(parsed.endAddress); setPassengerName(parsed.passengerName || '');
-      setPaymentMethod(parsed.paymentMethod || '');
-      setSelectedRideType(parsed.rideType === 'INTERNAL' ? 'INTERNAL' : parsed.externalSource || 'INTERNAL');
-      setExternalRideNumber(parsed.externalRideNumber || '');
-      toast.info(language === 'nl' ? 'Actieve rit hersteld' : language === 'ar' ? 'تم استعادة الرحلة النشطة' : 'Trajet actif restauré');
-    }
-  }, [language]);
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        // Legacy unscoped drafts cannot be assigned safely to the signed-in driver.
+        if (sessionStorage.getItem('active_trip') || sessionStorage.getItem('offline_trips')) {
+          toast.warning(language === 'ar' ? 'يوجد حفظ قديم على هذا الجهاز؛ راجعه قبل مسح بيانات المتصفح' : language === 'fr' ? 'Anciennes données locales présentes : vérifiez-les avant de les effacer' : 'Oude lokale gegevens aanwezig: controleer ze voordat u browsergegevens wist');
+        }
+        const saved = (await tripJournal().list<SavedTrip>(user.sub, 'active'))[0];
+        const queued = await tripJournal().list(user.sub, 'completed');
+        if (cancelled) return;
+        setPendingTrips(queued.length);
+        if (saved && !activeTripRef.current) {
+          const parsed = saved.trip;
+          activeTripRef.current = parsed; meterRef.current = saved.meter;
+          setActualTripDistance(saved.meter.distanceKm);
+          setEstimatedDistance(saved.estimatedDistance); setEstimatedDuration(saved.estimatedDuration);
+          setTripData(parsed); setTripActive(true); setStartAddress(parsed.startAddress);
+          setEndAddress(parsed.endAddress); setPassengerName(parsed.passengerName || '');
+          setPaymentMethod(parsed.paymentMethod || '');
+          setSelectedRideType(parsed.rideType === 'INTERNAL' ? 'INTERNAL' : parsed.externalSource || 'INTERNAL');
+          setExternalRideNumber(parsed.externalRideNumber || '');
+          toast.info(language === 'nl' ? 'Actieve rit hersteld' : language === 'ar' ? 'تم استعادة الرحلة النشطة' : 'Trajet actif restauré');
+        }
+        setStorageReady(true); void syncPendingTrips();
+      } catch { if (!cancelled) setStorageError(true); }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.sub]);
 
   useEffect(() => {
     if (tripActive && tripData && selectedRideType === 'INTERNAL') {
@@ -778,6 +855,17 @@ export default function TaximeterPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
+
+      {(pendingTrips > 0 || storageError) && (
+        <div role="status" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-950/40 p-4 text-amber-100">
+          {storageError
+            ? (language === 'ar' ? 'تعذّر حفظ الرحلة على الجهاز. لا تغلق التطبيق؛ تحقق من مساحة التخزين.' : language === 'fr' ? 'Enregistrement local indisponible. Gardez cette page ouverte et vérifiez le stockage.' : 'Lokaal opslaan niet beschikbaar. Houd deze pagina open en controleer de opslag.')
+            : (language === 'ar' ? `${pendingTrips} رحلة محفوظة على هذا الجهاز بانتظار الإرسال. لا تمسح بيانات التطبيق.` : language === 'fr' ? `${pendingTrips} trajet(s) à envoyer. Ne supprimez pas les données de l’application.` : `${pendingTrips} rit(ten) wachten op verzending. Wis de appgegevens niet.`)}
+          {pendingTrips > 0 && <Button className="mt-2" onClick={() => void syncPendingTrips()} disabled={!isOnline || syncingTrips}>
+            {language === 'ar' ? 'إعادة محاولة المزامنة' : language === 'fr' ? 'Réessayer la synchronisation' : 'Synchronisatie opnieuw proberen'}
+          </Button>}
+        </div>
+      )}
 
       {/* Daily Earnings Card */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, type: 'spring' }}>
@@ -1051,7 +1139,7 @@ export default function TaximeterPage() {
                 </button>
                 <motion.button
                   onClick={startTrip}
-                  disabled={loading}
+                  disabled={loading || !storageReady || storageError}
                   whileHover={{ scale: loading ? 1 : 1.02 }}
                   whileTap={{ scale: loading ? 1 : 0.97 }}
                   className="flex-1 h-14 rounded-2xl font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50 relative overflow-hidden"

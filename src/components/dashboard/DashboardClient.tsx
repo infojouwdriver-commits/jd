@@ -3,12 +3,16 @@
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import ManagementShell from "@/components/navigation/ManagementShell";
+import { managementMenu } from "@/components/navigation/management-menu";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import {
+  Search,
+  ArrowUpLeft,
   Building2,
   Users,
   Car,
@@ -30,45 +34,20 @@ import {
 import DriverDashboard from "@/components/driver/DriverDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const adminMenuItems = [
-  { title: "إدارة الشركات", description: "عرض وإدارة جميع الشركات", icon: Building2, href: "/admin/companies", color: "from-blue-500 to-blue-600" },
-  { title: "إدارة السائقين", description: "عرض وإدارة جميع السائقين", icon: Users, href: "/admin/drivers", color: "from-green-500 to-green-600" },
-  { title: "إدارة المركبات", description: "عرض وإدارة جميع المركبات", icon: Car, href: "/admin/vehicles", color: "from-purple-500 to-purple-600" },
-  { title: "إدارة الرحلات", description: "عرض ومراقبة جميع الرحلات", icon: MapPin, href: "/admin/trips", color: "from-orange-500 to-orange-600" },
-  { title: "رحلات الاختبار", description: "إدارة رحلات اختبار Chiron", icon: TestTube, href: "/admin/test-trips", color: "from-pink-500 to-pink-600" },
-  { title: "مزامنة Chiron", description: "مراقبة وإعادة محاولة المزامنة", icon: Settings, href: "/admin/chiron-sync", color: "from-indigo-500 to-indigo-600" },
-  { title: "إدارة الإشعارات", description: "إرسال إشعارات للسائقين", icon: Bell, href: "/admin/notifications", color: "from-yellow-500 to-yellow-600" },
-  { title: "الرسائل الداخلية", description: "إرسال واستقبال الرسائل", icon: MessageSquare, href: "/admin/messages", color: "from-teal-500 to-teal-600" },
-  { title: "إدارة الموزعين", description: "إدارة الموزعين وصلاحياتهم", icon: UserCog, href: "/admin/distributors", color: "from-cyan-500 to-cyan-600" },
-  { title: "طلبات الموافقة", description: "مراجعة طلبات التعديل والحذف", icon: CheckCircle, href: "/admin/approval-requests", color: "from-rose-500 to-rose-600" },
-  { title: "إدارة المستخدمين", description: "منح وسحب صلاحيات المديرين", icon: ShieldCheck, href: "/admin/users", color: "from-amber-500 to-yellow-600" },
-  { title: "إدارة الإعلانات", description: "نشر وتعديل المساحات الإعلانية في الصفحة الرئيسية", icon: Megaphone, href: "/admin/ad-slots", color: "from-fuchsia-500 to-pink-600" },
-  { title: "GDPR والامتثال", description: "إدارة حقوق البيانات وحوادث الاختراق وسجل النقل", icon: Shield, href: "/admin/gdpr", color: "from-emerald-500 to-teal-600" },
-];
+const adminMenuItems = managementMenu;
 
 function AdminMenuGrid() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {adminMenuItems.map((item, index) => {
-        const Icon = item.icon;
-        return (
-          <Link key={index} href={item.href}>
-            <Card className="p-6 rounded-3xl border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 hover:scale-105 transition-transform duration-300 cursor-pointer">
-              <div className="flex items-start gap-4">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}>
-                  <Icon className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{item.title}</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{item.description}</p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        );
-      })}
-    </div>
-  );
+  const [query, setQuery] = useState('');
+  const items = adminMenuItems.filter(item => `${item.title} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
+  return <div className="space-y-7">
+    <div className="workspace-search"><Search size={20} aria-hidden="true" /><input aria-label="البحث في أقسام الإدارة" value={query} onChange={event => setQuery(event.target.value)} placeholder="ابحث عن السائقين، المركبات، الرحلات…" /><span>{items.length} قسم</span></div>
+    {['التشغيل', 'التواصل', 'الإدارة', 'التكامل'].map(group => {
+      const visible = items.filter(item => item.group === group);
+      if (!visible.length) return null;
+      return <section key={group} aria-label={group}><h2 className="mb-3 text-sm font-semibold text-muted-foreground">{group}</h2><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">{visible.map(item => <Link key={item.href} href={item.href} className="workspace-launch-card"><div className="workspace-launch-icon"><item.icon size={23} aria-hidden="true" /></div><div className="min-w-0 flex-1"><h3 className="font-semibold">{item.title}</h3><p className="mt-1 text-sm text-muted-foreground">{item.description}</p></div><ArrowUpLeft size={18} className="text-muted-foreground" aria-hidden="true" /></Link>)}</div></section>;
+    })}
+    {!items.length && <p role="status" className="rounded-xl border border-dashed p-10 text-center text-muted-foreground">لا توجد أقسام بهذا الاسم. جرّب كلمة أخرى.</p>}
+  </div>;
 }
 
 function AdminAccountTab({ user, logout }: { user: any; logout: () => void }) {
@@ -101,7 +80,7 @@ function AdminAccountTab({ user, logout }: { user: any; logout: () => void }) {
                 <FileText className="w-4 h-4" />
                 معرف الحساب
               </div>
-              <span className="text-sm font-medium text-slate-900 dark:text-white">#{user?.id}</span>
+              <span className="text-sm font-medium text-slate-900 dark:text-white">#{user?.sub}</span>
             </div>
             <div className="flex items-center justify-between py-2.5">
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
@@ -134,14 +113,14 @@ function AdminAccountTab({ user, logout }: { user: any; logout: () => void }) {
 
 function AdminDashboard({ email, user, logout }: { email: string; user: any; logout: () => void }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="container mx-auto px-4 py-8">
+    <ManagementShell><div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <div className="mb-8 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-              مرحباً، {email}
+              إدارة المشروع
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">لوحة تحكم المسؤول</p>
+            <p className="text-slate-600 dark:text-slate-400">كل ما تحتاجه لإدارة شركتك، في مكان واحد.</p>
           </div>
         </div>
 
@@ -166,7 +145,7 @@ function AdminDashboard({ email, user, logout }: { email: string; user: any; log
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div></ManagementShell>
   );
 }
 
@@ -177,6 +156,8 @@ export default function DashboardClient() {
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/");
+    } else if (!isLoading && user && !user.isAdmin && ['manager', 'company', 'owner'].includes(user.userType || '')) {
+      router.replace('/company/dashboard');
     } else if (!isLoading && user?.userType === "distributor") {
       router.push("/distributor/dashboard");
     }
@@ -197,5 +178,6 @@ export default function DashboardClient() {
     return <DriverDashboard />;
   }
 
+  if (!user.isAdmin) return null;
   return <AdminDashboard email={user.email} user={user} logout={logout} />;
 }

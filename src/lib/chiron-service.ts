@@ -325,18 +325,20 @@ export class ChironService {
 
   static getPricingJson(company: CompanyChironConfig) {
     return {
-      base_fee: company.minimum_fare || 10.00,
-      km_rate: company.base_rate_per_km || 2.00,
-      minute_rate: company.base_rate_per_minute || 0.50,
-      minimum_fare: company.minimum_fare || 10.00,
-      airport_fee: company.airport_surcharge || 5.00,
-      night_surcharge_percentage: company.night_surcharge_percentage || 20.00,
-      peak_hour_surcharge_percentage: company.peak_hour_surcharge_percentage || 15.00
+      base_fee: company.minimum_fare ?? 10.00,
+      km_rate: company.base_rate_per_km ?? 2.00,
+      minute_rate: company.base_rate_per_minute ?? 0.50,
+      minimum_fare: company.minimum_fare ?? 10.00,
+      airport_fee: company.airport_surcharge ?? 5.00,
+      night_surcharge_percentage: company.night_surcharge_percentage ?? 20.00,
+      peak_hour_surcharge_percentage: company.peak_hour_surcharge_percentage ?? 15.00
     };
   }
 
   static resolveEnvironment(company: CompanyChironConfig): ChironEnvironment {
-    if (company.chiron_mode === 'TEST') {
+    const mode = String(company.chiron_mode).toUpperCase();
+    if (!['TEST', 'PRODUCTION'].includes(mode)) throw new Error('Invalid Chiron environment');
+    if (mode === 'TEST') {
       if (!company.chiron_test_client_id || !company.chiron_test_client_secret) {
         throw new Error('Test Chiron credentials are not configured for this company');
       }
@@ -913,7 +915,7 @@ export class ChironService {
     const adminToken = await generateAdminUserToken();
     
     const company = await this.getCompanyConfig(companyId);
-    if (company.chiron_mode !== 'TEST') {
+    if (String(company.chiron_mode).toUpperCase() !== 'TEST') {
       throw new Error('Company must be in TEST mode to run acceptance test');
     }
 
