@@ -2,7 +2,7 @@
   "passed": 11,
   "checks": [
     "release migrations applied",
-    "server user overrides payload owner",
+    "server user overrides payload owner and completed trip is locked",
     "retry does not duplicate trip",
     "restored function PUBLIC execute does not leak to browser",
     "browser role cannot read business table",
