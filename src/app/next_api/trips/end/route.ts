@@ -99,6 +99,7 @@ export const POST = requestMiddleware(async (request, context) => {
     }
 
     const driver = drivers[0];
+    if (driver.status !== 'active') return createErrorResponse({errorMessage:'Driver inactive',status:403});
     const company = await ChironService.getCompanyConfig(driver.company_id);
 
     let vehicle: any = null;
@@ -118,7 +119,7 @@ export const POST = requestMiddleware(async (request, context) => {
       vehicle = vehicles[0];
     }
 
-    if (String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'Vehicle not permitted',status:403});
+    if (vehicle.status !== 'active' || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'Vehicle not permitted',status:403});
     const tripsCrud = new CrudOperations("trips", context.token);
 
     const actualDuration = duration_minutes || 0;
@@ -166,8 +167,8 @@ export const POST = requestMiddleware(async (request, context) => {
       end_lon: finalEndLon,
       start_address: start_address || null,
       end_address: end_address || null,
-      distance_km: distance_km ? parseFloat(distance_km.toFixed(3)) : null,
-      duration_minutes: actualDuration || null,
+      distance_km: distance_km != null ? parseFloat(distance_km.toFixed(3)) : null,
+      duration_minutes: actualDuration,
       price: parseFloat(price.toFixed(2)),
       status: 'completed',
       ritnummer,
@@ -197,7 +198,7 @@ export const POST = requestMiddleware(async (request, context) => {
         ? parseFloat(driver_adjusted_price.toFixed(2))
         : null;
       tripData.actual_distance_km = distance_km ? parseFloat(distance_km.toFixed(3)) : null;
-      tripData.actual_duration_minutes = actualDuration || null;
+      tripData.actual_duration_minutes = actualDuration;
     }
 
     // Generate immutability hash after all fields are set
@@ -257,7 +258,6 @@ export const POST = requestMiddleware(async (request, context) => {
       console.error("Operation failed");
 
       await tripsCrud.update(trip.id, {
-        status: 'pending',
         chiron_sync_attempts: 1,
         sync_error_message: chironError.message,
         last_sync_attempt: new Date().toISOString(),
@@ -275,7 +275,7 @@ export const POST = requestMiddleware(async (request, context) => {
 
       return createSuccessResponse({
         ...trip,
-        status: 'pending',
+        chiron_sync_state: 'ERROR',
         warning: 'تم حفظ الرحلة ولكن فشل إرسالها إلى Chiron. سيتم إعادة المحاولة لاحقاً.',
       }, 201);
     }

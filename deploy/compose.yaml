@@ -7,10 +7,12 @@ services:
       APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN}
       TLS_EMAIL: ${TLS_EMAIL:?Set TLS_EMAIL}
     volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "tls_data:/data", "tls_config:/config"]
-    depends_on: [app]
+    depends_on:
+      app: {condition: service_healthy}
     networks: [frontend]
     security_opt: ["no-new-privileges:true"]
   app:
+    image: ${APP_IMAGE:-jouw-driver:local}
     build: {context: ..}
     restart: unless-stopped
     environment:

@@ -236,10 +236,12 @@ async function apiRequest<T = any>(
         const currentPath = window.location.pathname;
         const isOnLoginPage =
           currentPath === loginPath ||
+          currentPath === "/" ||
+          currentPath === "/trial" ||
           currentPath === "/login" ||
           currentPath === "/driver-login";
 
-        if (!isOnLoginPage && error.errorCode === AUTH_CODE.TOKEN_MISSING) {
+        if (endpoint.split("?")[0] !== "/auth/user" && !isOnLoginPage && error.errorCode === AUTH_CODE.TOKEN_MISSING) {
           redirectToLogin();
         }
       }

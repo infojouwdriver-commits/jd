@@ -1,3 +1,5 @@
+import {configurePdfFonts} from '../legal/pdf-fonts';
+import {structuredPaymentReference} from './payment-reference';
 
 import { jsPDF } from 'jspdf';
 
@@ -108,10 +110,7 @@ export class PDFGenerator {
    * Generate structured payment reference (Belgian OGM format)
    */
   static generateStructuredReference(invoiceNumber: string): string {
-    const numericPart = invoiceNumber.replace(/\D/g, '').padStart(10, '0').substring(0, 10);
-    const checksum = (97 - (parseInt(numericPart) % 97)).toString().padStart(2, '0');
-    const reference = numericPart + checksum;
-    return `+++${reference.substring(0, 3)}/${reference.substring(3, 7)}/${reference.substring(7, 12)}+++`;
+    return structuredPaymentReference(invoiceNumber);
   }
 
   /**
@@ -162,6 +161,7 @@ export class PDFGenerator {
    */
   static generateAcceptanceTestReport(data: AcceptanceTestReport): jsPDF {
     const doc = new jsPDF();
+    configurePdfFonts(doc);
 
     this.addLogoWatermark(doc);
 
@@ -487,6 +487,7 @@ export class PDFGenerator {
       unit: 'mm',
       format: [80, 297]
     });
+    configurePdfFonts(doc);
 
     const pageWidth = 80;
     let y = 5;
@@ -753,6 +754,7 @@ export class PDFGenerator {
    */
   static generateCompanyInvoice(data: CompanyInvoiceData): jsPDF {
     const doc = new jsPDF();
+    configurePdfFonts(doc);
 
     this.addLogoWatermark(doc);
 

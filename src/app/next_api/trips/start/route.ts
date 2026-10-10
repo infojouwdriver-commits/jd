@@ -64,6 +64,7 @@ export const POST = requestMiddleware(async (request, context) => {
     }
 
     const driver = drivers[0];
+    if (driver.status !== 'active') return createErrorResponse({errorMessage:'Driver inactive',status:403});
 
     // Resolve vehicle
     let vehicle: any = null;
@@ -80,7 +81,7 @@ export const POST = requestMiddleware(async (request, context) => {
       vehicle = vehicles?.[0] || null;
     }
 
-    if (!vehicle || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'No authorized vehicle',status:403});
+    if (!vehicle || vehicle.status !== 'active' || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'No authorized vehicle',status:403});
     const vehicleId = vehicle.id;
 
     const trip_uuid = generateTripUuid();

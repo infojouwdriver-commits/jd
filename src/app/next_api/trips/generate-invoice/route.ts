@@ -1,10 +1,8 @@
-import {randomBytes} from "node:crypto";
-
 import CrudOperations from '@/lib/crud-operations';
 import { createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams } from '@/lib/api-utils';
 import { generateAdminUserToken } from '@/lib/auth';
-import { PDFGenerator } from '@/lib/pdf-generator';
+import { createPostgrestClient } from '@/lib/postgrest';
 import {
   generateVervoerbewijs,
   getVervoerbewijsArrayBuffer,
@@ -37,6 +35,9 @@ export const POST = requestMiddleware(async (request, context) => {
     if (trip.user_id !== parseInt(user_id)) {
       return createErrorResponse({ errorMessage: 'Unauthorized', status: 403 });
     }
+    if (trip.status !== 'completed' || !trip.start_time || !trip.end_time || !Number.isFinite(Number(trip.price)) || Number(trip.price) < 0) {
+      return createErrorResponse({ errorMessage: 'Only completed trips with valid amounts can be invoiced', status: 409 });
+    }
 
     // ── Fetch related records ───────────────────────────────────────────────
     const companiesCrud = new CrudOperations('companies', adminToken);
@@ -50,19 +51,21 @@ export const POST = requestMiddleware(async (request, context) => {
     if (!driver) {
       return createErrorResponse({ errorMessage: 'Driver not found', status: 404 });
     }
+    if (driver.company_id !== company.id || driver.user_id !== trip.user_id) {
+      return createErrorResponse({ errorMessage: 'Trip driver does not match company', status: 409 });
+    }
 
     let vehicle: any = null;
     if (trip.vehicle_id) {
       const vehiclesCrud = new CrudOperations('vehicles', adminToken);
       vehicle = await vehiclesCrud.findById(trip.vehicle_id);
+      if (!vehicle || vehicle.company_id !== company.id) {
+        return createErrorResponse({ errorMessage: 'Trip vehicle does not match company', status: 409 });
+      }
     }
 
-    // ── Build share / QR URLs ───────────────────────────────────────────────
-    const invoiceNumber = `TRIP-${trip.id}-${Date.now()}`;
-    const shareToken = randomBytes(32).toString('base64url');
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.example.com';
-    const shareUrl = `${appUrl}/invoice/${shareToken}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareUrl)}`;
+    // Public sharing is disabled; never expose a nonfunctional URL or send it to an external QR service.
+    const invoiceNumber = `TRIP-${trip.id}`;
 
     // ── Resolve Belgian legal fields ────────────────────────────────────────
     const ritnummer = trip?.ritnummer || `TRIP-${trip.id}`;
@@ -135,49 +138,25 @@ export const POST = requestMiddleware(async (request, context) => {
       document_number: invoiceNumber,
       document_date: invoiceDatetime,
       vat_rate: 6,
-      qr_code_url: qrCodeUrl,
+      qr_code_url: undefined,
     };
 
-    // ── Generate PDF using new isolated module ──────────────────────────────
-    const pdfDoc = generateVervoerbewijs(vervoerbewijsData);
-    const arrayBuffer = getVervoerbewijsArrayBuffer(pdfDoc);
-    const buffer = Buffer.from(arrayBuffer);
-
-    if (buffer.length === 0) {
-      throw new Error('Failed to generate Vervoerbewijs PDF');
-    }
-
-    // ── Persist invoice record ──────────────────────────────────────────────
-    try {
-      const paymentReference = PDFGenerator['generateStructuredReference'](invoiceNumber);
+    // Persist before returning a PDF. The database locks the trip to serialize retries.
       const tripStartDate = new Date(invoiceDatetime);
-      const tripTimeString = tripStartDate.toTimeString().substring(0, 8);
-
-      const invoicesCrud = new CrudOperations('invoices', adminToken);
-      const newInvoice = await invoicesCrud.create({
-        user_id: parseInt(user_id),
-        company_id: company.id,
-        issuer_company_id: company.id,
-        trip_id: trip.id,
-        invoice_number: invoiceNumber,
+      const tripTimeString = tripStartDate.toISOString().substring(11, 19);
+      const saved = await createPostgrestClient(adminToken).rpc('security_create_trip_invoice', {
+        p_trip_id: trip.id,
+        p_user_id: Number(user_id),
+        p_receipt: vervoerbewijsData,
+        p_invoice: {
         client_name: trip.passenger_name || 'Klant',
         client_address: trip.end_address || '',
-        total_htva: Number(((Number(trip.price) || 0) / 1.06).toFixed(2)),
-        vat_rate: 6,
-        total_tvac: Number((Number(trip.price) || 0).toFixed(2)),
-        invoice_date: new Date().toISOString().split('T')[0],
-        status: 'sent',
-        payment_status: 'pending',
-        invoice_type: 'one_time',
-        invoice_category: 'trip',
-        invoice_language: 'nl',
-        items: JSON.stringify([{
+        items: [{
           description: `Vervoer van ${trip.start_address} naar ${trip.end_address}`,
           quantity: 1,
           unitPrice: Number(((Number(trip.price) || 0) / 1.06).toFixed(2)),
           total: Number(((Number(trip.price) || 0) / 1.06).toFixed(2)),
-        }]),
-        structured_reference: paymentReference,
+        }],
         bank_account: company.bank_account_iban || '',
         bic_code: company.bank_account_bic || '',
         trip_datetime: invoiceDatetime,
@@ -188,19 +167,13 @@ export const POST = requestMiddleware(async (request, context) => {
         toegepast_tarief: toegepastTarief,
         meterbedrag,
         ritnummer,
+        },
       });
-
-      const shareLinksCrud = new CrudOperations('invoice_share_links', adminToken);
-      await shareLinksCrud.create({
-        invoice_id: newInvoice.id,
-        share_token: shareToken,
-        qr_code_url: qrCodeUrl,
-        view_count: 0,
-        is_active: true,
-      });
-    } catch (dbError) {
-      console.error("Operation failed");
-    }
+      if (saved.error || !saved.data?.id || !saved.data.invoice_number) throw new Error('Invoice persistence failed');
+      const receipt = saved.data.receipt_snapshot || { ...vervoerbewijsData, document_number: saved.data.invoice_number, document_date: saved.data.trip_datetime || vervoerbewijsData.document_date };
+      const pdfDoc = generateVervoerbewijs(receipt);
+      const buffer = Buffer.from(getVervoerbewijsArrayBuffer(pdfDoc));
+      if (buffer.length === 0) throw new Error('Failed to generate Vervoerbewijs PDF');
 
     // ── Return PDF response ─────────────────────────────────────────────────
     return new Response(buffer, {
@@ -209,16 +182,14 @@ export const POST = requestMiddleware(async (request, context) => {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="Vervoerbewijs-${trip.id}.pdf"`,
         'Content-Length': buffer.length.toString(),
-        'Cache-Control': 'no-cache',
-        'X-Share-URL': shareUrl,
-        'X-QR-Code-URL': qrCodeUrl,
+        'Cache-Control': 'private, no-store',
       },
     });
 
   } catch (error: any) {
     console.error("Operation failed");
     return createErrorResponse({
-      errorMessage: error.message || 'Failed to generate Vervoerbewijs',
+      errorMessage: 'Failed to persist or generate Vervoerbewijs',
       status: 500,
     });
   }

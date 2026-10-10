@@ -26,7 +26,7 @@ import GpsLocationButton from '@/components/GpsLocationButton';
 import RouteMap from '@/components/RouteMap';
 import { tripJournal } from '@/lib/trip-journal';
 import { addMeterPoint, emptyMeter, type MeterState } from '@/lib/trip-meter';
-import { isFreshAccurateLocation } from '@/lib/mobile-location';
+import { isFreshAccurateLocation, clearNativeTripPoints } from '@/lib/mobile-location';
 
 interface PricingConfig {
   company_id: number; company_name: string;
@@ -484,7 +484,8 @@ export default function TaximeterPage() {
   const endingRef = useRef(false);
   const startingRef = useRef(false);
 
-  const { location: currentLocation, error: gpsError, permissionState: gpsPermissionState, isLocating: gpsIsLocating, accuracy: gpsAccuracy, getLocation, startWatching, stopWatching } = useGeolocation({ language });
+  const replayingForEndRef = useRef(false);
+  const { location: currentLocation, error: gpsError, permissionState: gpsPermissionState, isLocating: gpsIsLocating, accuracy: gpsAccuracy, getLocation, startWatching, stopWatching, replayWatching } = useGeolocation({ language });
   const startSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
   const endSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
 
@@ -496,6 +497,9 @@ export default function TaximeterPage() {
     try {
       const result = await tripJournal().sync(user.sub, async payload => {
         const response = await api.post('/trips/end', payload);
+        // Clear only after server acknowledgement. A failure leaves the queued
+        // idempotent payload available so cleanup can be retried safely.
+        await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
         setCompletedTripId(response.id);
         if (response.warning) toast.warning(response.warning);
       });
@@ -549,9 +553,10 @@ export default function TaximeterPage() {
   useEffect(() => { setPaymentMethod(selectedRideType !== 'INTERNAL' ? 'app' : ''); }, [selectedRideType]);
 
   useEffect(() => {
-    if (tripActive && selectedRideType === 'INTERNAL') {
+    const nativeTrip = activeTripRef.current;
+    if (tripActive && selectedRideType === 'INTERNAL' && user && nativeTrip) {
       startWatching((point: GeolocationPoint) => {
-        if (endingRef.current) return;
+        if (endingRef.current && !replayingForEndRef.current) return;
         meterRef.current = addMeterPoint(meterRef.current, point);
         setActualTripDistance(meterRef.current.distanceKm);
         // Keep a bounded display history. Billing uses the incremental meter, not this array.
@@ -562,7 +567,8 @@ export default function TaximeterPage() {
           const snapshot: SavedTrip = { trip, meter: meterRef.current, estimatedDistance, estimatedDuration };
           persistenceRef.current = persistenceRef.current.then(() => tripJournal().save(user.sub, 'active', trip.completionRequestKey, snapshot)).catch(() => { setStorageError(true); });
         }
-      }, { background: true });
+      }, { background: true, trip: { owner: user.sub, key: nativeTrip.completionRequestKey,
+        after: meterRef.current.lastPoint?.timestamp ?? 0 } });
     } else { stopWatching(); }
     return () => { stopWatching(); };
   }, [tripActive, selectedRideType, user?.sub, startWatching, stopWatching]);
@@ -711,6 +717,8 @@ export default function TaximeterPage() {
     endingRef.current = true;
     setLoading(true);
     try {
+      replayingForEndRef.current = true;
+      try { await replayWatching(); } finally { replayingForEndRef.current = false; }
       let endLoc = currentLocation;
       if (!endLoc || !isFreshAccurateLocation(endLoc)) endLoc = await getLocation(false);
       if (!endLoc || !isFreshAccurateLocation(endLoc)) throw new Error(language === 'ar' ? 'تعذّر تحديد موقع نهاية الرحلة بدقة. أبقِ الرحلة مفتوحة وحاول مجدداً.' : language === 'fr' ? 'Position de fin indisponible. Gardez le trajet ouvert et réessayez.' : 'Eindlocatie niet beschikbaar. Houd de rit open en probeer opnieuw.');
@@ -736,7 +744,7 @@ export default function TaximeterPage() {
       }
       await persistenceRef.current;
       await tripJournal().complete(user.sub, tripPayload);
-      stopWatching();
+      await stopWatching();
       activeTripRef.current = null;
       setPendingTrips((await tripJournal().list(user.sub, 'completed')).length);
       toast.success(language === 'ar' ? 'انتهت الرحلة وحُفظت بأمان على هذا الجهاز' : language === 'fr' ? 'Trajet terminé et enregistré sur cet appareil' : 'Rit beëindigd en op dit apparaat opgeslagen');

@@ -4,7 +4,7 @@ const sql=path=>fs.readFileSync(root+'/'+path,'utf8').replaceAll(':"schema"','pu
 await db.exec(fs.readFileSync(root+'/schema/reconstructed-staging.sql','utf8'));
 await db.exec('CREATE ROLE test_admin;CREATE ROLE test_user;GRANT USAGE ON SCHEMA public TO test_admin,test_user;GRANT ALL ON ALL TABLES IN SCHEMA public TO test_admin,test_user;GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO test_admin,test_user;');
 await db.exec('CREATE FUNCTION public.legacy_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;');
-await db.exec(sql('migrations/20261009_security.sql'));await db.exec(sql('migrations/20261010_release.sql'));await db.exec(sql('migrations/20261010_admin_mfa.sql'));await db.exec(sql('migrations/20261010_gateway_lockdown.sql'));
+await db.exec(sql('migrations/20261009_security.sql'));await db.exec(sql('migrations/20261010_release.sql'));await db.exec(sql('migrations/20261010_admin_mfa.sql'));await db.exec(sql('migrations/20261010_driver_lifecycle.sql'));await db.exec(sql('migrations/20261010_trip_invoice.sql'));await db.exec(sql('migrations/20261010_gateway_lockdown.sql'));
 await db.exec('CREATE POLICY server_mfa ON security_mfa_claims TO test_admin USING(true) WITH CHECK(true)');
 checks.push('release migrations applied');
 const payload={user_id:444,company_id:1,driver_id:1,vehicle_id:1,start_time:new Date().toISOString(),end_time:new Date().toISOString(),status:'completed',price:12,trip_uuid:'1e26b365-3465-4fdb-a4c8-6d81cc78858a'};const key='07bafc87-fc13-4aee-bcd3-ef9f96729a04';

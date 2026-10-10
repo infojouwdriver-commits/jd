@@ -19,10 +19,10 @@ export default function GlobalClientEffects() {
 
     documentElement.style.overflowY = "auto";
     documentElement.style.overflowX = "hidden";
-    documentElement.style.touchAction = "pan-y";
+    documentElement.style.touchAction = "manipulation";
     body.style.overflowY = "auto";
     body.style.overflowX = "hidden";
-    body.style.touchAction = "pan-y";
+    body.style.touchAction = "manipulation";
     body.style.minHeight = "100%";
 
     let serviceWorkerMessageHandler: ((event: MessageEvent) => void) | null =

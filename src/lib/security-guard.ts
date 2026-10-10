@@ -17,6 +17,10 @@ export async function authorizeEndpoint(request: NextRequest, payload: JWTPayloa
   }
   if (!memberEndpoint(path, request.method, user.user_type || 'driver')) throw new Response(null, {status: 403});
   const token = await generateAdminUserToken();
+  if (user.user_type === 'driver') {
+    const drivers = await new CrudOperations('drivers', token).findMany({user_id: user.id});
+    if (!drivers?.length || drivers.some(driver => driver.status !== 'active')) throw new Response(null, {status: 401});
+  }
   if (path.startsWith('/next_api/trips/') || (path === '/next_api/trips' && request.method !== 'GET')) {
     const id = request.nextUrl.searchParams.get('id');
     if (id) {

@@ -16,6 +16,12 @@ test('independent schema preserves legacy orphans, blocks new invalid writes and
   await assert.rejects(db.exec("INSERT INTO trips(user_id,driver_id,vehicle_id,company_id,status) VALUES(999,1,1,1,'legacy')"));
   await assert.rejects(db.exec("INSERT INTO trips(user_id,driver_id,vehicle_id,company_id,start_lat) VALUES(1,1,1,1,91)"));
   await assert.rejects(db.exec("INSERT INTO trips(user_id,driver_id,vehicle_id,company_id) VALUES(1,1,2,1)"));
+  await assert.rejects(db.exec('UPDATE drivers SET current_vehicle_id=2 WHERE id=1'));
+  await assert.rejects(db.exec("INSERT INTO driver_credentials(driver_id,company_id) VALUES(1,2)"));
+  await assert.rejects(db.exec("INSERT INTO driver_documents(driver_id,company_id) VALUES(1,2)"));
+  await assert.rejects(db.exec("INSERT INTO invoices(user_id,trip_id,company_id) VALUES(1,1,2)"));
+  await assert.rejects(db.exec("INSERT INTO expenses(user_id,company_id,amount) VALUES(1,999,10)"));
+
   await assert.rejects(db.exec(contractSql('public',{validate:true})));await db.exec('ROLLBACK');
   assert.equal((await db.query('SELECT count(*)::int AS n FROM trips')).rows[0].n,1);
   // Explicit synthetic repair, not an automatic record deletion or fabricated production identity.

@@ -3,6 +3,12 @@ BEGIN;
 SELECT format('CREATE ROLE %I NOLOGIN NOINHERIT', :'user_role') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'user_role') \gexec
 SELECT format('CREATE ROLE %I NOLOGIN NOINHERIT', :'admin_role') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'admin_role') \gexec
 SELECT format('CREATE ROLE %I LOGIN NOINHERIT PASSWORD %L', :'gateway_role', :'gateway_password') WHERE NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname=:'gateway_role') \gexec
+-- Reusing deployment roles must not retain superuser, RLS bypass or login rights.
+ALTER ROLE :"user_role" NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+ALTER ROLE :"admin_role" NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+ALTER ROLE :"gateway_role" LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+-- Apply rotated gateway credentials to existing installations too.
+SELECT format('ALTER ROLE %I PASSWORD %L', :'gateway_role', :'gateway_password') \gexec
 SELECT format('GRANT %I,%I TO %I', :'admin_role', :'user_role', :'gateway_role') \gexec
 GRANT USAGE ON SCHEMA :"schema" TO :"admin_role", :"user_role";
 GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA :"schema" TO :"admin_role";

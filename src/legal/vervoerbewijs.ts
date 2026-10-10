@@ -1,5 +1,6 @@
 
 import { jsPDF } from 'jspdf';
+import {configurePdfFonts} from './pdf-fonts';
 
 // ─── Data Types ───────────────────────────────────────────────────────────────
 
@@ -127,6 +128,7 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   const LIGHT: [number, number, number] = [155, 155, 155];
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [PAGE_W, 500] });
+  configurePdfFonts(doc);
 
   let y = 5;
 
@@ -338,9 +340,9 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   // ── Legal footer ───────────────────────────────────────────────────────────
   setFont(6.5, false, GRAY);
   const footerLines = [
-    'Vervoer onderworpen aan 6% BTW (Belgische wetgeving).',
-    'Ritregistratie conform Art. 33 & 34 — Vlaanderen MOW.',
-    'Automatisch gegenereerd — Geldig zonder handtekening.',
+    `BTW: ${data.vat_rate}% - tarief vermeld in dit document.`,
+    'Digitaal vervoerbewijs - JOUW DRIVER.',
+    'Bewaar dit document bij uw ritgegevens.',
   ];
   footerLines.forEach((l) => { doc.text(l, MID, y, { align: 'center' }); y += 3; });
 
@@ -348,6 +350,7 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   setFont(8, true, DARK);
   doc.text('Bedankt voor uw vertrouwen!', MID, y, { align: 'center' });
   y += 6;
+
 
   return doc;
 }

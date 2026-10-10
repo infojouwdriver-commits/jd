@@ -12,11 +12,17 @@ interface NativeLocation {
   speed?: number | null; time: number; simulated?: boolean;
 }
 interface LocationError { code?: string | number; message?: string }
+export interface NativeTripIdentity { owner: string; key: string; after?: number }
+export interface MobileWatchOptions { background?: boolean; trip?: NativeTripIdentity }
+export interface NativeTripJournalPlugin {
+  readTripPoints(options: { owner: string; key: string; after: number }): Promise<{ points: NativeLocation[] }>;
+  clearTripPoints(options: { owner: string; key: string }): Promise<void>;
+}
 export interface NativeLocationPlugin {
-  addWatcher(options: { requestPermissions: boolean; stale: boolean; distanceFilter: number; backgroundMessage?: string; backgroundTitle?: string }, callback: (location?: NativeLocation, error?: LocationError) => void): Promise<string>;
+  addWatcher(options: { requestPermissions: boolean; stale: boolean; distanceFilter: number; tripOwner?: string; tripKey?: string; backgroundMessage?: string; backgroundTitle?: string }, callback: (location?: NativeLocation, error?: LocationError) => void): Promise<string>;
   removeWatcher(options: { id: string }): Promise<void>;
 }
-const nativePlugin = registerPlugin<NativeLocationPlugin>('BackgroundGeolocation');
+const nativePlugin = registerPlugin<NativeLocationPlugin & NativeTripJournalPlugin>('BackgroundGeolocation');
 const notifications = registerPlugin<{ requestPermissions(): Promise<{ display: string }> }>('LocalNotifications');
 const stops = new Set<() => Promise<void>>();
 export const isNativeMobile = () => Capacitor.isNativePlatform();
@@ -24,7 +30,7 @@ export const isNativeMobile = () => Capacitor.isNativePlatform();
 export function normalizeNativeLocation(location: NativeLocation): MobileLocationPoint | null {
   if (location.simulated || !Number.isFinite(location.latitude) || Math.abs(location.latitude) > 90 ||
     !Number.isFinite(location.longitude) || Math.abs(location.longitude) > 180 ||
-    !Number.isFinite(location.time) || !Number.isFinite(location.accuracy) || location.accuracy < 0) return null;
+    !Number.isFinite(location.time) || location.time <= 0 || !Number.isFinite(location.accuracy) || location.accuracy < 0) return null;
   return { lat: location.latitude, lon: location.longitude, accuracy: location.accuracy,
     speed: location.speed != null && location.speed >= 0 && Number.isFinite(location.speed) ? location.speed : undefined,
     timestamp: location.time };
@@ -40,7 +46,7 @@ export function isFreshAccurateLocation(point: MobileLocationPoint | null, now =
 
 /** Callback suppression is immediate; late native registrations are removed too. */
 export function createNativeLocationWatch(plugin: NativeLocationPlugin, onPoint: (point: MobileLocationPoint) => void,
-  onError: (error: LocationError) => void, options: { background?: boolean } = {}, prepare: () => Promise<void> = async () => {}) {
+  onError: (error: LocationError) => void, options: MobileWatchOptions = {}, prepare: () => Promise<void> = async () => {}) {
   let stopped = false;
   let watcherId: string | undefined;
   let removed = false;
@@ -49,6 +55,7 @@ export function createNativeLocationWatch(plugin: NativeLocationPlugin, onPoint:
     await prepare();
     if (stopped) return;
     watcherId = await plugin.addWatcher({ requestPermissions: true, stale: false, distanceFilter: 5,
+      ...(options.trip ? { tripOwner: options.trip.owner, tripKey: options.trip.key } : {}),
       ...(options.background ? { backgroundTitle: 'Jouw Driver', backgroundMessage: 'Active trip: location tracking. End the trip to stop.' } : {}) },
       (location, error) => {
         if (stopped) return;
@@ -65,16 +72,71 @@ export function createNativeLocationWatch(plugin: NativeLocationPlugin, onPoint:
   return { ready, stop };
 }
 
+/** Serial replay + live buffering: a new live point cannot skip an older persisted batch. */
+export function createNativeTripReplay(plugin: NativeTripJournalPlugin, trip: NativeTripIdentity,
+  onPoint: (point: MobileLocationPoint) => void) {
+  if (!/^[1-9]\d{0,18}$/.test(trip.owner) || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(trip.key)) throw new Error('Active trip identity required');
+  let watermark = trip.after ?? 0;
+  if (!Number.isFinite(watermark) || watermark < 0) throw new Error('Invalid native trip watermark');
+  let stopped = false;
+  let work: Promise<void> | undefined;
+  let buffered: MobileLocationPoint[] = [];
+  const emit = (point: MobileLocationPoint) => {
+    if (stopped || point.timestamp <= watermark) return;
+    onPoint(point); watermark = point.timestamp;
+  };
+  const replay = () => {
+    if (stopped) return Promise.resolve();
+    if (work) return work;
+    work = (async () => {
+      while (!stopped) {
+        const batch = await plugin.readTripPoints({ owner: trip.owner, key: trip.key, after: watermark });
+        if (!Array.isArray(batch.points) || batch.points.length > 1000) throw new Error('Invalid native trip batch');
+        const points = batch.points.map(normalizeNativeLocation).filter((p): p is MobileLocationPoint => !!p).sort((a, b) => a.timestamp - b.timestamp);
+        const previous = watermark;
+        for (const point of points) emit(point);
+        if (batch.points.length < 1000) break;
+        if (watermark === previous) throw new Error('Native trip replay made no progress');
+      }
+      for (const point of buffered.sort((a, b) => a.timestamp - b.timestamp)) emit(point);
+      buffered = [];
+    })().finally(() => { work = undefined; });
+    return work;
+  };
+  return { replay, accept: (point: MobileLocationPoint) => { if (work) buffered.push(point); else emit(point); },
+    stop: () => { stopped = true; buffered = []; }, watermark: () => watermark };
+}
+
 export function watchMobileLocation(onPoint: (point: MobileLocationPoint) => void, onError: (error: LocationError) => void,
-  options: { background?: boolean } = {}) {
+  options: MobileWatchOptions = {}) {
   if (!isNativeMobile()) throw new Error('Native location is unavailable in the browser');
   if (!Capacitor.isPluginAvailable('BackgroundGeolocation')) throw new Error('Native location plugin is missing');
-  return createNativeLocationWatch(nativePlugin, onPoint, onError, options, async () => {
+  if (options.background && !options.trip) throw new Error('Background tracking requires an active trip identity');
+  const replay = options.trip ? createNativeTripReplay(nativePlugin, options.trip, onPoint) : undefined;
+  let stopped = false;
+  const nativeWatch = createNativeLocationWatch(nativePlugin, point => replay ? replay.accept(point) : onPoint(point), onError, options, async () => {
     if (options.background && Capacitor.getPlatform() === 'android') {
       const permission = await notifications.requestPermissions();
       if (permission.display !== 'granted') throw new Error('Background tracking requires the visible Android notification');
     }
+    await replay?.replay();
   });
+  const resume = () => {
+    if (stopped || document.visibilityState === 'hidden') return;
+    void replay?.replay().catch(() => onError({ code: 'JOURNAL_ERROR', message: 'Native trip replay failed' }));
+  };
+  if (replay) { document.addEventListener('visibilitychange', resume); document.addEventListener('resume', resume); }
+  const stop = async () => {
+    stopped = true; replay?.stop(); document.removeEventListener('visibilitychange', resume); document.removeEventListener('resume', resume);
+    try { await nativeWatch.stop(); } finally { stops.delete(stop); }
+  };
+  stops.add(stop);
+  return { ready: nativeWatch.ready, stop, replay: () => replay?.replay() ?? Promise.resolve() };
+}
+
+/** Only after the completed trip has been durably queued; never discard on logout. */
+export async function clearNativeTripPoints(owner: string, key: string) {
+  if (isNativeMobile()) await nativePlugin.clearTripPoints({ owner, key });
 }
 
 /** Call before logout or account changes. Never keep tracking another driver's session. */

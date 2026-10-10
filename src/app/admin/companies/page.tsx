@@ -46,6 +46,7 @@ export default function CompaniesPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -64,7 +65,7 @@ export default function CompaniesPage() {
 
   useEffect(() => {
     if (!isLoading && !user) router.push('/login');
-    if (!isLoading && !user?.isAdmin) router.push('/');
+    if (!isLoading && user && !user.isAdmin) router.push('/');
   }, [user, isLoading, router]);
 
   const fetchCompanies = async () => {
@@ -84,10 +85,12 @@ export default function CompaniesPage() {
   }, [user]);
 
   const handleCreateCompany = async () => {
+    if (saving) return;
     if (!newCompany.name || !newCompany.vat_number || !newCompany.kbo_number) {
       toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
       return;
     }
+    setSaving(true);
     try {
       const created = await api.post<Company>('/companies', {
         name: newCompany.name,
@@ -104,6 +107,8 @@ export default function CompaniesPage() {
       fetchCompanies();
     } catch (error: any) {
       toast.error(error.message || 'فشل إنشاء الشركة');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -117,14 +122,16 @@ export default function CompaniesPage() {
   };
 
   const handleUpdateCompany = async () => {
+    if (saving) return;
     if (!editCompany.name || !editCompany.vat_number || !editCompany.kbo_number) {
       toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
       return;
     }
-    if (editCompany.new_password && editCompany.new_password.length < 4) {
-      toast.error('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+    if (editCompany.new_password && editCompany.new_password.length < 12) {
+      toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
       return;
     }
+    setSaving(true);
     try {
       await api.put('/companies', {
         id: editCompany.id,
@@ -141,12 +148,14 @@ export default function CompaniesPage() {
       fetchCompanies();
     } catch (error: any) {
       toast.error(error.message || 'فشل تحديث الشركة');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleBulkSetPassword = async () => {
-    if (!bulkPassword || bulkPassword.length < 4) {
-      toast.error('كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+    if (!bulkPassword || bulkPassword.length < 12) {
+      toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
       return;
     }
     setSettingBulkPassword(true);
@@ -276,7 +285,7 @@ export default function CompaniesPage() {
                     />
                     <p className="text-xs text-muted-foreground mt-1">اختياري - يستخدمها صاحب الشركة لتسجيل الدخول</p>
                   </div>
-                  <Button onClick={handleCreateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
+                  <Button disabled={saving} aria-busy={saving} onClick={handleCreateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
                     <Plus className="w-5 h-5 ml-2" />إنشاء الشركة
                   </Button>
                 </div>
@@ -304,7 +313,7 @@ export default function CompaniesPage() {
               type="password"
               value={bulkPassword}
               onChange={(e) => setBulkPassword(e.target.value)}
-              placeholder="أدخل كلمة المرور (4 أحرف على الأقل)"
+              placeholder="أدخل كلمة المرور (12 حرفاً على الأقل)"
               className="rounded-2xl mt-1"
             />
           </div>
@@ -351,7 +360,7 @@ export default function CompaniesPage() {
                 className="rounded-2xl"
               />
             </div>
-            <Button onClick={handleUpdateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
+            <Button disabled={saving} aria-busy={saving} onClick={handleUpdateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
               حفظ التغييرات
             </Button>
           </div>

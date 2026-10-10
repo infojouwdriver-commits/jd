@@ -101,7 +101,7 @@ export default function ApprovalRequestsPage() {
 
   useEffect(() => {
     if (!isLoading && !user) router.push('/login');
-    if (!isLoading && user?.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') router.push('/');
+    if (!isLoading && user && !user.isAdmin) router.push('/');
   }, [user, isLoading, router]);
 
   const fetchRequests = useCallback(async () => {
@@ -134,7 +134,7 @@ export default function ApprovalRequestsPage() {
   }, []);
 
   useEffect(() => {
-    if (user?.role === 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (user?.isAdmin === true) {
       fetchRequests();
       fetchDriverRequests();
     }
@@ -230,7 +230,7 @@ export default function ApprovalRequestsPage() {
     );
   }
 
-  if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') return null;
+  if (!user || !user?.isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">

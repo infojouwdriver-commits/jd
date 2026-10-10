@@ -242,15 +242,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
       user?.password || ""
     );
 
-    let isValidCredentialPassword = false;
-    if (credential?.password_hash) {
-      isValidCredentialPassword = await verifyPasswordAgainstHash(
-        validated.password,
-        credential.password_hash
-      );
-    }
-
-    if (!isValidUserPassword && !isValidCredentialPassword) {
+    // The linked user is the authoritative credential. A stale legacy mirror
+    // must never revive a password after the manager resets it.
+    if (!isValidUserPassword) {
       return createErrorResponse({
         errorMessage: "Invalid phone number or password",
         status: 401,

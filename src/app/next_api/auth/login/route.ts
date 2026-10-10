@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const loginSchema = z.object({
   otp: z.string().optional(),
-  email: z.string().email("Please provide a valid email address"),
+  email: z.string().trim().toLowerCase().email("Please provide a valid email address"),
   password: z.string().min(1, "Please provide the password."),
 });
 

@@ -4,7 +4,7 @@ import {createPostgrestClient} from './postgrest';
 import {generateAdminUserToken} from './auth';
 const local = new Map<string, {count: number; reset: number}>();
 export async function rateLimit(request: NextRequest, path: string): Promise<Response | null> {
-  const auth = path.startsWith('/next_api/auth/') || path.endsWith('/login') || path === '/next_api/driver-profile';
+  const auth = request.method !== 'GET' && (path.startsWith('/next_api/auth/') || path.endsWith('/login') || path === '/next_api/driver-profile');
   const max = auth ? 10 : 120;
   const ip = process.env.TRUST_PROXY === 'true' ? request.headers.get('x-real-ip') || 'unknown' : 'unknown';
   return consumeRateLimit(`${auth ? 'auth' : 'api'}:${ip}`, max);

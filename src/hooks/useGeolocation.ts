@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { isNativeMobile, isFreshAccurateLocation, watchMobileLocation, type MobileLocationPoint } from '@/lib/mobile-location';
+import { isNativeMobile, isFreshAccurateLocation, watchMobileLocation, type MobileWatchOptions, type MobileLocationPoint } from '@/lib/mobile-location';
 export type GeolocationPoint = MobileLocationPoint;
 interface UseGeolocationOptions { onLocationUpdate?: (point: GeolocationPoint) => void; language?: 'nl' | 'fr' | 'ar' }
 const messages = {
@@ -12,7 +12,8 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
   const [state, setState] = useState({ location: null as GeolocationPoint | null, error: null as string | null,
     permissionState: 'unknown' as 'prompt' | 'granted' | 'denied' | 'unknown', isWatching: false, isLocating: false, accuracy: null as number | null });
   const last = useRef<GeolocationPoint | null>(null);
-  const stopRef = useRef<(() => void) | null>(null);
+  const stopRef = useRef<(() => void | Promise<void>) | null>(null);
+  const replayRef = useRef<(() => Promise<void>) | null>(null);
   const generation = useRef(0);
   const mounted = useRef(true);
   const optionsRef = useRef(options); optionsRef.current = options;
@@ -30,10 +31,12 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
   }, []);
   const stopWatching = useCallback(() => {
     generation.current++;
-    stopRef.current?.(); stopRef.current = null;
+    const stopped = stopRef.current?.(); stopRef.current = null;
+    replayRef.current = null;
     if (mounted.current) setState(prev => ({ ...prev, isWatching: false }));
+    return Promise.resolve(stopped);
   }, []);
-  const startWatching = useCallback((onUpdate: (point: GeolocationPoint) => void, watchOptions: { background?: boolean } = {}) => {
+  const startWatching = useCallback((onUpdate: (point: GeolocationPoint) => void, watchOptions: MobileWatchOptions = {}) => {
     stopWatching();
     const current = generation.current;
     const accept = (point: GeolocationPoint) => { if (generation.current !== current) return; update(point); onUpdate(point); };
@@ -45,7 +48,8 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     try {
       if (isNativeMobile()) {
         const watch = watchMobileLocation(accept, reject, watchOptions);
-        stopRef.current = () => { void watch.stop().catch(() => fail({})); };
+        replayRef.current = watch.replay;
+        stopRef.current = () => watch.stop().catch(() => fail({}));
         void watch.ready.then(() => { if (generation.current === current) setState(prev => ({ ...prev, isWatching: true })); }).catch(reject);
       } else {
         if (!navigator.geolocation) { reject({}); return; }
@@ -105,5 +109,6 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     } catch { return 'prompt' as const; }
   }, []);
   useEffect(() => { mounted.current = true; void checkPermission(); return () => { mounted.current = false; stopWatching(); }; }, [checkPermission, stopWatching]);
-  return { ...state, getLocation, startWatching, stopWatching, checkPermission, lastLocation: last.current };
+  const replayWatching = useCallback(async () => { await replayRef.current?.(); }, []);
+  return { ...state, getLocation, startWatching, stopWatching, replayWatching, checkPermission, lastLocation: last.current };
 }

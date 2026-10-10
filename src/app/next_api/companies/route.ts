@@ -92,7 +92,8 @@ export const POST = requestMiddleware(async (request, context) => {
     }
 
     let password_hash = null;
-    if (password && password.length >= 4) {
+    if (password != null && password !== '' && (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password,'utf8') > 72)) return createErrorResponse({errorMessage:'Password must be at least 12 characters and at most 72 UTF-8 bytes',status:400});
+    if (password) {
       password_hash = await hashString(password);
     }
     
@@ -188,7 +189,8 @@ export const PUT = requestMiddleware(async (request, context) => {
     }
 
     // Handle password update separately
-    if (password && password.length >= 4) {
+    if (password != null && password !== '' && (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password,'utf8') > 72)) return createErrorResponse({errorMessage:'Password must be at least 12 characters and at most 72 UTF-8 bytes',status:400});
+    if (password) {
       updateData.password_hash = await hashString(password);
     }
 

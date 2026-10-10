@@ -67,7 +67,7 @@ export function LoginForm({
         <div className="text-center text-2xl font-semibold">مرحبًا بعودتك</div>
       </div>
       <div className="p-6 pt-0">
-        <div>
+        <div className="hidden">
           <GoogleLoginButton
             onSuccess={onSuccess}
             onError={(message) => setError(message)}
@@ -87,9 +87,7 @@ export function LoginForm({
           )}
 
           <div className="space-y-2">
-            <div className="mb-[4px] h-[22px] text-sm font-medium">
-              البريد الإلكتروني
-            </div>
+            <label htmlFor="email" className="mb-1 block text-sm font-medium">البريد الإلكتروني</label>
             <Input
               id="email"
               type="email"
@@ -105,7 +103,7 @@ export function LoginForm({
 
           <div className="space-y-2">
             <div className="mb-[4px] flex h-[22px] items-center justify-between text-sm font-medium">
-              <span>كلمة المرور</span>
+              <label htmlFor="password">كلمة المرور</label>
               {onForgotPassword && (
                 <button
                   type="button"

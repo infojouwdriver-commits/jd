@@ -313,7 +313,7 @@ export async function validateRequestBody(request: NextRequest): Promise<any> {
     const body = JSON.parse(new TextDecoder().decode(joined));
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      throw new Error("Invalid request body");
+      throw new Response(null, { status: 400 });
     }
 
     const path = request.nextUrl.pathname;
@@ -328,7 +328,7 @@ export async function validateRequestBody(request: NextRequest): Promise<any> {
     return body;
   } catch (error) {
     if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in request body: ${error.message}`);
+      throw new Response(null, { status: 400 });
     }
 
     throw error;

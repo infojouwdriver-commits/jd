@@ -56,7 +56,7 @@ try {
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await psql(`CREATE FUNCTION public.stack_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
- for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
+ for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
@@ -100,6 +100,24 @@ try {
  assert.equal(await psql('SELECT independent_schema_ready();'),'t');
  await assert.rejects(psql("INSERT INTO trips(user_id,driver_id,vehicle_id,company_id) VALUES(2,100,1,1)"));
  checks.push('Independent core foreign keys and tenant identity validate on native PostgreSQL and reject mismatched driver company');
+ await psql("SELECT setval(pg_get_serial_sequence('users','id'),(SELECT max(id) FROM users)); SELECT setval(pg_get_serial_sequence('drivers','id'),(SELECT max(id) FROM drivers));");
+ const lifecycleArgs={p_account:{email:'lifecycle@example.invalid',password:hash,role:'jd_browser'},p_driver:{full_name:'Synthetic lifecycle driver',phone:'+32000000888',current_vehicle_id:1},p_company_id:1};
+ await denied('/rpc/security_create_driver_account',browser,'POST',lifecycleArgs);
+ const lifecycle=await success('/rpc/security_create_driver_account',service,'POST',lifecycleArgs);
+ assert.equal(lifecycle.user.password,undefined);assert.equal(lifecycle.driver.company_id,1);
+ const duplicateLifecycle=await api('/rpc/security_create_driver_account',service,'POST',lifecycleArgs);assert.equal(duplicateLifecycle.status,409);
+ await success('/driver_credentials',service,'POST',{driver_id:lifecycle.driver.id,company_id:1,phone:'+32000000888',password_hash:hash,is_active:true});
+ await success('/refresh_tokens',service,'POST',{user_id:lifecycle.user.id,token:'synthetic-lifecycle-refresh',revoked:false});
+ const invalidLifecycle=await api('/rpc/security_update_driver_account',service,'POST',{p_driver_id:lifecycle.driver.id,p_account:{email:'partial@example.invalid'},p_driver:{current_vehicle_id:999999}});assert.equal(invalidLifecycle.status,409);
+ assert.equal((await success(`/users?id=eq.${lifecycle.user.id}`,service))[0].email,'lifecycle@example.invalid');
+ await success('/rpc/security_update_driver_account',service,'POST',{p_driver_id:lifecycle.driver.id,p_account:{email:'updated-lifecycle@example.invalid',password:hash},p_driver:{phone:'+32000000889'}});
+ assert.equal((await success(`/driver_credentials?driver_id=eq.${lifecycle.driver.id}`,service))[0].phone,'+32000000889');
+ assert.equal((await success(`/refresh_tokens?user_id=eq.${lifecycle.user.id}`,service))[0].revoked,true);
+ await success('/rpc/security_deactivate_driver_account',service,'POST',{p_driver_id:lifecycle.driver.id});
+ assert.equal((await success(`/drivers?id=eq.${lifecycle.driver.id}`,service))[0].status,'inactive');
+ assert.equal((await success(`/driver_credentials?driver_id=eq.${lifecycle.driver.id}`,service))[0].password_hash,null);
+ checks.push('Native lifecycle RPCs enforce browser denial, unique accounts, atomic rollback, credential synchronization and history-preserving deactivation');
+
  const appOrigin='https://acceptance.jouw-driver.test';
  const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';const mfaSecret=Array.from(randomBytes(40),b=>alphabet[b&31]).join('');
  const appEnv={APP_ORIGIN:appOrigin,NEXT_PUBLIC_APP_URL:appOrigin,POSTGREST_URL:'http://postgrest:3000',POSTGREST_INTERNAL_NETWORK:'true',POSTGREST_SCHEMA:'public',SCHEMA_USER:'jd_browser',SCHEMA_ADMIN_USER:'jd_service',JWT_SECRET:jwtSecret,HASH_SALT_KEY:randomBytes(32).toString('hex'),RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),DATA_ENCRYPTION_KEY:randomBytes(32).toString('hex'),PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':mfaSecret}),PRIVACY_CONTACT_EMAIL:'privacy@example.invalid',PRIVACY_CONTROLLER_NAME:'Synthetic acceptance controller',PRIVACY_CONTROLLER_ADDRESS:'Synthetic test address only',TRIP_RETENTION_YEARS:'7',TRUST_PROXY:'true',DEPLOYMENT_MODE:'staging',SCHEMA_VALIDATED:'false',CHIRON_TRANSMISSION_ENABLED:'false'};

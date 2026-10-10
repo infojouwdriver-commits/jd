@@ -13,6 +13,7 @@ const totpSecret='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 const password='IntegrationPassword123!';
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
 const claims=new Set();let unavailable=false;const databaseTokens=[];
+rows.drivers=[{id:1,user_id:2,status:'active',company_id:1}];
 const mock=http.createServer(async(req,res)=>{
  try {
   const token=req.headers.authorization?.replace(/^Bearer /,'');

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '@/types/auth';
 import { api } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
@@ -54,6 +54,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
 
   const login = async (email: string, password: string, otp?: string) => {
     await api.post('/auth/login', { email, password, otp });
@@ -92,9 +94,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const applyEntryRedirect = useCallback((userData: User) => {
     const onAuthEntryPage =
-      pathname === '/' ||
-      pathname === '/login' ||
-      pathname === '/driver-login';
+      pathnameRef.current === '/' ||
+      pathnameRef.current === '/login' ||
+      pathnameRef.current === '/driver-login';
 
     if (!onAuthEntryPage) {
       return;
@@ -113,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } else {
       router.push('/dashboard');
     }
-  }, [pathname, router]);
+  }, [router]);
 
   const refreshUser = useCallback(async () => {
     try {

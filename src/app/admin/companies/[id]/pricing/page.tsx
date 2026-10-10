@@ -56,7 +56,7 @@ export default function CompanyPricingPage() {
     if (!authLoading && !user) {
       router.push('/login');
     }
-    if (!authLoading && user?.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (!authLoading && user && !user.isAdmin) {
       router.push('/');
     }
   }, [user, authLoading, router]);
@@ -87,7 +87,7 @@ export default function CompanyPricingPage() {
       }
     };
 
-    if (user?.role === 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (user?.isAdmin === true) {
       fetchCompany();
     }
   }, [companyId, user]);
@@ -116,7 +116,7 @@ export default function CompanyPricingPage() {
     );
   }
 
-  if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+  if (!user || !user?.isAdmin) {
     return null;
   }
 

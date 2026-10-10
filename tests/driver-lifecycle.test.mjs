@@ -1,0 +1,40 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {contractSql} from '../scripts/independent-schema.mjs';
+const {PGlite}=await import(process.env.PGLITE_MODULE_PATH||'@electric-sql/pglite');
+test('atomic driver lifecycle preserves history, credentials stay synchronized and partial operations roll back',async()=>{
+ const db=new PGlite();await db.waitReady;
+ try {
+ await db.exec(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
+ await db.exec('CREATE ROLE service_role; CREATE ROLE browser_role;');
+ const migration=file=>fs.readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8').replaceAll(':"schema"','public').replaceAll(':"admin_role"','service_role');
+ await db.exec(migration('20261009_security.sql'));await db.exec(migration('20261010_driver_lifecycle.sql'));
+ await db.exec(contractSql('public',{validate:true}));
+ await db.exec("INSERT INTO companies(id,name) VALUES(1,'Test'),(2,'Other'); INSERT INTO vehicles(id,company_id) VALUES(1,1),(2,2);");
+ const hash='$2b$12$'+'a'.repeat(53);const account={email:'ONE@driver.local',password:hash,role:'browser_role'};const driver={full_name:'Synthetic Driver',phone:'+32001'};
+ const create=(a=account,d=driver)=>db.query('SELECT security_create_driver_account($1::jsonb,$2::jsonb,1) AS result',[JSON.stringify(a),JSON.stringify(d)]);
+ await assert.rejects(create(account,{...driver,current_vehicle_id:2}));
+ assert.equal((await db.query('SELECT count(*)::int n FROM users')).rows[0].n,0,'user insertion rolls back when driver vehicle belongs to another company');
+ const result=(await create()).rows[0].result;assert.equal(result.user.email,'one@driver.local');assert.equal(result.user.password,undefined);
+ await assert.rejects(create({...account,email:' one@driver.local '}));
+ const uid=result.user.id,did=result.driver.id;
+ await db.query("INSERT INTO trips(user_id,driver_id,vehicle_id,company_id,status) VALUES($1,$2,1,1,'legacy')",[uid,did]);
+ await db.query("INSERT INTO driver_credentials(driver_id,company_id,phone,password_hash,is_active) VALUES($1,1,'+32001',$2,true);",[did,hash]);
+ await db.query("INSERT INTO refresh_tokens(user_id,token,revoked) VALUES($1,'synthetic',false)",[uid]);
+ const update=(a,d)=>db.query('SELECT security_update_driver_account($1,$2::jsonb,$3::jsonb) result',[did,JSON.stringify(a),JSON.stringify(d)]);
+ await assert.rejects(update({password:hash},{current_vehicle_id:2}));
+ assert.equal((await db.query('SELECT revoked FROM refresh_tokens')).rows[0].revoked,false,'failed update does not revoke or partially alter user');
+ const hash2='$2b$12$'+'b'.repeat(53);
+ await update({email:'two@driver.local',password:hash2},{phone:'+32002'});
+ const credential=(await db.query('SELECT * FROM driver_credentials')).rows[0];assert.equal(credential.phone,'+32002');assert.equal(credential.password_hash,hash2);
+ assert.equal((await db.query('SELECT revoked FROM refresh_tokens')).rows[0].revoked,true);
+ await db.query('SELECT security_deactivate_driver_account($1)',[did]);
+ assert.equal((await db.query('SELECT count(*)::int n FROM trips')).rows[0].n,1);
+ assert.equal((await db.query('SELECT status FROM drivers')).rows[0].status,'inactive');
+ assert.equal((await db.query('SELECT password_hash FROM driver_credentials')).rows[0].password_hash,null);
+ assert.ok((await db.query('SELECT security_revoked_before FROM users')).rows[0].security_revoked_before);
+ await assert.rejects(update({}, {company_id:2}));
+ await db.exec('SET ROLE browser_role');await assert.rejects(db.query('SELECT security_deactivate_driver_account($1)',[did]));await db.exec('RESET ROLE');
+ }finally{await db.close();}
+});

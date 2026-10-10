@@ -49,7 +49,7 @@ export default function ChironSettingsPage() {
   });
 
   useEffect(() => {
-    if (!isLoading && !user?.isAdmin) {
+    if (!isLoading && user && !user.isAdmin) {
       router.push('/dashboard');
     }
   }, [user, isLoading, router]);

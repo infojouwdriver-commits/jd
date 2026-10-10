@@ -1,12 +1,51 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createNativeLocationWatch, normalizeNativeLocation, isFreshAccurateLocation, stopAllMobileLocationWatches } from '../../src/lib/mobile-location.ts';
+import { createNativeLocationWatch, createNativeTripReplay, normalizeNativeLocation, isFreshAccurateLocation, stopAllMobileLocationWatches } from '../../src/lib/mobile-location.ts';
+import { readFile } from 'node:fs/promises';
 const point = { latitude: 50.8, longitude: 4.3, accuracy: 10, time: 123456, speed: 0 };
 test('native fixes preserve original time and reject simulated/malformed fixes', () => {
   assert.equal(normalizeNativeLocation(point).timestamp, 123456);
   assert.equal(normalizeNativeLocation({ ...point, simulated: true }), null);
   assert.equal(normalizeNativeLocation({ ...point, latitude: 91 }), null);
   assert.equal(normalizeNativeLocation({ ...point, accuracy: NaN }), null);
+  assert.equal(normalizeNativeLocation({ ...point, time: 0 }), null);
+  assert.equal(normalizeNativeLocation({ ...point, time: -1 }), null);
+});
+
+const trip = { owner: '123', key: '9839aaab-1d2c-431d-9101-437ac998bb11' };
+test('journal replays all bounded batches before newer live fixes, and deduplicates by original time', async () => {
+  let release; let reads = 0; const emitted = [];
+  const persisted = Array.from({ length: 1205 }, (_, n) => ({ ...point, time: n + 1 }));
+  const plugin = { readTripPoints: async ({ after }) => {
+    if (++reads === 1) await new Promise(resolve => { release = resolve; });
+    return { points: persisted.filter(p => p.time > after).slice(0, 1000) };
+  } };
+  const replay = createNativeTripReplay(plugin, trip, p => emitted.push(p.timestamp));
+  const first = replay.replay();
+  assert.equal(replay.replay(), first);
+  replay.accept({ lat: 50.8, lon: 4.3, accuracy: 10, timestamp: 1300 });
+  release(); await first;
+  assert.equal(reads, 2);
+  assert.deepEqual(emitted, [...persisted.map(p => p.time), 1300]);
+  replay.accept({ lat: 50.8, lon: 4.3, accuracy: 10, timestamp: 1300 });
+  assert.equal(emitted.length, 1206);
+  replay.stop(); replay.accept({ lat: 50.8, lon: 4.3, accuracy: 10, timestamp: 1400 });
+  assert.equal(emitted.length, 1206);
+});
+test('journal errors are surfaced; no-progress batches cannot loop forever', async () => {
+  assert.throws(() => createNativeTripReplay({}, { ...trip, owner: '../123' }, () => {}), /identity/);
+  const replay = createNativeTripReplay({ readTripPoints: async () => ({ points: Array.from({ length: 1000 }, () => ({ ...point, time: -1 })) }) }, trip, () => {});
+  await assert.rejects(replay.replay(), /no progress/);
+  const failed = createNativeTripReplay({ readTripPoints: async () => { throw new Error('authentication tag invalid'); } }, trip, () => {});
+  await assert.rejects(failed.replay(), /authentication tag invalid/);
+});
+test('taximeter passes owner-scoped trip identity and last durable meter anchor into native replay', async () => {
+  const source = await readFile(new URL('../../src/app/driver/taximeter/page.tsx', import.meta.url), 'utf8');
+  assert.match(source, /trip: \{ owner: user\.sub, key: nativeTrip\.completionRequestKey/);
+  assert.match(source, /after: meterRef\.current\.lastPoint\?\.timestamp \?\? 0/);
+  assert.match(source, /await replayWatching\(\)/);
+  assert.match(source, /await tripJournal\(\)\.complete\(user\.sub, tripPayload\);\s*await stopWatching\(\)/);
+  assert.match(source, /await api\.post\('\/trips\/end', payload\);[\s\S]*?await clearNativeTripPoints\(user\.sub/);
 });
 test('stop before asynchronous registration completes removes eventual watcher without emitting', async () => {
   let resolveId; let callback; const removed = []; const emitted = [];

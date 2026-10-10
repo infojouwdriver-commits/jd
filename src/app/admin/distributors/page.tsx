@@ -85,7 +85,7 @@ export default function DistributorsPage() {
     if (!isLoading && !user) {
       router.push('/login');
     }
-    if (!isLoading && user?.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (!isLoading && user && !user.isAdmin) {
       router.push('/');
     }
   }, [user, isLoading, router]);
@@ -112,7 +112,7 @@ export default function DistributorsPage() {
   };
 
   useEffect(() => {
-    if (user?.role === 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (user?.isAdmin === true) {
       fetchDistributors();
       fetchCompanies();
     }
@@ -184,7 +184,7 @@ export default function DistributorsPage() {
     );
   }
 
-  if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+  if (!user || !user?.isAdmin) {
     return null;
   }
 

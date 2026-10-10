@@ -45,14 +45,14 @@ export default function EditCompanyPage() {
     if (!authLoading && !user) {
       router.push('/login');
     }
-    if (!authLoading && user?.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (!authLoading && user && !user.isAdmin) {
       router.push('/');
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
     const fetchCompany = async () => {
-      if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user') return;
+      if (!user || !user?.isAdmin) return;
 
       setLoading(true);
       try {
@@ -73,7 +73,7 @@ export default function EditCompanyPage() {
       }
     };
 
-    if (user?.role === 'app20251225073911jaqqaxdfir_v1_admin_user') {
+    if (user?.isAdmin === true) {
       fetchCompany();
     }
   }, [user, companyId, router]);
@@ -117,7 +117,7 @@ export default function EditCompanyPage() {
     );
   }
 
-  if (!user || user.role !== 'app20251225073911jaqqaxdfir_v1_admin_user' || !company) {
+  if (!user || !user?.isAdmin || !company) {
     return null;
   }
 

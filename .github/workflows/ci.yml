@@ -5,6 +5,11 @@ on:
   pull_request:
     paths-ignore: ['**/*.md', 'tests/verification/**', 'security/verification/**']
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      force_native_db:
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -30,6 +35,8 @@ jobs:
           pnpm install --frozen-lockfile
       - name: Check committed files for credential and data exports
         run: node tests/repository-safety.mjs
+      - name: Host deployment fail-closed checks
+        run: node --test deploy/tests/*.test.mjs
       - name: Type checking
         run: pnpm typecheck
       - name: Unit, conversion and isolated PostgreSQL privilege tests
@@ -52,8 +59,8 @@ jobs:
         run: node --experimental-strip-types tests/run-auth-integration.mjs
 
   native-database:
-    # Standard Linux jobs in PUBLIC repos; skip private repos to avoid exceeding paid-minute allowances.
-    if: github.event.repository.private == false
+    # Release calls explicitly require native acceptance; routine private-repo pushes skip hosted Docker minutes.
+    if: inputs.force_native_db == true || github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
