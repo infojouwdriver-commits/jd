@@ -62,7 +62,10 @@ export async function backupRestoreAcceptance({docker,source,image,prefix}) {
   for(const table of tables){const id='"'+table.replaceAll('"','""')+'"';const query=`SELECT count(*)::text||':'||coalesce(md5(string_agg(row_data::text,'' ORDER BY row_data::text)),'empty') FROM (SELECT to_jsonb(t) AS row_data FROM public.${id} t) rows;`;assert.equal(await sql(target,database,query),await sql(source,'jd_test',query));}
   const sequences="SELECT coalesce(jsonb_agg(jsonb_build_array(sequencename,last_value,increment_by) ORDER BY sequencename),'[]'::jsonb) FROM pg_sequences WHERE schemaname='public';";
   assert.equal(await sql(target,database,sequences),await sql(source,'jd_test',sequences));
-  const metadata="SELECT jsonb_build_object('constraints',(SELECT count(*) FROM pg_constraint WHERE connamespace='public'::regnamespace),'policies',(SELECT count(*) FROM pg_policies WHERE schemaname='public'),'functions',(SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace));";
+  const metadata=`SELECT jsonb_build_object(
+   'constraints',(SELECT md5(string_agg(conrelid::regclass::text||':'||conname||':'||pg_get_constraintdef(oid),'' ORDER BY conrelid::regclass::text,conname)) FROM pg_constraint WHERE connamespace='public'::regnamespace),
+   'policies',(SELECT md5(jsonb_agg(to_jsonb(p) ORDER BY tablename,policyname)::text) FROM pg_policies p WHERE schemaname='public'),
+   'functions',(SELECT md5(string_agg(pg_get_functiondef(oid),'' ORDER BY proname,pg_get_function_identity_arguments(oid))) FROM pg_proc WHERE pronamespace='public'::regnamespace AND prokind='f'));`;
   assert.equal(await sql(target,database,metadata),await sql(source,'jd_test',metadata));
   await assert.rejects(sql(target,database,'SET ROLE jd_browser; SELECT * FROM public.trips;'));
   assert.match(await sql(target,database,'SET ROLE jd_service; SELECT count(*) FROM public.trips;'),/\d+/);
