@@ -1,6 +1,6 @@
 {
   "status": "release_candidate_requires_target_server_device_provider_acceptance",
-  "verified_code_commit": "0b547a0330ab3a7018d2dac37b4986d7834f66b9",
+  "verified_code_commit": "71a62c5130bede569e9918eb2071e152cf112346",
   "evidence": "tests/verification/github-actions.json",
   "verified": {
     "typescript": true,
@@ -10,16 +10,17 @@
     "mobile_test_cases": 7,
     "http_security_checks": 9,
     "production_auth_checks_with_simulated_postgrest": 17,
-    "native_docker_application_and_database_checks": 23,
+    "native_docker_application_and_database_checks": 27,
     "production_dependency_advisories": 0,
-    "repository_credential_export_scan": true
+    "repository_credential_export_scan": true,
+    "synthetic_encrypted_backup_restore": true
   },
   "not_verified": [
     "Synthetic data and inferred staging schema only",
     "Caddy/TLS and target hosting not tested",
     "Native phone binaries, background persistence and physical devices not accepted",
     "Chiron disabled; no provider acceptance",
-    "Production data migration, encrypted restore and legal acceptance not completed"
+    "Production migration/restore, application key recovery and legal acceptance remain untested"
   ],
   "trial_site_updated": false,
   "original_records_committed": false

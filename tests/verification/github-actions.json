@@ -2,28 +2,28 @@
   "reviewed_at": "2026-10-10",
   "timezone": "Europe/Brussels",
   "repository": "infojouwdriver-commits/jd",
-  "verified_code_commit": "0b547a0330ab3a7018d2dac37b4986d7834f66b9",
+  "verified_code_commit": "71a62c5130bede569e9918eb2071e152cf112346",
   "workflow_run": {
-    "id": 38006527876,
-    "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876",
+    "id": 38007178898,
+    "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38007178898",
     "conclusion": "success"
   },
   "jobs": [
     {
-      "id": 114076473638,
+      "id": 114078601443,
       "name": "verify",
       "conclusion": "success",
-      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876/job/114076473638"
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38007178898/job/114078601443"
     },
     {
-      "id": 114076473790,
+      "id": 114078601206,
       "name": "native-database",
       "conclusion": "success",
-      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38006527876/job/114076473790"
+      "url": "https://github.com/infojouwdriver-commits/jd/actions/runs/38007178898/job/114078601206"
     }
   ],
   "native_acceptance": {
-    "passed": 23,
+    "passed": 27,
     "checks": [
       "PostgreSQL has no published host port",
       "Reconstructed schema and full deployment migration sequence applied on native PostgreSQL",
@@ -47,6 +47,10 @@
       "Application refuses edits to the locked completed trip",
       "Real database-backed driver authorization denies admin routes and another owner trip",
       "Logout revokes existing access token against real PostgreSQL and clears cookies",
+      "Actual backup.sh produces a private age-encrypted custom-format dump with no plaintext dump file",
+      "Failed pg_dump leaves no published backup or temporary plaintext file",
+      "Encrypted backup restores in a separate network-isolated PostgreSQL container with matching all-table hashes, sequences, constraints, functions, RLS and browser/service access",
+      "Wrong decryption key and corrupted encrypted backup are rejected",
       "Actual app fails closed with 503 when real PostgREST rate storage is unavailable"
     ],
     "images": {
@@ -62,7 +66,7 @@
     "Caddy/TLS and target hosting not tested",
     "Native phone binaries, background persistence and physical devices not accepted",
     "Chiron disabled; no provider acceptance",
-    "Production data migration, encrypted restore and legal acceptance not completed"
+    "Synthetic encrypted restore passed; production migration/restore, application key recovery and legal acceptance remain untested"
   ],
   "trial_site_updated": false
 }
