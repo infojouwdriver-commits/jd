@@ -87,7 +87,7 @@ try {
  await docker(['build','--tag',appImage,'.'],{timeout:720000});
  checks.push('Actual root Dockerfile builds the production standalone image');
  const appPassword=randomBytes(24).toString('base64url');const hash=await bcrypt.hash(appPassword,12);
- await success('/users',service,'POST',[{id:1,email:'admin@example.invalid',password:hash,user_type:'admin',role:'jd_browser'},{id:2,email:'driver@example.invalid',password:hash,user_type:'driver',role:'jd_browser'},{id:222,email:'rpc-owner@example.invalid',user_type:'driver',role:'jd_browser'}]);
+ await success('/users',service,'POST',[{id:1,email:'admin@example.invalid',password:hash,user_type:'admin',role:'jd_browser'},{id:2,email:'driver@example.invalid',password:hash,user_type:'driver',role:'jd_browser'},{id:222,email:'rpc-owner@example.invalid',password:hash,user_type:'driver',role:'jd_browser'}]);
  await success('/companies?id=eq.1',service,'PATCH',{chiron_mode:'TEST'});
  await success('/vehicles',service,'POST',{id:1,company_id:1,plate_number:'SYNTHETIC-1',status:'active'});
  await success('/drivers',service,'POST',{id:1,user_id:2,company_id:1,current_vehicle_id:1,full_name:'Synthetic acceptance driver',phone:'+32000000002',status:'active'});
