@@ -1,5 +1,5 @@
 #!/bin/bash
-# Update only an accepted UI image; preserve runtime settings, data and HTTPS.
+# Update an accepted portal image; preserve accounts, data, TLS and recovery state.
 set -euo pipefail
 umask 077
 image=${1:?Image required}
@@ -23,12 +23,17 @@ if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.VERIFIED_BACKU
 BEFORE
 work=$(mktemp -d .ui-update.XXXXXX)
 cp private-app.yaml "$work/private-app.yaml"
+cp .app-staging.env "$work/app.env"
+cp Caddyfile "$work/Caddyfile"
 cp runtime-mode.json "$work/runtime-mode.json"
 cp /srv/jouw-driver/release.json "$work/release.json"
 updated=false
 cleanup(){
   if test "$updated" != true; then
     cat "$work/private-app.yaml" > private-app.yaml
+    cat "$work/app.env" > .app-staging.env
+    cat "$work/Caddyfile" > Caddyfile
+    docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1 || true
     cat "$work/runtime-mode.json" > runtime-mode.json
     cat "$work/release.json" > /srv/jouw-driver/release.json
     docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --wait --wait-timeout 180 app </dev/null >/dev/null 2>&1 || true
@@ -42,6 +47,14 @@ const c=fs.readFileSync('private-app.yaml','utf8'),p=/ghcr\.io\/infojouwdriver-c
 if((c.match(p)||[]).length!==1)throw Error('Expected one app image');
 fs.writeFileSync('private-app.yaml',c.replace(p,process.env.CUSTOMER_IMAGE),{mode:0o600});
 IMAGE
+node --input-type=module <<'FLAGS'
+import fs from 'node:fs';
+let env=fs.readFileSync('.app-staging.env','utf8');
+for(const [key,value] of Object.entries({CHIRON_TRANSMISSION_ENABLED:'true',CHIRON_PRODUCTION_ENABLED:'false'})){
+ const pattern=new RegExp('^'+key+'=.*$','m');env=pattern.test(env)?env.replace(pattern,key+'='+value):env+'\n'+key+'='+value+'\n';
+}
+fs.writeFileSync('.app-staging.env',env,{mode:0o600});
+FLAGS
 docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --wait --wait-timeout 180 app </dev/null
 app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
 test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
@@ -49,9 +62,12 @@ test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$image"
 test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
 docker exec "$app" node scripts/preflight.mjs
 docker exec "$app" node scripts/database-readiness.mjs
+cat /srv/jouw-driver/customer-release/Caddyfile.customers > Caddyfile
+docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy validate --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
+docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
 node --input-type=module <<'ACCEPT'
 const base='https://jouw-driver.duckdns.org';
-for(const p of ['/login','/driver-login','/privacy-policy']){
+for(const p of ['/','/login','/driver-login','/privacy-policy']){
 const r=await fetch(base+p,{redirect:'error',signal:AbortSignal.timeout(20000)});
 if(r.status!==200)throw Error('Live page failed');
 if(p==='/login'&&!r.headers.get('content-security-policy')?.includes("default-src 'self'"))throw Error('Login security policy missing');
@@ -64,8 +80,8 @@ ACCEPT
 node --input-type=module <<'STATE'
 import fs from 'node:fs';
 const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
-const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG};
+const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,chironTransmission:true,chironProduction:false,homepage:'public introduction',verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG};
 for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
 STATE
 updated=true
-printf 'Customer login contrast update deployed; database, runtime credentials and HTTPS preserved.\n'
+printf 'Customer homepage, admin interface and reviewed Chiron TEST integration deployed; accounts, database and HTTPS preserved.\n'
