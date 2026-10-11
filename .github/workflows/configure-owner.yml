@@ -144,8 +144,14 @@ jobs:
             frontend: {external: true, name: jouw-driver_frontend}
           COMPOSE
           docker compose --project-name jouw-driver --file enrollment.yaml up -d
-          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1
-          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1
+          enrollment_id=$(docker compose --project-name jouw-driver --file enrollment.yaml ps -q enrollment)
+          # Fetch inside the private container; never print the page containing
+          # the enrollment seed. Node retries startup and checks only HTTP status.
+          docker exec "$enrollment_id" node --input-type=module -e 'let ready=false;for(let i=0;i<20;i++){try{const r=await fetch("http://127.0.0.1:4000/admin-setup");await r.body.cancel();if(r.status===200){ready=true;break}}catch{}await new Promise(r=>setTimeout(r,1000))}if(!ready)process.exit(1);console.log("Private owner enrollment service responds successfully.")'
+          # Compose exec forwards stdin by default. Do not let it consume the
+          # remaining remote bash script and silently skip subsequent checks.
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy validate --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
           test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/admin-setup)" = 401
           printf 'Owner enrollment ready behind HTTPS password authentication. No account is created until the owner confirms MFA.\n'
           ENROLLMENT
