@@ -8,12 +8,18 @@ root=/srv/jouw-driver
 foundation="$root/foundation"
 backup_root="$root/backups"
 cd "$foundation"
-# This acceptance drill covers the private foundation. Before public rollout,
-# update backup coverage for its final live runtime and consistent hot snapshots.
+# The foundation keeps its existing private database and TLS volumes when live.
+# Reject an unrelated generic deployment whose runtime is outside this scope.
 test ! -e "$root/.env"
-test ! -e "$root/release.json"
+mode=private
+if test -f runtime-mode.json; then
+  mode=$(node -e 'const m=JSON.parse(require("fs").readFileSync("runtime-mode.json")); if(!["prepared","public"].includes(m.mode))process.exit(1);process.stdout.write(m.mode)')
+fi
+if test -e "$root/release.json"; then test "$mode" = public; fi
 sudo test -f .enroll-state/owner-enrolled.json
-test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/)" = 503
+expected=503
+if test "$mode" = public; then expected=200; fi
+test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/login)" = "$expected"
 test -s "$backup_root/recipients-$tag.txt"
 command -v age >/dev/null
 work=$(mktemp -d "$backup_root/.snapshot.XXXXXX")
@@ -31,6 +37,10 @@ test -s "$work/roles.sql"
 for file in .app-staging.env .database.env compose.yaml private-app.yaml Caddyfile owner-identity.json schema-initialized.json schema-audit.json; do
   cp -- "$file" "$work/runtime/$file"
 done
+for file in runtime-mode.json .app-before-production.env private-app-before-production.yaml Caddyfile-before-production; do
+  if test -f "$file"; then cp -- "$file" "$work/runtime/$file"; fi
+done
+if test -f "$root/release.json"; then cp -- "$root/release.json" "$work/runtime/release.json"; fi
 sudo cat .enroll-state/owner-enrolled.json > "$work/runtime/owner-enrolled.json"
 cp "$backup_root/backup-table-counts.sql" "$work/backup-table-counts.sql"
 # A private summary is included inside encryption, with counts and all hashes.
