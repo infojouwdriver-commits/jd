@@ -1,0 +1,40 @@
+name: Verify private owner authentication
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  authentication:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Verify existing owner login, MFA and revocation on the private app
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          OWNER_PASSWORD: ${{ secrets.INITIAL_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$OWNER_PASSWORD"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/private-verification; chmod 700 /srv/jouw-driver/private-verification' </dev/null
+          scp "${args[@]}" deploy/verify-private-owner.cjs "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/private-verification/"
+          node -e 'process.stdout.write(JSON.stringify({email:"jouw2023@gmail.com",password:process.env.OWNER_PASSWORD}))' | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'set -eu; cd /srv/jouw-driver/foundation; sudo test -f .enroll-state/owner-enrolled.json; app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app); test -n "$app"; docker exec -i "$app" node -e "$(cat /srv/jouw-driver/private-verification/verify-private-owner.cjs)"'
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'test "$(curl --proto "=https" --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w "%{http_code}" https://jouw-driver.duckdns.org/)" = 503; printf "Public maintenance remains active.\n"' </dev/null
