@@ -797,7 +797,7 @@
 .workspace-nav-link[aria-current="page"] { color: #1d4ed8; background: #eff6ff; }
 .dark .workspace-nav-link[aria-current="page"] { color: #93c5fd; background: #172554; }
 .workspace-nav-group { padding: 20px 12px 8px; font-size: 10px; color: var(--muted-foreground); }
-.workspace-content { margin-inline-start: var(--workspace-rail); min-width: 0; }
+.workspace-content { position: relative; z-index: 0; margin-inline-start: var(--workspace-rail); min-width: 0; }
 .workspace-content > div > .container { max-width: 1440px; }
 .workspace-content .min-h-screen { min-height: calc(100dvh - 76px); }
 .workspace-content .bg-gradient-to-br { background-image: none; }
