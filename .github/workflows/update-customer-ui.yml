@@ -1,4 +1,4 @@
-name: Update verified customer login UI
+name: Update verified customer UI
 on:
   workflow_dispatch:
     inputs:
@@ -59,9 +59,9 @@ jobs:
           if(!response.ok)throw Error('Cannot read UI proof');const bytes=Buffer.from(await response.arrayBuffer());
           if(a.digest&&a.digest!=='sha256:'+createHash('sha256').update(bytes).digest('hex'))throw Error('UI proof integrity mismatch');
           const dir=fs.mkdtempSync(os.tmpdir()+'/ui-proof-');
-          try{fs.writeFileSync(dir+'/proof.zip',bytes,{mode:0o600});const proof=JSON.parse(execFileSync('unzip',['-p',dir+'/proof.zip','verification.json'],{encoding:'utf8'}));if(proof.image!==i.image||proof.checks?.length!==8)throw Error('UI acceptance image mismatch');}finally{fs.rmSync(dir,{recursive:true,force:true});}
+          try{fs.writeFileSync(dir+'/proof.zip',bytes,{mode:0o600});const proof=JSON.parse(execFileSync('unzip',['-p',dir+'/proof.zip','verification.json'],{encoding:'utf8'}));if(proof.image!==i.image||proof.checks?.length!==16)throw Error('UI acceptance image mismatch');}finally{fs.rmSync(dir,{recursive:true,force:true});}
           const c=await api('/compare/fccc2600118dab9c08fffae919c916e40c47f180...'+i.revision);
-          const allowed=new Set(['src/components/auth/LoginPageClient.tsx','tests/run-customer-ui.mjs','.github/workflows/verify-customer-ui.yml','.github/workflows/update-customer-ui.yml','deploy/update-customer-ui.sh']);
+          const allowed=new Set(['src/components/auth/LoginPageClient.tsx','src/app/globals.css','src/app/admin/companies/page.tsx','src/app/admin/companies/[id]/settings/page.tsx','tests/run-customer-ui.mjs','.github/workflows/verify-customer-ui.yml','.github/workflows/update-customer-ui.yml','deploy/update-customer-ui.sh']);
           if(!c.files?.length||c.files.some(f=>!allowed.has(f.filename)&&!/^docs\/.*\.md$/.test(f.filename)))throw Error('Only reviewed UI and acceptance changes allowed');
           console.log('Verified release, isolated UI, recoverable live backup and UI-only change scope.');
           GATE
