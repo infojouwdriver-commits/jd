@@ -22,6 +22,7 @@ try{
   try{
    const context=await browser.newContext({viewport});
    await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
+   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
    const page=await context.newPage();const failures=[];
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
@@ -54,6 +55,19 @@ try{
    await page.waitForURL(base+'/privacy-policy');
    assert.ok(await page.getByRole('heading').count()>0);
    checks.push(name+': privacy link navigation');
+   await page.goto(base+'/');
+   await page.getByRole('button',{name:'AR',exact:true}).click();
+   assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+   assert.ok(await page.getByRole('heading',{name:/كل رحلة\. كل سائق\./}).isVisible());
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+   await page.screenshot({path:'ui-output/'+name+'-homepage.png',fullPage:true});
+   await page.locator('.jd-home-hero').getByRole('link',{name:'دخول الشركات',exact:true}).click();
+   await page.locator('#company-email').waitFor({state:'visible'});
+   checks.push(name+': public advertising homepage opens company login directly');
+   await page.goto(base+'/');
+   await page.locator('.jd-home-hero').getByRole('link',{name:'دخول السائقين',exact:true}).click();
+   await page.locator('#phone').waitFor({state:'visible'});
+   checks.push(name+': public homepage opens driver login in the same window');
    // Fixture responses exercise actual shipped admin components without production credentials.
    // Native release tests separately verify server authentication and database authorization.
    const companies=[{id:92,name:'Other fixture company',vat_number:'BE0999999999',kbo_number:'0999999999',chiron_mode:'TEST',subscription_status:'pending_contract'}, {id:91,name:'UI fixture company',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_mode:'TEST',subscription_status:'pending_contract'}];
@@ -95,6 +109,7 @@ try{
    await page.goto(base+'/admin/companies');
    await page.getByRole('heading',{name:'Created UI company',exact:true}).waitFor({state:'visible'});
    await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));
+   await page.screenshot({path:'ui-output/'+name+'-companies.png',fullPage:true});
    const nav=page.locator('#management-navigation');
    if(viewport.width<1024)await page.getByRole('button',{name:'فتح القائمة',exact:true}).click();
    await nav.getByRole('link',{name:'السائقون',exact:true}).click();
@@ -105,6 +120,6 @@ try{
    assert.equal(failures.length,0,name+': no hydration or script CSP errors');
   }finally{await browser.close();}
  }
- fs.writeFileSync('ui-output/verification.json',JSON.stringify({image,scope:'isolated deployed image on loopback; no live accounts',checks},null,2));
+ fs.writeFileSync('ui-output/verification.json',JSON.stringify({image,scope:'isolated deployed image on loopback; fixture admin API; real backend verified separately; no live accounts',checks},null,2));
  console.log(JSON.stringify({scope:'isolated immutable production image',passed:checks.length,checks}));
 }finally{try{docker(['rm','--force',container]);}catch{}}
