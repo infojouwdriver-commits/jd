@@ -1,6 +1,11 @@
 name: Verify customer image UI in isolation
 on:
   workflow_dispatch:
+    inputs:
+      image:
+        type: string
+        required: true
+        description: Verified immutable customer image digest
 permissions:
   contents: read
   packages: read
@@ -23,14 +28,18 @@ jobs:
       - name: Pull the verified immutable customer image
         env:
           REGISTRY_TOKEN: ${{ github.token }}
+          UI_IMAGE: ${{ inputs.image }}
         run: |
           set -euo pipefail
+          [[ "$UI_IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
           config=$(mktemp -d)
           export DOCKER_CONFIG="$config"
           trap 'rm -rf "$config"' EXIT
           printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1
-          docker pull ghcr.io/infojouwdriver-commits/jd@sha256:7f171174aba425d74cf1af31abc4f5f75d32dc836f8f807211a419c4b5775795
+          docker pull "$UI_IMAGE"
       - name: Test desktop and WebKit mobile buttons with production CSP
+        env:
+          UI_IMAGE: ${{ inputs.image }}
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/ui-tools/node_modules/playwright/index.mjs" node tests/run-customer-ui.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
