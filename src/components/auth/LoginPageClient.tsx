@@ -22,7 +22,7 @@ enum PortalEnum {
   COMPANY = "COMPANY",
 }
 
-function LoginPageContent() {
+function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
   const [mode, setMode] = useState<ModeEnum>(ModeEnum.LOGIN);
   const [portal, setPortal] = useState<PortalEnum>(PortalEnum.ADMIN);
   const searchParams = useSearchParams();
@@ -130,8 +130,8 @@ function LoginPageContent() {
             {mode === ModeEnum.LOGIN && (
               <LoginForm
                 onSuccess={handleSuccess}
-                onSwitchToRegister={() => setMode(ModeEnum.REGISTER)}
-                onForgotPassword={() => setMode(ModeEnum.RESET)}
+                onSwitchToRegister={emailEnabled ? () => setMode(ModeEnum.REGISTER) : undefined}
+                onForgotPassword={emailEnabled ? () => setMode(ModeEnum.RESET) : undefined}
               />
             )}
             {mode === ModeEnum.REGISTER && (
@@ -152,15 +152,17 @@ function LoginPageContent() {
         {portal === PortalEnum.COMPANY && (
           <CompanyLoginForm onSuccess={handleSuccess} />
         )}
+        {!emailEnabled && <p dir="rtl" className="mt-5 text-center text-sm text-slate-200">لإنشاء حساب أو استعادة الوصول، تواصل مع إدارة شركتك.</p>}
+        <p className="mt-4 text-center text-sm text-slate-200"><Link href="/privacy-policy" className="underline">الخصوصية · Confidentialité</Link></p>
       </div>
     </div>
   );
 }
 
-export function LoginPageClient() {
+export function LoginPageClient({emailEnabled = false}: {emailEnabled?: boolean}) {
   return (
     <Suspense fallback={null}>
-      <LoginPageContent />
+      <LoginPageContent emailEnabled={emailEnabled} />
     </Suspense>
   );
 }
