@@ -26,8 +26,8 @@ try{
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
    await page.goto(base+'/login');
-   const background=await page.locator('div.dark').evaluate(el=>({color:getComputedStyle(el).backgroundColor,image:getComputedStyle(el).backgroundImage}));
-   assert.equal(background.color,'rgb(11, 15, 26)');
+   const background=await page.locator('div.dark').evaluate(el=>({text:getComputedStyle(el).color,image:getComputedStyle(el).backgroundImage}));
+   assert.equal(background.text,'rgb(255, 255, 255)');
    assert.ok(background.image.includes('linear-gradient'),'Valid dark gradient must preserve white text contrast');
    checks.push(name+': valid dark login background and scoped theme');
    await page.getByRole('button',{name:'Company Portal',exact:true}).click();
