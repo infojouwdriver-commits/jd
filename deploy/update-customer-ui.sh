@@ -54,7 +54,7 @@ const base='https://jouw-driver.duckdns.org';
 for(const p of ['/login','/driver-login','/privacy-policy']){
 const r=await fetch(base+p,{redirect:'error',signal:AbortSignal.timeout(20000)});
 if(r.status!==200)throw Error('Live page failed');
-if(p==='/login'){const h=await r.text();if(!h.includes('dark relative flex')||!h.includes('radial-gradient(1200px 800px'))throw Error('Readable login background missing');}
+if(p==='/login'&&!r.headers.get('content-security-policy')?.includes("default-src 'self'"))throw Error('Login security policy missing');
 }
 for(const [p,n,headers]of [['/next_api/auth/user',401,{}],['/next_api/companies',401,{}],['/next_api/auth/user',403,{Origin:'https://untrusted.example'}],['/admin-setup',404,{}]]){
 if((await fetch(base+p,{headers,redirect:'error',signal:AbortSignal.timeout(15000)})).status!==n)throw Error('Live access guard failed');
