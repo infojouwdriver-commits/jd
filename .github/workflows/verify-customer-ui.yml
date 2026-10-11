@@ -41,7 +41,8 @@ jobs:
         env:
           UI_IMAGE: ${{ inputs.image }}
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/ui-tools/node_modules/playwright/index.mjs" node tests/run-customer-ui.mjs
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: isolated-customer-ui-${{ github.run_id }}
           path: ui-output/
