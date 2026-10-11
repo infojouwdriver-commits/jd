@@ -47,6 +47,9 @@ jobs:
           cd /srv/jouw-driver/foundation
           test ! -e /srv/jouw-driver/release.json
           test ! -e /srv/jouw-driver/.env
+          # A completed enrollment must never reset its recorded identity or
+          # regain the temporary provisioning privilege on a later dispatch.
+          sudo test ! -e .enroll-state/owner-enrolled.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const changes={PRIVACY_CONTACT_EMAIL:'jouw2023@gmail.com',PRIVACY_CONTROLLER_ADDRESS:'Oude Heerweg 2, 9160 Lokeren, Belgique'};
