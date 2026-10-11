@@ -799,6 +799,7 @@
 .workspace-nav-group { padding: 20px 12px 8px; font-size: 10px; color: var(--muted-foreground); }
 .workspace-content { position: relative; z-index: 0; margin-inline-start: var(--workspace-rail); min-width: 0; }
 .workspace-content > div > .container { max-width: 1440px; }
+.workspace-content > div > header.sticky { top: 76px; }
 .workspace-content .min-h-screen { min-height: calc(100dvh - 76px); }
 .workspace-content .bg-gradient-to-br { background-image: none; }
 .workspace-content [data-slot="card"] { border: 1px solid var(--border); box-shadow: 0 2px 6px #00000004; border-radius: 16px; }
