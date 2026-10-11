@@ -169,9 +169,11 @@ try {
  assert.equal((await appApi('/next_api/test-trips/acceptance-test','POST',{company_id:1,driver_id:1,vehicle_id:1},cookie)).status,403);
  const retryReady=await appApi('/next_api/trips/retry-sync','POST',{trip_id:finished.id},adminCookie);assert.equal(retryReady.status,409);assert.equal(retryReady.data.errorCode,'CHIRON_NOT_ENABLED');
  checks.push('Reviewed Chiron routes replace disabled stubs, accept UI trip identifiers, encrypt credentials, reject wrong environments and preserve driver authorization');
- const claimPath='/trips?id=eq.'+finished.id+'&chiron_sync_state=is.null';
+ const originalState=(await success('/trips?id=eq.'+finished.id,service))[0].chiron_sync_state;
+ assert.ok(['CREATED','ERROR'].includes(originalState));
+ const claimPath='/trips?id=eq.'+finished.id+'&chiron_sync_state=eq.'+originalState;
  const eventClaims=await Promise.all([success(claimPath,service,'PATCH',{chiron_sync_state:'START_SENT'}),success(claimPath,service,'PATCH',{chiron_sync_state:'START_SENT'})]);assert.equal(eventClaims.flat().length,1);
- assert.equal((await success('/trips?id=eq.'+finished.id,service))[0].price,22.55);await success('/trips?id=eq.'+finished.id,service,'PATCH',{chiron_sync_state:null});
+ assert.equal((await success('/trips?id=eq.'+finished.id,service))[0].price,22.55);await success('/trips?id=eq.'+finished.id,service,'PATCH',{chiron_sync_state:originalState});
  checks.push('Native conditional event claim permits only one concurrent sender without altering a locked trip price');
  assert.equal((await appApi('/next_api/auth/logout','POST',{},adminCookie)).status,200);
  const logout=await appApi('/next_api/auth/logout','POST',{},cookie);assert.equal(logout.status,200);assert.ok(logout.response.headers.getSetCookie().every(c=>/Max-Age=0/.test(c)));
