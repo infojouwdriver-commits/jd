@@ -1,0 +1,52 @@
+name: Transfer encrypted historical archive part
+on:
+  workflow_dispatch:
+    inputs:
+      part:
+        description: Encrypted part index 0 through 12
+        required: true
+        type: string
+      ciphertext:
+        description: Base64 ciphertext only; never plaintext records or credentials
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  transfer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Validate ciphertext and transfer a private immutable part
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          export TRANSFER_DIR="$keydir"
+          node <<'PART'
+          const fs=require('fs');
+          const input=JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH,'utf8')).inputs;
+          if(!/^(?:[0-9]|1[0-2])$/.test(input.part)||! /^[A-Za-z0-9+/]+={0,2}$/.test(input.ciphertext)||input.ciphertext.length>56000)throw Error('Invalid encrypted part');
+          const data=Buffer.from(input.ciphertext,'base64');
+          if(data.toString('base64')!==input.ciphertext||data.length<1||data.length>42000)throw Error('Invalid ciphertext encoding');
+          fs.writeFileSync(process.env.TRANSFER_DIR+'/part.bin',data,{mode:0o600});
+          fs.writeFileSync(process.env.TRANSFER_DIR+'/index',String(input.part).padStart(3,'0'),{mode:0o600});
+          PART
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          index=$(cat "$keydir/index")
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/archive-transfer/archive-20261009-v1; chmod 700 /srv/jouw-driver/archive-transfer /srv/jouw-driver/archive-transfer/archive-20261009-v1' </dev/null
+          scp "${args[@]}" "$keydir/part.bin" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/archive-transfer/archive-20261009-v1/incoming-$GITHUB_RUN_ID"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; cd /srv/jouw-driver/archive-transfer/archive-20261009-v1; if test -e part-$index; then cmp --silent part-$index incoming-$GITHUB_RUN_ID; rm incoming-$GITHUB_RUN_ID; else mv incoming-$GITHUB_RUN_ID part-$index; fi" </dev/null
+          printf 'Encrypted archive part accepted; no database changes or plaintext transfer.\n'
