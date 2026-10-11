@@ -110,6 +110,9 @@ try{
    await page.getByRole('heading',{name:'Created UI company',exact:true}).waitFor({state:'visible'});
    await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));
    await page.screenshot({path:'ui-output/'+name+'-companies.png',fullPage:true});
+   await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
+   await page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true}).waitFor({state:'visible'});
+   await page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true}).getByRole('button',{name:'Close',exact:true}).click();
    const nav=page.locator('#management-navigation');
    if(viewport.width<1024)await page.getByRole('button',{name:'فتح القائمة',exact:true}).click();
    await nav.getByRole('link',{name:'السائقون',exact:true}).click();
