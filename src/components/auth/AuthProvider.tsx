@@ -94,7 +94,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const applyEntryRedirect = useCallback((userData: User) => {
     const onAuthEntryPage =
-      pathnameRef.current === '/' ||
       pathnameRef.current === '/login' ||
       pathnameRef.current === '/driver-login';
 
