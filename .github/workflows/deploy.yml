@@ -60,7 +60,7 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/jd_deploy"
           printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           trap 'rm -f "$HOME/.ssh/jd_deploy" release.tar.gz' EXIT
-          git archive --format=tar.gz -o release.tar.gz HEAD deploy scripts migrations
+          git archive --format=tar.gz -o release.tar.gz HEAD deploy scripts schema migrations
           ssh_args=(-i "$HOME/.ssh/jd_deploy" -o BatchMode=yes -o StrictHostKeyChecking=yes)
           ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p /srv/jouw-driver/releases/$REVISION"
           scp "${ssh_args[@]}" release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$REVISION/release.tar.gz"
