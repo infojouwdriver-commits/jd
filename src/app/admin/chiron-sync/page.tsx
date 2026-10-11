@@ -29,6 +29,7 @@ interface FailedTrip {
   price: number;
   chiron_trip_id: string | null;
   chiron_sync_attempts: number;
+  chiron_sync_state: string;
   sync_error_message: string;
   last_sync_attempt: string;
 }
@@ -53,7 +54,7 @@ export default function ChironSyncPage() {
     setLoading(true);
     try {
       const allTrips = await api.get<FailedTrip[]>('/trips');
-      const failed = allTrips.filter(trip => trip.chiron_sync_attempts > 0 && !trip.chiron_trip_id);
+      const failed = allTrips.filter(trip => !!trip.end_time && trip.chiron_sync_state !== 'COMPLETED');
       setFailedTrips(failed);
     } catch (error: any) {
       toast.error(error.message || 'فشل تحميل الرحلات الفاشلة');
