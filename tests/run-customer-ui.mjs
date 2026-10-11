@@ -125,7 +125,7 @@ try{
    if(viewport.width<1024)await page.getByRole('button',{name:'فتح القائمة',exact:true}).click();
    await nav.getByRole('link',{name:'السائقون',exact:true}).click();
    await page.waitForURL(base+'/admin/drivers');
-   if(viewport.width<1024)assert.equal(await nav.isVisible(),false);
+   if(viewport.width<1024){await nav.waitFor({state:'hidden'});assert.equal(await nav.isVisible(),false);}
    checks.push(name+': navigation remains clickable after scrolling an admin page');
    assert.equal(context.pages().length,1,'Admin actions must not require another window');
    assert.equal(failures.length,0,name+': no hydration or script CSP errors');
