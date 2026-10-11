@@ -90,6 +90,10 @@ export default function CompaniesPage() {
       toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
       return;
     }
+    if (newCompany.password && (newCompany.password.length < 12 || new TextEncoder().encode(newCompany.password).length > 72)) {
+      toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل ولا تتجاوز 72 بايت');
+      return;
+    }
     setSaving(true);
     try {
       const created = await api.post<Company>('/companies', {
@@ -234,14 +238,14 @@ export default function CompaniesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <Link href="/dashboard">
             <Button variant="ghost" size="icon" className="rounded-2xl"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
           <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             إدارة الشركات
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Button variant="outline" size="sm" className="rounded-2xl text-xs" onClick={() => setShowBulkPasswordDialog(true)}>
               <KeyRound className="w-4 h-4 ml-1" />
               تعيين كلمة مرور للكل
@@ -264,8 +268,9 @@ export default function CompaniesPage() {
                     { label: 'الهاتف', key: 'phone', placeholder: '+32 2 XXX XX XX' },
                   ].map(({ label, key, placeholder, type }) => (
                     <div key={key}>
-                      <Label>{label}</Label>
+                      <Label htmlFor={`new-company-${key}`}>{label}</Label>
                       <Input
+                        id={`new-company-${key}`}
                         type={type || 'text'}
                         value={(newCompany as any)[key]}
                         onChange={(e) => setNewCompany({ ...newCompany, [key]: e.target.value })}
@@ -387,6 +392,11 @@ export default function CompaniesPage() {
       </AlertDialog>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
+        {!companies.length && <div className="mb-6 rounded-2xl border border-dashed p-6 text-center">
+          <h2 className="font-semibold">لا توجد شركات في القائمة الحالية</h2>
+          <p className="mt-2 text-sm text-muted-foreground">أنشئ شركة لتظهر إعدادات التسعير والعقود والسائقين الخاصة بها.</p>
+          <Button className="mt-4" onClick={() => setShowCreateDialog(true)}><Plus className="w-4 h-4 ml-2" />إنشاء أول شركة</Button>
+        </div>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {companies.map((company) => (
             <Card key={company.id} className="p-6 rounded-3xl border-0 shadow-xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
@@ -444,6 +454,9 @@ export default function CompaniesPage() {
                 </Link>
                 <Link href={`/admin/vehicles?company_id=${company.id}`}>
                   <Button variant="outline" className="w-full rounded-2xl"><Car className="w-4 h-4 ml-2" />المركبات</Button>
+                </Link>
+                <Link href={`/admin/companies/${company.id}/settings`} className="col-span-2">
+                  <Button variant="outline" className="w-full rounded-2xl"><Settings className="w-4 h-4 ml-2" />إعدادات الشركة</Button>
                 </Link>
                 <Link href={`/admin/companies/${company.id}/contracts`} className="col-span-2">
                   <Button variant="outline" className="w-full rounded-2xl"><FileText className="w-4 h-4 ml-2" />العقود</Button>
