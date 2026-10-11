@@ -6,7 +6,8 @@ import {pathToFileURL} from 'node:url';
 import fs from 'node:fs';
 
 const {chromium,webkit}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
-const image='ghcr.io/infojouwdriver-commits/jd@sha256:7f171174aba425d74cf1af31abc4f5f75d32dc836f8f807211a419c4b5775795';
+const image=process.env.UI_IMAGE;
+assert.match(image,/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/);
 const container='jouw-driver-isolated-ui';
 const base='http://127.0.0.1:3008';
 const docker=(args)=>execFileSync('docker',args,{stdio:['ignore','pipe','pipe']}).toString().trim();
@@ -25,6 +26,10 @@ try{
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
    await page.goto(base+'/login');
+   const background=await page.locator('div.dark').evaluate(el=>({color:getComputedStyle(el).backgroundColor,image:getComputedStyle(el).backgroundImage}));
+   assert.equal(background.color,'rgb(11, 15, 26)');
+   assert.ok(background.image.includes('linear-gradient'),'Valid dark gradient must preserve white text contrast');
+   checks.push(name+': valid dark login background and scoped theme');
    await page.getByRole('button',{name:'Company Portal',exact:true}).click();
    await page.locator('#company-email').waitFor({state:'visible'});
    assert.ok(await page.getByRole('button',{name:'Sign In as Company',exact:true}).isVisible());
