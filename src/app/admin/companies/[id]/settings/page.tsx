@@ -35,7 +35,7 @@ export default function CompanySettingsPage() {
   const companyId = params.id as string;
 
   const [company, setCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && user && !user.isAdmin) {
@@ -53,9 +53,7 @@ export default function CompanySettingsPage() {
     setLoading(true);
     try {
       const data = await api.get<Company[]>(`/companies?id=${companyId}`);
-      if (data && data.length > 0) {
-        setCompany(data[0]);
-      }
+      setCompany(data?.find(item => String(item.id) === companyId) || null);
     } catch (error: any) {
       console.error("Operation failed");
       toast.error('فشل تحميل بيانات الشركة');
@@ -64,13 +62,18 @@ export default function CompanySettingsPage() {
     }
   };
 
-  if (isLoading || !user?.isAdmin) {
+  if (isLoading || loading || !user?.isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
+
+  if (!company) return <div className="p-6 text-center">
+    <h1 className="text-xl font-bold">تعذّر العثور على الشركة</h1>
+    <Link href="/admin/companies" className="mt-4 inline-block underline">العودة إلى الشركات</Link>
+  </div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-6">
