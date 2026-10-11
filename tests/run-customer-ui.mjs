@@ -83,7 +83,8 @@ try{
     await route.fulfill({status:request.method()==='POST'?201:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
    });
    await page.goto(base+'/dashboard');
-   await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click();
+   try { await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click(); }
+   catch(error){await page.screenshot({path:'ui-output/'+name+'-failure.png',fullPage:true});fs.writeFileSync('ui-output/'+name+'-failure.json',JSON.stringify({url:page.url(),text:await page.locator('body').innerText(),failures},null,2));throw error;}
    await page.waitForURL(base+'/admin/companies');
    await page.getByRole('button',{name:'شركة جديدة',exact:true}).waitFor({state:'visible'});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin controls must fit the viewport');
