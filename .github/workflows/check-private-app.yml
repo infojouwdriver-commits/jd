@@ -1,0 +1,111 @@
+name: Verify private application on server
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Start immutable application behind maintenance page
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -f "$keydir/key" "$keydir/known_hosts"; rmdir "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh_args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          # Job-scoped registry credential travels over encrypted stdin, never argv;
+          # remove the temporary Docker login immediately after the immutable pull.
+          printf '%s\n' "$GHCR_TOKEN" | ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'set -eu; umask 077; read -r package_token; registry_config=$(mktemp -d); export DOCKER_CONFIG="$registry_config"; trap '\''rm -f "$registry_config/config.json"; rmdir "$registry_config"'\'' EXIT; printf "%s" "$package_token" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset package_token; docker pull ghcr.io/infojouwdriver-commits/jd@sha256:e747579c1516a454ee4827fba3ace9ac0b60f8b531ebc37152ea4eea42ac46a9'
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          cd /srv/jouw-driver/foundation
+          test -f schema-audit.json
+          test ! -e /srv/jouw-driver/release.json
+          test ! -e /srv/jouw-driver/.env
+          image='ghcr.io/infojouwdriver-commits/jd@sha256:e747579c1516a454ee4827fba3ace9ac0b60f8b531ebc37152ea4eea42ac46a9'
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = ac2543dfe8d3290c7b2d16e3cf6fedba5894094b
+          node --env-file=.database.env --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {randomBytes} from 'node:crypto';
+          if(!fs.existsSync('.app-staging.env')){
+            const e=process.env;
+            const base32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            const mfa=Array.from(randomBytes(40),n=>base32[n&31]).join('');
+            const config={APP_ORIGIN:'https://jouw-driver.duckdns.org',NEXT_PUBLIC_APP_URL:'https://jouw-driver.duckdns.org',POSTGREST_URL:'http://postgrest:3000',POSTGREST_INTERNAL_NETWORK:'true',POSTGREST_SCHEMA:e.POSTGREST_SCHEMA,SCHEMA_USER:e.SCHEMA_USER,SCHEMA_ADMIN_USER:e.SCHEMA_ADMIN_USER,PGRST_DB_URI:`postgres://${e.GATEWAY_DB_ROLE}:${e.GATEWAY_DB_PASSWORD}@db:5432/${e.POSTGRES_DB}`,PGRST_DB_SCHEMAS:e.POSTGREST_SCHEMA,PGRST_JWT_AUD:'jouw-driver',JWT_SECRET:randomBytes(48).toString('hex'),HASH_SALT_KEY:randomBytes(32).toString('hex'),RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),DATA_ENCRYPTION_KEY:randomBytes(32).toString('hex'),PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':mfa}),PRIVACY_CONTROLLER_NAME:'JOUW DRIVER',PRIVACY_CONTROLLER_ADDRESS:'Adresse à confirmer avant ouverture',PRIVACY_CONTACT_EMAIL:'info.jouwdriver@gmail.com',TRIP_RETENTION_YEARS:'7',TRUST_PROXY:'true',DEPLOYMENT_MODE:'staging',SCHEMA_VALIDATED:'false',SCHEMA_SOURCE:'independent',CHIRON_TRANSMISSION_ENABLED:'false',NEXT_TELEMETRY_DISABLED:'1'};
+            // No users/accounts are created; this unbound draft MFA configuration
+            // must be replaced by actual administrator enrollment before public access.
+            config.PGRST_JWT_SECRET=config.JWT_SECRET;
+            fs.writeFileSync('.app-staging.env',Object.entries(config).map(([k,v])=>`${k}=${v}`).join('\n')+'\n',{mode:0o600,flag:'wx'});
+          }
+          NODE
+          cat > private-app.yaml <<'COMPOSE'
+          services:
+            postgrest:
+              image: postgrest/postgrest:v13.0.8
+              restart: unless-stopped
+              environment:
+                PGRST_DB_URI: ${PGRST_DB_URI:?required}
+                PGRST_DB_SCHEMAS: ${PGRST_DB_SCHEMAS:?required}
+                PGRST_JWT_SECRET: ${PGRST_JWT_SECRET:?required}
+                PGRST_JWT_AUD: jouw-driver
+              networks: [database]
+              cap_drop: [ALL]
+              security_opt: ["no-new-privileges:true"]
+            app:
+              image: ghcr.io/infojouwdriver-commits/jd@sha256:e747579c1516a454ee4827fba3ace9ac0b60f8b531ebc37152ea4eea42ac46a9
+              restart: unless-stopped
+              env_file: [.app-staging.env]
+              networks: [database, frontend]
+              read_only: true
+              tmpfs: ["/tmp", "/app/.next/cache:uid=10001,gid=10001"]
+              cap_drop: [ALL]
+              security_opt: ["no-new-privileges:true"]
+              depends_on: [postgrest]
+              healthcheck:
+                test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/privacy-policy').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+                interval: 10s
+                timeout: 5s
+                retries: 10
+                start_period: 30s
+          networks:
+            database:
+              external: true
+              name: jouw-driver_database
+            frontend:
+              external: true
+              name: jouw-driver_frontend
+          COMPOSE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --wait --wait-timeout 180
+          app_id=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          gateway_id=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q postgrest)
+          for container_id in "$app_id" "$gateway_id"; do
+            bindings=$(docker inspect --format '{{json .HostConfig.PortBindings}}' "$container_id")
+            test "$bindings" = null || test "$bindings" = '{}'
+          done
+          test "$(docker exec "$app_id" id -u)" = 10001
+          docker exec "$app_id" node scripts/preflight.mjs
+          docker exec "$app_id" node scripts/database-readiness.mjs
+          docker exec "$app_id" node --input-type=module -e 'const base="http://127.0.0.1:3000"; for (const path of ["/login","/privacy-policy"]) {const r=await fetch(base+path); if(!r.ok)throw Error("Page failed: "+path); console.log("Page healthy: "+path)} const r=await fetch(base+"/next_api/auth/user"); if(r.status!==401)throw Error("Unauthenticated session must be rejected"); console.log("Unauthenticated session rejected")'
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --max-time 15 https://jouw-driver.duckdns.org/healthz
+          printf '\nPrivate app healthy; public maintenance remains active. No administrator account has been created.\n'
+          REMOTE
