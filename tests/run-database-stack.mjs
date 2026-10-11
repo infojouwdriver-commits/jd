@@ -156,6 +156,7 @@ try {
  assert.equal((await appApi('/next_api/companies','GET',undefined,cookie)).status,403);assert.equal((await appApi('/next_api/trips?id='+again.trip.id,'PUT',{price:99},cookie)).status,404);checks.push('Real database-backed driver authorization denies admin routes and another owner trip');
  const adminLogin=await appApi('/next_api/auth/login','POST',{email:'admin@example.invalid',password:appPassword,otp:totpAt(mfaSecret,Math.floor(Date.now()/30000))});
  assert.equal(adminLogin.status,200,'Native administrator MFA login failed');const adminCookie=adminLogin.response.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
+ await psql("SELECT setval(pg_get_serial_sequence('companies','id'),(SELECT max(id) FROM companies));");
  const createdCompany=await appApi('/next_api/companies','POST',{name:'Native created company',vat_number:'BE0111111111',kbo_number:'0111111111',email:'native-company@example.invalid'},adminCookie);
  assert.equal(createdCompany.status,201,'Administrator company creation must work');const newCompanyId=createdCompany.data.data.id;
  assert.ok((await appApi('/next_api/companies','GET',undefined,adminCookie)).data.data.some(c=>c.id===newCompanyId));
