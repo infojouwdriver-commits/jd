@@ -1,0 +1,102 @@
+name: Verify owner activation and close enrollment
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: Verify completed owner enrollment and revoke setup access
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh_args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'FINALIZE'
+          set -euo pipefail
+          umask 077
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/release.json
+          test ! -e /srv/jouw-driver/.env
+          if ! sudo test -f .enroll-state/owner-enrolled.json; then
+            printf 'Owner enrollment is not complete; no setup access was changed.\n' >&2
+            exit 1
+          fi
+          sudo node --input-type=module <<'MARKER'
+          import fs from 'node:fs';
+          const marker=JSON.parse(fs.readFileSync('.enroll-state/owner-enrolled.json','utf8'));
+          if(marker.email!=='jouw2023@gmail.com'||!Number.isFinite(Date.parse(marker.enrolledAt)))throw Error('Owner completion marker is invalid');
+          console.log('Owner confirmed a valid MFA code and completed enrollment.');
+          MARKER
+          verified=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -At <<'SQL'
+          SELECT count(*)=1 AND bool_and(id=1 AND email='jouw2023@gmail.com' AND user_type='admin' AND role='jouw_app_user' AND password ~ '^\$2[aby]\$12\$[./A-Za-z0-9]{53}$') FROM public.users;
+          SQL
+          )
+          test "$verified" = t
+          node --env-file=.app-staging.env --input-type=module <<'MFA'
+          const e=process.env;
+          if(e.PLATFORM_ADMIN_IDS!=='1'||! /^[A-Z2-7]{32,128}$/.test(JSON.parse(e.ADMIN_TOTP_SECRETS_JSON)['1']))throw Error('Owner MFA configuration is incomplete');
+          console.log('Initial administrator record and private MFA configuration verified.');
+          MFA
+          # Replace only the temporary setup entry point; keep public maintenance.
+          node --input-type=module <<'CADDY'
+          import fs from 'node:fs';
+          fs.writeFileSync('Caddyfile',`jouw-driver.duckdns.org {
+            header {
+              Strict-Transport-Security "max-age=31536000"
+            }
+            @health path /healthz
+            handle @health {
+              respond "Infrastructure ready; application deployment pending." 200
+            }
+            handle {
+              header Content-Type "text/html; charset=utf-8"
+              header Cache-Control "no-store"
+              header Retry-After "3600"
+              respond "<!doctype html><html lang='ar' dir='rtl'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>JOUW DRIVER</title><body style='margin:0;background:#102b35;color:#fff;font-family:system-ui;text-align:center;padding:15vh 24px'><h1>JOUW DRIVER</h1><p>بوابة السائق قيد التجهيز</p><p>سنفتح تسجيل الدخول بعد إكمال الإعداد والاختبارات.</p></body></html>" 503
+            }
+          }\n`,{mode:0o600});
+          CADDY
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy validate --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile </dev/null >/dev/null 2>&1
+          docker compose --project-name jouw-driver --file enrollment.yaml stop enrollment </dev/null
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 <<'REVOKE'
+          BEGIN;
+          REVOKE ALL ON FUNCTION public.security_enroll_initial_owner(text) FROM PUBLIC,jouw_service,jouw_app_user,jouw_gateway;
+          REVOKE UPDATE ON SEQUENCE public.users_id_seq FROM jouw_service;
+          NOTIFY pgrst,'reload schema';
+          COMMIT;
+          REVOKE
+          revoked=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -Atc "SELECT NOT has_function_privilege('jouw_service','public.security_enroll_initial_owner(text)','EXECUTE') AND NOT has_function_privilege('jouw_app_user','public.security_enroll_initial_owner(text)','EXECUTE');" </dev/null)
+          test "$revoked" = t
+          # No response body or private setup content is logged or inspected.
+          test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/admin-setup)" = 503
+          test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/healthz)" = 200
+          test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/)" = 503
+          node --input-type=module <<'IDENTITY'
+          import fs from 'node:fs';
+          const identity=JSON.parse(fs.readFileSync('owner-identity.json','utf8'));
+          if(identity.email!=='jouw2023@gmail.com')throw Error('Owner identity does not match');
+          identity.ownerEnrolled=true;identity.enrollmentClosed=true;identity.verifiedAt=new Date().toISOString();
+          fs.writeFileSync('owner-identity.json',JSON.stringify(identity,null,2)+'\n',{mode:0o600});
+          IDENTITY
+          printf 'Administrator activation verified; enrollment service stopped, route closed and setup RPC access revoked. Public maintenance remains enabled.\n'
+          FINALIZE
