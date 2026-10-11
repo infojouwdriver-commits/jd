@@ -86,7 +86,9 @@ try{
    await page.close(); page=await context.newPage();
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
+   const fixtureProfile=page.waitForResponse(response=>response.url()===base+'/next_api/auth/user');
    await page.goto(base+'/dashboard');
+   assert.equal((await (await fixtureProfile).json()).data.isAdmin,true,'Signed-in fixture profile must reach the shipped UI');
    try { await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click(); }
    catch(error){await page.screenshot({path:'ui-output/'+name+'-failure.png',fullPage:true});fs.writeFileSync('ui-output/'+name+'-failure.json',JSON.stringify({url:page.url(),text:await page.locator('body').innerText(),failures},null,2));throw error;}
    await page.waitForURL(base+'/admin/companies');
