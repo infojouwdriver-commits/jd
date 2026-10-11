@@ -1,0 +1,151 @@
+name: Configure owner and secure enrollment
+on:
+  workflow_dispatch:
+    inputs:
+      enable_enrollment:
+        description: 'Enable owner enrollment only after the owner has saved INITIAL_ADMIN_PASSWORD'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  configure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Configure reviewed company identity and optional enrollment
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          ENABLE_ENROLLMENT: ${{ inputs.enable_enrollment }}
+          INITIAL_ADMIN_PASSWORD: ${{ secrets.INITIAL_ADMIN_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh_args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'IDENTITY'
+          set -euo pipefail
+          umask 077
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/release.json
+          test ! -e /srv/jouw-driver/.env
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const changes={PRIVACY_CONTACT_EMAIL:'jouw2023@gmail.com',PRIVACY_CONTROLLER_ADDRESS:'Oude Heerweg 2, 9160 Lokeren, Belgique'};
+          let text=fs.readFileSync('.app-staging.env','utf8');
+          for(const [k,v]of Object.entries(changes)){
+            if(!new RegExp('^'+k+'=','m').test(text))throw Error('Required configuration field is absent');
+            text=text.replace(new RegExp('^'+k+'=.*$','m'),k+'='+v);
+          }
+          fs.writeFileSync('.app-staging.env.new',text,{mode:0o600,flag:'wx'});
+          fs.renameSync('.app-staging.env.new','.app-staging.env');
+          fs.writeFileSync('owner-identity.json',JSON.stringify({email:'jouw2023@gmail.com',address:changes.PRIVACY_CONTROLLER_ADDRESS,ownerEnrolled:false,confirmedAt:new Date().toISOString()},null,2)+'\n',{mode:0o600});
+          NODE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --force-recreate --wait --wait-timeout 180 app
+          app_id=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          docker exec "$app_id" node scripts/preflight.mjs
+          docker exec "$app_id" node scripts/database-readiness.mjs
+          printf 'Reviewed owner email and company address configured; public maintenance preserved.\n'
+          IDENTITY
+          if [ "$ENABLE_ENROLLMENT" != true ]; then exit 0; fi
+          test -n "$INITIAL_ADMIN_PASSWORD"
+          # Only the password hash leaves the runner. No plaintext password in SQL,
+          # arguments, uploads or logs. The owner enters the secret manually in GitHub.
+          npm install --prefix "$keydir/hash" --ignore-scripts --no-audit --no-fund bcryptjs@3.0.3 >/dev/null
+          export HASH_DIR="$keydir/hash" HASH_FILE="$keydir/owner-hash.env"
+          node <<'HASH'
+          const fs=require('fs'),bcrypt=require(process.env.HASH_DIR+'/node_modules/bcryptjs');
+          const password=process.env.INITIAL_ADMIN_PASSWORD;
+          if(typeof password!=='string'||password.length<12||Buffer.byteLength(password)>72)throw Error('Owner password must contain at least 12 characters and no more than 72 UTF-8 bytes');
+          bcrypt.hash(password,12).then(hash=>fs.writeFileSync(process.env.HASH_FILE,'INITIAL_ADMIN_HASH='+hash+'\n',{mode:0o600,flag:'wx'}));
+          HASH
+          unset INITIAL_ADMIN_PASSWORD
+          scp "${ssh_args[@]}" "$keydir/owner-hash.env" deploy/admin-enrollment.mjs deploy/enroll-initial-owner.sql "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'ENROLLMENT'
+          set -euo pipefail
+          umask 077
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/release.json
+          test ! -e /srv/jouw-driver/.env
+          test ! -e .enroll-state/owner-enrolled.json
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 < enroll-initial-owner.sql >/dev/null
+          node --env-file=.app-staging.env --env-file=owner-hash.env --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const e=process.env,keys=['APP_ORIGIN','PLATFORM_ADMIN_IDS','ADMIN_TOTP_SECRETS_JSON','POSTGREST_URL','POSTGREST_SCHEMA','SCHEMA_ADMIN_USER','JWT_SECRET','INITIAL_ADMIN_HASH'];
+          if(!/^\$2[aby]\$12\$[./A-Za-z0-9]{53}$/.test(e.INITIAL_ADMIN_HASH))throw Error('Invalid owner hash');
+          fs.writeFileSync('.enrollment.env',keys.map(k=>k+'='+e[k]).join('\n')+'\nINITIAL_ADMIN_EMAIL=jouw2023@gmail.com\n',{mode:0o600});
+          // Replace maintenance config only on this unopened foundation. Password
+          // hash stays private; no placeholder credentials or unauthenticated setup.
+          fs.writeFileSync('Caddyfile',`jouw-driver.duckdns.org {
+            header {
+              Strict-Transport-Security "max-age=31536000"
+            }
+            @setup path /admin-setup /admin-setup/*
+            handle @setup {
+              basic_auth {
+                jouw2023@gmail.com ${e.INITIAL_ADMIN_HASH}
+              }
+              header Cache-Control "no-store"
+              reverse_proxy enrollment:4000
+            }
+            @health path /healthz
+            handle @health {
+              respond "Infrastructure ready; application deployment pending." 200
+            }
+            handle {
+              header Content-Type "text/html; charset=utf-8"
+              header Cache-Control "no-store"
+              header Retry-After "3600"
+              respond "<!doctype html><html lang='ar' dir='rtl'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>JOUW DRIVER</title><body style='margin:0;background:#102b35;color:#fff;font-family:system-ui;text-align:center;padding:15vh 24px'><h1>JOUW DRIVER</h1><p>بوابة السائق قيد التجهيز</p><p>سنفتح تسجيل الدخول بعد إكمال الإعداد والاختبارات.</p></body></html>" 503
+            }
+          }\n`,{mode:0o600});
+          NODE
+          rm -f owner-hash.env
+          mkdir -p .enroll-state
+          sudo chown 10001:10001 .enroll-state
+          sudo chmod 0700 .enroll-state
+          cat > enrollment.yaml <<'COMPOSE'
+          services:
+            enrollment:
+              image: node:22-bookworm-slim
+              user: "10001:10001"
+              restart: unless-stopped
+              command: [node, /app/admin-enrollment.mjs]
+              env_file:
+                - path: .enrollment.env
+                  format: raw
+              volumes: ["./admin-enrollment.mjs:/app/admin-enrollment.mjs:ro", "./.enroll-state:/state"]
+              networks: [database, frontend]
+              read_only: true
+              tmpfs: [/tmp]
+              cap_drop: [ALL]
+              security_opt: ["no-new-privileges:true"]
+              mem_limit: 128m
+          networks:
+            database: {external: true, name: jouw-driver_database}
+            frontend: {external: true, name: jouw-driver_frontend}
+          COMPOSE
+          docker compose --project-name jouw-driver --file enrollment.yaml up -d
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy validate --config /etc/caddy/Caddyfile >/dev/null 2>&1
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T edge caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1
+          test "$(curl --proto '=https' --tlsv1.2 --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' https://jouw-driver.duckdns.org/admin-setup)" = 401
+          printf 'Owner enrollment ready behind HTTPS password authentication. No account is created until the owner confirms MFA.\n'
+          ENROLLMENT
