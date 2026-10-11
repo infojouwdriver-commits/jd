@@ -12,10 +12,6 @@ jouw-driver.duckdns.org {
   handle @setup {
     respond "Not found" 404
   }
-  @home path /
-  handle @home {
-    redir /login 302
-  }
   @health path /healthz
   handle @health {
     rewrite * /privacy-policy
