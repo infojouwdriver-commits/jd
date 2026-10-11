@@ -24,13 +24,13 @@ enum PortalEnum {
 
 function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
   const [mode, setMode] = useState<ModeEnum>(ModeEnum.LOGIN);
-  const [portal, setPortal] = useState<PortalEnum>(PortalEnum.ADMIN);
   const searchParams = useSearchParams();
+  const [portal, setPortal] = useState<PortalEnum>(searchParams.get("portal") === "company" ? PortalEnum.COMPANY : PortalEnum.ADMIN);
   const router = useRouter();
 
   const handleSuccess = () => {
-    const redirectTo = searchParams.get("redirect") || "/";
-    router.replace(redirectTo);
+    const redirectTo = searchParams.get("redirect");
+    router.replace(redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : portal === PortalEnum.COMPANY ? "/company/dashboard" : "/dashboard");
   };
 
   const handlePortalSwitch = (newPortal: PortalEnum) => {
