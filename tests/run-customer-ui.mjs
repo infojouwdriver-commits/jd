@@ -54,6 +54,54 @@ try{
    await page.waitForURL(base+'/privacy-policy');
    assert.ok(await page.getByRole('heading').count()>0);
    checks.push(name+': privacy link navigation');
+   // Fixture responses exercise actual shipped admin components without production credentials.
+   // Native release tests separately verify server authentication and database authorization.
+   const companies=[{id:92,name:'Other fixture company',vat_number:'BE0999999999',kbo_number:'0999999999',chiron_mode:'TEST',subscription_status:'pending_contract'}, {id:91,name:'UI fixture company',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_mode:'TEST',subscription_status:'pending_contract'}];
+   const created=[];
+   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
+   await context.route(base+'/next_api/**',async route=>{
+    const request=route.request(),url=new URL(request.url());let data=[];
+    if(url.pathname==='/next_api/auth/user')data={sub:'9001',id:9001,email:'admin@ui.example',isAdmin:true,userType:'admin',role:'jouw_app_user'};
+    else if(url.pathname==='/next_api/companies'){
+     if(request.method()==='POST'){const body=request.postDataJSON();created.push(body);companies.push({id:93,...body,chiron_mode:'TEST',subscription_status:'pending_contract'});data=companies.at(-1);}
+     else data=companies; // Current API returns a list; settings must select the requested id.
+    }
+    await route.fulfill({status:request.method()==='POST'?201:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
+   });
+   await page.goto(base+'/dashboard');
+   await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click();
+   await page.waitForURL(base+'/admin/companies');
+   await page.getByRole('button',{name:'شركة جديدة',exact:true}).waitFor({state:'visible'});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin controls must fit the viewport');
+   checks.push(name+': signed-in admin reaches companies in the same window');
+   await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
+   const dialog=page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true});
+   await dialog.getByPlaceholder('JOUW DRIVER SRL',{exact:true}).fill('Created UI company');
+   await dialog.getByPlaceholder('BE0123456789',{exact:true}).fill('BE0111111111');
+   await dialog.getByPlaceholder('0123456789',{exact:true}).fill('0111111111');
+   await dialog.getByRole('button',{name:'إنشاء الشركة',exact:true}).click();
+   await dialog.waitFor({state:'hidden'});
+   await page.getByRole('heading',{name:'Created UI company',exact:true}).waitFor({state:'visible'});
+   assert.equal(created.length,1);assert.equal(created[0].name,'Created UI company');assert.equal(created[0].kbo_number,'0111111111');
+   checks.push(name+': company creation dialog submits once and refreshes the company list');
+   const card=page.locator('[data-slot="card"]').filter({has:page.getByRole('heading',{name:'UI fixture company',exact:true})});
+   await card.getByRole('link',{name:'إعدادات الشركة',exact:true}).click();
+   await page.waitForURL(base+'/admin/companies/91/settings');
+   await page.getByText('UI fixture company',{exact:true}).waitFor({state:'visible'});
+   assert.equal(await page.getByText('Other fixture company',{exact:true}).count(),0);
+   assert.ok(await page.getByRole('link',{name:/إعدادات التسعير/}).isVisible());
+   assert.ok(await page.getByRole('link',{name:/عقود المنصات الخارجية/}).isVisible());
+   checks.push(name+': company settings link selects the correct company and exposes existing settings');
+   await page.goto(base+'/admin/companies');
+   await page.getByRole('heading',{name:'Created UI company',exact:true}).waitFor({state:'visible'});
+   await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));
+   const nav=page.locator('#management-navigation');
+   if(viewport.width<1024)await page.getByRole('button',{name:'فتح القائمة',exact:true}).click();
+   await nav.getByRole('link',{name:'السائقون',exact:true}).click();
+   await page.waitForURL(base+'/admin/drivers');
+   if(viewport.width<1024)assert.equal(await nav.isVisible(),false);
+   checks.push(name+': navigation remains clickable after scrolling an admin page');
+   assert.equal(context.pages().length,1,'Admin actions must not require another window');
    assert.equal(failures.length,0,name+': no hydration or script CSP errors');
   }finally{await browser.close();}
  }
