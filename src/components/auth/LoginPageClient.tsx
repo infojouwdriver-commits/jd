@@ -40,10 +40,10 @@ function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
 
   return (
     <div
-      className="relative flex min-h-[100vh] items-center justify-center overflow-hidden"
+      className="dark relative flex min-h-[100vh] items-center justify-center overflow-hidden bg-[#0b0f1a] text-white"
       style={{
         background:
-          "radial-gradient(1200px_800px_at_10%_-10%, rgba(56,189,248,0.18), rgba(0,0,0,0) 60%), radial-gradient(900px_700px_at_90%_0%, rgba(167,139,250,0.16), rgba(0,0,0,0) 55%), radial-gradient(700px_500px_at_50%_110%, rgba(248,113,113,0.12), rgba(0,0,0,0) 50%), linear-gradient(180deg, #0b0f1a 0%, #0a0a0a 100%)",
+          "radial-gradient(1200px 800px at 10% -10%, rgba(56,189,248,0.18), rgba(0,0,0,0) 60%), radial-gradient(900px 700px at 90% 0%, rgba(167,139,250,0.16), rgba(0,0,0,0) 55%), radial-gradient(700px 500px at 50% 110%, rgba(248,113,113,0.12), rgba(0,0,0,0) 50%), linear-gradient(180deg, #0b0f1a 0%, #0a0a0a 100%)",
       }}
     >
       <div
