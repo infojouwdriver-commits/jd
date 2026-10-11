@@ -16,6 +16,9 @@ import Link from 'next/link';
 
 interface Company {
   id: number;
+  transmissionEnabled: boolean;
+  productionEnabled: boolean;
+  testCredentialsConfigured: boolean;
   name: string;
   chiron_mode: 'TEST' | 'PRODUCTION';
   chiron_test_client_id: string;
@@ -109,6 +112,12 @@ export default function ChironSettingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-6">
       <div className="container mx-auto max-w-5xl">
+        <div role="status" className="mb-6 rounded-2xl border border-border bg-card p-4 text-sm leading-7">
+          <p>{company?.transmissionEnabled ? 'مزامنة بيئة الاختبار متاحة.' : 'مزامنة Chiron غير مفعّلة على الخادم.'}</p>
+          <p>{company?.testCredentialsConfigured ? 'بيانات اتصال الاختبار محفوظة. يمكنك إجراء اختبار القبول.' : 'أدخل بيانات Client ID وClient Secret التي حصلت عليها من Chiron لبيئة الاختبار.'}</p>
+          <p>الإرسال الفعلي إلى PRODUCTION يحتاج إكمال اختبار القبول وتفعيل بيئة الإنتاج.</p>
+          <Link href="/admin/test-trips" className="mt-2 inline-block font-semibold underline">فتح اختبار قبول Chiron</Link>
+        </div>
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link href={`/admin/companies/${companyId}/settings`}>
