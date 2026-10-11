@@ -1,0 +1,120 @@
+name: Encrypted foundation backup and native restore drill
+on:
+  workflow_dispatch:
+    inputs:
+      include_restore_tool:
+        description: Include the official age executable for offline recovery verification
+        type: boolean
+        default: true
+  schedule:
+    - cron: '23 1 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    services:
+      restore-db:
+        image: postgres:16.15-bookworm
+        env:
+          POSTGRES_DB: restore_sandbox
+          POSTGRES_PASSWORD: restore-verification-only
+        ports: ['127.0.0.1:5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Install official Ubuntu encryption and PostgreSQL clients
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age postgresql-client-16
+      - name: Encrypt on the server and restore into an isolated PostgreSQL database
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+          INCLUDE_RESTORE_TOOL: ${{ inputs.include_restore_tool }}
+          PGHOST: 127.0.0.1
+          PGPORT: '5432'
+          PGDATABASE: restore_sandbox
+          PGUSER: postgres
+          PGPASSWORD: restore-verification-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh_args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          # The owner's recovery identity never enters GitHub or the server.
+          # An additional ephemeral identity exists for this isolated drill only.
+          age-keygen -o "$keydir/drill-identity" >/dev/null 2>&1
+          age-keygen -y "$keydir/drill-identity" > "$keydir/drill-recipient"
+          cat deploy/backup-recipient.pub "$keydir/drill-recipient" > "$keydir/recipients-$BACKUP_TAG.txt"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/backups; chmod 700 /srv/jouw-driver/backups'
+          scp "${ssh_args[@]}" deploy/backup-foundation.sh deploy/backup-table-counts.sql "$keydir/recipients-$BACKUP_TAG.txt" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/backups/"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash /srv/jouw-driver/backups/backup-foundation.sh '$BACKUP_TAG'" </dev/null
+          mkdir -p backup-output
+          scp "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/backups/foundation-$BACKUP_TAG.tar.age" backup-output/snapshot.tar.age
+          scp "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/backups/foundation-$BACKUP_TAG.sha256" backup-output/snapshot.sha256
+          test "$(sha256sum backup-output/snapshot.tar.age | awk '{print $1}')" = "$(cat backup-output/snapshot.sha256)"
+          age -d -i "$keydir/drill-identity" -o "$keydir/snapshot.tar" backup-output/snapshot.tar.age
+          mkdir "$keydir/restore"
+          # Archive member paths were produced from a fixed private work folder.
+          tar -tf "$keydir/snapshot.tar" | python3 -c 'import sys; from pathlib import PurePosixPath; items=[x.strip() for x in sys.stdin]; assert items and all(not PurePosixPath(x).is_absolute() and ".." not in PurePosixPath(x).parts for x in items)'
+          tar -xf "$keydir/snapshot.tar" -C "$keydir/restore"
+          RESTORE_DIR="$keydir/restore" node --input-type=module <<'VERIFY'
+          import fs from 'node:fs';import {createHash} from 'node:crypto';
+          const root=process.env.RESTORE_DIR,m=JSON.parse(fs.readFileSync(root+'/manifest.json','utf8'));
+          for(const [file,key]of [['database.dump','databaseDumpSha256'],['roles.sql','rolesSha256']])if(createHash('sha256').update(fs.readFileSync(root+'/'+file)).digest('hex')!==m[key])throw Error('Backup content integrity failed');
+          console.log('Encrypted archive and private database/role file integrity verified.');
+          VERIFY
+          # Restore roles needed by policies without using live passwords here.
+          psql --no-psqlrc -v ON_ERROR_STOP=1 -q -c 'CREATE ROLE jouw_app_user; CREATE ROLE jouw_service; CREATE ROLE jouw_gateway;' >/dev/null
+          if ! pg_restore --no-owner --no-privileges --exit-on-error --dbname "$PGDATABASE" "$keydir/restore/database.dump" 2> "$keydir/restore-errors"; then
+            printf 'Native PostgreSQL restore failed; private diagnostics were not logged.\n' >&2
+            exit 1
+          fi
+          psql --no-psqlrc -Atq < "$keydir/restore/backup-table-counts.sql" > "$keydir/restored-counts.json"
+          cmp --silent "$keydir/restore/table-counts.json" "$keydir/restored-counts.json"
+          owner_count=$(psql --no-psqlrc -Atq <<'OWNER'
+          SELECT count(*) FROM public.users WHERE id=1 AND email='jouw2023@gmail.com' AND user_type='admin';
+          OWNER
+          )
+          test "$owner_count" = 1
+          node scripts/audit-independent.mjs "$keydir/restore-audit.json" public
+          printf '{"scope":"private foundation","nativePostgreSQLRestore":"passed","allTableCounts":"matched","coreContract":"passed","ownerRecord":"verified","createdAt":"%s"}\n' "$(date -u +%FT%TZ)" > backup-output/restore-verification.json
+          if [ "$INCLUDE_RESTORE_TOOL" = true ]; then
+            mkdir backup-output/restore-tools
+            cp /usr/bin/age backup-output/restore-tools/age
+            age --version > backup-output/restore-tools/version.txt
+            sha256sum backup-output/restore-tools/age | awk '{print $1}' > backup-output/restore-tools/age.sha256
+          fi
+          printf 'Native restore passed; all table counts matched and owner account was preserved. Only encrypted backup and non-secret verification files will be uploaded.\n'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: foundation-backup-${{ github.run_id }}
+          path: backup-output/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
