@@ -1,0 +1,87 @@
+name: Prepare server runtime
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Install official runtime without changing application data
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -f "$keydir/key" "$keydir/known_hosts"; rmdir "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          . /etc/os-release
+          test "$ID" = ubuntu && test "$VERSION_ID" = 24.04
+          test "$(dpkg --print-architecture)" = amd64
+          sudo -n true
+          # Existing application configuration, databases and credentials are never overwritten.
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl xz-utils age ufw
+          if ! command -v docker >/dev/null; then
+            # Official signed Docker apt repository, not a curl-to-shell installer.
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl --proto '=https' --tlsv1.2 -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc >/dev/null
+            sudo chmod 0644 /etc/apt/keyrings/docker.asc
+            printf '%s\n' 'Types: deb' 'URIs: https://download.docker.com/linux/ubuntu' 'Suites: noble' 'Components: stable' 'Architectures: amd64' 'Signed-By: /etc/apt/keyrings/docker.asc' | sudo tee /etc/apt/sources.list.d/docker.sources >/dev/null
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          fi
+          sudo systemctl enable --now docker
+          docker compose version
+          docker compose up --help | grep -q -- --wait
+          sudo usermod -aG docker "$(id -un)"
+          if ! command -v node >/dev/null; then
+            # Resolve a Node 22 maintenance release from its official HTTPS distribution.
+            node_tmp=$(mktemp -d)
+            trap 'rm -f "$node_tmp/SHASUMS256.txt" "$node_tmp/checksum" "$node_tmp"/*.tar.xz; rmdir "$node_tmp"' EXIT
+            curl --proto '=https' --tlsv1.2 -fsSL https://nodejs.org/dist/latest-v22.x/SHASUMS256.txt -o "$node_tmp/SHASUMS256.txt"
+            awk '$2 ~ /^node-v22\.[0-9]+\.[0-9]+-linux-x64\.tar\.xz$/ {print}' "$node_tmp/SHASUMS256.txt" > "$node_tmp/checksum"
+            test "$(wc -l < "$node_tmp/checksum")" = 1
+            node_archive=$(awk '{print $2}' "$node_tmp/checksum")
+            curl --proto '=https' --tlsv1.2 -fsSL "https://nodejs.org/dist/latest-v22.x/$node_archive" -o "$node_tmp/$node_archive"
+            (cd "$node_tmp" && sha256sum -c checksum)
+            node_directory=${node_archive%.tar.xz}
+            sudo install -d -m 0755 /opt/jouw-driver
+            sudo tar -xJf "$node_tmp/$node_archive" -C /opt/jouw-driver --no-same-owner
+            sudo ln -s "/opt/jouw-driver/$node_directory/bin/node" /usr/local/bin/node
+          fi
+          node -e 'const [major,minor]=process.versions.node.split(".").map(Number); if(major!==22 || minor<18) process.exit(1)'
+          node --version
+          age --version
+          sudo install -d -m 0700 -o "$(id -un)" -g "$(id -gn)" /srv/jouw-driver /srv/jouw-driver/releases /srv/jouw-driver/backups
+          # Keep SSH available before enabling the host firewall. Docker publishes only
+          # edge 80/443 in the reviewed compose file; database ports must stay unpublished.
+          test "$(sudo /usr/sbin/sshd -T | awk '$1=="port" {print $2}')" = 22
+          sudo ufw default deny incoming
+          sudo ufw default allow outgoing
+          sudo ufw allow 22/tcp
+          sudo ufw allow 80/tcp
+          sudo ufw allow 443/tcp
+          sudo ufw --force enable
+          sudo ufw status
+          sudo docker info --format '{{.ServerVersion}}'
+          printf 'Runtime prepared. No application secrets or business data were created or modified.\n'
+          REMOTE
+          # A fresh connection verifies both group membership and post-firewall access.
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" 'docker info --format "{{.ServerVersion}}" && node --version && age --version && test -w /srv/jouw-driver'
