@@ -1,0 +1,144 @@
+name: Prepare private database and HTTPS
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ac2543dfe8d3290c7b2d16e3cf6fedba5894094b
+          persist-credentials: false
+      - name: Prepare isolated foundation over pinned SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -f "$keydir/key" "$keydir/known_hosts" release.tar.gz; rmdir "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh_args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          git archive --format=tar.gz -o release.tar.gz HEAD deploy scripts schema migrations
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'mkdir -p /srv/jouw-driver/foundation/source'
+          scp "${ssh_args[@]}" release.tar.gz "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/source/release.tar.gz"
+          ssh "${ssh_args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/release.json
+          test ! -e /srv/jouw-driver/.env
+          mkdir .prepare-lock
+          trap 'rmdir .prepare-lock' EXIT
+          tar -xzf source/release.tar.gz -C source
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {randomBytes} from 'node:crypto';
+          if (!fs.existsSync('.database.env')) {
+            const values={POSTGRES_DB:'jouw_driver',POSTGRES_PASSWORD:randomBytes(32).toString('hex'),GATEWAY_DB_ROLE:'jouw_gateway',GATEWAY_DB_PASSWORD:randomBytes(32).toString('hex'),POSTGREST_SCHEMA:'public',SCHEMA_USER:'jouw_app_user',SCHEMA_ADMIN_USER:'jouw_service',SCHEMA_SOURCE:'independent',DEPLOYMENT_MODE:'staging',SCHEMA_VALIDATED:'false',INDEPENDENT_SCHEMA_VALIDATE:'false',COMPOSE_PROJECT_NAME:'jouw-driver'};
+            fs.writeFileSync('.database.env',Object.entries(values).map(([k,v])=>`${k}=${v}`).join('\n')+'\n',{mode:0o600,flag:'wx'});
+          }
+          NODE
+          cat > compose.yaml <<'COMPOSE'
+          services:
+            db:
+              image: postgres:16.15-bookworm
+              restart: unless-stopped
+              environment:
+                POSTGRES_USER: postgres
+                POSTGRES_DB: ${POSTGRES_DB:?required}
+                POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+              volumes: ["database_data:/var/lib/postgresql/data"]
+              networks: [database]
+              healthcheck:
+                test: [CMD-SHELL, "pg_isready -U postgres -d $$POSTGRES_DB"]
+                interval: 5s
+                timeout: 5s
+                retries: 20
+            edge:
+              image: caddy:2
+              restart: unless-stopped
+              ports: ["80:80", "443:443"]
+              volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "tls_data:/data", "tls_config:/config"]
+              networks: [frontend]
+              security_opt: ["no-new-privileges:true"]
+          networks:
+            frontend: {}
+            database: {internal: true}
+          volumes:
+            database_data: {}
+            tls_data: {}
+            tls_config: {}
+          COMPOSE
+          cat > Caddyfile <<'CADDY'
+          jouw-driver.duckdns.org {
+            header {
+              Strict-Transport-Security "max-age=31536000"
+              Cache-Control "no-store"
+              X-Content-Type-Options "nosniff"
+              -Server
+            }
+            @health path /healthz
+            handle @health {
+              respond "Infrastructure ready; application deployment pending." 200
+            }
+            handle {
+              header Content-Type "text/html; charset=utf-8"
+              header Retry-After "3600"
+              respond "<!doctype html><html lang='ar' dir='rtl'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>JOUW DRIVER</title><body style='margin:0;background:#102b35;color:#fff;font-family:system-ui;text-align:center;padding:15vh 24px'><h1>JOUW DRIVER</h1><p>بوابة السائق قيد التجهيز</p><p>سنفتح تسجيل الدخول بعد إكمال الإعداد والاختبارات.</p></body></html>" 503
+            }
+          }
+          CADDY
+          export COMPOSE_FILE="$PWD/compose.yaml"
+          node --env-file=.database.env --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {spawnSync} from 'node:child_process';
+          import {contractSql,auditSql} from './source/scripts/independent-schema.mjs';
+          const run=(args,input,capture=false)=>{
+            const p=spawnSync('docker',args,{input,encoding:'utf8',stdio:['pipe',capture?'pipe':'inherit','pipe'],timeout:240000});
+            if(p.error||p.status!==0)throw Error('Foundation command failed; inspect the host privately.');
+            return p.stdout?.trim();
+          };
+          run(['compose','up','-d','--wait','--wait-timeout','120','db']);
+          const psql=sql=>run(['compose','exec','-T','db','psql','-U','postgres','-d',process.env.POSTGRES_DB,'-v','ON_ERROR_STOP=1','-At'],sql,true);
+          const tables=psql("SELECT count(*) FROM pg_tables WHERE schemaname='public';");
+          if(tables==='0'){
+            psql('BEGIN;\n'+fs.readFileSync('source/schema/reconstructed-staging.sql','utf8')+'\nCOMMIT;');
+            fs.writeFileSync('schema-initialized.json',JSON.stringify({revision:'ac2543dfe8d3290c7b2d16e3cf6fedba5894094b',createdAt:new Date().toISOString(),businessDataImported:false})+'\n',{mode:0o600,flag:'wx'});
+          } else if(!fs.existsSync('schema-initialized.json')) throw Error('Existing database has no foundation marker; refusing changes.');
+          // This is an empty foundation, never an acceptance of the historical export.
+          const n=psql('SELECT (SELECT count(*) FROM users)+(SELECT count(*) FROM trips)+(SELECT count(*) FROM invoices);');
+          if(n!=='0')throw Error('Business records exist; backup and reviewed migration workflow required.');
+          const p=spawnSync('node',['--env-file=.database.env','source/scripts/apply-release.mjs'],{stdio:'inherit'});
+          if(p.status!==0)throw Error('Schema migration failed.');
+          const audit=JSON.parse(psql(auditSql('public')));
+          fs.writeFileSync('schema-audit.json',JSON.stringify({...audit,businessDataImported:false,checkedAt:new Date().toISOString()},null,2)+'\n',{mode:0o600});
+          if(!audit.passed)throw Error('Empty foundation schema audit failed.');
+          psql(contractSql('public',{validate:true}));
+          if(psql('SELECT independent_schema_ready();')!=='t')throw Error('Independent constraint validation failed.');
+          const id=run(['compose','ps','-q','db'],undefined,true);
+          const bindings=JSON.parse(run(['inspect','--format','{{json .HostConfig.PortBindings}}',id],undefined,true));
+          if(bindings&&Object.keys(bindings).length)throw Error('Database port must remain unpublished.');
+          console.log('Empty private PostgreSQL foundation validated; historical data not imported.');
+          run(['compose','up','-d','edge']);
+          NODE
+          # The DNS and certificate checks are real; no --insecure or local trust bypass.
+          python3 -c "import socket; assert '162.19.70.78' in {x[4][0] for x in socket.getaddrinfo('jouw-driver.duckdns.org',443)}; print('DNS points to the server')"
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --retry 12 --retry-all-errors --retry-delay 5 --max-time 15 https://jouw-driver.duckdns.org/healthz
+          printf '\nHTTPS certificate and private database foundation verified.\n'
+          REMOTE
