@@ -1,0 +1,51 @@
+name: Import and verify private historical archive
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  archive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Install official age and XZ clients
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age xz-utils
+      - name: Verify, decrypt and transactionally import an inaccessible archive
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'set -eu; cd /srv/jouw-driver/archive-transfer/archive-20261009-v1; for i in $(seq -w 000 012); do test -s part-$i; done; cat part-0??' > "$keydir/archive.age"
+          test "$(sha256sum "$keydir/archive.age" | cut -d ' ' -f1)" = 4b17f68d1da831c5d8d108604626bd2f51fca1bc38122f4906c113a9040e7640
+          age -d -i "$keydir/key" "$keydir/archive.age" | xz --decompress > "$keydir/archive.sql"
+          test "$(sha256sum "$keydir/archive.sql" | cut -d ' ' -f1)" = 2b6b087882f9ee41a490e9c488d984ed5735945a3ab9a24c969e78872ea29e86
+          node --input-type=module <<'AUDIT'
+          import fs from 'node:fs';import {auditSql} from './scripts/independent-schema.mjs';
+          fs.writeFileSync(process.env.RUNNER_TEMP+'/private-archive-audit.sql',auditSql('jouw_driver_archive_20261009'),{mode:0o600});
+          AUDIT
+          scp "${args[@]}" deploy/import-private-archive.sh deploy/backup-table-counts.sql "$RUNNER_TEMP/private-archive-audit.sql" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/archive-transfer/archive-20261009-v1/"
+          if ! ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash /srv/jouw-driver/archive-transfer/archive-20261009-v1/import-private-archive.sh' < "$keydir/archive.sql"; then
+            printf 'Private archive import failed; record values and SQL diagnostics were not logged.\n' >&2
+            exit 1
+          fi
