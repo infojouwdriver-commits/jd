@@ -23,7 +23,7 @@ try{
    const context=await browser.newContext({viewport});
    await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
    await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
-   const page=await context.newPage();const failures=[];
+   let page=await context.newPage();const failures=[];
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
    await page.goto(base+'/login');
@@ -82,6 +82,10 @@ try{
     }
     await route.fulfill({status:request.method()==='POST'?201:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
    });
+   // Start authenticated fixture in a fresh document, after the anonymous form checks.
+   await page.close(); page=await context.newPage();
+   page.on('pageerror',error=>failures.push(error.message));
+   page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
    await page.goto(base+'/dashboard');
    try { await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click(); }
    catch(error){await page.screenshot({path:'ui-output/'+name+'-failure.png',fullPage:true});fs.writeFileSync('ui-output/'+name+'-failure.json',JSON.stringify({url:page.url(),text:await page.locator('body').innerText(),failures},null,2));throw error;}
