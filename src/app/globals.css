@@ -816,3 +816,50 @@
 a:focus-visible, button:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 @media (max-width: 1023px) { .workspace-content { margin-inline-start: 0; } .workspace-sidebar { display: none; width: min(300px, 85vw); } .workspace-sidebar.is-open { display: block; } .workspace-header { padding: 12px 16px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* Public product introduction, independent of the authenticated workspace theme. */
+.jd-home { background:#f5f6f7; color:#14201f; font-family:Arial,sans-serif; }
+.jd-home a,.jd-home button { -webkit-tap-highlight-color:transparent; }
+.jd-home-nav { max-width:1240px; margin:auto; padding:25px 32px; display:flex; align-items:center; gap:24px; }
+.jd-home-brand { display:flex; align-items:center; gap:10px; font-size:19px; letter-spacing:-.7px; font-weight:800; }
+.jd-home-brand svg,.jd-home-brand b { color:#087b64; }
+.jd-home-languages { margin-inline-start:auto; display:flex; gap:5px; }
+.jd-home-languages button { border-radius:7px; padding:7px 9px; font-size:11px; font-weight:700; }
+.jd-home-languages button[aria-pressed=true] { background:#e1ebe7; color:#05624f; }
+.jd-home-admin { display:flex; gap:6px; align-items:center; font-size:12px; }
+.jd-home-hero { max-width:1240px; margin:auto; padding:65px 32px 90px; display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:64px; }
+.jd-home-eyebrow { display:flex; align-items:center; gap:9px; font-size:12px; font-weight:600; color:#48665d; }
+.jd-home-eyebrow span { width:7px; height:7px; border-radius:50%; background:#099877; }
+.jd-home h1 { margin:24px 0; font-size:clamp(38px,4.3vw,65px); line-height:1.15; font-weight:800; letter-spacing:-2px; }
+.jd-home h1 em { color:#087b64; font-style:normal; }
+.jd-home-intro { font-size:16px; line-height:1.85; color:#58655f; max-width:520px; }
+.jd-home-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:30px; }
+.jd-home-primary,.jd-home-secondary { min-height:50px; padding:13px 18px; display:inline-flex; align-items:center; justify-content:center; gap:10px; border-radius:10px; font-size:13px; font-weight:700; }
+.jd-home-primary { background:#087b64; color:white; box-shadow:0 6px 15px #087b6418; }
+.jd-home-primary:hover { background:#056450; }
+.jd-home-secondary { border:1px solid #cdd9d3; background:white; }
+.jd-home-secondary:hover { border-color:#087b64; }
+.jd-home-discover { display:inline-flex; gap:8px; align-items:center; margin-top:26px; font-size:12px; color:#58655f; }
+.jd-home-visual { position:relative; display:flex; justify-content:center; padding:20px; }
+.jd-home-orbit { position:absolute; width:420px; height:420px; border-radius:50%; top:45px; background:radial-gradient(circle,#c4e4d8 0%,#e4ece4 65%,transparent 66%); }
+.jd-home-phone { position:relative; width:300px; background:#102d28; color:white; padding:26px 22px 22px; border:7px solid #182420; border-radius:39px; box-shadow:0 30px 50px #253b3120; transform:rotate(-4deg); }
+.jd-home-phone-top { display:flex; align-items:center; justify-content:space-between; font-size:12px; letter-spacing:1px; font-weight:800; }
+.jd-home-phone-label { font-size:11px; color:#a7c4b9; margin-top:25px; }
+.jd-home-phone h2 { font-size:20px; font-weight:700; margin:8px 0 20px; }
+.jd-home-route { position:relative; height:170px; background:#edf2e9; border-radius:13px; overflow:hidden; }
+.jd-home-streets { position:absolute; inset:-30px; background:repeating-linear-gradient(0deg,transparent 0 30px,#fff 30px 34px),repeating-linear-gradient(90deg,transparent 0 40px,#fff 40px 44px); transform:rotate(-22deg); }
+.jd-home-pin { position:absolute; z-index:2; color:#087b64; background:#edf2e9; }
+.jd-home-pin.start { top:32px; left:38px; }.jd-home-pin.end { bottom:32px; right:38px; }
+.jd-home-route-line { position:absolute; left:54px; right:54px; top:55px; height:66px; border-top:4px solid #087b64; border-right:4px solid #087b64; border-radius:0 16px 0 0; }
+.jd-home-trip { display:flex; gap:10px; align-items:center; background:#1c4139; padding:13px 10px; border-radius:11px; margin-top:15px; }
+.jd-home-trip div { flex:1; }.jd-home-trip strong { display:block; font-size:11px; }.jd-home-trip span { display:block; font-size:10px; color:#afcec0; margin-top:5px; }
+.jd-home-phone-links { display:flex; justify-content:space-between; margin-top:23px; font-size:9px; color:#c0d3ca; }.jd-home-phone-links span { display:flex; flex-direction:column; gap:9px; align-items:center; }
+.jd-home-preview-label { font-size:9px; text-align:center; margin-top:23px; color:#a6c0b4; }
+.jd-home-floating { position:absolute; bottom:46px; inset-inline-end:-12px; display:flex; gap:13px; align-items:center; background:white; padding:16px 20px; border:1px solid #e2e8e2; border-radius:14px; box-shadow:0 10px 30px #233c3112; font-size:12px; font-weight:700; }.jd-home-floating svg { color:#087b64; }.jd-home-floating small { display:block; font-size:10px; font-weight:400; margin-top:5px; color:#58655f; }
+.jd-home-section { background:white; padding:75px 32px; text-align:center; }.jd-home-section-kicker { font-size:11px; letter-spacing:2px; color:#087b64; font-weight:700; }.jd-home-section h2,.jd-home-start h2,.jd-home-cta h2 { font-size:clamp(25px,3vw,36px); font-weight:750; letter-spacing:-.6px; margin-top:15px; }.jd-home-section-intro { margin-top:14px; font-size:14px; color:#58655f; }
+.jd-home-feature-grid { display:grid; grid-template-columns:repeat(3,1fr); max-width:1100px; margin:45px auto 0; gap:24px; text-align:start; }.jd-home-feature-grid article { padding:27px; border:1px solid #e5ebe6; border-radius:15px; }.jd-home-feature-icon { display:grid; place-items:center; width:49px; height:49px; border-radius:13px; background:#eaf4ee; color:#087b64; }.jd-home-feature-grid h3 { font-size:18px; font-weight:700; margin-top:23px; }.jd-home-feature-grid p { font-size:14px; color:#58655f; margin-top:12px; line-height:1.8; }
+.jd-home-start { max-width:1160px; margin:auto; padding:75px 32px; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }.jd-home-start p { font-size:14px; color:#58655f; margin-top:14px; line-height:1.8; }.jd-home-steps { display:grid; gap:24px; }.jd-home-steps article { display:flex; gap:20px; }.jd-home-steps article>span { color:#087b64; background:#e1ebe5; width:45px; height:45px; flex-shrink:0; border-radius:12px; display:grid; place-items:center; font-size:12px; font-weight:700; }.jd-home-steps h3 { font-size:16px; font-weight:700; }.jd-home-steps p { margin-top:6px; }
+.jd-home-cta { background:#102d28; color:#fff; text-align:center; padding:70px 24px; }.jd-home-cta p { font-size:14px; color:#bdd1c6; margin-top:17px; }.jd-home-cta .jd-home-actions { justify-content:center; }.jd-home-cta .jd-home-secondary { color:#14201f; }.jd-home-cta .jd-home-primary { background:#a8e1be; color:#102d28; }
+.jd-home-footer { display:flex; gap:25px; align-items:center; justify-content:space-between; padding:32px; max-width:1240px; margin:auto; font-size:11px; color:#58655f; }.jd-home-footer strong { color:#14201f; font-size:13px; }.jd-home-footer p { margin-top:8px; }
+@media(max-width:900px){ .jd-home-hero { gap:24px; padding-top:38px; }.jd-home-orbit { width:310px; height:310px; }.jd-home-floating { inset-inline-end:0; padding:12px; }.jd-home-feature-grid { gap:12px; }.jd-home-feature-grid article { padding:22px; } }
+@media(max-width:650px){ .jd-home-nav { padding:20px; gap:12px; flex-wrap:wrap; }.jd-home-brand { font-size:17px; }.jd-home-admin { flex-basis:100%; justify-content:flex-end; }.jd-home-hero { grid-template-columns:1fr; padding:30px 22px 55px; gap:40px; }.jd-home h1 { font-size:40px; letter-spacing:-1px; }.jd-home-intro { font-size:15px; }.jd-home-actions { flex-direction:column; }.jd-home-visual { padding:10px; }.jd-home-phone { width:280px; }.jd-home-floating { bottom:29px; inset-inline-end:0; }.jd-home-section { padding:55px 22px; }.jd-home-feature-grid { grid-template-columns:1fr; gap:16px; margin-top:30px; }.jd-home-start { grid-template-columns:1fr; gap:30px; padding:50px 22px; }.jd-home-footer { padding:28px 22px; flex-wrap:wrap; }.jd-home-footer>div { flex-basis:100%; }.jd-home-cta .jd-home-actions { max-width:340px; margin-inline:auto; } }
