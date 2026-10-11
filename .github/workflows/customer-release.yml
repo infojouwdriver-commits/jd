@@ -1,0 +1,93 @@
+name: Prepare or publish customer portal
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [prepare, publish]
+        default: prepare
+        description: Prepare privately, or publish after verified backup and owner tests
+      image:
+        type: string
+        required: true
+        description: Verified immutable GHCR image digest
+      revision:
+        type: string
+        required: true
+        description: Full tested source revision
+      release_run:
+        type: string
+        required: true
+        description: Successful Verified server image workflow run ID
+      backup_run:
+        type: string
+        default: '0'
+        description: Successful backup after preparation; mandatory for publish
+      owner_test_run:
+        type: string
+        default: '0'
+        description: Successful owner verification after preparation; mandatory for publish
+permissions:
+  contents: read
+  actions: read
+  packages: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  customer-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Verify completed release and recovery gates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATES'
+          import fs from 'node:fs';
+          const i=JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).inputs;
+          if(!['prepare','publish'].includes(i.action)||!/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/.test(i.image)||!/^[a-f0-9]{40}$/.test(i.revision))throw Error('Invalid immutable release inputs');
+          for(const [id,path]of [[i.release_run,'release.yml'],...(i.action==='publish'?[[i.backup_run,'backup-foundation.yml'],[i.owner_test_run,'verify-private-owner.yml']]:[])]){
+            if(!/^[1-9][0-9]+$/.test(id))throw Error('Verified run required');
+            const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/actions/runs/'+id,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'}});
+            if(!r.ok)throw Error('Cannot verify acceptance run');const run=await r.json();
+            if(run.status!=='completed'||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Acceptance gate did not pass');
+            if(path==='release.yml'&&run.head_sha!==i.revision)throw Error('Release revision does not match acceptance run');
+          }
+          console.log('Release and required recovery/authentication acceptance runs verified.');
+          GATES
+      - name: Prepare or publish with pinned SSH and preserved runtime credentials
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          ACTION: ${{ inputs.action }}
+          IMAGE: ${{ inputs.image }}
+          REVISION: ${{ inputs.revision }}
+          BACKUP_RUN: ${{ inputs.backup_run }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$BACKUP_RUN" =~ ^[0-9]+$ ]]
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/customer-release; chmod 700 /srv/jouw-driver/customer-release' </dev/null
+          scp "${args[@]}" deploy/prepare-customer-runtime.sh deploy/publish-customer-runtime.sh deploy/Caddyfile.customers "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/customer-release/"
+          if [ "$ACTION" = prepare ]; then
+            printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+            ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash /srv/jouw-driver/customer-release/prepare-customer-runtime.sh '$IMAGE' '$REVISION'" </dev/null
+          else
+            ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash /srv/jouw-driver/customer-release/publish-customer-runtime.sh '$IMAGE' '$REVISION' '$BACKUP_RUN-1'" </dev/null
+          fi
