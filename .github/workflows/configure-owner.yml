@@ -85,7 +85,7 @@ jobs:
           cd /srv/jouw-driver/foundation
           test ! -e /srv/jouw-driver/release.json
           test ! -e /srv/jouw-driver/.env
-          test ! -e .enroll-state/owner-enrolled.json
+          sudo test ! -e .enroll-state/owner-enrolled.json
           docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 < enroll-initial-owner.sql >/dev/null
           node --env-file=.app-staging.env --env-file=owner-hash.env --input-type=module <<'NODE'
           import fs from 'node:fs';
