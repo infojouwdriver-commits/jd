@@ -2,7 +2,8 @@ import {requestMiddleware,validateRequestBody} from '@/lib/api-utils';
 import {createSuccessResponse,createErrorResponse} from '@/lib/create-response';
 import {ChironService} from '@/lib/chiron-service';
 import {ChironError} from '@/lib/chiron-protocol';
-export const POST=requestMiddleware(async request=>{
+export const POST=requestMiddleware(async (request,context)=>{
+ if(!context.payload?.isAdmin)return createErrorResponse({errorMessage:'Admin access required',status:403});
  const body=await validateRequestBody(request);
  const ids=[body.company_id,body.driver_id,body.vehicle_id].map(Number);
  if(ids.some(id=>!Number.isSafeInteger(id)||id<=0))return createErrorResponse({errorMessage:'اختر الشركة والسائق والمركبة',status:400});
