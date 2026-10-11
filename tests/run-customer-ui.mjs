@@ -20,7 +20,7 @@ try{
  for(const [name,engine,viewport]of [['chromium-desktop',chromium,{width:1280,height:900}],['webkit-mobile',webkit,{width:390,height:844}]]){
   const browser=await engine.launch();
   try{
-   const context=await browser.newContext({viewport});
+   const context=await browser.newContext({viewport,serviceWorkers:'block'});
    await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
    await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
    let page=await context.newPage();const failures=[];
@@ -88,7 +88,8 @@ try{
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
    const fixtureProfile=page.waitForResponse(response=>response.url()===base+'/next_api/auth/user');
    await page.goto(base+'/dashboard');
-   assert.equal((await (await fixtureProfile).json()).data.isAdmin,true,'Signed-in fixture profile must reach the shipped UI');
+   const fixtureResponse=await fixtureProfile,fixtureData=await fixtureResponse.json();
+   assert.equal(fixtureData.data?.isAdmin,true,'Fixture profile must reach UI; status='+fixtureResponse.status()+' code='+(fixtureData.errorCode||'none'));
    try { await page.locator('#workspace-content').getByRole('link',{name:'الشركات الحسابات والعقود والأسعار',exact:true}).click(); }
    catch(error){await page.screenshot({path:'ui-output/'+name+'-failure.png',fullPage:true});fs.writeFileSync('ui-output/'+name+'-failure.json',JSON.stringify({url:page.url(),text:await page.locator('body').innerText(),failures},null,2));throw error;}
    await page.waitForURL(base+'/admin/companies');
