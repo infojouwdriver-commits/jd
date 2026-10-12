@@ -1,7 +1,8 @@
 
 'use client';
 
-import {sanitizeHtml} from "@/lib/sanitize-html";
+import ContractDocument from '@/components/contracts/ContractDocument';
+import {todayInBrussels,contractIsImmutable} from '@/lib/contract-terms';
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -108,7 +109,7 @@ export default function CompanyContractsPage() {
   const [loadingSignatures, setLoadingSignatures] = useState(false);
 
   const [newContract, setNewContract] = useState({
-    contract_start_date: new Date().toISOString().split('T')[0],
+    contract_start_date: todayInBrussels(),
     contract_duration_months: 12,
     monthly_fee: 99.00,
     auto_renew: true,
@@ -198,7 +199,7 @@ export default function CompanyContractsPage() {
       toast.success('تم إنشاء العقد بنجاح');
       setShowCreateDialog(false);
       setNewContract({
-        contract_start_date: new Date().toISOString().split('T')[0],
+        contract_start_date: todayInBrussels(),
         contract_duration_months: 12,
         monthly_fee: 99.00,
         auto_renew: true,
@@ -244,16 +245,16 @@ export default function CompanyContractsPage() {
   };
 
   const handleDeleteContract = async (contractId: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذا العقد؟')) {
+    if (!confirm('إلغاء هذه المسودة مع الاحتفاظ بالوثيقة في السجل؟')) {
       return;
     }
 
     try {
       await api.delete(`/contracts?id=${contractId}`);
-      toast.success('تم حذف العقد بنجاح');
+      toast.success('تم إلغاء المسودة مع حفظ الوثيقة');
       fetchContracts();
     } catch (error: any) {
-      toast.error(error.message || 'فشل حذف العقد');
+      toast.error(error.message || 'فشل إلغاء المسودة');
     }
   };
 
@@ -635,7 +636,7 @@ export default function CompanyContractsPage() {
                     </Button>
                   )}
 
-                  {contract.contract_status === 'pending_signature' && (
+                  {contract.contract_status === 'pending_signature' && !contractIsImmutable(contract) && (
                     <>
                       <Button
                         variant="outline"
@@ -676,7 +677,7 @@ export default function CompanyContractsPage() {
                         className="rounded-2xl"
                       >
                         <Trash2 className="w-4 h-4 ml-2" />
-                        حذف
+                        إلغاء المسودة
                       </Button>
                     </>
                   )}
@@ -706,10 +707,7 @@ export default function CompanyContractsPage() {
             <DialogTitle>معاينة العقد</DialogTitle>
           </DialogHeader>
           {previewContract && (
-            <div 
-              className="prose dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(previewContract.contract_html_template) }}
-            />
+            <><div className="flex justify-end"><Link href={`/contract-print/${previewContract.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg border text-sm">طباعة / حفظ PDF</Link></div><ContractDocument html={previewContract.contract_html_template} /></>
           )}
         </DialogContent>
       </Dialog>

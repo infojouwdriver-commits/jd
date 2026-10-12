@@ -1,7 +1,7 @@
 
 'use client';
 
-import {sanitizeHtml} from "@/lib/sanitize-html";
+import ContractDocument from '@/components/contracts/ContractDocument';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -403,10 +403,7 @@ export default function SignContractPage() {
               <Shield className="w-5 h-5 text-blue-600" />
               {t.contractText}
             </h2>
-            <div 
-              className="prose dark:prose-invert max-w-none max-h-96 overflow-y-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(contractData.contract.contract_html_template) }}
-            />
+            <ContractDocument html={contractData.contract.contract_html_template} />
           </Card>
         </div>
       </div>
@@ -484,10 +481,7 @@ export default function SignContractPage() {
             <Shield className="w-5 h-5 text-blue-600" />
             {t.contractText}
           </h2>
-          <div 
-            className="prose dark:prose-invert max-w-none max-h-96 overflow-y-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(contractData.contract.contract_html_template) }}
-          />
+          <ContractDocument html={contractData.contract.contract_html_template} />
         </Card>
 
         <Card className="p-8 rounded-3xl border-0 shadow-xl">
