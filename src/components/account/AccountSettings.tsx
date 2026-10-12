@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import CookiePreferencesButton from '@/components/gdpr/CookiePreferencesButton';
 const labels = {
  ar:{title:'حسابي',current:'كلمة المرور الحالية',next:'كلمة المرور الجديدة',repeat:'تأكيد كلمة المرور الجديدة',save:'تغيير كلمة المرور',email:'البريد الإلكتروني',newEmail:'البريد الجديد',code:'رمز التحقق',send:'إرسال رمز التحقق',change:'تغيير البريد',unavailable:'تغيير البريد يحتاج خدمة تأكيد البريد؛ تواصل مع الإدارة لتجهيزها.',signIn:'تم حفظ التغيير. أعد تسجيل الدخول.',mismatch:'كلمتا المرور غير متطابقتين',hint:'12 حرفاً على الأقل؛ ستنتهي جلسات الدخول السابقة بعد الحفظ.',logout:'تسجيل الخروج'},
  fr:{title:'Mon compte',current:'Mot de passe actuel',next:'Nouveau mot de passe',repeat:'Confirmer le mot de passe',save:'Modifier le mot de passe',email:'Adresse e-mail',newEmail:'Nouvelle adresse',code:'Code de vérification',send:'Envoyer le code',change:'Modifier l’adresse',unavailable:'La vérification e-mail doit être configurée par l’administration.',signIn:'Modification enregistrée. Reconnectez-vous.',mismatch:'Les mots de passe ne correspondent pas',hint:'12 caractères minimum. Les sessions précédentes seront fermées.',logout:'Se déconnecter'},
@@ -55,6 +56,7 @@ export default function AccountSettings() {
    <Button type="button" variant="outline" disabled={busy||!available||!email||!current} onClick={()=>void submit('request_email_code')}>{t.send}</Button>
    {sent?<div className="space-y-2"><Label htmlFor="account-code">{t.code}</Label><Input id="account-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={event=>setCode(event.target.value)} /><Button type="button" disabled={busy||code.length!==6} onClick={()=>void submit('update_email')}>{t.change}</Button></div>:null}
   </div>
+  <div className="border-t pt-3"><CookiePreferencesButton /></div>
   <Button type="button" variant="outline" disabled={busy} onClick={()=>void logout()}>{t.logout}</Button>
  </CardContent></Card>;
 }

@@ -61,6 +61,8 @@ jobs:
           node "$RUNNER_TEMP/portal-ui/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Company, account and trip overview browser regressions
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-portal-ui.mjs
+      - name: Cookie preferences persistence and non-blocking dismissal
+        run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-cookie-ui.mjs
       - name: Production auth and ownership integration checks
         run: node --experimental-strip-types tests/run-auth-integration.mjs
 

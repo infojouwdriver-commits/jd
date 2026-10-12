@@ -10,6 +10,7 @@ import { api } from "@/lib/api-client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Link from "next/link";
+import { COOKIE_CONSENT_KEY, COOKIE_CONSENT_VERSION, COOKIE_PREFERENCES_EVENT, readCookieConsent, saveCookieConsent } from '@/lib/cookie-consent';
 
 interface CookieCategory {
   id: number;
@@ -19,9 +20,6 @@ interface CookieCategory {
   is_required: boolean;
   display_order: number;
 }
-
-const STORAGE_KEY = "gdpr_cookie_consent";
-const CONSENT_VERSION = "1.0";
 
 const T = {
   nl: {
@@ -69,51 +67,60 @@ export default function CookieBanner() {
 
   const [show, setShow] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [categories, setCategories] = useState<CookieCategory[]>([]);
-  const [choices, setChoices] = useState<Record<string, boolean>>({});
+  const [categoriesReady, setCategoriesReady] = useState(false);
+  const [categories, setCategories] = useState<CookieCategory[]>(DEFAULT_CATEGORIES);
+  const [choices, setChoices] = useState<Record<string, boolean>>({ essential: true, analytics: false, marketing: false });
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.version === CONSENT_VERSION) return;
-      } catch {}
-    }
-    const timer = setTimeout(() => setShow(true), 1800);
-    return () => clearTimeout(timer);
+    const open = () => { setExpanded(true); setShow(true); };
+    const update = (event: StorageEvent) => {
+      if (event.key === COOKIE_CONSENT_KEY && readCookieConsent()) setShow(false);
+    };
+    window.addEventListener(COOKIE_PREFERENCES_EVENT, open);
+    window.addEventListener('storage', update);
+    const timer = readCookieConsent() ? undefined : setTimeout(() => {
+      if (!readCookieConsent()) setShow(true);
+    }, 1800);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(COOKIE_PREFERENCES_EVENT, open);
+      window.removeEventListener('storage', update);
+    };
   }, []);
 
   useEffect(() => {
     if (!show) return;
+    let active = true;
+    let settled = false;
+    setCategoriesReady(false);
+    const applyCategories = (cats: CookieCategory[]) => {
+      if (!active || settled) return;
+      settled = true;
+      setCategories(cats);
+      const saved = readCookieConsent()?.categories ?? {};
+      setChoices(Object.fromEntries(cats.map(c => [c.code, c.is_required || c.code === 'essential' || saved[c.code] === true])));
+      setCategoriesReady(true);
+    };
+    const fallback = setTimeout(() => applyCategories(DEFAULT_CATEGORIES), 2000);
     api.get<CookieCategory[]>("/gdpr/cookie-categories")
       .then((data) => {
-        const cats = data?.length ? data : DEFAULT_CATEGORIES;
-        setCategories(cats);
-        const init: Record<string, boolean> = {};
-        let saved: Record<string, boolean> = {};
-        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').categories || {}; } catch {}
-        cats.forEach((c) => { init[c.code] = c.is_required || saved[c.code] === true; });
-        setChoices(init);
+        applyCategories(data?.length ? data : DEFAULT_CATEGORIES);
       })
-      .catch(() => {
-        setCategories(DEFAULT_CATEGORIES);
-        const init: Record<string, boolean> = {};
-        DEFAULT_CATEGORIES.forEach((c) => { init[c.code] = c.is_required; });
-        setChoices(init);
-      });
+      .catch(() => applyCategories(DEFAULT_CATEGORIES));
+    return () => { active = false; clearTimeout(fallback); };
   }, [show]);
 
-  const persist = useCallback(async (finalChoices: Record<string, boolean>) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: CONSENT_VERSION, timestamp: new Date().toISOString(), categories: finalChoices }));
-    if (user) {
-      try {
-        const payload = Object.entries(finalChoices).map(([key, granted]) => ({ consent_scope: "cookie_category", consent_key: key, consent_version: CONSENT_VERSION, granted }));
-        await api.post("/gdpr/consents", { consents: payload });
-      } catch {}
-    }
-    window.dispatchEvent(new CustomEvent("privacy-consent-changed", {detail: finalChoices}));
+  const persist = useCallback((finalChoices: Record<string, boolean>) => {
+    const consent = saveCookieConsent(finalChoices);
     setShow(false);
+    setExpanded(false);
+    window.dispatchEvent(new CustomEvent("privacy-consent-changed", {detail: consent.categories}));
+    if (user) {
+      const payload = Object.entries(consent.categories).map(([key, granted]) => ({ consent_scope: "cookie_category", consent_key: key, consent_version: COOKIE_CONSENT_VERSION, granted }));
+      void api.post("/gdpr/consents", { consents: payload }).catch(() => {
+        // The saved browser preference stays effective when account sync is unavailable.
+      });
+    }
   }, [user]);
 
   const acceptAll = useCallback(() => {
@@ -129,7 +136,6 @@ export default function CookieBanner() {
   }, [categories, persist]);
 
   return (
-    <><button type="button" onClick={() => { setShow(true); setExpanded(true); }} className="fixed bottom-3 left-3 z-50 rounded-lg border bg-white px-3 py-2 text-xs text-slate-900" aria-label={t.customize}>{t.customize}</button>
     <AnimatePresence>
       {show && (
         <motion.div
@@ -166,7 +172,7 @@ export default function CookieBanner() {
                           </div>
                           {cat.description && <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{cat.description}</p>}
                         </div>
-                        <Switch checked={choices[cat.code] ?? false} onCheckedChange={() => { if (!cat.is_required) setChoices((p) => ({ ...p, [cat.code]: !p[cat.code] })); }} disabled={cat.is_required} />
+                        <Switch checked={choices[cat.code] ?? false} onCheckedChange={() => { if (!cat.is_required) setChoices((p) => ({ ...p, [cat.code]: !p[cat.code] })); }} disabled={!categoriesReady || cat.is_required || cat.code === 'essential'} />
                       </div>
                     ))}
                   </div>
@@ -184,16 +190,16 @@ export default function CookieBanner() {
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-xs rounded-xl" onClick={rejectNonEssential}>{t.reject}</Button>
+                <Button variant="outline" size="sm" disabled={!categoriesReady} className="h-8 text-xs rounded-xl" onClick={rejectNonEssential}>{t.reject}</Button>
                 {expanded
-                  ? <Button size="sm" className="h-8 text-xs rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600" onClick={() => persist(choices)}>{t.save}</Button>
-                  : <Button size="sm" className="h-8 text-xs rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600" onClick={acceptAll}>{t.acceptAll}</Button>
+                  ? <Button size="sm" disabled={!categoriesReady} className="h-8 text-xs rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600" onClick={() => persist(choices)}>{t.save}</Button>
+                  : <Button size="sm" disabled={!categoriesReady} className="h-8 text-xs rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600" onClick={acceptAll}>{t.acceptAll}</Button>
                 }
               </div>
             </div>
           </div>
         </motion.div>
       )}
-    </AnimatePresence></>
+    </AnimatePresence>
   );
 }
