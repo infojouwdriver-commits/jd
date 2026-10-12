@@ -477,32 +477,18 @@ export async function sendVerificationEmail(
 
   if (process.env.RESEND_KEY) {
     const resend = new Resend(process.env.RESEND_KEY);
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: getSenderEmail(),
       to: email,
       subject: "Email Verification Code",
       html: htmlTemplate,
     });
 
-    return true;
+    return !result.error;
   }
 
-  const url = `${process.env.NEXT_PUBLIC_ZOER_HOST}/zapi/app/email/send`;
-
-  await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Postgrest-API-Key": process.env.POSTGREST_API_KEY || "",
-    },
-    body: JSON.stringify({
-      to: email,
-      subject: "Email Verification Code",
-      html: htmlTemplate,
-    }),
-  });
-
-  return true;
+  // An unconfigured sender must never report a successful delivery.
+  return false;
 }
 
 function shouldUseSecureCookies(): boolean {

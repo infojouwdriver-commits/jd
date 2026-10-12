@@ -2,6 +2,7 @@ import { Building2, Users, Car, MapPin, Settings, Bell, MessageSquare, ShieldChe
 
 /** One route catalog shared by the workspace and dashboard. */
 export const managementMenu = [
+  { title: 'حسابي', description: 'البريد وكلمة المرور وأمان الجلسات', icon: UserCog, href: '/admin/account', group: 'الإدارة' },
   { title: 'الشركات', description: 'الحسابات والعقود والأسعار', icon: Building2, href: '/admin/companies', group: 'التشغيل' },
   { title: 'السائقون', description: 'الملفات والصلاحيات والمركبات', icon: Users, href: '/admin/drivers', group: 'التشغيل' },
   { title: 'المركبات', description: 'الأسطول وتعيين السيارات', icon: Car, href: '/admin/vehicles', group: 'التشغيل' },

@@ -16,7 +16,9 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const body = await validateRequestBody(request);
-    const { email, password } = body;
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const password = body.password;
+    if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72) return createErrorResponse({errorMessage:'Invalid email or password',status:400});
 
     if (!email || !password) {
       return createErrorResponse({

@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 
 interface Trip {
   id: number;
+  company_name?: string; driver_name?: string; vehicle_plate_number?: string; locked_after_completion?: boolean;
   start_time: string;
   end_time: string;
   start_address: string;
@@ -51,6 +52,9 @@ interface Trip {
 export default function AdminTripsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [companies, setCompanies] = useState<{id:number;name:string}[]>([]);
+  const [companyId, setCompanyId] = useState('all');
+  const [page, setPage] = useState(0);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
@@ -74,20 +78,24 @@ export default function AdminTripsPage() {
   const fetchTrips = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<Trip[]>('/trips');
+      const query = new URLSearchParams({limit:'50',offset:String(page*50)});
+      if (companyId !== 'all') query.set('company_id', companyId);
+      const data = await api.get<Trip[]>('/trips?' + query);
       setTrips(data);
     } catch (error: any) {
       toast.error(error.message || 'فشل تحميل الرحلات');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [companyId, page]);
 
   useEffect(() => {
     if (user?.isAdmin === true) {
       fetchTrips();
     }
   }, [user, fetchTrips]);
+
+  useEffect(() => { if (user?.isAdmin) api.get<{id:number;name:string}[]>('/companies').then(setCompanies).catch(() => toast.error('تعذر تحميل الشركات')); }, [user]);
 
   const openEditDialog = (trip: Trip) => {
     setEditingTrip(trip);
@@ -171,7 +179,7 @@ export default function AdminTripsPage() {
     const matchesSearch = 
       trip.start_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       trip.end_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trip.id.toString().includes(searchQuery);
+      trip.id.toString().includes(searchQuery) || [trip.company_name,trip.driver_name,trip.vehicle_plate_number].some(value => value?.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesFilter && matchesSearch;
   });
 
@@ -214,6 +222,14 @@ export default function AdminTripsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-4 space-y-2">
+          <Label htmlFor="trip-company">الشركة</Label>
+          <select id="trip-company" value={companyId} onChange={event => {setPage(0);setCompanyId(event.target.value);}} className="w-full rounded-xl border bg-background p-3">
+            <option value="all">جميع الشركات</option>
+            {companies.map(company => <option key={company.id} value={String(company.id)}>{company.name}</option>)}
+          </select>
+          <p className="text-xs text-muted-foreground">الأعداد والبحث أدناه تخص الصفحة الحالية (حتى 50 رحلة).</p>
+        </div>
         {/* Search */}
         <div className="mb-6">
           <div className="relative">
@@ -289,6 +305,7 @@ export default function AdminTripsPage() {
                       <MapPin className="w-6 h-6 text-white" />
                     </div>
                     <div>
+                      <p className="mb-1 text-xs text-muted-foreground">{[trip.company_name,trip.driver_name,trip.vehicle_plate_number].filter(Boolean).join(" · ")}</p>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-slate-900 dark:text-white">
                           رحلة #{trip.id}
@@ -320,6 +337,8 @@ export default function AdminTripsPage() {
                       variant="outline"
                       size="sm"
                       className="rounded-xl text-xs gap-1 h-7 px-3 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                      disabled={trip.locked_after_completion}
+                      title={trip.locked_after_completion ? "الرحلة المكتملة مقفلة" : "تعديل السعر"}
                       onClick={() => openEditDialog(trip)}
                     >
                       <Pencil className="w-3 h-3" />
@@ -401,6 +420,11 @@ export default function AdminTripsPage() {
               </Card>
             ))
           )}
+        </div>
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <Button variant="outline" disabled={page===0} onClick={() => setPage(value => value-1)}>السابق</Button>
+          <span>صفحة {page+1}</span>
+          <Button variant="outline" disabled={trips.length<50} onClick={() => setPage(value => value+1)}>التالي</Button>
         </div>
       </main>
 

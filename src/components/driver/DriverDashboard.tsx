@@ -35,6 +35,7 @@ import {
   Shield,
   Loader2,
 } from "lucide-react";
+import AccountSettings from '@/components/account/AccountSettings';
 import { toast } from "sonner";
 
 interface DriverProfile {
@@ -250,53 +251,7 @@ function AddVehicleDialog({ onSuccess }: { onSuccess: () => void }) {
 }
 
 function AccountTab({ user, logout }: { user: any; logout: () => void }) {
-  return (
-    <div className="space-y-4">
-      <Card className="rounded-2xl border-0 shadow-lg bg-white dark:bg-slate-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-              <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            </div>
-            معلومات الحساب
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-slate-100 dark:border-slate-800">
-            <span className="text-sm text-slate-500 dark:text-slate-400 sm:w-44 shrink-0 flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" /> البريد الإلكتروني
-            </span>
-            <span className="text-sm font-medium text-slate-900 dark:text-white">{user?.email}</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5 border-b border-slate-100 dark:border-slate-800">
-            <span className="text-sm text-slate-500 dark:text-slate-400 sm:w-44 shrink-0 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5" /> نوع الحساب
-            </span>
-            <Badge variant="outline" className="w-fit text-xs border-blue-300 text-blue-600">سائق</Badge>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 py-2.5">
-            <span className="text-sm text-slate-500 dark:text-slate-400 sm:w-44 shrink-0 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> معرف الحساب
-            </span>
-            <span className="text-sm font-medium text-slate-900 dark:text-white">#{user?.id}</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-2xl border-0 shadow-lg bg-white dark:bg-slate-800">
-        <CardContent className="py-5">
-          <Button
-            onClick={logout}
-            variant="outline"
-            className="w-full rounded-2xl border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            تسجيل الخروج
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <AccountSettings />;
 }
 
 export default function DriverDashboard() {
