@@ -1,5 +1,4 @@
-
-
+import {CONTRACT_DOCUMENT_CSS} from './contract-document-style';
 export const CONTRACT_TEMPLATE_HTML_NL = `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1254,7 +1253,7 @@ export const CONTRACT_TEMPLATE_HTML_FR = `<!DOCTYPE html>
 </body>
 </html>`;
 
-interface ContractData {
+export interface ContractData {
   contractNumber: string;
   companyName: string;
   companyVAT: string;
@@ -1274,17 +1273,16 @@ export function generateContractHTML(data: ContractData): string {
   const template = data.language === 'fr' ? CONTRACT_TEMPLATE_HTML_FR : CONTRACT_TEMPLATE_HTML_NL;
   const locale = data.language === 'fr' ? 'fr-BE' : 'nl-BE';
   
-  let html = template;
-  
-  html = html.replace(/{{CONTRACT_NUMBER}}/g, data.contractNumber);
-  html = html.replace(/{{COMPANY_NAME}}/g, data.companyName);
-  html = html.replace(/{{COMPANY_VAT}}/g, data.companyVAT);
-  html = html.replace(/{{COMPANY_KBO}}/g, data.companyKBO);
-  html = html.replace(/{{START_DATE}}/g, new Date(data.startDate).toLocaleDateString(locale));
-  html = html.replace(/{{END_DATE}}/g, new Date(data.endDate).toLocaleDateString(locale));
-  html = html.replace(/{{MONTHLY_FEE}}/g, data.monthlyFee.toFixed(2));
-  html = html.replace(/{{ANNUAL_FEE}}/g, data.annualFee.toFixed(2));
-  html = html.replace(/{{DURATION_MONTHS}}/g, data.durationMonths.toString());
-  
-  return html;
+  const escape = (value: string) => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
+  const values: Record<string, string> = {
+    CONTRACT_NUMBER: escape(data.contractNumber), COMPANY_NAME: escape(data.companyName),
+    COMPANY_VAT: escape(data.companyVAT), COMPANY_KBO: escape(data.companyKBO),
+    START_DATE: new Date(data.startDate + 'T00:00:00Z').toLocaleDateString(locale, {timeZone:'UTC'}),
+    END_DATE: new Date(data.endDate + 'T00:00:00Z').toLocaleDateString(locale, {timeZone:'UTC'}),
+    MONTHLY_FEE: data.monthlyFee.toFixed(2), ANNUAL_FEE: data.annualFee.toFixed(2), DURATION_MONTHS: String(data.durationMonths),
+  };
+  return template
+    .replace(/<style>[\s\S]*?<\/style>/, () => `<style>${CONTRACT_DOCUMENT_CSS}</style>`)
+    .replace('<body>', '<body class="contract-document" data-contract-template="jouw-driver-v2">')
+    .replace(/{{([A-Z_]+)}}/g, (placeholder, key) => values[key] ?? placeholder);
 }
