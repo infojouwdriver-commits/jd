@@ -12,6 +12,7 @@ import { ArrowLeft, Save, Loader2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { normalizeCompanyPricing, companyPricingPatch } from '@/lib/company-pricing';
 
 interface Company {
   id: number;
@@ -68,18 +69,9 @@ export default function CompanyPricingPage() {
       setLoading(true);
       try {
         const data = await api.get<Company>(`/companies/${companyId}/pricing`);
+        const normalized = normalizeCompanyPricing(data as unknown as Record<string, unknown>);
+        setPricing(normalized);
         setCompany(data);
-        setPricing({
-          base_rate_per_km: data.base_rate_per_km,
-          base_rate_per_minute: data.base_rate_per_minute,
-          minimum_fare: data.minimum_fare,
-          airport_surcharge: data.airport_surcharge,
-          night_surcharge_percentage: data.night_surcharge_percentage,
-          peak_hour_surcharge_percentage: data.peak_hour_surcharge_percentage,
-          night_start_hour: data.night_start_hour,
-          night_end_hour: data.night_end_hour,
-          peak_hours: data.peak_hours
-        });
       } catch (error: any) {
         toast.error(error.message || 'فشل تحميل بيانات الشركة');
       } finally {
@@ -93,11 +85,12 @@ export default function CompanyPricingPage() {
   }, [companyId, user]);
 
   const handleSave = async () => {
+    if (saving || !company) return;
     setSaving(true);
     try {
       await api.put('/companies', {
         id: parseInt(companyId),
-        ...pricing
+        ...companyPricingPatch(pricing)
       });
       toast.success('تم حفظ إعدادات التسعيرة بنجاح');
       router.push('/admin/companies');
@@ -119,6 +112,12 @@ export default function CompanyPricingPage() {
   if (!user || !user?.isAdmin) {
     return null;
   }
+
+  if (!company) return <div role="alert" className="mx-auto max-w-xl p-8 text-center space-y-4">
+    <h1 className="text-xl font-bold">تعذّر تحميل إعدادات التسعير</h1>
+    <p>لم تُحمّل إعدادات الشركة؛ لا يمكن حفظ أسعار افتراضية فوق بياناتها.</p>
+    <Link href={`/admin/companies/${companyId}/settings`} className="inline-block underline">العودة إلى إعدادات الشركة</Link>
+  </div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">

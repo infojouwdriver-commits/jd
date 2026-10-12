@@ -2,6 +2,7 @@
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware } from "@/lib/api-utils";
+import { driverPricing } from '@/lib/company-pricing';
 
 /**
  * GET - جلب تسعيرة الشركة للسائق الحالي
@@ -42,14 +43,7 @@ export const GET = requestMiddleware(async (request, context) => {
     }
 
     // بناء كائن التسعير من الحقول الموجودة في قاعدة البيانات
-    const pricing = {
-      base_fee: company.minimum_fare || 10.00,
-      km_rate: company.base_rate_per_km || 2.00,
-      minute_rate: company.base_rate_per_minute || 0.50,
-      minimum_fare: company.minimum_fare || 10.00,
-      airport_fee: company.airport_surcharge || 5.00,
-      night_fee: (company.minimum_fare || 10.00) * ((company.night_surcharge_percentage || 20) / 100)
-    };
+    const pricing = driverPricing(company);
 
     return createSuccessResponse({
       company_id: company.id,

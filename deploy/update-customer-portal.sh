@@ -10,7 +10,9 @@ backup_tag=${3:?Verified backup tag required}
 [[ "$backup_tag" =~ ^[0-9]+-[0-9]+$ ]] || { printf 'Verified backup tag required\n' >&2; exit 1; }
 source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 migration="$source_dir/20261012_accounts_messages.sql"
+pricing_migration="$source_dir/20261013_company_pricing.sql"
 test -s "$migration"
+test -s "$pricing_migration"
 root=/srv/jouw-driver
 cd "$root/foundation"
 test ! -e "$root/.env"
@@ -19,7 +21,7 @@ test -s "$root/backups/foundation-$backup_tag.tar.age"
 test -s "$root/backups/foundation-$backup_tag.sha256"
 test "$(sha256sum "$root/backups/foundation-$backup_tag.tar.age" | awk '{print $1}')" = "$(cat "$root/backups/foundation-$backup_tag.sha256")"
 test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$revision"
-export CUSTOMER_IMAGE="$image" CUSTOMER_REVISION="$revision" VERIFIED_BACKUP_TAG="$backup_tag" PORTAL_MIGRATION="$migration"
+export CUSTOMER_IMAGE="$image" CUSTOMER_REVISION="$revision" VERIFIED_BACKUP_TAG="$backup_tag" PORTAL_MIGRATION="$migration" PRICING_MIGRATION="$pricing_migration"
 node --env-file=.app-staging.env --input-type=module <<'CHECK'
 import fs from 'node:fs';
 const state=JSON.parse(fs.readFileSync('runtime-mode.json'));
@@ -54,7 +56,7 @@ node --env-file=.database.env --input-type=module <<'MIGRATE'
 import fs from 'node:fs';import {spawnSync} from 'node:child_process';
 const e=process.env;
 if(e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||e.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
-let sql=fs.readFileSync(e.PORTAL_MIGRATION,'utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"');
+let sql=[e.PORTAL_MIGRATION,e.PRICING_MIGRATION].map(file=>fs.readFileSync(file,'utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"')).join('\n');
 const check="SELECT public.independent_schema_ready() AND NOT EXISTS(SELECT FROM unnest(ARRAY['jouw_app_user','jouw_service','jouw_gateway']) r(role) WHERE has_schema_privilege(role,'jouw_driver_archive_20261009','USAGE'));";
 const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
 const before=spawnSync('docker',args,{input:check,encoding:'utf8'});
@@ -93,7 +95,7 @@ ACCEPT
 node --input-type=module <<'STATE'
 import fs from 'node:fs';
 const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
-const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG,portalMigration:'20261012_accounts_messages'};
+const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG,portalMigration:'20261012_accounts_messages',pricingMigration:'20261013_company_pricing'};
 for(const file of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(file,JSON.stringify(state,null,2)+'\n',{mode:0o600});
 STATE
 updated=true

@@ -4,6 +4,7 @@ import { createSuccessResponse, createErrorResponse } from '@/lib/create-respons
 import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/api-utils";
 import { generateAdminUserToken } from '@/lib/auth';
 import { saveCompanyAccount } from '@/lib/company-account';
+import { companyPricingPatch, PricingValidationError } from '@/lib/company-pricing';
 
 export const GET = requestMiddleware(async (request, context) => {
   const { limit, offset } = parseQueryParams(request);
@@ -106,6 +107,12 @@ export const PUT = requestMiddleware(async (request, context) => {
 
   if (!id) {
     return createErrorResponse({ errorMessage: "معرف الشركة مطلوب", status: 400 });
+  }
+
+  try { Object.assign(updateData, companyPricingPatch(updateData)); }
+  catch (error) {
+    if (error instanceof PricingValidationError) return createErrorResponse({errorMessage:error.message,status:400});
+    throw error;
   }
 
   try {

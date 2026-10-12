@@ -16,7 +16,7 @@ try {
   const context=await browser.newContext({viewport,serviceWorkers:'block'});
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
   await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
-  const accountPosts=[],tripRequests=[],created=[];let loggedIn=true;
+  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data={sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'};}
@@ -27,9 +27,11 @@ try {
    else if(url.pathname==='/next_api/auth/logout'){loggedIn=false;data=true;}
    else if(url.pathname==='/next_api/companies'){
     if(request.method()==='POST'){created.push(request.postDataJSON());data={id:3,...created.at(-1),portal_login_enabled:true};}
+    else if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,...pricingWrites.at(-1)};}
     else data=[{id:1,name:'Company One',vat_number:'BE0000000001',kbo_number:'0000000001',chiron_mode:'TEST'},{id:2,name:'Company Two',vat_number:'BE0000000002',kbo_number:'0000000002',chiron_mode:'TEST'}];
    }
    else if(url.pathname==='/next_api/trips'){tripRequests.push(url.searchParams);data=[{id:101,start_time:'2026-10-12T08:00:00Z',end_time:'2026-10-12T08:10:00Z',price:12,status:'completed',company_name:'Company One',driver_name:'Synthetic Driver',vehicle_plate_number:'SYN-101',locked_after_completion:true}];}
+   else if(url.pathname==='/next_api/companies/1/pricing')data={id:1,name:'Company One',base_rate_per_km:0,base_rate_per_minute:'0.5',minimum_fare:'10.75',airport_surcharge:0,night_surcharge_percentage:0,peak_hour_surcharge_percentage:0,night_start_hour:22,night_end_hour:6,peak_hours:null};
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:{success:true,data})});
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -65,6 +67,19 @@ try {
   await dialog.getByRole('button',{name:'إنشاء الشركة',exact:true}).click();await creation;await dialog.waitFor({state:'hidden'});
   assert.equal(created.length,1);assert.equal(created[0].email,'owner@example.invalid');assert.equal(created[0].password,'company-password-123');assert.equal(errors.length,0,errors.join('\n'));
   checks.push(name+': company identity requires email before submitting and sends the canonical credentials once');
+  await page.goto(base+'/admin/companies/1/settings');
+  await page.getByRole('link',{name:/إعدادات التسعير/}).click();
+  await page.waitForURL(base+'/admin/companies/1/pricing');
+  const fields=page.locator('input[type="number"]');
+  await fields.first().waitFor();assert.equal(await fields.first().inputValue(),'0');assert.equal(await fields.nth(2).inputValue(),'10.75');
+  await fields.nth(2).fill('-1');await page.getByRole('button',{name:/حفظ/}).click();
+  await page.getByText('قيمة التسعير غير صالحة: minimum_fare',{exact:true}).waitFor();assert.equal(pricingWrites.length,0);
+  await fields.nth(2).fill('10.75');
+  const pricingSaved=page.waitForResponse(response=>response.url()===base+'/next_api/companies'&&response.request().method()==='PUT');
+  await page.getByRole('button',{name:/حفظ/}).click();await pricingSaved;await page.waitForURL(base+'/admin/companies');
+  assert.equal(pricingWrites[0].base_rate_per_km,0);assert.equal(pricingWrites[0].airport_surcharge,0);assert.equal(pricingWrites[0].minimum_fare,10.75);assert.equal(pricingWrites[0].peak_hours.length,2);
+  assert.equal(errors.length,0,errors.join('\n'));
+  checks.push(name+': pricing settings link opens, unset periods render safely, zero rates and cents persist, invalid edits do not submit');
   if(process.env.UI_OUTPUT_DIRECTORY){fs.mkdirSync(process.env.UI_OUTPUT_DIRECTORY,{recursive:true});await page.screenshot({path:path.join(process.env.UI_OUTPUT_DIRECTORY,name+'-companies.png'),fullPage:true});}
   await context.close();
  }
