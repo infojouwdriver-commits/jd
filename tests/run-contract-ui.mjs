@@ -34,7 +34,7 @@ try{
   assert.equal(await page.getByRole('link',{name:/طباعة/}).getAttribute('href'),'/contract-print/1');
   checks.push(name+': contract preview and authenticated print link open');
   for(const c of contracts){
-   await page.goto(base+'/contract-print/'+c.id);const doc=page.locator('[data-contract-document]');await doc.locator('.page').waitFor();
+   const response=await page.goto(base+'/contract-print/'+c.id);assert.match(response.headers()['cache-control'],/private.*no-store/);const doc=page.locator('[data-contract-document]');await doc.locator('.page').waitFor();
    assert.equal(await doc.getAttribute('lang'),c.id===1?'nl':'fr');assert.ok((await doc.innerText()).includes('99.95'));
    assert.equal(await doc.locator('script,style,img,iframe').count(),0);
    assert.equal(await page.evaluate(()=>window.contractInjected),undefined);

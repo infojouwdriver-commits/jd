@@ -15,6 +15,8 @@ await check('/next_api/auth/login',{method:'POST',headers:{origin:base,'Content-
 await check('/next_api/ai-assistant/chat',{method:'POST',headers:{origin:base,'Content-Type':'application/json'},body:'{}'},503);
 await check('/next_api/invoices/view?token=legacy',{},503);
 await check('/zoer_proxy/anything',{},410);
+const contractPrint = await check('/contract-print/1',{},200);
+assert.match(contractPrint.headers.get('cache-control'),/no-store/);
 const page = await check('/privacy-policy',{},200);
 assert.match(page.headers.get('content-security-policy'),/script-src 'self' 'nonce-/);
 assert.equal(page.headers.get('x-frame-options'),'DENY');
