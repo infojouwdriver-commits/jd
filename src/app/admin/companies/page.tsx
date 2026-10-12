@@ -37,7 +37,8 @@ interface Company {
   subscription_status: string;
   current_contract_id: number | null;
   payment_overdue_days: number;
-  password_hash?: string;
+  portal_login_enabled?: boolean;
+  portal_login_email?: string;
 }
 
 const emptyNew = { name: '', vat_number: '', kbo_number: '', address: '', email: '', phone: '', password: '' };
@@ -51,16 +52,13 @@ export default function CompaniesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showBulkPasswordDialog, setShowBulkPasswordDialog] = useState(false);
   const [switchingMode, setSwitchingMode] = useState<number | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [bulkPassword, setBulkPassword] = useState('');
-  const [settingBulkPassword, setSettingBulkPassword] = useState(false);
   const [newCompany, setNewCompany] = useState(emptyNew);
   const [editCompany, setEditCompany] = useState({
     id: 0, name: '', vat_number: '', kbo_number: '',
-    address: '', email: '', phone: '', new_password: '',
+    address: '', email: '', phone: '', new_password: '', login_email: '',
   });
 
   useEffect(() => {
@@ -90,6 +88,7 @@ export default function CompaniesPage() {
       toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
       return;
     }
+    if (newCompany.password && !newCompany.email.trim()) { toast.error('البريد الإلكتروني مطلوب لإنشاء حساب دخول الشركة'); return; }
     if (newCompany.password && (newCompany.password.length < 12 || new TextEncoder().encode(newCompany.password).length > 72)) {
       toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل ولا تتجاوز 72 بايت');
       return;
@@ -120,7 +119,7 @@ export default function CompaniesPage() {
     setEditCompany({
       id: company.id, name: company.name, vat_number: company.vat_number,
       kbo_number: company.kbo_number, address: company.address || '',
-      email: company.email || '', phone: company.phone || '', new_password: '',
+      email: company.email || '', phone: company.phone || '', new_password: '', login_email: company.portal_login_email || company.email || '',
     });
     setShowEditDialog(true);
   };
@@ -131,7 +130,7 @@ export default function CompaniesPage() {
       toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
       return;
     }
-    if (editCompany.new_password && editCompany.new_password.length < 12) {
+    if (editCompany.new_password && (editCompany.new_password.length < 12 || new TextEncoder().encode(editCompany.new_password).length > 72)) {
       toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
       return;
     }
@@ -154,27 +153,6 @@ export default function CompaniesPage() {
       toast.error(error.message || 'فشل تحديث الشركة');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleBulkSetPassword = async () => {
-    if (!bulkPassword || bulkPassword.length < 12) {
-      toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل');
-      return;
-    }
-    setSettingBulkPassword(true);
-    try {
-      const result = await api.put<{ updated: number; message: string }>('/company-portal/set-password', {
-        password: bulkPassword,
-      });
-      toast.success(`تم تعيين كلمة المرور لـ ${result?.updated} شركة`);
-      setShowBulkPasswordDialog(false);
-      setBulkPassword('');
-      fetchCompanies();
-    } catch (error: any) {
-      toast.error(error.message || 'فشل تعيين كلمة المرور');
-    } finally {
-      setSettingBulkPassword(false);
     }
   };
 
@@ -246,10 +224,6 @@ export default function CompaniesPage() {
             إدارة الشركات
           </h1>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <Button variant="outline" size="sm" className="rounded-2xl text-xs" onClick={() => setShowBulkPasswordDialog(true)}>
-              <KeyRound className="w-4 h-4 ml-1" />
-              تعيين كلمة مرور للكل
-            </Button>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
                 <Button className="rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
@@ -288,7 +262,7 @@ export default function CompaniesPage() {
                       placeholder="كلمة المرور للدخول إلى لوحة تحكم الشركة"
                       className="rounded-2xl"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">اختياري - يستخدمها صاحب الشركة لتسجيل الدخول</p>
+                    <p className="text-xs text-muted-foreground mt-1">اختياري — مع البريد الإلكتروني ينشئ حساب دخول للشركة؛ بدونه يُنشأ سجل الشركة فقط</p>
                   </div>
                   <Button disabled={saving} aria-busy={saving} onClick={handleCreateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
                     <Plus className="w-5 h-5 ml-2" />إنشاء الشركة
@@ -299,38 +273,6 @@ export default function CompaniesPage() {
           </div>
         </div>
       </header>
-
-      {/* Bulk Password Dialog */}
-      <AlertDialog open={showBulkPasswordDialog} onOpenChange={setShowBulkPasswordDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-blue-500" />
-              تعيين كلمة مرور لجميع الشركات
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم تعيين كلمة المرور المدخلة لجميع الشركات الموجودة في النظام.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-2">
-            <Label>كلمة المرور الجديدة</Label>
-            <Input
-              type="password"
-              value={bulkPassword}
-              onChange={(e) => setBulkPassword(e.target.value)}
-              placeholder="أدخل كلمة المرور (12 حرفاً على الأقل)"
-              className="rounded-2xl mt-1"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkSetPassword} disabled={settingBulkPassword}>
-              {settingBulkPassword ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
-              تعيين للجميع
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
@@ -359,11 +301,13 @@ export default function CompaniesPage() {
               <Label className="flex items-center gap-2"><Lock className="w-4 h-4" />تغيير كلمة المرور</Label>
               <Input
                 type="password"
+                aria-describedby="company-login-note"
                 value={editCompany.new_password}
                 onChange={(e) => setEditCompany({ ...editCompany, new_password: e.target.value })}
                 placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
                 className="rounded-2xl"
               />
+              <p id="company-login-note" className="mt-2 text-xs text-muted-foreground">حساب الدخول: {editCompany.login_email || 'أدخل بريداً للشركة لإنشاء حسابها'}. بريد التواصل منفصل عن بريد الدخول الحالي.</p>
             </div>
             <Button disabled={saving} aria-busy={saving} onClick={handleUpdateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
               حفظ التغييرات
@@ -418,9 +362,9 @@ export default function CompaniesPage() {
                     {company.chiron_mode}
                   </Badge>
                   {getStatusBadge(company.subscription_status)}
-                  {company.password_hash && (
+                  {company.portal_login_enabled && (
                     <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-0 text-xs">
-                      <Lock className="w-3 h-3 ml-1" />كلمة مرور مفعّلة
+                      <Lock className="w-3 h-3 ml-1" />حساب دخول مفعّل
                     </Badge>
                   )}
                   <Button size="sm" variant="outline" onClick={() => handleSwitchMode(company.id, company.chiron_mode)} disabled={switchingMode === company.id} className="rounded-xl text-xs">
@@ -431,6 +375,7 @@ export default function CompaniesPage() {
               </div>
 
               <div className="space-y-1 text-sm mb-4">
+                {company.portal_login_email && <p className="text-xs text-blue-600">حساب الدخول: {company.portal_login_email}</p>}
                 {company.email && <p className="text-slate-600 dark:text-slate-400">{company.email}</p>}
                 {company.phone && <p className="text-slate-600 dark:text-slate-400">{company.phone}</p>}
                 {company.address && <p className="text-slate-500 dark:text-slate-500 text-xs">{company.address}</p>}

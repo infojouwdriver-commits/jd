@@ -5,7 +5,7 @@ import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/
 import { generateAdminUserToken } from '@/lib/auth';
 
 export const GET = requestMiddleware(async (request, context) => {
-  const { limit, offset } = parseQueryParams(request);
+  const { limit, offset, company_id } = parseQueryParams(request);
   
   const user_id = context.payload?.sub;
   if (!user_id) {
@@ -19,8 +19,14 @@ export const GET = requestMiddleware(async (request, context) => {
     const adminToken = await generateAdminUserToken();
     const tripsCrud = new CrudOperations("trips", adminToken);
     
+    const filters: Record<string, unknown> = context.payload?.isAdmin ? {} : {user_id};
+    if (context.payload?.isAdmin && company_id) {
+      const companyId = Number(company_id);
+      if (!Number.isSafeInteger(companyId) || companyId < 1) return createErrorResponse({errorMessage:'معرف الشركة غير صالح',status:400});
+      filters.company_id = companyId;
+    }
     const trips = await tripsCrud.findMany(
-      { user_id },
+      filters,
       { 
         limit: limit || 50, 
         offset: offset || 0,
@@ -42,11 +48,26 @@ export const GET = requestMiddleware(async (request, context) => {
       tripInvoices = groups.flat();
     }
 
+    const companiesCrud = new CrudOperations('companies', adminToken);
+    const driversCrud = new CrudOperations('drivers', adminToken);
+    const vehiclesCrud = new CrudOperations('vehicles', adminToken);
+    const uniqueRecords = async (crud: CrudOperations, ids: unknown[]) => {
+      const unique = [...new Set(ids.filter(Boolean).map(String))];
+      return new Map(await Promise.all(unique.map(async id => [id, await crud.findById(id)] as const)));
+    };
+    const [companies, drivers, vehicles] = await Promise.all([
+      uniqueRecords(companiesCrud, trips.map(trip => trip.company_id)),
+      uniqueRecords(driversCrud, trips.map(trip => trip.driver_id)),
+      uniqueRecords(vehiclesCrud, trips.map(trip => trip.vehicle_id)),
+    ]);
     const tripsWithInvoices = trips.map((trip: any) => {
       const invoice = tripInvoices.find((inv: any) => inv.trip_id === trip.id);
       return {
         ...trip,
-        invoice: invoice || null
+        invoice: invoice || null,
+        company_name: companies.get(String(trip.company_id))?.name || null,
+        driver_name: drivers.get(String(trip.driver_id))?.full_name || null,
+        vehicle_plate_number: vehicles.get(String(trip.vehicle_id))?.plate_number || null
       };
     });
 

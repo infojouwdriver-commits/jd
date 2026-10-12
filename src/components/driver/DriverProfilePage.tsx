@@ -11,6 +11,7 @@ import { api } from '@/lib/api-client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { driverTranslations } from '@/locales/driver';
 import { toast } from 'sonner';
+import AccountSettings from '@/components/account/AccountSettings';
 import DriverGdprSection from '@/components/gdpr/DriverGdprSection';
 
 interface VehicleSummary {
@@ -416,6 +417,7 @@ export default function DriverProfilePage() {
 
       {/* GDPR & Privacy Rights Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
+        <AccountSettings />
         <DriverGdprSection />
       </motion.div>
     </div>

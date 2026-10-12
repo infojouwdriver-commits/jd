@@ -11,6 +11,7 @@ import { api } from '@/lib/api-client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast } from 'sonner';
+import AccountSettings from '@/components/account/AccountSettings';
 import DriversTab from './DriversTab';
 import VehiclesTab from './VehiclesTab';
 
@@ -144,14 +145,16 @@ export default function CompanyDashboard() {
                 <TabsTrigger value="vehicles" className="flex-1 gap-2">
                   <Car className="w-4 h-4" /> Vehicles ({vehicles.length})
                 </TabsTrigger>
-              </TabsList>
+                <TabsTrigger value="account">حسابي</TabsTrigger>
+          </TabsList>
               <TabsContent value="drivers">
                 <DriversTab drivers={drivers} onRefresh={() => fetchData(true)} />
               </TabsContent>
               <TabsContent value="vehicles">
                 <VehiclesTab vehicles={vehicles} onRefresh={() => fetchData(true)} />
               </TabsContent>
-            </Tabs>
+              <TabsContent value="account"><AccountSettings /></TabsContent>
+        </Tabs>
           </CardContent>
         </Card>
       </main>

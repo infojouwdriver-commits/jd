@@ -1,4 +1,6 @@
 
+import { createPostgrestClient } from '@/lib/postgrest';
+import { writeMessage } from '@/lib/message-access';
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/api-utils";
@@ -24,27 +26,31 @@ export const GET = requestMiddleware(async (request, context) => {
     filters.status = status;
   }
   
-  const messages = await messagesCrud.findMany(filters, { 
-    limit: limit || 50, 
-    offset: offset || 0,
-    orderBy: { column: 'last_activity_at', direction: 'desc' }
-  });
-  
+  let query = createPostgrestClient(adminToken).from('internal_messages').select('*').is('parent_message_id', null).order('last_activity_at', {ascending:false}).range(offset, offset + limit - 1);
+  for (const [key,value] of Object.entries(filters)) query = query.eq(key, value);
+  const {data:messages,error} = await query;
+  if (error || !messages) throw new Error('Messages unavailable');
+
   // جلب معلومات المرسلين
   const usersCrud = new CrudOperations("users", adminToken);
   const driversCrud = new CrudOperations("drivers", adminToken);
   
-  const allUsers = await usersCrud.findMany({}, { limit: 1000 });
-  const allDrivers = await driversCrud.findMany({}, { limit: 1000 });
+  const senderIds = [...new Set(messages.map(message => String(message.sender_user_id)))];
+  const [senderUsers,senderDrivers] = await Promise.all([
+    Promise.all(senderIds.map(id => usersCrud.findById(id))),
+    Promise.all(senderIds.map(id => driversCrud.findMany({user_id:Number(id)}))),
+  ]);
+  const allUsers = senderUsers.filter(Boolean);
+  const allDrivers = senderDrivers.flat();
   
   // دمج معلومات المرسل مع الرسائل
-  const messagesWithSenderInfo = messages.map((msg: any) => {
+  const messagesWithSenderInfo = messages.filter((message: any) => !message.parent_message_id).map((msg: any) => {
     const user = allUsers.find((u: any) => u.id === msg.sender_user_id);
     const driver = allDrivers.find((d: any) => d.user_id === msg.sender_user_id);
     
     return {
       ...msg,
-      sender_name: driver?.full_name || user?.email || 'غير معروف',
+      sender_name: driver?.full_name || msg.sender_name || user?.email || 'غير معروف',
       sender_email: user?.email || null
     };
   });
@@ -52,92 +58,12 @@ export const GET = requestMiddleware(async (request, context) => {
   return createSuccessResponse(messagesWithSenderInfo);
 }, true);
 
-// POST - إنشاء رسالة جديدة
+// The server derives the sender and creates message/recipients in one transaction.
 export const POST = requestMiddleware(async (request, context) => {
   const body = await validateRequestBody(request);
-  const userId = context.payload?.sub;
-  
-  if (!userId) {
-    return createErrorResponse({
-      errorMessage: "معرف المستخدم مطلوب",
-      status: 401,
-    });
-  }
-  
-  if (!body.subject || !body.message_body) {
-    return createErrorResponse({
-      errorMessage: "الموضوع والرسالة مطلوبان",
-      status: 400,
-    });
-  }
-  
-  const adminToken = await generateAdminUserToken();
-  
-  // جلب معلومات المرسل
-  const usersCrud = new CrudOperations("users", adminToken);
-  const driversCrud = new CrudOperations("drivers", adminToken);
-  
-  const user = await usersCrud.findById(userId);
-  const allDrivers = await driversCrud.findMany({ user_id: parseInt(userId) });
-  const driver = allDrivers && allDrivers.length > 0 ? allDrivers[0] : null;
-  
-  const senderName = driver?.full_name || user?.email || 'غير معروف';
-  
-  const messagesCrud = new CrudOperations("internal_messages", adminToken);
-  
-  const messageData = {
-    sender_user_id: parseInt(userId),
-    sender_type: body.sender_type || 'admin',
-    sender_name: senderName,
-    subject: body.subject,
-    message_body: body.message_body,
-    message_priority: body.message_priority || 'normal',
-    recipient_type: body.recipient_type || 'all_drivers',
-    target_company_id: body.target_company_id || null,
-    is_broadcast: body.is_broadcast || false,
-    parent_message_id: body.parent_message_id || null,
-    status: 'open',
-    last_activity_at: new Date().toISOString(),
-    is_locked: false
-  };
-  
-  const data = await messagesCrud.create(messageData);
-  
-  // إنشاء سجلات المستلمين
-  if (data && data.id) {
-    const recipientsCrud = new CrudOperations("message_recipients", adminToken);
-    
-    // جلب قائمة المستلمين بناءً على نوع المستلم
-    let recipientUserIds: number[] = [];
-    
-    if (body.recipient_type === 'all_drivers' || body.recipient_type === 'all_active_drivers') {
-      const filters: Record<string, any> = {};
-      
-      if (body.recipient_type === 'all_active_drivers') {
-        filters.status = 'active';
-      }
-      
-      if (body.target_company_id) {
-        filters.company_id = parseInt(body.target_company_id);
-      }
-      
-      const drivers = await driversCrud.findMany(filters);
-      recipientUserIds = drivers.map((d: any) => d.user_id);
-    } else if (body.recipient_type === 'individual' && body.recipient_user_id) {
-      recipientUserIds = [parseInt(body.recipient_user_id)];
-    }
-    
-    // إنشاء سجل لكل مستلم
-    for (const recipientUserId of recipientUserIds) {
-      await recipientsCrud.create({
-        message_id: data.id,
-        recipient_user_id: recipientUserId,
-        is_read: false
-      });
-    }
-  }
-  
-  return createSuccessResponse(data, 201);
+  const token = await generateAdminUserToken();
+  const result = await writeMessage(token, context.payload!.sub, context.payload?.isAdmin === true, body);
+  return createSuccessResponse(result, 201);
 }, true);
 
 // PUT - تحديث رسالة

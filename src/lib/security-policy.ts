@@ -20,10 +20,12 @@ export function disabledEndpoint(path: string): boolean {
   return ['/next_api/ai-assistant', '/next_api/contracts/sign', '/next_api/contracts/verify-token', '/next_api/contracts/send-signature-link', '/next_api/invoices/view', '/next_api/invoices/share-link', '/next_api/auth/google-login', '/next_api/example', '/next_api/websocket', '/next_api/zoer_health', '/next_api/company-portal/register', '/next_api/company-portal/set-password'].some(prefix => path === prefix || path.startsWith(prefix + '/'));
 }
 export function memberEndpoint(path: string, method: string, userType: string): boolean {
-  if (['/next_api/auth/user', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;
+  if (['/next_api/auth/user', '/next_api/auth/account', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;
   if (['manager', 'company', 'owner'].includes(userType)) return ['/next_api/company-portal', '/next_api/company-portal/drivers', '/next_api/company-portal/vehicles'].includes(path);
   if (userType === 'distributor') return method === 'GET' && ['/next_api/distributors/my-companies','/next_api/invoices/my-invoices'].includes(path);
   if (userType !== 'driver') return false;
+  if (path === '/next_api/messages') return method === 'POST';
+  if (path === '/next_api/messages/replies') return method === 'GET' || method === 'POST';
   return ['/next_api/drivers/me', '/next_api/drivers/pricing', '/next_api/drivers/vehicles', '/next_api/drivers/profile', '/next_api/driver-profile', '/next_api/trips', '/next_api/trips/start', '/next_api/trips/end', '/next_api/trips/summary', '/next_api/trips/export-pdf', '/next_api/trips/generate-invoice', '/next_api/trips/retry-sync', '/next_api/notifications/driver', '/next_api/notifications/mark-read', '/next_api/messages/driver', '/next_api/messages/mark-read'].includes(path) && !(path === '/next_api/drivers/profile' && method !== 'GET');
 }
 export function ownsRecord(record: {user_id?: unknown} | null, userId: string): boolean {

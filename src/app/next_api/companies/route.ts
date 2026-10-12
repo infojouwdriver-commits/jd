@@ -3,7 +3,7 @@ import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/api-utils";
 import { generateAdminUserToken } from '@/lib/auth';
-import { hashString } from '@/lib/server-utils';
+import { saveCompanyAccount } from '@/lib/company-account';
 
 export const GET = requestMiddleware(async (request, context) => {
   const { limit, offset } = parseQueryParams(request);
@@ -55,14 +55,22 @@ export const GET = requestMiddleware(async (request, context) => {
       }
     );
 
-    return createSuccessResponse(companies);
+    const links = await new CrudOperations('company_users', adminToken).findMany({role:'portal_owner'});
+    const owners = new Map(await Promise.all([...new Set(links.map(link => String(link.user_id)))].map(async userId => [userId,await new CrudOperations('users',adminToken).findById(userId)] as const)));
+    return createSuccessResponse(companies.map(company => {
+      const link = links.find(link => String(link.company_id) === String(company.id));
+      const owner = link ? owners.get(String(link.user_id)) : null;
+      return {...company,portal_login_enabled:!!owner,portal_login_email:owner?.email || null};
+    }));
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || "فشل تحميل الشركات", status: 500 });
   }
 }, true);
 
 export const POST = requestMiddleware(async (request, context) => {
+  if (!context.payload?.isAdmin) return createErrorResponse({errorMessage:'Admin access required',status:403});
   const body = await validateRequestBody(request);
   
   const { name, vat_number, kbo_number, address, email, phone, logo_url, password } = body;
@@ -79,53 +87,14 @@ export const POST = requestMiddleware(async (request, context) => {
     const adminToken = await generateAdminUserToken();
     const companiesCrud = new CrudOperations("companies", adminToken);
     
-    let created_by_distributor_id = null;
-    if (!context.payload?.isAdmin) {
-      const distributorsCrud = new CrudOperations("distributors", adminToken);
-      const distributors = await distributorsCrud.findMany({
-        user_id: parseInt(context.payload?.sub || '0')
-      });
-      
-      if (distributors && distributors.length > 0) {
-        created_by_distributor_id = distributors[0].id;
-      }
-    }
-
-    let password_hash = null;
-    if (password != null && password !== '' && (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password,'utf8') > 72)) return createErrorResponse({errorMessage:'Password must be at least 12 characters and at most 72 UTF-8 bytes',status:400});
-    if (password) {
-      password_hash = await hashString(password);
-    }
-    
-    const newCompany = await companiesCrud.create({
-      name,
-      vat_number,
-      kbo_number,
-      address: address || null,
-      email: email || null,
-      phone: phone || null,
-      logo_url: logo_url || null,
-      chiron_mode: 'TEST',
-      bank_account_iban: 'BE16973450355674',
-      bank_account_bic: 'ARSPBE22',
-      bank_account_holder: name,
-      created_by_distributor_id,
-      password_hash,
-    });
-
-    if (created_by_distributor_id) {
-      const distributorCompaniesCrud = new CrudOperations("distributor_companies", adminToken);
-      await distributorCompaniesCrud.create({
-        distributor_id: created_by_distributor_id,
-        company_id: newCompany.id,
-        assigned_by_user_id: context.payload?.sub,
-        is_active: true,
-        notes: 'تم الإنشاء تلقائياً عند إضافة الشركة'
-      });
-    }
+    const newCompany = await saveCompanyAccount(adminToken, null, {
+      name, vat_number, kbo_number, address: address || null,
+      email: email || null, phone: phone || null, logo_url: logo_url || null,
+    }, password);
 
     return createSuccessResponse(newCompany, 201);
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || "فشل إنشاء الشركة", status: 500 });
   }
@@ -188,10 +157,14 @@ export const PUT = requestMiddleware(async (request, context) => {
       });
     }
 
-    // Handle password update separately
-    if (password != null && password !== '' && (typeof password !== 'string' || password.length < 12 || Buffer.byteLength(password,'utf8') > 72)) return createErrorResponse({errorMessage:'Password must be at least 12 characters and at most 72 UTF-8 bytes',status:400});
-    if (password) {
-      updateData.password_hash = await hashString(password);
+    if (password !== undefined && password !== '') {
+      const updated = await saveCompanyAccount(adminToken, Number(id), {
+        name: updateData.name ?? existing.name, vat_number: updateData.vat_number ?? existing.vat_number,
+        kbo_number: updateData.kbo_number ?? existing.kbo_number, address: updateData.address ?? existing.address,
+        email: updateData.email ?? existing.email, phone: updateData.phone ?? existing.phone,
+        logo_url: updateData.logo_url ?? existing.logo_url, chiron_mode: updateData.chiron_mode ?? existing.chiron_mode,
+      }, password);
+      return createSuccessResponse(updated);
     }
 
     if (updateData.chiron_mode && !['TEST', 'PRODUCTION'].includes(updateData.chiron_mode)) {
@@ -205,6 +178,7 @@ export const PUT = requestMiddleware(async (request, context) => {
 
     return createSuccessResponse(updated);
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || "فشل تحديث الشركة", status: 500 });
   }
@@ -269,6 +243,7 @@ export const DELETE = requestMiddleware(async (request, context) => {
     await companiesCrud.delete(id);
     return createSuccessResponse({ id });
   } catch (error: any) {
+    if (error instanceof Response) return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || "فشل حذف الشركة", status: 500 });
   }

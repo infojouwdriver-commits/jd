@@ -1,4 +1,5 @@
 
+import { accessibleMessage, messageId } from '@/lib/message-access';
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, validateRequestBody } from "@/lib/api-utils";
@@ -25,6 +26,9 @@ export const POST = requestMiddleware(async (request, context) => {
   }
   
   const adminToken = await generateAdminUserToken();
+  const id = messageId(body.message_id);
+  const message = await accessibleMessage(adminToken, id, userId, context.payload?.isAdmin === true);
+  if (String(message.sender_user_id) === String(userId)) return createSuccessResponse({is_read:true});
   const recipientsCrud = new CrudOperations("message_recipients", adminToken);
   
   // البحث عن السجل
