@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import {ArrowUpRight, Building2, Car, Check, ChevronDown, FileText, MapPin, ShieldCheck, Users} from 'lucide-react';
 import {useLanguage} from '@/contexts/LanguageContext';
+import CookiePreferencesButton from '@/components/gdpr/CookiePreferencesButton';
 
 const copy = {
  ar: {eyebrow:'للشركات والسائقين في بلجيكا',title:'كل رحلة. كل سائق.',accent:'في مكان واحد.',intro:'نظّم عمل شركتك، تابع رحلاتك، واجمع فريقك مع JOUW DRIVER. مساحة واضحة لإدارة يومك، من أول انطلاق حتى آخر رحلة.',driver:'دخول السائقين',company:'دخول الشركات',admin:'دخول الإدارة',features:'اكتشف التطبيق',badge:'رحلتك تبدأ هنا',preview:'نظرة توضيحية على التطبيق',journey:'رحلاتك، بوضوح',trip:'تفاصيل الرحلة',route:'الانطلاق ← الوصول',history:'سجل الرحلات',team:'الشركة والفريق',platform:'مساحة عمل تناسب دورك',detail:'من الهاتف أثناء العمل إلى إدارة الشركة على الكمبيوتر.',cards:[['للسائق','مكان واحد لملفك، مركبتك وسجل رحلاتك.'],['للشركة','نظّم السائقين والمركبات وتابع نشاط شركتك.'],['للإدارة','إدارة الشركات والحسابات والأسعار والعقود.']],flow:'ابدأ بخطوتين',step1:'اختر بوابتك',step1desc:'ادخل إلى بوابة السائق أو الشركة حسب حسابك.',step2:'سجّل الدخول واعمل',step2desc:'استخدم الحساب الذي جهزته لك إدارة شركتك.',cta:'جاهز ليوم عمل أكثر تنظيماً؟',ctadesc:'بوابتك وفريقك ورحلاتك، في مساحة واحدة.',note:'الحسابات تُجهّز عبر إدارة الشركة.',privacy:'الخصوصية',footer:'منصة إدارة رحلات وشركات النقل.'},
@@ -20,6 +21,6 @@ export default function LandingPage(){
    <section id="features" className="jd-home-section"><p className="jd-home-section-kicker">JOUW DRIVER</p><h2>{t.platform}</h2><p className="jd-home-section-intro">{t.detail}</p><div className="jd-home-feature-grid">{t.cards.map(([title,desc],i)=>{const Icon=icons[i];return <article key={title}><div className="jd-home-feature-icon"><Icon size={25}/></div><h3>{title}</h3><p>{desc}</p></article>;})}</div></section>
    <section className="jd-home-start"><div><p className="jd-home-section-kicker">LET’S GO</p><h2>{t.flow}</h2><p>{t.note}</p></div><div className="jd-home-steps">{[[t.step1,t.step1desc],[t.step2,t.step2desc]].map(([title,desc],i)=><article key={title}><span>0{i+1}</span><div><h3>{title}</h3><p>{desc}</p></div></article>)}</div></section>
    <section className="jd-home-cta"><h2>{t.cta}</h2><p>{t.ctadesc}</p><div className="jd-home-actions"><Link className="jd-home-primary" href="/driver-login"><Car size={20}/>{t.driver}</Link><Link className="jd-home-secondary" href="/login?portal=company"><Building2 size={20}/>{t.company}</Link></div></section>
-  </main><footer className="jd-home-footer"><div><strong dir="ltr">JOUW DRIVER</strong><p>{t.footer}</p></div><Link href="/privacy-policy">{t.privacy}</Link><span>© {new Date().getFullYear()} JOUW DRIVER</span></footer>
+  </main><footer className="jd-home-footer"><div><strong dir="ltr">JOUW DRIVER</strong><p>{t.footer}</p></div><Link href="/privacy-policy">{t.privacy}</Link><CookiePreferencesButton /><span>© {new Date().getFullYear()} JOUW DRIVER</span></footer>
  </div>;
 }

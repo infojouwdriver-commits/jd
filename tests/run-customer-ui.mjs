@@ -22,7 +22,7 @@ try{
   try{
    const context=await browser.newContext({viewport,serviceWorkers:'block'});
    await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
-   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
+   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}})));
    let page=await context.newPage();const failures=[];
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
@@ -72,7 +72,7 @@ try{
    // Native release tests separately verify server authentication and database authorization.
    const companies=[{id:92,name:'Other fixture company',vat_number:'BE0999999999',kbo_number:'0999999999',chiron_mode:'TEST',subscription_status:'pending_contract'}, {id:91,name:'UI fixture company',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_mode:'TEST',subscription_status:'pending_contract'}];
    const created=[];
-   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}})));
+   await context.addInitScript(()=>localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}})));
    await context.route(base+'/next_api/**',async route=>{
     const request=route.request(),url=new URL(request.url());let data=[];
     if(url.pathname==='/next_api/auth/user')data={sub:'9001',id:9001,email:'admin@ui.example',isAdmin:true,userType:'admin',role:'jouw_app_user'};

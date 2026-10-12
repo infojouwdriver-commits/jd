@@ -14,7 +14,7 @@ try {
  browser=await chromium.launch({headless:true});
  for(const [name,viewport]of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
   const context=await browser.newContext({viewport,serviceWorkers:'block'});
-  await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',categories:{essential:true,analytics:false,marketing:false}}));});
+  await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
   await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
   const accountPosts=[],tripRequests=[],created=[];let loggedIn=true;
   await context.route(base+'/next_api/**',async route=>{
