@@ -45,6 +45,7 @@ export const CONTRACT_DOCUMENT_CSS = `
  .contract-document .card{margin-bottom:6mm;padding-bottom:5mm}
  .contract-document section{break-inside:avoid}
  .contract-document h2{font-size:14pt}
+ .contract-document .kicker{break-after:avoid}
  .contract-document h3{font-size:11pt}
  .contract-print-controls,body:has(.contract-print-page) [data-cookie-banner],body:has(.contract-print-page) [data-sonner-toaster]{display:none!important}
  .contract-print-page{max-width:none!important;margin:0!important;padding:0!important;background:#fff!important}
