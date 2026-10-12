@@ -57,7 +57,7 @@ try {
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await psql(`CREATE FUNCTION public.stack_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
- for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
+ for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
@@ -160,6 +160,14 @@ try {
  const createdCompany=await appApi('/next_api/companies','POST',{name:'Native created company',vat_number:'BE0111111111',kbo_number:'0111111111',email:'native-company@example.invalid',password:appPassword},adminCookie);
  assert.equal(createdCompany.status,201,'Administrator company creation must work');const newCompanyId=createdCompany.data.data.id;
  assert.ok((await appApi('/next_api/companies','GET',undefined,adminCookie)).data.data.some(c=>c.id===newCompanyId));
+ const pricingSave=await appApi('/next_api/companies','PUT',{id:1,minimum_fare:10.75,airport_surcharge:3.95,night_surcharge_percentage:0,base_rate_per_km:0},adminCookie);
+ assert.equal(pricingSave.status,200,'Company pricing must accept cents and configured zero rates');
+ const currentPricing=await appApi('/next_api/drivers/pricing','GET',undefined,cookie);
+ assert.equal(currentPricing.status,200);assert.equal(currentPricing.data.data.pricing.base_fee,10.75);assert.equal(currentPricing.data.data.pricing.airport_fee,3.95);assert.equal(currentPricing.data.data.pricing.km_rate,0);assert.equal(currentPricing.data.data.pricing.night_fee,0);
+ assert.equal((await appApi('/next_api/companies','PUT',{id:1,minimum_fare:-10},adminCookie)).status,400);
+ assert.equal((await appApi('/next_api/drivers/pricing','GET',undefined,cookie)).data.data.pricing.minimum_fare,10.75);
+ assert.equal((await appApi('/next_api/companies','PUT',{id:1,minimum_fare:1},cookie)).status,403);
+ checks.push('Native company pricing saves euro cents and preserves zero fees; invalid values and driver writes are rejected without changing stored rates');
  checks.push('Real administrator MFA session creates and lists a company through production handlers and native PostgreSQL');
  const companyLogin=await appApi('/next_api/company-portal/login','POST',{email:' NATIVE-COMPANY@EXAMPLE.INVALID ',password:appPassword});
  assert.equal(companyLogin.status,200,'New company account must authenticate through canonical users table');

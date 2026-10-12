@@ -3,6 +3,7 @@ import CrudOperations from './crud-operations';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {ChironError,chironDestination,rideMessage} from './chiron-protocol';
+import {driverPricing} from './company-pricing';
 
 export class ChironService {
  static async getCompanyConfig(companyId:number):Promise<any>{
@@ -13,15 +14,7 @@ export class ChironService {
   const rows=await new CrudOperations('platform_contracts',await generateAdminUserToken()).findMany({company_id:companyId,platform_name:platformName.toLowerCase(),is_active:true});return rows[0]||null;
  }
   static getPricingJson(company: any) {
-    return {
-      base_fee: company.minimum_fare ?? 10.00,
-      km_rate: company.base_rate_per_km ?? 2.00,
-      minute_rate: company.base_rate_per_minute ?? 0.50,
-      minimum_fare: company.minimum_fare ?? 10.00,
-      airport_fee: company.airport_surcharge ?? 5.00,
-      night_surcharge_percentage: company.night_surcharge_percentage ?? 20.00,
-      peak_hour_surcharge_percentage: company.peak_hour_surcharge_percentage ?? 15.00
-    };
+    return driverPricing(company);
   }
 
 
