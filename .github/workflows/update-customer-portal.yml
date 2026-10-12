@@ -1,0 +1,91 @@
+name: Update verified customer portal with additive migration
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        type: string
+        required: true
+        description: Immutable GHCR image digest from a successful verified release
+      revision:
+        type: string
+        required: true
+        description: Exact 40-character tested source revision reachable from main
+      release_run:
+        type: string
+        required: true
+        description: Successful Verified server image run for this revision
+      backup_run:
+        type: string
+        required: true
+        description: Successful recent encrypted backup and native restore drill
+permissions:
+  contents: read
+  actions: read
+  packages: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Validate release ancestry and completed native acceptance/recovery
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          import fs from 'node:fs';
+          const input=JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).inputs;
+          if(!/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/.test(input.image)||!/^[a-f0-9]{40}$/.test(input.revision))throw Error('Invalid immutable release');
+          const api=async path=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+path,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Acceptance unavailable');return r.json();};
+          const ancestry=await api('/compare/'+input.revision+'...main');
+          if(!['identical','ahead'].includes(ancestry.status))throw Error('Revision must be reachable from main');
+          for(const [id,path] of [[input.release_run,'release.yml'],[input.backup_run,'backup-foundation.yml']]){
+            if(!/^[1-9][0-9]+$/.test(id))throw Error('Verified run required');
+            const run=await api('/actions/runs/'+id);
+            if(run.status!=='completed'||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Acceptance did not pass');
+            if(path==='release.yml'&&run.head_sha!==input.revision)throw Error('Release revision mismatch');
+            if(path==='backup-foundation.yml'){
+              if(Date.now()-Date.parse(run.updated_at)>24*60*60*1000)throw Error('Backup restore drill must be recent');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup_tag='+run.id+'-'+run.run_attempt+'\n');
+            }
+          }
+          console.log('Verified main revision, release acceptance and recent native restore drill.');
+          GATE
+        id: gate
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ inputs.revision }}
+          persist-credentials: false
+      - name: Update the accepted foundation runtime over pinned SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ inputs.image }}
+          REVISION: ${{ inputs.revision }}
+          BACKUP_TAG: ${{ steps.gate.outputs.backup_tag }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          test -s migrations/20261012_accounts_messages.sql
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          remote_dir="/srv/jouw-driver/customer-release/$REVISION"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p '$remote_dir'; chmod 700 '$remote_dir'" </dev/null
+          scp "${args[@]}" deploy/update-customer-portal.sh migrations/20261012_accounts_messages.sql "$DEPLOY_USER@$DEPLOY_HOST:$remote_dir/"
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash '$remote_dir/update-customer-portal.sh' '$IMAGE' '$REVISION' '$BACKUP_TAG'" </dev/null
