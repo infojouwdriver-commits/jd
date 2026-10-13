@@ -58,7 +58,7 @@ try{
    await page.goto(base+'/');
    await page.getByRole('button',{name:'AR',exact:true}).click();
    assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
-   assert.ok(await page.getByRole('heading',{name:/كل رحلة\. كل سائق\./}).isVisible());
+   assert.ok(await page.getByRole('heading',{name:/من الرحلة إلى إدارة شركتك/}).isVisible());
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    await page.screenshot({path:'ui-output/'+name+'-homepage.png',fullPage:true});
    await page.locator('.jd-home-hero').getByRole('link',{name:'دخول الشركات',exact:true}).click();
