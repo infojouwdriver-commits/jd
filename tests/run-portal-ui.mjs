@@ -20,7 +20,7 @@ try {
     if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
     return url.origin===base?route.continue():route.abort();
   });
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true,currentUserType='admin';
+  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true,currentUserType='admin',chironTests=0;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
@@ -37,6 +37,12 @@ try {
    else if(url.pathname==='/next_api/trips'){tripRequests.push(url.searchParams);data=[{id:101,start_time:'2026-10-12T08:00:00Z',end_time:'2026-10-12T08:10:00Z',price:12,status:'completed',company_name:'Company One',driver_name:'Synthetic Driver',vehicle_plate_number:'SYN-101',locked_after_completion:true}];}
    else if(url.pathname==='/next_api/fleet')data=[{driver_id:11,driver_name:'Synthetic Driver',company_id:1,company_name:'Company One',vehicle_id:21,plate_number:'SYN-101',shift_active:true,sharing_enabled:true,latitude:50.8503,longitude:4.3517,accuracy_m:8,last_update:'2026-10-13T18:00:00Z',work_status:'available'},{driver_id:12,driver_name:'Off Shift Driver',company_id:1,company_name:'Company One',vehicle_id:null,plate_number:null,shift_active:false,sharing_enabled:false,latitude:null,longitude:null,accuracy_m:null,last_update:null,work_status:'off_shift'}];
    else if(url.pathname==='/next_api/company-portal')data={company:{id:1,name:'Company One',email:'company@example.invalid',phone:'',subscription_status:'active'},drivers:[],vehicles:[]};
+   else if(url.pathname==='/next_api/drivers')data=[{id:11,full_name:'Synthetic Driver',company_id:1}];
+   else if(url.pathname==='/next_api/vehicles')data=[{id:21,brand:'Synthetic',model:'Car',plate_number:'SYN-101',company_id:1}];
+   else if(url.pathname==='/next_api/test-trips/acceptance-test'){
+    chironTests++;
+    data={success:true,totalMessages:10,successCount:10,failedCount:0,results:Array.from({length:10},(_,i)=>({ritnummer:'TEST-synthetic-'+Math.floor(i/2),sequence:i+1,messageType:i%2?'aankomst':'vertrek',success:true,httpStatus:200}))};
+   }
    else if(url.pathname==='/next_api/companies/1/pricing')data={id:1,name:'Company One',base_rate_per_km:0,base_rate_per_minute:'0.5',minimum_fare:'10.75',airport_surcharge:0,night_surcharge_percentage:0,peak_hour_surcharge_percentage:0,night_start_hour:22,night_end_hour:6,peak_hours:null};
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:{success:true,data})});
   });
@@ -95,6 +101,18 @@ try {
   await page.getByText('آخر تحديث: المشاركة متوقفة',{exact:true}).waitFor();
   assert.equal(await page.getByText('Company One',{exact:true}).count()>0,true);
   checks.push(name+': admin fleet view shows company, vehicle, accuracy, last shared coordinates and hides stopped sharing');
+  await page.goto(base+'/admin/test-trips');
+  const choices=page.getByRole('combobox');
+  await choices.nth(0).click();await page.getByRole('option',{name:'Company One (TEST)',exact:true}).click();
+  await choices.nth(1).click();await page.getByRole('option',{name:'Synthetic Driver',exact:true}).click();
+  await choices.nth(2).click();await page.getByRole('option',{name:'Synthetic Car - SYN-101',exact:true}).click();
+  await page.getByRole('button',{name:'تنفيذ اختبار القبول (10 رسائل)',exact:true}).click();
+  await page.locator('[data-testid="chiron-message-result"][data-accepted="true"]').last().waitFor();
+  assert.equal(await page.locator('[data-testid="chiron-message-result"][data-accepted="true"]').count(),10);
+  assert.equal(await page.locator('[data-testid="chiron-message-result"][data-accepted="false"]').count(),0);
+  assert.equal(await page.getByText(/الانطلاق · VERTREK/).count(),5);assert.equal(await page.getByText(/الوصول · AANKOMST/).count(),5);
+  assert.equal(chironTests,1,'One explicitly clicked local fixture call only');
+  checks.push(name+': accepted Chiron event booleans render ten successes, five departures, five arrivals and HTTP evidence');
   currentUserType='company';
   await page.goto(base+'/company/dashboard');
   await page.getByRole('tab',{name:/الأسطول/}).click();
