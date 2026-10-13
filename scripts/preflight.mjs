@@ -21,5 +21,17 @@ try {
  const secrets=JSON.parse(env.ADMIN_TOTP_SECRETS_JSON||'{}');
  for(const id of (env.PLATFORM_ADMIN_IDS||'').split(',').filter(Boolean)) if(typeof secrets[id]!=='string'||!/^[A-Z2-7]{32,128}$/.test(secrets[id]))errors.push(`Enroll administrator MFA for user ${id}`);
 } catch {errors.push('ADMIN_TOTP_SECRETS_JSON invalid');}
+const mailKeys=['RESEND_KEY','RESEND_FROM_EMAIL','RESEND_VERIFIED_DOMAIN','RESEND_WEBHOOK_SECRET','MAIL_METADATA_KEY'];
+const mailConfigured=mailKeys.some(key=>(env[key]||'').trim()) || env.RESEND_FREE_PLAN_CONFIRMED==='true';
+if(mailConfigured){
+ const domain=(env.RESEND_VERIFIED_DOMAIN||'').trim().toLowerCase();
+ const sender=(env.RESEND_FROM_EMAIL||'').trim();
+ const address=sender.match(/^(?:[^<>\r\n]+<)?([^<>\s]+@[^<>\s]+)>?$/)?.[1]?.toLowerCase();
+ if(!(env.RESEND_KEY||'').trim())errors.push('RESEND_KEY required when transactional mail is configured');
+ if(!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(domain)||domain==='resend.dev'||!address||address.split('@')[1]!==domain||/[\r\n]/.test(sender))errors.push('Transactional mail requires a sender on RESEND_VERIFIED_DOMAIN');
+ if(env.RESEND_FREE_PLAN_CONFIRMED!=='true')errors.push('Set RESEND_FREE_PLAN_CONFIRMED=true only after confirming the provider plan');
+ if(!(env.RESEND_WEBHOOK_SECRET||'').trim())errors.push('RESEND_WEBHOOK_SECRET required to verify delivery events');
+ if(!/^[a-f0-9]{64}$/i.test((env.MAIL_METADATA_KEY||env.DATA_ENCRYPTION_KEY||'').trim()))errors.push('MAIL_METADATA_KEY or DATA_ENCRYPTION_KEY must provide 64 hex characters');
+}
 console.log(errors.length ? errors.join('\n') : 'Configuration syntax checks passed. Database, provider agreements and deployment controls require separate verification.');
 process.exitCode=errors.length ? 1 : 0;
