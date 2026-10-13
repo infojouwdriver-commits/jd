@@ -36,6 +36,8 @@ interface TestResult {
   status: 'success' | 'failed';
   vertrek: boolean;
   aankomst: boolean;
+  messageType?: string;
+  httpStatus?: number;
   error?: string;
   startAddress?: string;
   endAddress?: string;
@@ -394,10 +396,16 @@ export class PDFGenerator {
         }
       }
 
-      doc.text(`VERTREK: ${result.vertrek ? '✓ Geslaagd' : '✗ Mislukt'}`, 25, yPosition);
-      yPosition += 5;
-      doc.text(`AANKOMST: ${result.aankomst ? '✓ Geslaagd' : '✗ Mislukt'}`, 25, yPosition);
-      yPosition += 5;
+      if (result.messageType === 'vertrek' || result.messageType === 'aankomst') {
+        doc.text(`Bericht: ${result.messageType.toUpperCase()}`, 25, yPosition);
+        yPosition += 5;
+        if (Number.isInteger(result.httpStatus)) { doc.text(`HTTP: ${result.httpStatus}`, 25, yPosition); yPosition += 5; }
+      } else {
+        doc.text(`VERTREK: ${result.vertrek ? '✓ Geslaagd' : '✗ Mislukt'}`, 25, yPosition);
+        yPosition += 5;
+        doc.text(`AANKOMST: ${result.aankomst ? '✓ Geslaagd' : '✗ Mislukt'}`, 25, yPosition);
+        yPosition += 5;
+      }
 
       if (result.status === 'success') {
         doc.setTextColor(...successColor);

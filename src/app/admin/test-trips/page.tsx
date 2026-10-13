@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
 import Link from 'next/link';
 import { PDFGenerator } from '@/lib/pdf-generator';
+import { isAcceptedTestMessage, acceptanceReportMessages } from '@/lib/chiron-test-result';
 
 interface Company {
   id: number;
@@ -170,7 +171,7 @@ export default function AcceptanceTestPage() {
         totalMessages: testResult.totalMessages || 0,
         successCount: testResult.successCount || 0,
         failedCount: testResult.failedCount || 0,
-        results: testResult.results || []
+        results: acceptanceReportMessages(testResult.results || [])
       };
 
       const pdf = PDFGenerator.generateAcceptanceTestReport(reportData);
@@ -227,7 +228,7 @@ export default function AcceptanceTestPage() {
         totalMessages: testResult.totalMessages || 0,
         successCount: testResult.successCount || 0,
         failedCount: testResult.failedCount || 0,
-        results: testResult.results || []
+        results: acceptanceReportMessages(testResult.results || [])
       };
 
       const pdf = PDFGenerator.generateAcceptanceTestReport(reportData);
@@ -400,11 +401,13 @@ export default function AcceptanceTestPage() {
                   {testResult.results?.map((result: any, index: number) => (
                     <Alert 
                       key={index}
-                      variant={result.status === 'success' ? 'default' : 'destructive'}
+                      variant={isAcceptedTestMessage(result) ? 'default' : 'destructive'}
+                      data-testid="chiron-message-result"
+                      data-accepted={isAcceptedTestMessage(result)}
                       className="text-sm"
                     >
                       <div className="flex items-start gap-2">
-                        {result.status === 'success' ? (
+                        {isAcceptedTestMessage(result) ? (
                           <CheckCircle2 className="w-4 h-4 mt-0.5 text-green-500" />
                         ) : (
                           <XCircle className="w-4 h-4 mt-0.5 text-red-500" />
@@ -412,6 +415,11 @@ export default function AcceptanceTestPage() {
                         <div className="flex-1">
                           <div className="font-medium">
                             {result.ritnummer || 'N/A'}
+                          </div>
+                          <div className="mt-1 text-xs">
+                            {result.messageType === 'vertrek' ? 'الانطلاق · VERTREK' : result.messageType === 'aankomst' ? 'الوصول · AANKOMST' : 'رسالة الاختبار'}
+                            {' · '}{isAcceptedTestMessage(result) ? 'قُبلت الرسالة' : 'لم يُثبت قبول الرسالة'}
+                            {Number.isInteger(result.httpStatus) && <> · HTTP {result.httpStatus}</>}
                           </div>
                           {result.error && (
                             <AlertDescription className="mt-1 text-xs">
