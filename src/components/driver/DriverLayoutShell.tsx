@@ -24,6 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import DriverFleetShift from "@/components/driver/DriverFleetShift";
 
 const LOGO_URL =
   "https://cdn.chat2db-ai.com/app/avatar/custom/16eda623-2b94-41ea-8390-395dcb708494_737955.png";
@@ -362,6 +363,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </div>
+        <DriverFleetShift language={language} />
       </header>
 
       <main className="dp-content-with-tabbar dp-fade-in">{children}</main>
