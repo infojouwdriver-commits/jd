@@ -50,11 +50,14 @@ export async function fetchDrivingRoute(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const response = await request(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+    const response = await request(url, { signal: controller.signal, referrerPolicy: "origin", headers: { Accept: "application/json" } });
     if (!response.ok) throw new Error("mapbox_route_unavailable");
     const route = parseDrivingRoute(await response.json());
     if (!route) throw new Error("mapbox_route_invalid");
     return route;
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("mapbox_")) throw error;
+    throw new Error(controller.signal.aborted ? "mapbox_route_timeout" : "mapbox_route_unavailable");
   } finally {
     clearTimeout(timeout);
   }
