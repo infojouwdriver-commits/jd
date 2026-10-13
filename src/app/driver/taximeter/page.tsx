@@ -24,6 +24,7 @@ import { useGeolocation, GeolocationPoint } from '@/hooks/useGeolocation';
 import { useAddressSearch } from '@/hooks/useAddressSearch';
 import GpsLocationButton from '@/components/GpsLocationButton';
 import RouteMap from '@/components/RouteMap';
+import { getDrivingRoute, type Coordinate, type DrivingRoute } from '@/lib/mapbox-route';
 import { tripJournal } from '@/lib/trip-journal';
 import { addMeterPoint, emptyMeter, type MeterState } from '@/lib/trip-meter';
 import { isFreshAccurateLocation, clearNativeTripPoints } from '@/lib/mobile-location';
@@ -42,7 +43,13 @@ interface TripData {
 }
 interface SavedTrip { trip: TripData; meter: MeterState; estimatedDistance: number; estimatedDuration: number; }
 interface LocationPoint { lat: number; lon: number; timestamp: number; speed?: number; accuracy?: number }
-interface RouteCoords { startLat: number; startLon: number; endLat: number; endLon: number }
+interface RouteCoords {
+  startLat: number;
+  startLon: number;
+  endLat: number;
+  endLon: number;
+  route: DrivingRoute;
+}
 type RideType = 'INTERNAL' | 'BOLT' | 'UBER' | 'HEETCH';
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -451,6 +458,8 @@ export default function TaximeterPage() {
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
+  const [selectedStartCoords, setSelectedStartCoords] = useState<Coordinate | null>(null);
+  const [selectedEndCoords, setSelectedEndCoords] = useState<Coordinate | null>(null);
   const [passengerName, setPassengerName] = useState('');
   const [proposedPrice, setProposedPrice] = useState('');
   const [finalPrice, setFinalPrice] = useState('');
@@ -587,6 +596,7 @@ export default function TaximeterPage() {
   const handleGpsLocationFound = async (lat: number, lon: number) => {
     const address = await reverseGeocode(lat, lon);
     if (address) {
+      setSelectedStartCoords({ lat, lon });
       setStartAddress(address); startSearch.clear(); setShowStartSuggestions(false);
       toast.success(language === 'nl' ? 'Huidige locatie gebruikt' : language === 'ar' ? 'تم استخدام الموقع الحالي' : 'Localisation actuelle utilisée');
     } else {
@@ -594,21 +604,29 @@ export default function TaximeterPage() {
     }
   };
 
-  const calculateRouteDetails = async (startAddr: string, endAddr: string) => {
+  const calculateRouteDetails = async (startAddr: string, endAddr: string, selectedStart: Coordinate | null, selectedEnd: Coordinate | null) => {
     if (!startAddr || !endAddr) return null;
-    try {
-      const [startRes, endRes] = await Promise.all([
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startAddr)}&limit=1`),
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endAddr)}&limit=1`),
-      ]);
-      const [startData, endData] = await Promise.all([startRes.json(), endRes.json()]);
-      if (!startData[0] || !endData[0]) throw new Error('Addresses not found');
-      const startLat = parseFloat(startData[0].lat), startLon = parseFloat(startData[0].lon);
-      const endLat = parseFloat(endData[0].lat), endLon = parseFloat(endData[0].lon);
-      const directDistance = calculateDistance(startLat, startLon, endLat, endLon);
-      const estimatedDist = directDistance * 1.4;
-      return { distance: parseFloat(estimatedDist.toFixed(2)), duration: Math.round((estimatedDist / 40) * 60), startLat, startLon, endLat, endLon };
-    } catch (error) { console.error("Operation failed"); return null; }
+    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
+    if (!token) throw new Error('mapbox_token_required');
+    const [start, end] = await Promise.all([selectedStart ?? geocodeAddress(startAddr), selectedEnd ?? geocodeAddress(endAddr)]);
+    if (!start || !end) throw new Error('route_address_not_found');
+    const { lat: startLat, lon: startLon } = start;
+    const { lat: endLat, lon: endLon } = end;
+    const route = await getDrivingRoute({ lat: startLat, lon: startLon }, { lat: endLat, lon: endLon }, token);
+    return {
+      distance: parseFloat((route.distanceMeters / 1000).toFixed(2)),
+      duration: Math.max(1, Math.ceil(route.durationSeconds / 60)),
+      startLat, startLon, endLat, endLon, route,
+    };
+  };
+
+  const geocodeAddress = async (address: string): Promise<Coordinate | null> => {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?countrycodes=be&format=json&q=${encodeURIComponent(address)}&limit=1`);
+    if (!response.ok) throw new Error('route_address_lookup_failed');
+    const results = await response.json();
+    if (!results[0]) return null;
+    const lat = Number(results[0].lat), lon = Number(results[0].lon);
+    return Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null;
   };
 
   const calculateProposedPrice = (distance: number, duration: number): number => {
@@ -631,20 +649,25 @@ export default function TaximeterPage() {
           toast.error(language === 'nl' ? 'Voer bestemmingsadres in' : language === 'ar' ? 'أدخل عنوان الوجهة' : "Entrez l'adresse de destination");
           return;
         }
-        const routeDetails = await calculateRouteDetails(startAddress, endAddress);
-        if (!routeDetails) {
-          toast.error(language === 'nl' ? 'Afstand berekenen mislukt' : language === 'ar' ? 'فشل حساب المسافة' : 'Échec du calcul de la distance');
-          return;
-        }
+        const routeDetails = await calculateRouteDetails(startAddress, endAddress, selectedStartCoords, selectedEndCoords);
+        if (!routeDetails) throw new Error('route_address_not_found');
         setEstimatedDistance(routeDetails.distance);
         setEstimatedDuration(routeDetails.duration);
         setProposedPrice(calculateProposedPrice(routeDetails.distance, routeDetails.duration).toFixed(2));
-        setRouteCoords({ startLat: routeDetails.startLat, startLon: routeDetails.startLon, endLat: routeDetails.endLat, endLon: routeDetails.endLon });
+        setRouteCoords({ startLat: routeDetails.startLat, startLon: routeDetails.startLon, endLat: routeDetails.endLat, endLon: routeDetails.endLon, route: routeDetails.route });
         setShowMap(true);
       } else { setProposedPrice('0.00'); setRouteCoords(null); }
       setShowPriceProposal(true);
     } catch (error) {
-      toast.error(language === 'nl' ? 'Prijs berekenen mislukt' : language === 'ar' ? 'فشل حساب السعر' : 'Échec du calcul du prix');
+      const code = error instanceof Error ? error.message : '';
+      const message = code === 'mapbox_token_required'
+        ? (language === 'nl' ? 'Mapbox is nog niet ingesteld' : language === 'ar' ? 'لم يتم إعداد Mapbox بعد' : "Mapbox n'est pas encore configuré")
+        : code.startsWith('mapbox_')
+          ? (language === 'nl' ? 'Mapbox-route niet beschikbaar. Probeer later opnieuw.' : language === 'ar' ? 'تعذر حساب مسار Mapbox. حاول لاحقاً.' : 'Itinéraire Mapbox indisponible. Réessayez plus tard.')
+          : code.startsWith('route_address_')
+            ? (language === 'nl' ? 'Adres niet gevonden. Controleer het adres.' : language === 'ar' ? 'لم يتم العثور على العنوان. تحقق منه.' : 'Adresse introuvable. Vérifiez-la.')
+            : (language === 'nl' ? 'Prijs berekenen mislukt' : language === 'ar' ? 'فشل حساب السعر' : 'Échec du calcul du prix');
+      toast.error(message);
     }
     finally { setLoading(false); }
   };
@@ -999,7 +1022,7 @@ export default function TaximeterPage() {
                       <div className="relative flex-1">
                         <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(212,175,55,0.6)' }} />
                         {(startSearch.isSearching || isReverseGeocoding) && <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 animate-spin" />}
-                        <input value={startAddress} onChange={(e) => { setStartAddress(e.target.value); startSearch.search(e.target.value); setShowStartSuggestions(true); }}
+                        <input value={startAddress} onChange={(e) => { setStartAddress(e.target.value); setSelectedStartCoords(null); startSearch.search(e.target.value); setShowStartSuggestions(true); }}
                           onFocus={() => setShowStartSuggestions(true)} onBlur={() => setTimeout(() => setShowStartSuggestions(false), 200)}
                           placeholder={t.enterStartAddress} className="w-full pr-10 pl-4 text-sm outline-none transition-all"
                           style={{ ...inputStyle, color: 'white' }}
@@ -1014,7 +1037,7 @@ export default function TaximeterPage() {
                           style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)', backdropFilter: 'blur(20px)' }}
                         >
                           {startSearch.suggestions.map((addr, idx) => (
-                            <button key={idx} onMouseDown={() => { setStartAddress(addr.display_name); startSearch.clear(); setShowStartSuggestions(false); }}
+                            <button key={idx} onMouseDown={() => { setStartAddress(addr.display_name); setSelectedStartCoords({ lat: Number(addr.lat), lon: Number(addr.lon) }); startSearch.clear(); setShowStartSuggestions(false); }}
                               className="w-full px-4 py-3 text-sm text-left transition-colors hover:bg-yellow-500/10 border-b border-white/5 last:border-b-0"
                               style={{ color: 'rgba(255,255,255,0.9)' }}
                             >
@@ -1036,7 +1059,7 @@ export default function TaximeterPage() {
                     <div className="relative">
                       <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(239,68,68,0.7)' }} />
                       {endSearch.isSearching && <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-pulse" />}
-                      <input value={endAddress} onChange={(e) => { setEndAddress(e.target.value); endSearch.search(e.target.value); setShowEndSuggestions(true); }}
+                      <input value={endAddress} onChange={(e) => { setEndAddress(e.target.value); setSelectedEndCoords(null); endSearch.search(e.target.value); setShowEndSuggestions(true); }}
                         onFocus={() => setShowEndSuggestions(true)} onBlur={() => setTimeout(() => setShowEndSuggestions(false), 200)}
                         placeholder={t.enterEndAddress} className="w-full pr-10 pl-4 text-sm outline-none transition-all"
                         style={{ ...inputStyle, color: 'white' }}
@@ -1049,7 +1072,7 @@ export default function TaximeterPage() {
                           style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)', backdropFilter: 'blur(20px)' }}
                         >
                           {endSearch.suggestions.map((addr, idx) => (
-                            <button key={idx} onMouseDown={() => { setEndAddress(addr.display_name); endSearch.clear(); setShowEndSuggestions(false); }}
+                            <button key={idx} onMouseDown={() => { setEndAddress(addr.display_name); setSelectedEndCoords({ lat: Number(addr.lat), lon: Number(addr.lon) }); endSearch.clear(); setShowEndSuggestions(false); }}
                               className="w-full px-4 py-3 text-sm text-left transition-colors hover:bg-red-500/10 border-b border-white/5 last:border-b-0"
                               style={{ color: 'rgba(255,255,255,0.9)' }}
                             >
@@ -1176,7 +1199,25 @@ export default function TaximeterPage() {
                 <AnimatePresence>
                   {showMap && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
-                      <RouteMap startLat={routeCoords.startLat} startLon={routeCoords.startLon} endLat={routeCoords.endLat} endLon={routeCoords.endLon} language={language} height={140} />
+                      <RouteMap
+                        start={{ lat: routeCoords.startLat, lon: routeCoords.startLon }}
+                        end={{ lat: routeCoords.endLat, lon: routeCoords.endLon }}
+                        route={routeCoords.route}
+                        language={language}
+                        height={190}
+                      />
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&origin=${routeCoords.startLat},${routeCoords.startLon}&destination=${routeCoords.endLat},${routeCoords.endLon}&travelmode=driving`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="rounded-lg border border-blue-400/30 bg-blue-500/10 px-3 py-2 text-center text-xs font-semibold text-blue-200"
+                        >Google Maps</a>
+                        <a
+                          href={`https://waze.com/ul?ll=${routeCoords.endLat},${routeCoords.endLon}&navigate=yes`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-center text-xs font-semibold text-emerald-200"
+                        >Waze</a>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
