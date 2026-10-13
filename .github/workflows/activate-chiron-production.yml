@@ -1,0 +1,95 @@
+name: Verify OAuth and activate Chiron production
+on:
+  workflow_dispatch:
+    inputs:
+      company_id:
+        type: string
+        required: true
+        description: Company with recent accepted TEST messages and production credentials
+      tested_revision:
+        type: string
+        required: true
+        description: Tested activation tooling revision reachable from main
+      checks_run:
+        type: string
+        required: true
+        description: Successful Application checks run for the tooling revision
+      release_run:
+        type: string
+        required: true
+        description: Successful verified image run for the currently deployed app
+      backup_run:
+        type: string
+        required: true
+        description: Successful fresh encrypted backup and native restore drill
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  activate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Verify tested main ancestry, current image acceptance and recovery
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          import fs from 'node:fs';
+          const input=JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).inputs;
+          if(!/^[1-9]\d{0,8}$/.test(input.company_id)||!/^[a-f0-9]{40}$/.test(input.tested_revision))throw Error('Invalid activation scope');
+          const api=async path=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+path,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Acceptance unavailable');return r.json();};
+          const ancestry=await api('/compare/'+input.tested_revision+'...main');
+          if(!['identical','ahead'].includes(ancestry.status))throw Error('Tooling must be reachable from main');
+          for(const [id,path] of [[input.checks_run,'ci.yml'],[input.release_run,'release.yml'],[input.backup_run,'backup-foundation.yml']]){
+            if(!/^[1-9][0-9]+$/.test(id))throw Error('Verified run required');
+            const run=await api('/actions/runs/'+id);
+            if(run.status!=='completed'||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Acceptance did not pass');
+            if(path==='ci.yml'&&run.head_sha!==input.tested_revision)throw Error('Checks revision mismatch');
+            if(path==='release.yml')fs.appendFileSync(process.env.GITHUB_OUTPUT,'live_revision='+run.head_sha+'\n');
+            if(path==='backup-foundation.yml'){
+              if(Date.now()-Date.parse(run.updated_at)>24*3600000)throw Error('Fresh restore drill required');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup_tag='+run.id+'-'+run.run_attempt+'\n');
+            }
+          }
+          console.log('Tested activation tooling, accepted app image and recovery verified.');
+          GATE
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ inputs.tested_revision }}
+          persist-credentials: false
+      - name: Verify production OAuth on the server and enable sending
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          TOOLING_REVISION: ${{ inputs.tested_revision }}
+          LIVE_REVISION: ${{ steps.gate.outputs.live_revision }}
+          COMPANY_ID: ${{ inputs.company_id }}
+          BACKUP_TAG: ${{ steps.gate.outputs.backup_tag }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$TOOLING_REVISION" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$LIVE_REVISION" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$COMPANY_ID" =~ ^[1-9][0-9]{0,8}$ ]]
+          [[ "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          remote_dir="/srv/jouw-driver/chiron-activation/$TOOLING_REVISION"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p '$remote_dir'"
+          scp "${args[@]}" deploy/activate-chiron-production.sh deploy/chiron-production-probe.mjs "$DEPLOY_USER@$DEPLOY_HOST:$remote_dir/"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash '$remote_dir/activate-chiron-production.sh' '$COMPANY_ID' '$LIVE_REVISION' '$BACKUP_TAG'" </dev/null

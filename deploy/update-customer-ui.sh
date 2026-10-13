@@ -50,7 +50,7 @@ IMAGE
 node --input-type=module <<'FLAGS'
 import fs from 'node:fs';
 let env=fs.readFileSync('.app-staging.env','utf8');
-for(const [key,value] of Object.entries({CHIRON_TRANSMISSION_ENABLED:'true',CHIRON_PRODUCTION_ENABLED:'false'})){
+for(const [key,value] of Object.entries({CHIRON_TRANSMISSION_ENABLED:'true',...(!/^CHIRON_PRODUCTION_ENABLED=(true|false)$/m.test(env)?{CHIRON_PRODUCTION_ENABLED:'false'}:{})})){
  const pattern=new RegExp('^'+key+'=.*$','m');env=pattern.test(env)?env.replace(pattern,key+'='+value):env+'\n'+key+'='+value+'\n';
 }
 fs.writeFileSync('.app-staging.env',env,{mode:0o600});
