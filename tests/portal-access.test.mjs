@@ -85,6 +85,8 @@ test('verification email never claims delivery without a configured provider or 
  const source=fs.readFileSync(new URL('../src/lib/api-utils.ts',import.meta.url),'utf8');
  const snippet=source.slice(source.indexOf('export async function sendVerificationEmail'),source.indexOf('function shouldUseSecureCookies'));
  const output=ts.transpileModule(snippet,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- const run=async(env,result)=>{const exports={};class Resend{emails={send:async()=>result};}vm.runInNewContext(output,{exports,process:{env},Resend,getSenderEmail:()=> 'sender@example.invalid'});return exports.sendVerificationEmail('recipient@example.invalid','123456');};
- assert.equal(await run({},{}),false);assert.equal(await run({RESEND_KEY:'test'}, {error:{message:'Rejected'}}),false);assert.equal(await run({RESEND_KEY:'test'},{data:{id:'synthetic'}}),true);
+ const run=async(result)=>{const exports={};let message;vm.runInNewContext(output,{exports,sendTransactionalMail:async(value)=>{message=value;return result;}});return {sent:await exports.sendVerificationEmail('recipient@example.invalid','123456'),message};};
+ assert.equal((await run({accepted:false,status:'not_configured'})).sent,false);
+ assert.equal((await run({accepted:false,status:'failed'})).sent,false);
+ const accepted=await run({accepted:true,status:'accepted'});assert.equal(accepted.sent,true);assert.equal(accepted.message.purpose,'verification');assert.match(accepted.message.text,/123456/);assert.equal(accepted.message.event,'verification:recipient@example.invalid:123456');
 });
