@@ -16,3 +16,10 @@
 المراجع الرسمية: https://resend.com/pricing?product=transactional وhttps://resend.com/docs/webhooks/verify-webhooks-requests وhttps://resend.com/docs/dashboard/emails/idempotency-keys . لم يُفعّل تجاوز مدفوع للحصة أو تتبع الفتح والنقر.
 
 التسليم الحقيقي غير مثبت حتى يُضاف نطاق موثق ومفتاح webhook ومرسل معتمد ومستلم اختبار مأذون، ثم يصل حدث `email.delivered` الموقّع. قبول API وحده لا يكفي. غياب بيانات النطاق هو العائق الخارجي الحالي، ولا يوقف بقية بنود الخريطة والأسطول والمحمول.
+
+## تحصين إعداد التشغيل — 13 أكتوبر 2026
+
+- دُمج [PR #20](https://github.com/infojouwdriver-commits/jd/pull/20) لإضافة جميع متغيرات Resend الناقصة إلى مثال إعداد خادم الإنتاج، ومنع بدء التطبيق إذا فُعّل البريد بإعداد جزئي أو مرسل لا يطابق النطاق الموثق. يبقى البريد معطلاً بأمان عندما تكون إعداداته كلها فارغة.
+- أضيفت ثلاثة اختبارات تلقائية للتعطيل الآمن والإعداد الجزئي والإعداد الاصطناعي الكامل. نجحت فحوص التطبيق وقاعدة PostgreSQL/PostgREST في [التشغيل 38381845473](https://github.com/infojouwdriver-commits/jd/actions/runs/38381845473).
+- نجح بناء صورة الإصدار الموثقة في [التشغيل 38382390358](https://github.com/infojouwdriver-commits/jd/actions/runs/38382390358)، ثم نجح النسخ الاحتياطي المشفر واختبار الاستعادة في [التشغيل 38382432685](https://github.com/infojouwdriver-commits/jd/actions/runs/38382432685)، واكتمل النشر المحمي في [التشغيل 38383112372](https://github.com/infojouwdriver-commits/jd/actions/runs/38383112372).
+- تحقق الموقع العام بعد النشر دون تعطل. لم تُضف أسرار أو نطاقات ولم تُرسل رسالة حقيقية؛ لا يزال إثبات التسليم ينتظر DNS وWebhook ومستلم اختبار مأذون.
