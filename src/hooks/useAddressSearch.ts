@@ -1,14 +1,9 @@
-
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-
-export interface AddressSuggestion {
-  display_name: string;
-  lat: string;
-  lon: string;
-  distance?: number;
-}
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { belgianSuggestions, sortByDistance } from "@/lib/address-search";
+import type { AddressSuggestion } from "@/lib/address-search";
+export type { AddressSuggestion } from "@/lib/address-search";
 
 interface UseAddressSearchOptions {
   countryCode?: string;
@@ -17,128 +12,57 @@ interface UseAddressSearchOptions {
   currentLocation?: { lat: number; lon: number } | null;
 }
 
-const searchCache = new Map<string, AddressSuggestion[]>();
-
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 export function useAddressSearch(options: UseAddressSearchOptions = {}) {
-  const {
-    countryCode = "be",
-    limit = 8,
-    debounceMs = 300,
-    currentLocation,
-  } = options;
-
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const { limit = 8, debounceMs = 300, currentLocation } = options;
+  const [results, setResults] = useState<AddressSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortController = useRef<AbortController | null>(null);
-
-  const search = useCallback(
-    (query: string) => {
-      // Clear previous debounce timer
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-
-      if (query.length < 3) {
-        setSuggestions([]);
-        setIsSearching(false);
-        return;
-      }
-
-      // Check cache first
-      const cacheKey = `${countryCode}:${query.toLowerCase().trim()}`;
-      if (searchCache.has(cacheKey)) {
-        const cached = searchCache.get(cacheKey)!;
-        setSuggestions(sortByDistance(cached, currentLocation));
-        return;
-      }
-
-      setIsSearching(true);
-
-      debounceTimer.current = setTimeout(async () => {
-        // Cancel previous request
-        if (abortController.current) {
-          abortController.current.abort();
-        }
-        abortController.current = new AbortController();
-
-        try {
-          const url = `https://nominatim.openstreetmap.org/search?countrycodes=${countryCode}&format=json&q=${encodeURIComponent(query)}&limit=${limit}&addressdetails=1`;
-
-          const response = await fetch(url, {
-            signal: abortController.current.signal,
-            headers: {
-              "Accept-Language": "nl,fr",
-            },
-          });
-
-          if (!response.ok) throw new Error("Search failed");
-
-          const data: AddressSuggestion[] = await response.json();
-
-          // Store in cache (max 100 entries)
-          if (searchCache.size > 100) {
-            const firstKey = searchCache.keys().next().value;
-            if (firstKey) searchCache.delete(firstKey);
-          }
-          searchCache.set(cacheKey, data);
-
-          setSuggestions(sortByDistance(data, currentLocation));
-        } catch (err: any) {
-          if (err?.name !== "AbortError") {
-            console.error("Operation failed");
-            setSuggestions([]);
-          }
-        } finally {
-          setIsSearching(false);
-        }
-      }, debounceMs);
-    },
-    [countryCode, limit, debounceMs, currentLocation]
-  );
-
-  const clear = useCallback(() => {
-    setSuggestions([]);
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    if (abortController.current) abortController.current.abort();
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const generation = useRef(0);
+  const location = useRef(currentLocation);
+  location.current = currentLocation;
+  // Re-rank immediately when GPS becomes available or changes, even without typing.
+  const suggestions = useMemo(() => sortByDistance(results, currentLocation).slice(0, limit), [results, currentLocation, limit]);
+  const cancel = useCallback(() => {
+    generation.current++;
+    if (timer.current) clearTimeout(timer.current);
+    controller.current?.abort();
   }, []);
-
+  useEffect(() => cancel, [cancel]);
+  const clear = useCallback(() => {
+    cancel();
+    setResults([]);
+    setIsSearching(false);
+  }, [cancel]);
+  const search = useCallback((input: string) => {
+    cancel();
+    setResults([]);
+    const query = input.trim();
+    if (query.length < 3) { setIsSearching(false); return; }
+    const version = generation.current;
+    setIsSearching(true);
+    timer.current = setTimeout(async () => {
+      const requestController = new AbortController();
+      controller.current = requestController;
+      try {
+        const url = new URL("https://nominatim.openstreetmap.org/search");
+        url.search = new URLSearchParams({ countrycodes: "be", format: "json", q: query, limit: "40", addressdetails: "1" }).toString();
+        const point = location.current;
+        if (point && Number.isFinite(point.lat) && Number.isFinite(point.lon)) {
+          // Prefer nearby matches, without excluding destinations elsewhere in Belgium.
+          url.searchParams.set("viewbox", `${point.lon - 0.3},${point.lat + 0.2},${point.lon + 0.3},${point.lat - 0.2}`);
+          url.searchParams.set("bounded", "0");
+        }
+        const response = await fetch(url, { signal: requestController.signal, headers: { "Accept-Language": "nl,fr" } });
+        if (!response.ok) throw new Error("Search failed");
+        const data: unknown = await response.json();
+        if (generation.current === version) setResults(belgianSuggestions(data));
+      } catch {
+        if (generation.current === version) setResults([]);
+      } finally {
+        if (generation.current === version) setIsSearching(false);
+      }
+    }, debounceMs);
+  }, [cancel, debounceMs]);
   return { suggestions, isSearching, search, clear };
-}
-
-function sortByDistance(
-  suggestions: AddressSuggestion[],
-  currentLocation?: { lat: number; lon: number } | null
-): AddressSuggestion[] {
-  if (!currentLocation) return suggestions;
-  return suggestions
-    .map((s) => ({
-      ...s,
-      distance: calculateDistance(
-        currentLocation.lat,
-        currentLocation.lon,
-        parseFloat(s.lat),
-        parseFloat(s.lon)
-      ),
-    }))
-    .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
 }
