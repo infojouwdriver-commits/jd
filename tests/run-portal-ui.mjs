@@ -15,7 +15,11 @@ try {
  for(const [name,viewport]of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
   const context=await browser.newContext({viewport,serviceWorkers:'block'});
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
-  await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
+  await context.route('**/*',route=>{
+    const url=new URL(route.request().url());
+    if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
+    return url.origin===base?route.continue():route.abort();
+  });
   const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true,currentUserType='admin';
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
@@ -85,6 +89,8 @@ try {
   await page.goto(base+'/admin/fleet');
   await page.getByRole('heading',{name:'تتبع الأسطول',exact:true}).waitFor();
   await page.getByText('Synthetic Driver',{exact:true}).waitFor();
+  await page.getByTestId('live-map').locator('[data-map-point="11"]').waitFor();
+  assert.equal(await page.locator('[data-map-point="12"]').count(),0,'An off-shift driver must never appear on the map');
   await page.getByText('50.85030, 4.35170',{exact:true}).waitFor();
   await page.getByText('آخر تحديث: المشاركة متوقفة',{exact:true}).waitFor();
   assert.equal(await page.getByText('Company One',{exact:true}).count()>0,true);

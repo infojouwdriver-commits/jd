@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car, Clock3, Loader2, LocateFixed, MapPin, RefreshCw, ShieldCheck, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
+import LiveMap from '@/components/LiveMap';
 
 const statusLabels: Record<FleetWorkStatus, string> = {
   on_trip: 'في رحلة',
@@ -81,6 +82,8 @@ export default function FleetPanel({ showCompany = false }: { showCompany?: bool
     </div>
 
     {failed && <div role="alert" className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"><WifiOff className="h-4 w-4" /> تعذّر تحديث البيانات. آخر حالة معروفة ما زالت معروضة.</div>}
+
+    <LiveMap height={400} points={failed ? [] : rows.filter(isFleetLocationVisible).map(row => ({ id: String(row.driver_id), lat: Number(row.latitude), lon: Number(row.longitude), label: `${row.driver_name} · ${statusLabels[row.work_status]} · ${formatUpdate(row.last_update)}`, color: row.work_status === 'stale' ? '#d97706' : row.work_status === 'on_trip' ? '#2563eb' : '#059669' }))} />
 
     {rows.length === 0 ? <Card><CardContent className="flex min-h-44 flex-col items-center justify-center gap-3 text-center text-muted-foreground"><ShieldCheck className="h-8 w-8" /><p>لا يوجد سائقون نشطون ضمن نطاق حسابك.</p></CardContent></Card> :
       <div className="grid gap-4 lg:grid-cols-2">
