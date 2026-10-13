@@ -475,6 +475,7 @@ export default function TaximeterPage() {
   const [syncingTrips, setSyncingTrips] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const [showPriceProposal, setShowPriceProposal] = useState(false);
+  const [routeUnavailable, setRouteUnavailable] = useState(false);
   const [showEndTripDialog, setShowEndTripDialog] = useState(false);
   const [completedTripId, setCompletedTripId] = useState<number | null>(null);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
@@ -639,6 +640,7 @@ export default function TaximeterPage() {
 
   const showPriceEstimate = async () => {
     setLoading(true);
+    setRouteUnavailable(false);
     try {
       if (selectedRideType === 'INTERNAL') {
         if (!startAddress) {
@@ -667,7 +669,18 @@ export default function TaximeterPage() {
           : code.startsWith('route_address_')
             ? (language === 'nl' ? 'Adres niet gevonden. Controleer het adres.' : language === 'ar' ? 'لم يتم العثور على العنوان. تحقق منه.' : 'Adresse introuvable. Vérifiez-la.')
             : (language === 'nl' ? 'Prijs berekenen mislukt' : language === 'ar' ? 'فشل حساب السعر' : 'Échec du calcul du prix');
-      toast.error(message);
+      if (code.startsWith('mapbox_') && selectedRideType === 'INTERNAL') {
+        // Routing is an optional estimate. GPS capture and durable trip storage remain required.
+        setRouteUnavailable(true);
+        setRouteCoords(null);
+        setShowMap(false);
+        setEstimatedDistance(0);
+        setEstimatedDuration(0);
+        setProposedPrice('');
+        setShowPriceProposal(true);
+      } else {
+        toast.error(message);
+      }
     }
     finally { setLoading(false); }
   };
@@ -694,7 +707,7 @@ export default function TaximeterPage() {
         return;
       }
       const priceValue = parseFloat(proposedPrice);
-      if (isNaN(priceValue) || priceValue <= 0) {
+      if (!Number.isFinite(priceValue) || priceValue <= 0) {
         toast.error(language === 'nl' ? 'Voer geldige prijs in' : language === 'ar' ? 'أدخل سعراً صحيحاً' : 'Entrez un prix valide');
         return;
       }
@@ -1226,7 +1239,12 @@ export default function TaximeterPage() {
 
             {selectedRideType === 'INTERNAL' && (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                {routeUnavailable && (
+                  <p role="status" data-testid="route-unavailable" className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+                    {language === 'nl' ? 'Route en automatische prijs niet beschikbaar. Voer een overeengekomen prijs in om de rit met GPS te starten.' : language === 'ar' ? 'المسار والسعر التلقائي غير متاحين. أدخل سعراً متفقاً عليه لبدء الرحلة مع تسجيل GPS.' : 'Itinéraire et estimation automatique indisponibles. Saisissez un prix convenu pour démarrer le trajet avec le suivi GPS.'}
+                  </p>
+                )}
+                {!routeUnavailable && <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-2xl" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
                     <span className="text-xs block mb-1" style={{ color: 'rgba(212,175,55,0.85)' }}>{t.estimatedDistance}</span>
                     <span className="font-bold text-base text-white">{estimatedDistance.toFixed(1)} {t.km}</span>
@@ -1235,14 +1253,16 @@ export default function TaximeterPage() {
                     <span className="text-xs block mb-1" style={{ color: 'rgba(212,175,55,0.85)' }}>{t.estimatedDuration}</span>
                     <span className="font-bold text-base text-white">{estimatedDuration} {t.min}</span>
                   </div>
-                </div>
+                </div>}
                 <div>
-                  <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(212,175,55,0.85)' }}>{t.proposedPrice} (€)</label>
+                  <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(212,175,55,0.85)' }}>{routeUnavailable ? (language === 'nl' ? 'Overeengekomen prijs' : language === 'ar' ? 'السعر المتفق عليه' : 'Prix convenu') : t.proposedPrice} (€)</label>
                   <div className="relative">
                     <Edit2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(212,175,55,0.6)' }} />
                     <input
                       type="number"
                       step="0.01"
+                      aria-label={routeUnavailable ? (language === 'nl' ? 'Overeengekomen prijs' : language === 'ar' ? 'السعر المتفق عليه' : 'Prix convenu') : t.proposedPrice}
+                      min="0.01"
                       value={proposedPrice}
                       onChange={(e) => setProposedPrice(e.target.value)}
                       className="w-full pr-10 pl-4 text-2xl font-black outline-none"

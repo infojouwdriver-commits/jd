@@ -54,6 +54,8 @@ jobs:
       - name: HTTP security checks
         run: node tests/run-http.mjs
       - name: Production build
+        env:
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: pk_test
         run: pnpm build
       - name: Install browser for portal regression checks
         run: |
@@ -61,6 +63,8 @@ jobs:
           node "$RUNNER_TEMP/portal-ui/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Company, account and trip overview browser regressions
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-portal-ui.mjs
+      - name: Mapbox failure and durable driver trip start regression
+        run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-mapbox-trip-ui.mjs
       - name: Cookie preferences persistence and non-blocking dismissal
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-cookie-ui.mjs
       - name: Marketing languages, journey, audience and accessibility checks

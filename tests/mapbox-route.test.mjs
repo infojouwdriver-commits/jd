@@ -37,6 +37,7 @@ test('requests one non-alternative driving route and returns its distance and ET
   const route = await fetchDrivingRoute({ lat: 50.85, lon: 4.35 }, { lat: 50.87, lon: 4.37 }, 'pk_test', async (url, options) => {
     requestedUrl = new URL(url);
     assert.equal(options.headers.Accept, 'application/json');
+    assert.equal(options.referrerPolicy, 'origin');
     return new Response(JSON.stringify(sample), { status: 200, headers: { 'content-type': 'application/json' } });
   });
   assert.equal(requestedUrl.hostname, 'api.mapbox.com');
@@ -52,4 +53,9 @@ test('requests one non-alternative driving route and returns its distance and ET
 test('fails closed when Mapbox rejects the route or returns invalid geometry', async () => {
   await assert.rejects(fetchDrivingRoute({ lat: 50, lon: 4 }, { lat: 51, lon: 5 }, 'pk_test', async () => new Response('', { status: 401 })), /mapbox_route_unavailable/);
   await assert.rejects(fetchDrivingRoute({ lat: 50, lon: 4 }, { lat: 51, lon: 5 }, 'pk_test', async () => new Response(JSON.stringify({ routes: [] }), { status: 200 })), /mapbox_route_invalid/);
+});
+
+
+test('network failures become routing errors so optional estimates can fail safely', async () => {
+  await assert.rejects(fetchDrivingRoute({lat:50.85,lon:4.35}, {lat:50.86,lon:4.36}, 'pk_test', async () => { throw new TypeError('Failed to fetch'); }), /mapbox_route_unavailable/);
 });
