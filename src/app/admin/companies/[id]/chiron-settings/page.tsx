@@ -19,6 +19,9 @@ interface Company {
   transmissionEnabled: boolean;
   productionEnabled: boolean;
   testCredentialsConfigured: boolean;
+  productionCredentialsConfigured: boolean;
+  testKeyConfigured: boolean;
+  productionKeyConfigured: boolean;
   name: string;
   chiron_mode: 'TEST' | 'PRODUCTION';
   chiron_test_client_id: string;
@@ -72,11 +75,11 @@ export default function ChironSettingsPage() {
         setFormData({
           chiron_mode: data.chiron_mode || 'TEST',
           chiron_test_client_id: data.chiron_test_client_id || '',
-          chiron_test_client_secret: data.chiron_test_client_secret || '',
+          chiron_test_client_secret: '',
           chiron_test_auth_url: data.chiron_test_auth_url || 'https://mow-acc.api.vlaanderen.be/oauth/token',
           chiron_test_api_url: data.chiron_test_api_url || 'https://mow-acc.api.vlaanderen.be/chiron/taxirit',
           chiron_prod_client_id: data.chiron_prod_client_id || '',
-          chiron_prod_client_secret: data.chiron_prod_client_secret || '',
+          chiron_prod_client_secret: '',
           chiron_prod_auth_url: data.chiron_prod_auth_url || 'https://mow.api.vlaanderen.be/oauth/token',
           chiron_prod_api_url: data.chiron_prod_api_url || 'https://mow.api.vlaanderen.be/chiron/taxirit',
         });
@@ -116,6 +119,7 @@ export default function ChironSettingsPage() {
           <p>{company?.transmissionEnabled ? 'مزامنة بيئة الاختبار متاحة.' : 'مزامنة Chiron غير مفعّلة على الخادم.'}</p>
           <p>{company?.testCredentialsConfigured ? 'بيانات اتصال الاختبار محفوظة. يمكنك إجراء اختبار القبول.' : 'أدخل بيانات Client ID وClient Secret التي حصلت عليها من Chiron لبيئة الاختبار.'}</p>
           <p>الإرسال الفعلي إلى PRODUCTION يحتاج إكمال اختبار القبول وتفعيل بيئة الإنتاج.</p>
+          <p>{!company ? 'جارٍ التحقق من إعدادات الخادم…' : company.productionEnabled ? 'الإرسال الإنتاجي مفعّل على الخادم؛ يلزم التحقق من قبول الرحلات الفعلية.' : 'الإرسال الإنتاجي غير مفعّل على الخادم، حتى عند اختيار PRODUCTION للشركة.'}</p>
           <Link href="/admin/test-trips" className="mt-2 inline-block font-semibold underline">فتح اختبار قبول Chiron</Link>
         </div>
         {/* Header */}
@@ -206,9 +210,12 @@ export default function ChironSettingsPage() {
                     type="password"
                     value={formData.chiron_test_client_secret}
                     onChange={(e) => setFormData({ ...formData, chiron_test_client_secret: e.target.value })}
-                    placeholder="أدخل Client Secret لبيئة الاختبار"
+                    placeholder={company?.testKeyConfigured ? 'اتركه فارغاً للإبقاء على المفتاح المحفوظ' : 'أدخل Client Secret لبيئة الاختبار'}
                     className="rounded-xl"
                   />
+                  <p role="status" data-testid="chiron-test-key-status" className="mt-2 text-sm text-muted-foreground">
+                    {!company ? 'جارٍ التحقق من حالة المفتاح…' : company.testKeyConfigured ? 'مفتاح الاختبار محفوظ ومخفي. أدخل قيمة جديدة فقط لاستبداله؛ ترك الحقل فارغاً لا يحذفه.' : 'لا يوجد مفتاح اختبار محفوظ.'}
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="chiron_test_auth_url">OAuth URL (اختبار)</Label>
@@ -257,9 +264,12 @@ export default function ChironSettingsPage() {
                     type="password"
                     value={formData.chiron_prod_client_secret}
                     onChange={(e) => setFormData({ ...formData, chiron_prod_client_secret: e.target.value })}
-                    placeholder="أدخل Client Secret لبيئة الإنتاج"
+                    placeholder={company?.productionKeyConfigured ? 'اتركه فارغاً للإبقاء على المفتاح المحفوظ' : 'أدخل Client Secret لبيئة الإنتاج'}
                     className="rounded-xl"
                   />
+                  <p role="status" data-testid="chiron-production-key-status" className="mt-2 text-sm text-muted-foreground">
+                    {!company ? 'جارٍ التحقق من حالة المفتاح…' : company.productionKeyConfigured ? 'مفتاح الإنتاج محفوظ ومخفي. أدخل قيمة جديدة فقط لاستبداله؛ ترك الحقل فارغاً لا يحذفه.' : 'لا يوجد مفتاح إنتاج محفوظ.'}
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="chiron_prod_auth_url">OAuth URL (إنتاج)</Label>
