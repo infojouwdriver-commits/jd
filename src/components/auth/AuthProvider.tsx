@@ -7,6 +7,7 @@ import { api } from '@/lib/api-client';
 import { useRouter, usePathname } from 'next/navigation';
 import { tripJournal } from '@/lib/trip-journal';
 import { stopAllMobileLocationWatches } from '@/lib/mobile-location';
+import { stopFleetSharingRuntime } from '@/lib/fleet-sharing-runtime';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -75,6 +76,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } catch {
         toast.error('تعذّر التحقق من حفظ الرحلة؛ أبقِ التطبيق مفتوحاً / Cannot verify saved trips');
+        return;
+      }
+    }
+    if (user?.userType === 'driver') {
+      try {
+        await stopFleetSharingRuntime();
+        await api.post('/fleet/location', { shift_active: false, sharing_enabled: false });
+      } catch {
+        toast.error('تعذّر إيقاف مشاركة الموقع؛ حاول إنهاء الوردية مجدداً / Location sharing could not be stopped');
         return;
       }
     }

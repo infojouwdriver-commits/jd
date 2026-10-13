@@ -16,10 +16,10 @@ try {
   const context=await browser.newContext({viewport,serviceWorkers:'block'});
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
   await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true;
+  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true,currentUserType='admin';
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
-   if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data={sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'};}
+   if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
    else if(url.pathname==='/next_api/auth/account'){
     if(request.method()==='GET')data={email_verification_available:false};
     else{accountPosts.push(request.postDataJSON());data={updated:true,sign_in_required:true};}
@@ -31,6 +31,8 @@ try {
     else data=[{id:1,name:'Company One',vat_number:'BE0000000001',kbo_number:'0000000001',chiron_mode:'TEST'},{id:2,name:'Company Two',vat_number:'BE0000000002',kbo_number:'0000000002',chiron_mode:'TEST'}];
    }
    else if(url.pathname==='/next_api/trips'){tripRequests.push(url.searchParams);data=[{id:101,start_time:'2026-10-12T08:00:00Z',end_time:'2026-10-12T08:10:00Z',price:12,status:'completed',company_name:'Company One',driver_name:'Synthetic Driver',vehicle_plate_number:'SYN-101',locked_after_completion:true}];}
+   else if(url.pathname==='/next_api/fleet')data=[{driver_id:11,driver_name:'Synthetic Driver',company_id:1,company_name:'Company One',vehicle_id:21,plate_number:'SYN-101',shift_active:true,sharing_enabled:true,latitude:50.8503,longitude:4.3517,accuracy_m:8,last_update:'2026-10-13T18:00:00Z',work_status:'available'},{driver_id:12,driver_name:'Off Shift Driver',company_id:1,company_name:'Company One',vehicle_id:null,plate_number:null,shift_active:false,sharing_enabled:false,latitude:null,longitude:null,accuracy_m:null,last_update:null,work_status:'off_shift'}];
+   else if(url.pathname==='/next_api/company-portal')data={company:{id:1,name:'Company One',email:'company@example.invalid',phone:'',subscription_status:'active'},drivers:[],vehicles:[]};
    else if(url.pathname==='/next_api/companies/1/pricing')data={id:1,name:'Company One',base_rate_per_km:0,base_rate_per_minute:'0.5',minimum_fare:'10.75',airport_surcharge:0,night_surcharge_percentage:0,peak_hour_surcharge_percentage:0,night_start_hour:22,night_end_hour:6,peak_hours:null};
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:{success:true,data})});
   });
@@ -80,6 +82,22 @@ try {
   assert.equal(pricingWrites[0].base_rate_per_km,0);assert.equal(pricingWrites[0].airport_surcharge,0);assert.equal(pricingWrites[0].minimum_fare,10.75);assert.equal(pricingWrites[0].peak_hours.length,2);
   assert.equal(errors.length,0,errors.join('\n'));
   checks.push(name+': pricing settings link opens, unset periods render safely, zero rates and cents persist, invalid edits do not submit');
+  await page.goto(base+'/admin/fleet');
+  await page.getByRole('heading',{name:'تتبع الأسطول',exact:true}).waitFor();
+  await page.getByText('Synthetic Driver',{exact:true}).waitFor();
+  await page.getByText('50.85030, 4.35170',{exact:true}).waitFor();
+  await page.getByText('آخر تحديث: المشاركة متوقفة',{exact:true}).waitFor();
+  assert.equal(await page.getByText('Company One',{exact:true}).count()>0,true);
+  checks.push(name+': admin fleet view shows company, vehicle, accuracy, last shared coordinates and hides stopped sharing');
+  currentUserType='company';
+  await page.goto(base+'/company/dashboard');
+  await page.getByRole('tab',{name:/الأسطول/}).click();
+  await page.getByRole('heading',{name:'تتبع الأسطول',exact:true}).waitFor();
+  await page.getByText('Synthetic Driver',{exact:true}).waitFor();
+  assert.equal(await page.getByText('Company One',{exact:true}).count(),1,'Company name should remain in the portal header, not be repeated as an admin fleet field');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  currentUserType='admin';
+  checks.push(name+': company portal exposes the tenant-scoped fleet tab responsively');
   if(process.env.UI_OUTPUT_DIRECTORY){fs.mkdirSync(process.env.UI_OUTPUT_DIRECTORY,{recursive:true});await page.screenshot({path:path.join(process.env.UI_OUTPUT_DIRECTORY,name+'-companies.png'),fullPage:true});}
   await context.close();
  }

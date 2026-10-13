@@ -18,7 +18,7 @@ try {
       localStorage.setItem('driver_language','fr');
       localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));
     });
-    let mapboxCalls=0, tripWrites=0;
+    let mapboxCalls=0, tripWrites=0;const fleetWrites=[];
     await context.route('**/*',async route=>{
       const request=route.request(),url=new URL(request.url());
       if(url.hostname==='api.mapbox.com'){
@@ -36,11 +36,21 @@ try {
       if(url.pathname==='/next_api/auth/user')data={sub:'9002',email:'driver@example.invalid',isAdmin:false,userType:'driver'};
       else if(url.pathname==='/next_api/drivers/pricing')data={company_id:1,company_name:'Synthetic company',pricing:{base_fee:3,km_rate:2,minute_rate:0.3,minimum_fare:10},chiron_mode:'TEST'};
       else if(url.pathname==='/next_api/drivers/me')data={id:9002,name:'Synthetic Driver',company_id:1};
+      else if(url.pathname==='/next_api/fleet/location'){
+        if(request.method()==='POST'){fleetWrites.push(request.postDataJSON());data=request.postDataJSON();}
+        else data={shift_active:false,sharing_enabled:false};
+      }
       if(url.pathname.startsWith('/next_api/trips') && request.method()==='POST')tripWrites++;
       return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
     });
     const page=await context.newPage();
     await page.goto(base+'/driver/taximeter');
+    await page.getByRole('button',{name:'Commencer le service et partager',exact:true}).click();
+    await page.getByText('Partage de position actif',{exact:true}).waitFor();
+    assert.equal(fleetWrites[0].shift_active,true);assert.equal(fleetWrites[0].sharing_enabled,true);assert.equal(fleetWrites[0].latitude,50.85);
+    await page.getByRole('button',{name:'Terminer le service',exact:true}).click();
+    await page.getByText('Position non partagée',{exact:true}).waitFor();
+    assert.deepEqual(fleetWrites.at(-1),{shift_active:false,sharing_enabled:false});
     await page.getByPlaceholder("Entrez l'adresse de départ").fill('Synthetic start');
     await page.getByPlaceholder("Entrez l'adresse d'arrivée").fill('Destination test');
     await page.getByRole('combobox').click();
@@ -59,7 +69,7 @@ try {
     await page.reload();
     await page.getByRole('button',{name:'Terminer Course',exact:true}).waitFor();
     assert.equal(tripWrites,0,'Starting and restoring the synthetic trip must not submit a completed trip');
-    console.log('Passed: Mapbox 403 shows manual agreed price, rejects blank price, starts with GPS and restores the saved trip on '+viewport.width+'px');
+    console.log('Passed: driver starts/stops fleet sharing; Mapbox 403 shows manual agreed price, rejects blank price, starts with GPS and restores the saved trip on '+viewport.width+'px');
     await context.close();
   }
 } finally {await browser?.close();server.kill('SIGTERM');}

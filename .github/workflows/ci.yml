@@ -61,7 +61,7 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/portal-ui" --no-audit --no-fund --ignore-scripts playwright@1.56.1
           node "$RUNNER_TEMP/portal-ui/node_modules/playwright/cli.js" install --with-deps chromium
-      - name: Company, account and trip overview browser regressions
+      - name: Company, account, trip and fleet browser regressions
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-portal-ui.mjs
       - name: Mapbox failure and durable driver trip start regression
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-mapbox-trip-ui.mjs

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, Car, Users, LogOut, Loader2, RefreshCw } from 'lucide-react';
+import { Building2, Car, Users, LogOut, Loader2, RefreshCw, RadioTower } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import AccountSettings from '@/components/account/AccountSettings';
 import DriversTab from './DriversTab';
 import VehiclesTab from './VehiclesTab';
+import FleetPanel from '@/components/fleet/FleetPanel';
 
 interface CompanyData {
   company: {
@@ -145,6 +146,9 @@ export default function CompanyDashboard() {
                 <TabsTrigger value="vehicles" className="flex-1 gap-2">
                   <Car className="w-4 h-4" /> Vehicles ({vehicles.length})
                 </TabsTrigger>
+                <TabsTrigger value="fleet" className="flex-1 gap-2">
+                  <RadioTower className="w-4 h-4" /> الأسطول
+                </TabsTrigger>
                 <TabsTrigger value="account">حسابي</TabsTrigger>
           </TabsList>
               <TabsContent value="drivers">
@@ -153,6 +157,7 @@ export default function CompanyDashboard() {
               <TabsContent value="vehicles">
                 <VehiclesTab vehicles={vehicles} onRefresh={() => fetchData(true)} />
               </TabsContent>
+              <TabsContent value="fleet"><FleetPanel /></TabsContent>
               <TabsContent value="account"><AccountSettings /></TabsContent>
         </Tabs>
           </CardContent>
