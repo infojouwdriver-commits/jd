@@ -45,6 +45,9 @@ test('nested credentials are removed from responses', () => {
 test('risky legacy integrations fail closed', () => {
  for (const path of ['/next_api/invoices/view','/next_api/websocket','/next_api/auth/google-login','/next_api/ai-assistant/chat']) assert.equal(disabledEndpoint(path),true);
 });
+test('Chiron key presence survives response filtering while actual and masked secret fields are removed', () => {
+ assert.deepEqual(stripSecrets({testKeyConfigured:true,productionKeyConfigured:false,productionCredentialsConfigured:false,chiron_test_client_secret:'synthetic-only',chiron_prod_client_secret:'••••••••'}),{testKeyConfigured:true,productionKeyConfigured:false,productionCredentialsConfigured:false});
+});
 import {encryptSecret, decryptSecret} from '../src/lib/secret-vault.ts';
 test('secret encryption authenticates contents and field context', () => {
  process.env.DATA_ENCRYPTION_KEY = 'a'.repeat(64);

@@ -35,8 +35,9 @@ export const GET = requestMiddleware(async (request, context) => {
     productionEnabled: process.env.CHIRON_PRODUCTION_ENABLED === 'true',
     testCredentialsConfigured: !!company.chiron_test_client_id && !!chiron_test_client_secret,
     productionCredentialsConfigured: !!company.chiron_prod_client_id && !!chiron_prod_client_secret,
-    chiron_test_client_secret: chiron_test_client_secret ? '••••••••' : '',
-    chiron_prod_client_secret: chiron_prod_client_secret ? '••••••••' : ''
+    // Metadata survives secret stripping; never return even a masked credential field.
+    testKeyConfigured: !!chiron_test_client_secret,
+    productionKeyConfigured: !!chiron_prod_client_secret
   });
 }, true);
 

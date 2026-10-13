@@ -20,7 +20,7 @@ try {
     if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
     return url.origin===base?route.continue():route.abort();
   });
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[];let loggedIn=true,currentUserType='admin',chironTests=0;
+  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[],chironWrites=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
@@ -29,6 +29,10 @@ try {
     else{accountPosts.push(request.postDataJSON());data={updated:true,sign_in_required:true};}
    }
    else if(url.pathname==='/next_api/auth/logout'){loggedIn=false;data=true;}
+   else if(url.pathname==='/next_api/chiron-settings'){
+    if(request.method()==='PUT'){chironWrites.push(request.postDataJSON());data={id:1};}
+    else data={id:1,name:'Company One',chiron_mode:'TEST',transmissionEnabled:true,productionEnabled:false,testCredentialsConfigured:true,productionCredentialsConfigured:productionKeyConfigured,testKeyConfigured:true,productionKeyConfigured,chiron_test_client_id:'synthetic-test-id',chiron_prod_client_id:'synthetic-production-id'};
+   }
    else if(url.pathname==='/next_api/companies'){
     if(request.method()==='POST'){created.push(request.postDataJSON());data={id:3,...created.at(-1),portal_login_enabled:true};}
     else if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,...pricingWrites.at(-1)};}
@@ -92,6 +96,20 @@ try {
   assert.equal(pricingWrites[0].base_rate_per_km,0);assert.equal(pricingWrites[0].airport_surcharge,0);assert.equal(pricingWrites[0].minimum_fare,10.75);assert.equal(pricingWrites[0].peak_hours.length,2);
   assert.equal(errors.length,0,errors.join('\n'));
   checks.push(name+': pricing settings link opens, unset periods render safely, zero rates and cents persist, invalid edits do not submit');
+  await page.goto(base+'/admin/companies/1/chiron-settings');
+  await page.getByTestId('chiron-test-key-status').getByText(/مفتاح الاختبار محفوظ ومخفي/).waitFor();
+  assert.equal(await page.locator('#chiron_test_client_secret').inputValue(),'');
+  await page.getByRole('tab',{name:'بيئة الإنتاج',exact:true}).click();
+  await page.getByTestId('chiron-production-key-status').getByText(/مفتاح الإنتاج محفوظ ومخفي/).waitFor();
+  assert.equal(await page.locator('#chiron_prod_client_secret').inputValue(),'');
+  await page.getByText('الإرسال الإنتاجي غير مفعّل على الخادم، حتى عند اختيار PRODUCTION للشركة.',{exact:true}).waitFor();
+  const chironSaved=page.waitForResponse(r=>r.url().includes('/next_api/chiron-settings?')&&r.request().method()==='PUT');
+  await page.getByRole('button',{name:'حفظ جميع الإعدادات',exact:true}).click();await chironSaved;
+  assert.equal(chironWrites.length,1);assert.equal(chironWrites[0].chiron_test_client_secret,'');assert.equal(chironWrites[0].chiron_prod_client_secret,'');
+  await page.reload();await page.getByTestId('chiron-test-key-status').getByText(/مفتاح الاختبار محفوظ ومخفي/).waitFor();
+  productionKeyConfigured=false;await page.reload();await page.getByTestId('chiron-test-key-status').getByText(/مفتاح الاختبار محفوظ ومخفي/).waitFor();
+  await page.getByRole('tab',{name:'بيئة الإنتاج',exact:true}).click();await page.getByTestId('chiron-production-key-status').getByText('لا يوجد مفتاح إنتاج محفوظ.',{exact:true}).waitFor();
+  checks.push(name+': Chiron key metadata remains visible after save/reload without returning secret fields, blank inputs preserve keys and missing production keys are distinguished');
   await page.goto(base+'/admin/fleet');
   await page.getByRole('heading',{name:'تتبع الأسطول',exact:true}).waitFor();
   await page.getByText('Synthetic Driver',{exact:true}).waitFor();
