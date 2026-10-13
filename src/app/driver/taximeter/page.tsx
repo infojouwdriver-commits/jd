@@ -24,6 +24,7 @@ import { useGeolocation, GeolocationPoint } from '@/hooks/useGeolocation';
 import { useAddressSearch } from '@/hooks/useAddressSearch';
 import GpsLocationButton from '@/components/GpsLocationButton';
 import RouteMap from '@/components/RouteMap';
+import LiveMap from '@/components/LiveMap';
 import { getDrivingRoute, type Coordinate, type DrivingRoute } from '@/lib/mapbox-route';
 import { tripJournal } from '@/lib/trip-journal';
 import { addMeterPoint, emptyMeter, type MeterState } from '@/lib/trip-meter';
@@ -40,6 +41,8 @@ interface TripData {
   startTime: string; distance: number; duration: number; proposedPrice: number;
   passengerName?: string; paymentMethod?: string; rideType: 'INTERNAL' | 'EXTERNAL';
   externalSource?: 'BOLT' | 'UBER' | 'HEETCH'; externalRideNumber?: string;
+  destinationCoords?: Coordinate;
+  suggestedRoute?: DrivingRoute;
 }
 interface SavedTrip { trip: TripData; meter: MeterState; estimatedDistance: number; estimatedDuration: number; }
 interface LocationPoint { lat: number; lon: number; timestamp: number; speed?: number; accuracy?: number }
@@ -579,6 +582,9 @@ export default function TaximeterPage() {
         }
       }, { background: true, trip: { owner: user.sub, key: nativeTrip.completionRequestKey,
         after: meterRef.current.lastPoint?.timestamp ?? 0 } });
+    } else if (tripActive && user && nativeTrip) {
+      // External rides still display live foreground GPS; their price remains supplied by the platform.
+      startWatching(() => {});
     } else { stopWatching(); }
     return () => { stopWatching(); };
   }, [tripActive, selectedRideType, user?.sub, startWatching, stopWatching]);
@@ -723,6 +729,8 @@ export default function TaximeterPage() {
         rideType: selectedRideType === 'INTERNAL' ? 'INTERNAL' : 'EXTERNAL',
         externalSource: selectedRideType !== 'INTERNAL' ? selectedRideType : undefined,
         externalRideNumber: externalRideNumber || undefined,
+        destinationCoords: selectedEndCoords || (routeCoords ? { lat: routeCoords.endLat, lon: routeCoords.endLon } : undefined),
+        suggestedRoute: routeCoords?.route,
       };
       meterRef.current = emptyMeter();
       if (startLocation) meterRef.current = addMeterPoint(meterRef.current, startLocation);
@@ -1359,6 +1367,13 @@ export default function TaximeterPage() {
                   />
                 </motion.div>
               )}
+              <div className="relative z-10 mt-4" data-testid="active-trip-map">
+                <p className="mb-2 text-xs text-white/80">{language === 'ar' ? 'آخر موقع GPS' : language === 'fr' ? 'Dernière position GPS' : 'Laatste GPS-locatie'}: {currentLocation ? new Date(currentLocation.timestamp).toLocaleTimeString() : new Date(tripData?.startTime || '').toLocaleTimeString()}</p>
+                <LiveMap language={language} height={300} followId="driver" route={tripData?.suggestedRoute?.coordinates} points={[
+                  { id: 'driver', lat: currentLocation?.lat ?? tripData?.startLat ?? 50.85, lon: currentLocation?.lon ?? tripData?.startLon ?? 4.35, accuracy: currentLocation?.accuracy, label: language === 'ar' ? 'موقعك' : language === 'fr' ? 'Votre position' : 'Uw locatie' },
+                  ...(tripData?.destinationCoords ? [{ id: 'destination', ...tripData.destinationCoords, label: tripData.endAddress, color: '#ef4444' }] : []),
+                ]} />
+              </div>
             </GlassCard>
           </motion.div>
 

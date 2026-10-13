@@ -22,6 +22,10 @@ try {
     await context.route('**/*',async route=>{
       const request=route.request(),url=new URL(request.url());
       if(url.hostname==='api.mapbox.com'){
+        if(url.pathname.includes('/tiles/')) {
+          assert.equal(request.headers().referer,base+'/');
+          return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
+        }
         mapboxCalls++;
         assert.equal(request.headers().referer,base+'/');
         return route.fulfill({status:403,contentType:'application/json',body:JSON.stringify({message:'Forbidden'})});
@@ -66,8 +70,13 @@ try {
     await agreed.fill('25');
     await page.getByRole('button',{name:'Démarrer Course',exact:true}).click();
     await page.getByRole('button',{name:'Terminer Course',exact:true}).waitFor();
+    await page.getByTestId('active-trip-map').locator('.leaflet-tile-loaded').first().waitFor();
+    await page.getByTestId('active-trip-map').getByRole('button',{name:'Suivre la position',exact:true}).click();
+    await context.setGeolocation({latitude:50.851,longitude:4.352,accuracy:5});
+    await page.locator('[data-map-point="driver"][data-lat="50.851"]').waitFor();
     await page.reload();
     await page.getByRole('button',{name:'Terminer Course',exact:true}).waitFor();
+    await page.getByTestId('active-trip-map').locator('.leaflet-container').waitFor();
     assert.equal(tripWrites,0,'Starting and restoring the synthetic trip must not submit a completed trip');
     console.log('Passed: driver starts/stops fleet sharing; Mapbox 403 shows manual agreed price, rejects blank price, starts with GPS and restores the saved trip on '+viewport.width+'px');
     await context.close();
