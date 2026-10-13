@@ -61,13 +61,15 @@ try{
    assert.ok(await page.getByRole('heading',{name:/من الرحلة إلى إدارة شركتك/}).isVisible());
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    await page.screenshot({path:'ui-output/'+name+'-homepage.png',fullPage:true});
-   await page.locator('.jd-home-hero').getByRole('link',{name:'دخول الشركات',exact:true}).click();
+   await page.getByRole('tab',{name:'شركة التاكسي',exact:true}).click();
+   await page.locator('#role-panel').getByRole('link',{name:'دخول الشركة',exact:true}).click();
    await page.locator('#company-email').waitFor({state:'visible'});
-   checks.push(name+': public advertising homepage opens company login directly');
+   checks.push(name+': company audience section opens company login directly');
    await page.goto(base+'/');
-   await page.locator('.jd-home-hero').getByRole('link',{name:'دخول السائقين',exact:true}).click();
+   await page.getByRole('tab',{name:'السائق',exact:true}).click();
+   await page.locator('#role-panel').getByRole('link',{name:'دخول السائق',exact:true}).click();
    await page.locator('#phone').waitFor({state:'visible'});
-   checks.push(name+': public homepage opens driver login in the same window');
+   checks.push(name+': driver audience section opens driver login in the same window');
    // Fixture responses exercise actual shipped admin components without production credentials.
    // Native release tests separately verify server authentication and database authorization.
    const companies=[{id:92,name:'Other fixture company',vat_number:'BE0999999999',kbo_number:'0999999999',chiron_mode:'TEST',subscription_status:'pending_contract'}, {id:91,name:'UI fixture company',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_mode:'TEST',subscription_status:'pending_contract'}];
