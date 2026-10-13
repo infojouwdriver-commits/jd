@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   const origin = request.headers.get('origin');
   const allowed = originAllowed(origin, appOrigin, process.env.TRUSTED_ORIGINS);
   const nonce = btoa(crypto.randomUUID());
-  const csp = "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://api.bigdatacloud.net; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+  const csp = "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.mapbox.com https://nominatim.openstreetmap.org https://api.bigdatacloud.net; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
   const forwarded = new Headers(request.headers);
   forwarded.set('Content-Security-Policy', csp);
   forwarded.set('x-nonce', nonce);

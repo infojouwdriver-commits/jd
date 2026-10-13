@@ -19,6 +19,7 @@ const contractPrint = await check('/contract-print/1',{},200);
 assert.match(contractPrint.headers.get('cache-control'),/no-store/);
 const page = await check('/privacy-policy',{},200);
 assert.match(page.headers.get('content-security-policy'),/script-src 'self' 'nonce-/);
+assert.match(page.headers.get('content-security-policy'),/connect-src 'self' https:\/\/api\.mapbox\.com(?: |;)/);
 assert.equal(page.headers.get('x-frame-options'),'DENY');
 const nonce = page.headers.get('content-security-policy').match(/'nonce-([^']+)'/)[1];
 assert.ok((await page.text()).includes(`nonce="${nonce}"`));
