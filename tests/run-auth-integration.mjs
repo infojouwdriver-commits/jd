@@ -57,6 +57,13 @@ try {
  await status('Rotated refresh cookie cannot be replayed',request('/next_api/auth/refresh','POST',{},null,cookie),401);
  await status('Password-only admin access is denied in production',request('/next_api/trips','GET',null,await sign(1)),401);
  const driverToken=await sign(2);
+ rows.drivers.push({id:11,user_id:1,status:'active',company_id:1});
+ const completed=(id,user_id,driver_id)=>({id,user_id,driver_id,company_id:1,status:'completed',start_time:'2026-10-14T10:00:00Z',end_time:'2026-10-14T10:05:00Z',start_address:'Synthetic A',end_address:'Synthetic B',price:2,currency:'EUR',distance_km:1,duration_minutes:5,private_payload:'synthetic-internal-only'});
+ rows.trips.push(completed(103,2,1),completed(104,3,2),completed(105,1,11));
+ const driverHistory=await status('Native history ignores hostile driver/company scope',request('/next_api/drivers/trips?driver_id=2&company_id=99&limit=25','GET',null,driverToken),200);
+ const ownHistory=(await driverHistory.json()).data;assert.deepEqual(ownHistory.trips.map(row=>row.id),[103]);assert.equal(ownHistory.driver_id,1);assert.equal('private_payload' in ownHistory.trips[0],false);
+ const adminHistory=await status('Native administrator driver history remains self-scoped',request('/next_api/drivers/trips?limit=25','GET',null,refreshedToken),200);assert.deepEqual((await adminHistory.json()).data.trips.map(row=>row.id),[105]);
+
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);
  await status('Driver cannot edit another driver trip',request('/next_api/trips?id=102','PUT',{price:40},driverToken),404);assert.equal(rows.trips[1].price,20);

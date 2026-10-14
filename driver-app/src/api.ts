@@ -2,10 +2,11 @@ import type {MeterPoint} from './trip-meter';
 export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
   native_trip_contract_version?: number;
-  driver: {id: number; full_name: string; company_id: number; current_vehicle_id: number | null};
+  driver: {id: number; status?: string; full_name: string; company_id: number; current_vehicle_id: number | null};
   company: {id: number; name: string; chiron_mode: string};
 }
 export interface DriverVehicle {id: number; company_id: number; plate_number: string; status: string; brand?: string; model?: string}
+export interface DriverTripSummary {id:number; driver_id:number; start_time:string|null; end_time:string|null; start_address:string|null; end_address:string|null; price:number; currency:string; distance:number|null; duration:number|null; chiron_environment:string|null; chiron_sync_state:string|null}
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number) {
@@ -16,12 +17,14 @@ export class ApiError extends Error {
 // Uses the OS cookie store with the existing HttpOnly session contract.
 // Native cookie persistence/refresh must pass device acceptance before release.
 export function createDriverApi(transport: typeof fetch = fetch) {
-  async function request<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET'): Promise<T> {
+  async function request<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, number>): Promise<T> {
     if (!/^\/next_api\/[a-z0-9/-]+$/.test(path)) throw new Error('Invalid API path');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await transport(API_ORIGIN + path, {
+      const params = new URLSearchParams();
+      for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) || !Number.isSafeInteger(value) || value < 0) throw new ApiError(400); params.set(key,String(value));}
+      const response = await transport(API_ORIGIN + path + (params.size ? `?${params}` : ''), {
         method, credentials: 'include', redirect: 'error',
         headers: {Origin: API_ORIGIN, Accept: 'application/json', ...(body ? {'Content-Type': 'application/json'} : {})},
         ...(body ? {body: JSON.stringify(body)} : {}), signal: controller.signal,
@@ -53,6 +56,15 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async history(owner:number, offset=0) {
+      if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) throw new ApiError(400);
+      const current = await profile(); if (current.driver.id !== owner) throw new ApiError(403);
+      const page = await request<{driver_id:number;trips:DriverTripSummary[];next_offset:number|null}>('/next_api/drivers/trips',undefined,'GET',{limit:25,offset});
+      if (page.driver_id !== owner || !Array.isArray(page.trips) || page.trips.length > 25
+        || (page.next_offset !== null && page.next_offset !== offset + 25)
+        || page.trips.some(trip=>!Number.isSafeInteger(trip.id) || trip.id < 1 || trip.driver_id !== owner || (trip.start_address !== null && typeof trip.start_address !== 'string') || (trip.end_address !== null && typeof trip.end_address !== 'string') || (trip.start_time !== null && !Number.isFinite(Date.parse(trip.start_time))) || (trip.end_time !== null && !Number.isFinite(Date.parse(trip.end_time))) || !Number.isFinite(trip.price) || trip.price < 0 || (trip.distance !== null && (!Number.isFinite(trip.distance) || trip.distance < 0)) || (trip.duration !== null && (!Number.isFinite(trip.duration) || trip.duration < 0)) || trip.currency !== 'EUR')) throw new ApiError(502);
+      return page;
+    },
     async selectVehicle(owner: number, vehicleId: number) {
       if (!Number.isSafeInteger(vehicleId) || vehicleId <= 0) throw new ApiError(400);
       const listed = await vehicles(owner);
@@ -66,6 +78,7 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     },
     async tripAssignment(owner: number) {
       const current = await vehicles(owner);
+      if (current.profile.driver.status !== 'active') throw Error('حساب السائق غير نشط لبدء رحلة.');
       if ((current.profile.native_trip_contract_version ?? 0) < 1) throw Error('يتطلب بدء رحلة التطبيق تحديث حماية الرحلات على الخادم.');
       if (!current.vehicles.some(vehicle => vehicle.id === current.profile.driver.current_vehicle_id)) throw Error('اختر مركبة نشطة من سيارات شركتك قبل بدء الرحلة.');
       return current.profile;
