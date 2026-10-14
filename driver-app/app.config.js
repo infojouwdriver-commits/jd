@@ -1,6 +1,6 @@
 module.exports = {
   expo: {
-    name: 'JOUW DRIVER', slug: 'jouw-driver-native', version: '0.1.0',
+    name: 'JOUW DRIVER', slug: 'jouw-driver-native', version: '0.1.0', scheme: 'jouwdriver',
     orientation: 'portrait', userInterfaceStyle: 'dark',
     ios: {bundleIdentifier: 'be.jouwdriver.driver', supportsTablet: false},
     android: {package: 'be.jouwdriver.driver', allowBackup: false, permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION']},

@@ -57,14 +57,18 @@ jobs:
           cache-dependency-path: driver-app/package-lock.json
       - run: npm ci
       - run: npx expo prebuild --platform ios --no-install
+      - name: Warm simulator during native compilation
+        run: |
+          jd_simulator_id=$(xcrun simctl list devices available --json | python3 -c 'import sys,json; print(next(d["udid"] for devices in json.load(sys.stdin)["devices"].values() for d in devices if "iPhone" in d["name"]))')
+          echo "JD_IOS_SIMULATOR_ID=$jd_simulator_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$jd_simulator_id"
       - name: Install native CocoaPods dependencies
         run: cd ios && pod install
       - name: Compile unsigned simulator application
         run: xcodebuild -workspace ios/JOUWDRIVER.xcworkspace -scheme JOUWDRIVER -configuration Release -sdk iphonesimulator -derivedDataPath build/ios -arch arm64 CODE_SIGNING_ALLOWED=NO build
       - name: Launch simulator smoke test
         run: |
-          simulator_id=$(xcrun simctl list devices available --json | python3 -c 'import sys,json; print(next(d["udid"] for devices in json.load(sys.stdin)["devices"].values() for d in devices if "iPhone" in d["name"]))')
-          xcrun simctl boot "$simulator_id"
+          simulator_id="$JD_IOS_SIMULATOR_ID"
           xcrun simctl bootstatus "$simulator_id" -b
           xcrun simctl install "$simulator_id" build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app
           trap 'xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png || true; python3 scripts/simulator-diagnostics.py' EXIT
@@ -73,7 +77,8 @@ jobs:
           sleep 20
           # --console remains attached while the app is alive; crash/exit must fail acceptance.
           kill -0 "$simulator_console_pid"
-          xcrun simctl spawn "$simulator_id" launchctl list | grep be.jouwdriver.driver
+          xcrun simctl spawn "$simulator_id" launchctl list | awk '$3 ~ /be[.]jouwdriver[.]driver/ && $1 ~ /^[0-9]+$/ && $1 > 0 {found=1} END {exit !found}'
+          if grep -Eq 'Unhandled JS Exception|Terminating app due|RCTFatalException' build/ios/simulator-console.raw; then exit 1; fi
           xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png
       - name: Preserve simulator application package
         run: ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app build/ios/JOUWDRIVER-simulator.zip

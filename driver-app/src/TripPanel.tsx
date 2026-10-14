@@ -6,8 +6,8 @@ import {enableBackgroundMeter, stopBackgroundMeter} from './background-meter';
 import {nativeJournal} from './native-journal';
 import {tripDurationSeconds, validPoint, type NativeTrip} from './trip-engine';
 import type {MeterPoint} from './trip-meter';
-import {createDriverApi, type DriverProfile} from './api';
-const api = createDriverApi();
+import {driverApi, type DriverProfile} from './api';
+const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
   const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity};

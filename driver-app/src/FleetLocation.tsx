@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Text} from 'react-native';
 import * as Location from 'expo-location';
-import {createDriverApi} from './api';
+import {driverApi} from './api';
 import {validPoint} from './trip-engine';
 export default function FleetLocation({owner, registerStop}: {owner: number; registerStop: (stop: (() => Promise<void>) | null) => void}) {
   const [status, setStatus] = useState('مشاركة الموقع: بانتظار إذن الهاتف أو GPS');
   useEffect(() => {
-    const api = createDriverApi();
+    const api = driverApi;
     let stopped = false;
     let watcher: Location.LocationSubscription | undefined;
     let inFlight: Promise<unknown> | null = null;

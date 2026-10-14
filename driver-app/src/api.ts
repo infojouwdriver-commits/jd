@@ -73,3 +73,6 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     logout: () => request('/next_api/auth/logout', {}),
   };
 }
+
+// Shared refresh flight for the OS cookie jar across all native screens.
+export const driverApi = createDriverApi();

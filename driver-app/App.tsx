@@ -6,8 +6,8 @@ import DriverMap from './src/DriverMap';
 import FleetLocation from './src/FleetLocation';
 import TripPanel from './src/TripPanel';
 import type {MeterPoint} from './src/trip-meter';
-import {ApiError, createDriverApi, DriverProfile} from './src/api';
-const api = createDriverApi();
+import {ApiError, driverApi, DriverProfile} from './src/api';
+const api = driverApi;
 export default function App() {
   const fleetStop = useRef<(() => Promise<void>) | null>(null);
   const registerFleetStop = useCallback((stop: (() => Promise<void>) | null) => {fleetStop.current = stop;}, []);
