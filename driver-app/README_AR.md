@@ -22,3 +22,5 @@
 قبل التسليم: نجاح تجميع Android وiOS الأصليين، تحقق الدخول والتجديد والخروج بهاتفين، Mapbox واللغة ولوحة المفاتيح، ثم تنفيذ واختبار محرك الرحلة. التوزيع على iPhone فعلي يحتاج Apple Team وتوقيع؛ النشر في المتاجر يحتاج حسابات المطور، ولم تبدأ اشتراكات أو خدمات مدفوعة.
 
 المصادر: https://reactnative.dev/docs/network ، https://rnmapbox.github.io/docs/install ، https://docs.expo.dev/workflow/prebuild/
+
+أُضيف `eas.json` لمسارات development/preview/production عند تجهيز حساب Expo والتوقيع. لا يبدأ المشروع بناء EAS أو ينشئ حساباً أو اشتراكاً تلقائياً. CI الحالي يختبر التجميع فقط؛ تسليم إصدار المتجر يبقى مساراً منفصلاً.
