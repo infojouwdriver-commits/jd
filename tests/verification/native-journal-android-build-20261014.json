@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-14",
+  "source_commit": "f58e139fcbe9c20a0b6512e7b0c962f9f4c19408",
+  "pull_request": 56,
+  "native_run": 38585375522,
+  "android_job": 115925842576,
+  "android_status": "success",
+  "artifact_id": 11906037263,
+  "artifact_sha256": "0c6365b6a908eff979e1fcc5211219a7c2f91f8c179435ca564c8781e62e6b51",
+  "apk_sha256": "b853d2fbf4af0a67769a25ff16da43eb8643ffdc6fe71bfa69949291f79de5e5",
+  "embedded_signer_matches_previous": true,
+  "tests": 47,
+  "lint": "pass",
+  "typecheck": "pass",
+  "device_completion_acceptance": "pending",
+  "native_chiron_acceptance": "pending"
+}
