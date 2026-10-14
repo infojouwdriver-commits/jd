@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import CrudOperations from './crud-operations';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
-import {ChironError,chironDestination,rideMessage} from './chiron-protocol';
+import {ChironError,chironDestination,rideMessage,canonicalChironEnvironment} from './chiron-protocol';
 import {driverPricing} from './company-pricing';
 
 export class ChironService {
@@ -55,7 +55,7 @@ export class ChironService {
   if(['START_SENT','ARRIVAL_SENT'].includes(state))throw new ChironError('طلب سابق قيد المعالجة أو نتيجته غير مؤكدة. راجع Chiron قبل إعادة الإرسال.',409,'CHIRON_DELIVERY_UNCERTAIN');
   if(status==='aankomst'&&state!=='START_ACCEPTED')throw new ChironError('يجب قبول رسالة الانطلاق أولاً',409);
   const company=await this.getCompanyConfig(companyId),env=this.resolveEnvironment(company);
-  if(trip.chiron_environment&&trip.chiron_environment!==(env.mode==='TEST'?'test':'production'))throw new ChironError('بيئة الرحلة السابقة تختلف عن بيئة الشركة. لا تُرسل الرحلة إلى بيئة أخرى.',409);
+  if(trip.chiron_environment&&canonicalChironEnvironment(trip.chiron_environment)!==canonicalChironEnvironment(env.mode))throw new ChironError('بيئة الرحلة السابقة تختلف عن بيئة الشركة. لا تُرسل الرحلة إلى بيئة أخرى.',409);
   const driver=await new CrudOperations('drivers',token).findById(trip.driver_id),vehicle=await new CrudOperations('vehicles',token).findById(trip.vehicle_id);
   if(!driver||!vehicle)throw new ChironError('السائق أو المركبة غير موجودة',422);
   const contract=trip.external_source?await this.getPlatformContract(companyId,trip.external_source):null;

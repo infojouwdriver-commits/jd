@@ -84,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await stopFleetSharingRuntime();
         await api.post('/fleet/location', { shift_active: false, sharing_enabled: false });
       } catch {
-        toast.error('تعذّر إيقاف مشاركة الموقع؛ حاول إنهاء الوردية مجدداً / Location sharing could not be stopped');
+        toast.error('تعذّر إيقاف مشاركة الموقع؛ حاول تسجيل الخروج مجدداً / Location sharing could not be stopped');
         return;
       }
     }

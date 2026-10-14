@@ -7,6 +7,7 @@ import { generateAdminUserToken } from '@/lib/auth';
 import {createPostgrestClient} from '@/lib/postgrest';
 import { createHash, randomUUID } from 'crypto';
 import { completedTripTimes } from '@/lib/trip-times';
+import { canonicalChironEnvironment } from '@/lib/chiron-protocol';
 
 function generateTripUuid(): string { return randomUUID(); }
 
@@ -173,7 +174,7 @@ export const POST = requestMiddleware(async (request, context) => {
       status: 'completed',
       ritnummer,
       trip_uuid,
-      chiron_environment: company.chiron_mode,
+      chiron_environment: canonicalChironEnvironment(company.chiron_mode),
       chiron_sync_attempts: 0,
       chiron_sync_state: 'CREATED',
       passenger_name: passenger_name || null,
