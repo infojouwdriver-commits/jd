@@ -67,7 +67,7 @@ export interface VervoerbewijsData {
 
 function fmtTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' });
   } catch {
     return iso;
   }
@@ -76,8 +76,8 @@ function fmtTime(iso: string): string {
 function fmtDateTime(iso: string): string {
   try {
     const d = new Date(iso);
-    const date = d.toLocaleDateString('nl-BE', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const time = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+    const date = d.toLocaleDateString('nl-BE', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Europe/Brussels' });
+    const time = d.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' });
     return `${date} ${time}`;
   } catch {
     return iso;
