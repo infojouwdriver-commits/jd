@@ -21,6 +21,9 @@ test('driver cannot enter admin paths, manager cannot edit platform settings', (
  assert.equal(memberEndpoint('/next_api/chiron-settings','PUT','manager'),false);
  assert.equal(memberEndpoint('/next_api/drivers/profile','POST','driver'),false);
  assert.equal(memberEndpoint('/next_api/trips/end','POST','driver'),true);
+ assert.equal(memberEndpoint('/next_api/drivers/trips','GET','driver'),true);
+ assert.equal(memberEndpoint('/next_api/drivers/trips','PUT','driver'),false);
+ assert.equal(memberEndpoint('/next_api/drivers/trips','GET','manager'),false);
  assert.equal(memberEndpoint('/next_api/fleet/location','POST','driver'),true);
  assert.equal(memberEndpoint('/next_api/fleet/location','DELETE','driver'),false);
  assert.equal(memberEndpoint('/next_api/fleet','GET','manager'),true);
