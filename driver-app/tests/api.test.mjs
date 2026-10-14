@@ -51,3 +51,34 @@ test('fleet requires matching durable acknowledgement and clears only latest ser
 test('native completion freezes original driver identity before any write',async()=>{
  const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return ok({native_trip_contract_version:1,driver:{id:2},company:{id:1}});});await assert.rejects(api.completeTrip({_native_driver_id:1}));assert.equal(calls.some(url=>url.endsWith('/trips/end')),false);
 });
+const assigned = () => ({native_trip_contract_version:1, driver:{id:1,company_id:10,current_vehicle_id:20},company:{id:10,name:'Synthetic',chiron_mode:'PRODUCTION'}});
+const vehicle = {id:20,company_id:10,plate_number:'SYNTHETIC',status:'active'};
+test('vehicle selection uses company list, one PUT and matching refreshed assignment',async()=>{
+ const calls=[]; const api=createDriverApi(async(url,options)=>{calls.push({url,options});if(url.endsWith('/drivers/me'))return ok(assigned());return ok(options.method==='PUT'?{driver_id:1,current_vehicle_id:20,vehicle}:{driver_id:1,current_vehicle_id:20,vehicles:[vehicle]});});
+ assert.equal((await api.selectVehicle(1,20)).driver.current_vehicle_id,20);
+ const writes=calls.filter(call=>call.options.method==='PUT');assert.equal(writes.length,1);assert.deepEqual(JSON.parse(writes[0].options.body),{vehicle_id:20});assert.equal(writes[0].options.credentials,'include');
+});
+test('vehicle reads reject changed owner, foreign company and inactive entries without mutation',async()=>{
+ for(const row of [{...vehicle,company_id:11},{...vehicle,status:'inactive'}]){
+  const calls=[];const api=createDriverApi(async(url,options)=>{calls.push(options.method);return ok(url.endsWith('/drivers/me')?assigned():{driver_id:1,vehicles:[row]});});await assert.rejects(api.selectVehicle(1,20));assert.equal(calls.includes('PUT'),false);
+ }
+ let reads=0;const api=createDriverApi(async()=>{reads++;return ok({...assigned(),driver:{...assigned().driver,id:2}});});await assert.rejects(api.vehicles(1));assert.equal(reads,1);
+});
+test('ambiguous vehicle mutation is never retried or represented as saved',async()=>{
+ for(const reply of [Response.json({}, {status:503}),ok({driver_id:2,current_vehicle_id:20,vehicle}),ok({driver_id:1,current_vehicle_id:21,vehicle})]){
+  let writes=0;const api=createDriverApi(async(url,options)=>{if(options.method==='PUT'){writes++;return reply;}return ok(url.endsWith('/drivers/me')?assigned():{driver_id:1,vehicles:[vehicle]});});await assert.rejects(api.selectVehicle(1,20));assert.equal(writes,1);
+ }
+});
+test('new native trip requires current active vehicle and supported server assignment guard',async()=>{
+ for(const current of [{...assigned(),native_trip_contract_version:0},{...assigned(),driver:{...assigned().driver,current_vehicle_id:21}}]){
+  const api=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?current:{driver_id:1,vehicles:[vehicle]}));await assert.rejects(api.tripAssignment(1));
+ }
+ const current={...assigned(),company:{...assigned().company,chiron_mode:'TEST'}};const api=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?current:{driver_id:1,vehicles:[vehicle]}));assert.equal((await api.tripAssignment(1)).company.chiron_mode,'TEST');
+});
+test('post-selection reassignment refuses confirmation and unavailable vehicle never sends PUT',async()=>{
+ let reads=0,writes=0;const api=createDriverApi(async(url,options)=>{
+  if(url.endsWith('/drivers/me')){reads++;return ok(reads===1?assigned():{...assigned(),driver:{...assigned().driver,current_vehicle_id:21}});}
+  if(options.method==='PUT'){writes++;return ok({driver_id:1,current_vehicle_id:20,vehicle});}return ok({driver_id:1,vehicles:[vehicle]});
+ });await assert.rejects(api.selectVehicle(1,20));assert.equal(writes,1);
+ const missing=createDriverApi(async(url,options)=>{assert.notEqual(options.method,'PUT');return ok(url.endsWith('/drivers/me')?assigned():{driver_id:1,vehicles:[]});});await assert.rejects(missing.selectVehicle(1,20));await assert.rejects(missing.selectVehicle(1,NaN));
+});

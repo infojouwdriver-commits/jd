@@ -6,10 +6,12 @@ import DriverMap from './src/DriverMap';
 import FleetLocation from './src/FleetLocation';
 import {stopFleetPublishing} from './src/native-fleet-runtime';
 import TripPanel from './src/TripPanel';
+import {createActionGate} from './src/action-gate';
 import type {MeterPoint} from './src/trip-meter';
 import {ApiError, driverApi, DriverProfile} from './src/api';
 const api = driverApi;
 export default function App() {
+  const actionGate = useRef(createActionGate()).current;
   const fleetStop = useRef<(() => Promise<void>) | null>(null);
   const registerFleetStop = useCallback((stop: (() => Promise<void>) | null) => {fleetStop.current = stop;}, []);
   const [fleetGeneration, setFleetGeneration] = useState(0);
@@ -29,10 +31,11 @@ export default function App() {
     finally {setPassword(''); setOtp(''); setBusy(false);}
   }
   async function logout() {
+    if (blockLogout || !actionGate.acquire()) return;
     setBusy(true); setError('');
     try {await fleetStop.current?.(); if (profile) await stopFleetPublishing(profile.driver.id); await api.clearFleet(); await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
     catch {setFleetGeneration(value => value + 1); setError('تعذّر إكمال تسجيل الخروج ومسح موقع الأسطول على الخادم. حاول مجدداً.');}
-    finally {setBusy(false);}
+    finally {setBusy(false); actionGate.release();}
   }
   return <SafeAreaProvider><SafeAreaView style={styles.screen}><StatusBar style="light"/>
     <KeyboardAvoidingView style={{flex:1}} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -44,7 +47,7 @@ export default function App() {
       {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
       {profile ? <>
         <FleetLocation key={fleetGeneration} owner={profile.driver.id} registerStop={registerFleetStop}/>
-        <TripPanel profile={profile} onBlockLogout={setBlockLogout} onLocation={setDriverPosition}/>
+        <TripPanel profile={profile} onProfile={setProfile} sessionBusy={busy} actionGate={actionGate} onBlockLogout={setBlockLogout} onLocation={setDriverPosition}/>
         <DriverMap position={driverPosition}/>
         <View style={styles.card}><Text style={styles.cardTitle}>حسابك متصل</Text><Text style={styles.subtitle}>{profile.company.name}</Text><Text style={styles.note}>موقعك يظهر على هاتفك عند السماح بالوصول إليه.</Text></View>
         <Pressable accessibilityRole="button" onPress={logout} disabled={busy || blockLogout} style={styles.secondary}><Text style={styles.secondaryText}>تسجيل الخروج</Text></Pressable>
