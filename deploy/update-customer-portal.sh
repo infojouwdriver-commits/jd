@@ -31,7 +31,7 @@ import fs from 'node:fs';
 const state=JSON.parse(fs.readFileSync('runtime-mode.json'));
 const release=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
 if(state.mode!=='public'||state.image!==release.image||state.revision!==release.revision)throw Error('Live runtime state mismatch');
-if(process.env.APP_ORIGIN!=='https://jouw-driver.duckdns.org'||process.env.DEPLOYMENT_MODE!=='production'||process.env.SCHEMA_SOURCE!=='independent'||process.env.SCHEMA_VALIDATED!=='true'||process.env.CHIRON_PRODUCTION_ENABLED!=='false')throw Error('Expected accepted foundation runtime');
+if(process.env.APP_ORIGIN!=='https://jouw-driver.duckdns.org'||process.env.DEPLOYMENT_MODE!=='production'||process.env.SCHEMA_SOURCE!=='independent'||process.env.SCHEMA_VALIDATED!=='true'||!['true','false'].includes(process.env.CHIRON_PRODUCTION_ENABLED))throw Error('Expected accepted foundation runtime');
 if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.VERIFIED_BACKUP_TAG+'.tar.age').mtimeMs<Date.parse(state.deployedAt))throw Error('Backup must cover the current release');
 CHECK
 mkdir "$root/.deployment-lock"
