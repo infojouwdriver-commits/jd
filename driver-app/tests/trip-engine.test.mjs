@@ -1,0 +1,35 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+import {DatabaseSync} from 'node:sqlite';
+import {createCipheriv,createDecipheriv,randomBytes} from 'node:crypto';
+function compile(name,imports={}){const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL(`../src/${name}.ts`,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:name=>imports[name],Date,Number,JSON,Error,Map,TextEncoder,TextDecoder});return exports;}
+const meter=compile('trip-meter');
+const {createTripEngine,tripDurationSeconds}=compile('trip-engine',{'./trip-meter':meter});
+const {createSqlTripStore}=compile('trip-store');
+async function fixture(){
+ const db=new DatabaseSync(':memory:');const keys=new Map();
+ const adapter={execAsync:async sql=>{db.exec(sql);},runAsync:async(sql,...params)=>db.prepare(sql).run(...params),getFirstAsync:async(sql,...params)=>db.prepare(sql).get(...params)||null,getAllAsync:async(sql,...params)=>db.prepare(sql).all(...params),withExclusiveTransactionAsync:async task=>{db.exec('BEGIN IMMEDIATE');try{await task(adapter);db.exec('COMMIT');}catch(error){db.exec('ROLLBACK');throw error;}}};
+ const cipher={encrypt:async(owner,id,text)=>{if(!keys.has(owner))keys.set(owner,randomBytes(32));const iv=randomBytes(12),c=createCipheriv('aes-256-gcm',keys.get(owner),iv);c.setAAD(Buffer.from(id));return Buffer.concat([iv,c.update(text,'utf8'),c.final(),c.getAuthTag()]).toString('base64');},decrypt:async(owner,id,text)=>{const bytes=Buffer.from(text,'base64'),d=createDecipheriv('aes-256-gcm',keys.get(owner),bytes.subarray(0,12));d.setAAD(Buffer.from(id));d.setAuthTag(bytes.subarray(-16));return Buffer.concat([d.update(bytes.subarray(12,-16)),d.final()]).toString('utf8');}};
+ const store=await createSqlTripStore(adapter,cipher);let now=Date.parse('2026-10-14T08:00:00Z');const key='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ const engine=createTripEngine('1',store,()=>key,()=>now);
+ const point=()=>({lat:50.85,lon:4.35,timestamp:now,accuracy:5});
+ const input=()=>({companyId:1,vehicleId:1,point:point(),startAddress:'Synthetic departure',endAddress:'Synthetic arrival',proposedPrice:2,paymentMethod:'card'});
+ return {db,adapter,store,engine,key,point,input,advance:n=>now+=n,now:()=>now};
+}
+test('trip persists encrypted, restores elapsed wall time and isolates driver owners',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(121000);const restored=await createTripEngine('1',f.store,()=>f.key,f.now).restore();assert.equal(tripDurationSeconds(restored,f.now()),121);assert.equal(await f.store.active('2'),null);const bytes=f.db.prepare('SELECT ciphertext FROM trips').get().ciphertext;assert.equal(bytes.includes('Synthetic'),false);await assert.rejects(f.engine.start(f.input()));}finally{f.db.close();}
+});
+test('bad endpoint keeps active trip; failed server receipt keeps same completion key',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await assert.rejects(f.engine.end({...f.point(),accuracy:100},2));assert.ok(await f.engine.restore());const payload=await f.engine.end(f.point(),2);assert.equal(payload.completion_request_key,f.key);assert.equal(await f.engine.restore(),null);assert.equal((await f.engine.sync(async()=>{throw Error('lost receipt');})).remaining,1);const sent=[];const [a,b]=await Promise.all([f.engine.sync(async p=>{sent.push(p);return {id:1};}),f.engine.sync(async p=>{sent.push(p);return {id:1};})]);assert.equal(sent.length,1);assert.equal(sent[0].completion_request_key,f.key);assert.equal(a.remaining,0);assert.equal(b.remaining,0);}finally{f.db.close();}
+});
+test('GPS duplicate and stale points cannot inflate distance, concurrent writes cannot overwrite',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());const stale=await f.engine.restore();f.advance(30000);const next=await f.engine.point({...f.point(),lat:50.8503});assert.ok(next.meter.distanceKm>0);const distance=next.meter.distanceKm;await f.engine.point({...f.point(),lat:50.8503});assert.equal((await f.engine.restore()).meter.distanceKm,distance);f.advance(31000);await f.engine.point({...f.point(),timestamp:f.now()-40000,lat:51});assert.equal((await f.engine.restore()).meter.distanceKm,distance);await assert.rejects(f.store.update({...stale,revision:1}));}finally{f.db.close();}
+});
+test('tampered owner/AAD or encrypted record cannot silently restore as a new trip',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.db.exec('UPDATE trips SET revision=9');await assert.rejects(f.engine.restore());assert.equal(f.db.prepare('SELECT count(*) n FROM trips').get().n,1);}finally{f.db.close();}
+});
+
+test('HTTP success without a durable trip identifier never clears queued trip',async()=>{const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await f.engine.end(f.point(),2);assert.equal((await f.engine.sync(async()=>({success:true}))).remaining,1);assert.equal((await f.store.pending('1')).length,1);}finally{f.db.close();}});
