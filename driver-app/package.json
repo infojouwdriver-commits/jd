@@ -40,5 +40,8 @@
     "prebuild": "expo prebuild",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "decode-uri-component": "0.5.0"
+  }
 }
