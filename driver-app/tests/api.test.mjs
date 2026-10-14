@@ -22,3 +22,15 @@ test('logout failure is propagated, with no retry or reported revocation',async(
  let calls=0;const api=createDriverApi(async()=>{calls++;return Response.json({}, {status:503});});
  await assert.rejects(api.logout());assert.equal(calls,1);
 });
+
+test('native completion refuses servers without assignment guards',async()=>{
+ const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return ok({driver:{company_id:1,current_vehicle_id:2},company:{chiron_mode:'TEST'}});});
+ await assert.rejects(api.completeTrip({_native_company_id:1,_native_vehicle_id:2,_native_environment:'TEST'}));
+ assert.equal(calls.some(url=>url.endsWith('/trips/end')),false);
+});
+test('completion sends frozen assignment to capable server, allowing idempotent replay after reassignment',async()=>{
+ const calls=[];const api=createDriverApi(async(url,options)=>{calls.push({url,options});return ok(url.endsWith('/drivers/me')?{native_trip_contract_version:1,driver:{company_id:3,current_vehicle_id:4},company:{chiron_mode:'PRODUCTION'}}:{id:1});});
+ await api.completeTrip({_native_company_id:1,_native_vehicle_id:2,_native_environment:'TEST',completion_request_key:'synthetic'});
+ const body=JSON.parse(calls[1].options.body);assert.equal(body.expected_company_id,1);assert.equal(body.expected_vehicle_id,2);assert.equal(body.expected_chiron_environment,'TEST');assert.equal('_native_company_id' in body,false);
+});
+test('email login forwards MFA code without weakening administrator verification',async()=>{const calls=[];const api=createDriverApi(async(url,options)=>{calls.push({url,options});return ok(url.endsWith('/drivers/me')?{driver:{id:1},company:{id:1}}:true);});await api.login('synthetic@example.invalid','synthetic-password','000000');assert.equal(JSON.parse(calls[0].options.body).otp,'000000');assert.equal(calls[0].url.endsWith('/auth/login'),true);});

@@ -3,7 +3,7 @@ module.exports = {
     name: 'JOUW DRIVER', slug: 'jouw-driver-native', version: '0.1.0',
     orientation: 'portrait', userInterfaceStyle: 'dark',
     ios: {bundleIdentifier: 'be.jouwdriver.driver', supportsTablet: false},
-    android: {package: 'be.jouwdriver.driver', permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION']},
-    plugins: ['expo-router', '@rnmapbox/maps', ['expo-location', {locationWhenInUsePermission: 'JOUW DRIVER utilise votre position pour afficher votre emplacement sur la carte.'}]],
+    android: {package: 'be.jouwdriver.driver', allowBackup: false, permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION']},
+    plugins: ['expo-router', '@rnmapbox/maps', 'expo-sqlite', 'expo-secure-store', ['expo-location', {locationWhenInUsePermission: 'JOUW DRIVER utilise votre position pour afficher votre emplacement sur la carte.'}]],
   },
 };

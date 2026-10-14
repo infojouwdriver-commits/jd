@@ -1,5 +1,6 @@
 export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
+  native_trip_contract_version?: number;
   driver: {id: number; full_name: string; company_id: number; current_vehicle_id: number | null};
   company: {id: number; name: string; chiron_mode: string};
 }
@@ -41,11 +42,17 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   }
   return {
     profile,
-    async login(identity: string, password: string) {
+    async login(identity: string, password: string, otp = '') {
       const value = identity.trim();
       await request(value.includes('@') ? '/next_api/auth/login' : '/next_api/auth/driver-login',
-        value.includes('@') ? {email: value, password} : {phone: value, password});
+        value.includes('@') ? {email: value, password, ...(otp ? {otp} : {})} : {phone: value, password});
       return profile();
+    },
+    async completeTrip(payload: Record<string, unknown>) {
+      const current = await profile();
+      if ((current.native_trip_contract_version ?? 0) < 1) throw new ApiError(409);
+      const {_native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
+      return request<{id: number; warning?: string}>('/next_api/trips/end', {...body, expected_company_id: _native_company_id, expected_vehicle_id: _native_vehicle_id, expected_chiron_environment: _native_environment});
     },
     // Do not clear the session UI when server revocation fails.
     logout: () => request('/next_api/auth/logout', {}),

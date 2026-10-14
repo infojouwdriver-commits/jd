@@ -41,6 +41,7 @@ export const GET = requestMiddleware(async (request, context) => {
     });
 
     return createSuccessResponse({
+      native_trip_contract_version: 1,
       driver: {
         id: driver.id,
         full_name: driver.full_name,
