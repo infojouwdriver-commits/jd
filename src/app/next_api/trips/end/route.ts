@@ -8,6 +8,7 @@ import {createPostgrestClient} from '@/lib/postgrest';
 import { createHash, randomUUID } from 'crypto';
 import { completedTripTimes } from '@/lib/trip-times';
 import { canonicalChironEnvironment } from '@/lib/chiron-protocol';
+import {assertNativeTripExpectation, hasNativeTripExpectation} from '@/lib/native-trip-contract';
 
 function generateTripUuid(): string { return randomUUID(); }
 
@@ -91,6 +92,10 @@ export const POST = requestMiddleware(async (request, context) => {
 
   try {
     const adminToken = await generateAdminUserToken();
+    if (hasNativeTripExpectation(body)) {
+      const receipts = await new CrudOperations('trips', adminToken).findMany({user_id: Number(user_id), completion_request_key: body.completion_request_key});
+      if (receipts?.[0]) return createSuccessResponse({...receipts[0], replayed: true}, 200);
+    }
 
     const driversCrud = new CrudOperations("drivers", adminToken);
     const drivers = await driversCrud.findMany({ user_id: parseInt(user_id) });
@@ -121,6 +126,8 @@ export const POST = requestMiddleware(async (request, context) => {
     }
 
     if (vehicle.status !== 'active' || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'Vehicle not permitted',status:403});
+    try {assertNativeTripExpectation(body, Number(driver.company_id), Number(vehicle.id), company.chiron_mode);}
+    catch {return createErrorResponse({errorMessage:'تغيرت الشركة أو المركبة أو بيئة الإرسال منذ بدء الرحلة. تبقى الرحلة محفوظة على الهاتف.',status:409});}
     const tripsCrud = new CrudOperations("trips", context.token);
 
     const actualDuration = duration_minutes || 0;

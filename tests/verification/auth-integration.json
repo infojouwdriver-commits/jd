@@ -1,5 +1,5 @@
 {
-  "passed": 17,
+  "passed": 19,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -9,6 +9,8 @@
     "Refresh preserves administrator MFA claim",
     "Rotated refresh cookie cannot be replayed",
     "Password-only admin access is denied in production",
+    "Native history ignores hostile driver/company scope",
+    "Native administrator driver history remains self-scoped",
     "Driver cannot enter admin company endpoint",
     "Client admin role claims do not grant platform authority",
     "Driver cannot edit another driver trip",
