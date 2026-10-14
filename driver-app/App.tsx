@@ -3,24 +3,29 @@ import {ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
 import DriverMap from './src/DriverMap';
+import TripPanel from './src/TripPanel';
+import type {MeterPoint} from './src/trip-meter';
 import {ApiError, createDriverApi, DriverProfile} from './src/api';
 const api = createDriverApi();
 export default function App() {
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
+  const [blockLogout, setBlockLogout] = useState(true);
+  const [driverPosition, setDriverPosition] = useState<MeterPoint | null>(null);
   useEffect(() => {let disposed = false; api.profile().then(value => {if (!disposed) setProfile(value);}).catch(error => {if (!disposed && (!(error instanceof ApiError) || error.status !== 401)) setError('تعذّر استعادة الجلسة. تحقق من الاتصال.');}).finally(() => {if (!disposed) setBusy(false);}); return () => {disposed = true;};}, []);
   async function login() {
     setBusy(true); setError('');
-    try {setProfile(await api.login(identity, password));}
+    try {setProfile(await api.login(identity, password, otp));}
     catch(error) {setError(error instanceof ApiError ? error.message : 'تعذّر الاتصال. حاول مجدداً.');}
-    finally {setPassword(''); setBusy(false);}
+    finally {setPassword(''); setOtp(''); setBusy(false);}
   }
   async function logout() {
     setBusy(true); setError('');
-    try {await api.logout(); setProfile(null); setIdentity('');}
+    try {await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
     catch {setError('تعذّر تسجيل الخروج على الخادم. حاول مجدداً.');}
     finally {setBusy(false);}
   }
@@ -33,15 +38,17 @@ export default function App() {
       <Text style={styles.subtitle}>{profile ? profile.company.name : 'ادخل بحسابك الحالي للوصول إلى بوابة السائق.'}</Text>
       {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
       {profile ? <>
-        <DriverMap/>
+        <TripPanel profile={profile} onBlockLogout={setBlockLogout} onLocation={setDriverPosition}/>
+        <DriverMap position={driverPosition}/>
         <View style={styles.card}><Text style={styles.cardTitle}>حسابك متصل</Text><Text style={styles.subtitle}>{profile.company.name}</Text><Text style={styles.note}>موقعك يظهر على هاتفك عند السماح بالوصول إليه.</Text></View>
-        <Pressable accessibilityRole="button" onPress={logout} disabled={busy} style={styles.secondary}><Text style={styles.secondaryText}>تسجيل الخروج</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={logout} disabled={busy || blockLogout} style={styles.secondary}><Text style={styles.secondaryText}>تسجيل الخروج</Text></Pressable>
       </> : <View style={styles.card}>
         <Text style={styles.cardTitle}>تسجيل الدخول</Text>
         <Text accessibilityLabel="البريد الإلكتروني أو رقم الهاتف" style={styles.label}>البريد الإلكتروني أو رقم الهاتف</Text>
         <TextInput accessibilityLabel="البريد الإلكتروني أو رقم الهاتف" value={identity} onChangeText={setIdentity} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="username" editable={!busy} style={styles.input}/>
         <Text style={styles.label}>كلمة المرور</Text>
         <TextInput accessibilityLabel="كلمة المرور" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" editable={!busy} style={styles.input} onSubmitEditing={() => {if (!busy && identity.trim() && password) void login();}}/>
+        {identity.includes('@') && <TextInput accessibilityLabel="رمز التحقق إذا كان حسابك يتطلبه" placeholder="رمز التحقق إذا كان حسابك يتطلبه" placeholderTextColor="#8294a6" value={otp} onChangeText={setOtp} keyboardType="number-pad" autoComplete="one-time-code" maxLength={6} editable={!busy} style={styles.input}/>}
         <Pressable accessibilityRole="button" disabled={busy || !identity.trim() || !password} onPress={login} style={[styles.primary,(busy || !identity.trim() || !password) && {opacity:0.5}]}>{busy ? <ActivityIndicator color="#102018"/> : <Text style={styles.primaryText}>الدخول</Text>}</Pressable>
       </View>}
       <Text style={styles.footer}>JOUW DRIVER · BELGIUM</Text>

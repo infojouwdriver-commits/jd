@@ -2,16 +2,18 @@ import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, Pressable, StyleSheet, Text, View} from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import * as Location from 'expo-location';
+import type {MeterPoint} from './trip-meter';
 
 const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
 if (token?.startsWith('pk.')) Mapbox.setAccessToken(token);
-export default function DriverMap() {
+export default function DriverMap({position}: {position?: MeterPoint | null}) {
   const [point, setPoint] = useState<[number, number] | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const hasExternalPosition = position != null;
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || hasExternalPosition) return;
     let stopped = false;
     let watcher: Location.LocationSubscription | undefined;
     Location.watchPositionAsync({accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 10}, location => {
@@ -23,7 +25,7 @@ export default function DriverMap() {
     }).then(value => {if (stopped) value.remove(); else watcher = value;})
       .catch(() => {if (!stopped) setError('تعذّر قراءة الموقع. تحقق من إذن الهاتف.');});
     return () => {stopped = true; watcher?.remove();};
-  }, [enabled]);
+  }, [enabled, hasExternalPosition]);
   async function locate() {
     setBusy(true); setError('');
     try {
@@ -32,11 +34,12 @@ export default function DriverMap() {
       setEnabled(true);
     } catch {setError('تعذّر طلب إذن الموقع.');} finally {setBusy(false);}
   }
+  const displayPoint: [number, number] | null = position ? [position.lon, position.lat] : point;
   if (!token?.startsWith('pk.')) return <View style={styles.placeholder}><Text style={styles.text}>الخريطة غير متاحة في هذه النسخة.</Text></View>;
   return <View style={styles.wrapper}>
     <Mapbox.MapView style={styles.map} styleURL={Mapbox.StyleURL.Street} onMapLoadingError={() => setError('تعذّر تحميل الخريطة. تحقق من الاتصال.')}>
-      <Mapbox.Camera centerCoordinate={point ?? [4.3517, 50.8503]} zoomLevel={point ? 15 : 11} animationDuration={600}/>
-      {point && <Mapbox.PointAnnotation id="driver-location" coordinate={point}><View style={styles.point}/></Mapbox.PointAnnotation>}
+      <Mapbox.Camera centerCoordinate={displayPoint ?? [4.3517, 50.8503]} zoomLevel={displayPoint ? 15 : 11} animationDuration={600}/>
+      {displayPoint && <Mapbox.PointAnnotation id="driver-location" coordinate={displayPoint}><View style={styles.point}/></Mapbox.PointAnnotation>}
     </Mapbox.MapView>
     <Pressable accessibilityRole="button" accessibilityLabel="عرض موقعي على الخريطة" disabled={busy} onPress={locate} style={styles.locate}>{busy ? <ActivityIndicator/> : <Text>موقعي</Text>}</Pressable>
     {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}

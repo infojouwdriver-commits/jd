@@ -32,7 +32,7 @@ jobs:
       - run: npm run lint && npm run typecheck && npm test && npx expo install --check
       - run: npx expo prebuild --platform android --no-install
       - name: Compile bundled preview application
-        run: ./android/gradlew -p android assembleRelease --no-daemon
+        run: ./android/gradlew -p android assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: driver-android-preview-${{ github.sha }}
@@ -60,7 +60,7 @@ jobs:
       - name: Install native CocoaPods dependencies
         run: cd ios && pod install
       - name: Compile unsigned simulator application
-        run: xcodebuild -workspace ios/JOUWDRIVER.xcworkspace -scheme JOUWDRIVER -configuration Release -sdk iphonesimulator -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -workspace ios/JOUWDRIVER.xcworkspace -scheme JOUWDRIVER -configuration Release -sdk iphonesimulator -derivedDataPath build/ios -arch arm64 CODE_SIGNING_ALLOWED=NO build
       - name: Launch simulator smoke test
         run: |
           simulator_id=$(xcrun simctl list devices available --json | python3 -c 'import sys,json; print(next(d["udid"] for devices in json.load(sys.stdin)["devices"].values() for d in devices if "iPhone" in d["name"]))')

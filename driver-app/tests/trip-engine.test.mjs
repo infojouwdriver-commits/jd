@@ -16,7 +16,7 @@ async function fixture(){
  const store=await createSqlTripStore(adapter,cipher);let now=Date.parse('2026-10-14T08:00:00Z');const key='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
  const engine=createTripEngine('1',store,()=>key,()=>now);
  const point=()=>({lat:50.85,lon:4.35,timestamp:now,accuracy:5});
- const input=()=>({companyId:1,vehicleId:1,point:point(),startAddress:'Synthetic departure',endAddress:'Synthetic arrival',proposedPrice:2,paymentMethod:'card'});
+ const input=()=>({companyId:1,vehicleId:1,environment:'TEST',point:point(),startAddress:'Synthetic departure',endAddress:'Synthetic arrival',proposedPrice:2,paymentMethod:'card'});
  return {db,adapter,store,engine,key,point,input,advance:n=>now+=n,now:()=>now};
 }
 test('trip persists encrypted, restores elapsed wall time and isolates driver owners',async()=>{
