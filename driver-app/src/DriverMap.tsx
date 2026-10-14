@@ -4,6 +4,7 @@ import Mapbox from '@rnmapbox/maps';
 import * as Location from 'expo-location';
 import type {MeterPoint} from './trip-meter';
 import {validPoint} from './trip-engine';
+import {mapboxErrorMessage} from './mapbox-error';
 import {fetchNativeRoute,navigationUrl,routeBounds,type NativeRoute,type RouteCoordinate} from './native-route';
 const token=process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
 if(token?.startsWith('pk.'))Mapbox.setAccessToken(token);
@@ -38,7 +39,7 @@ export default function DriverMap({position}:{position?:MeterPoint|null}){
  return <View style={styles.panel}>
   <Text style={styles.heading}>الخريطة والمسار</Text><Text style={styles.note}>اضغط مطولاً على الخريطة لتحديد وجهة المسار.</Text>
   <View style={styles.wrapper}>
-   <Mapbox.MapView style={styles.map} styleURL={Mapbox.StyleURL.Street} onLongPress={feature=>chooseDestination(feature.geometry.coordinates)} onMapLoadingError={()=>setError('تعذّر تحميل الخريطة. تحقق من الاتصال.')}>
+   <Mapbox.MapView style={styles.map} styleURL={Mapbox.StyleURL.Street} onLongPress={feature=>chooseDestination(feature.geometry.coordinates)} onMapLoadingError={payload=>setError(mapboxErrorMessage(payload))}>
     <Mapbox.Camera ref={camera} defaultSettings={{centerCoordinate:[4.3517,50.8503],zoomLevel:11}} centerCoordinate={following?displayPoint:undefined} zoomLevel={following&&displayPoint?15:undefined} animationDuration={600}/>
     {route&&<Mapbox.ShapeSource id="trip-route" shape={{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:route.coordinates}}}><Mapbox.LineLayer id="trip-route-line" style={{lineColor:'#367cff',lineWidth:5,lineCap:'round',lineJoin:'round'}}/></Mapbox.ShapeSource>}
     {displayPoint&&<Mapbox.PointAnnotation id="driver-location" coordinate={displayPoint}><View style={styles.point}/></Mapbox.PointAnnotation>}
