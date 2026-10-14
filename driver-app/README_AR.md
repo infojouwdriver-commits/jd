@@ -31,3 +31,7 @@ CI يجمع Android ARM64 release-bundled بتوقيع debug تجريبي، وي
 `eas.json` يجهز development/preview/production عند توفر الحساب والتوقيع؛ لا ينشئ حساباً أو يبدأ بناء EAS أو شراء تلقائياً.
 
 المصادر: https://reactnative.dev/docs/network ، https://rnmapbox.github.io/docs/install ، https://docs.expo.dev/versions/v57.0.0/sdk/location/ ، https://docs.expo.dev/versions/v57.0.0/sdk/linking/
+
+## قبول مفتاح الخريطة الأصلي
+
+يبني CI باستعمال `MAPBOX_NATIVE_PUBLIC_TOKEN` إن توفّر، وإلا يفحص المفتاح الحالي قبل استعماله. يختبر قراءة style وfonts دون Referer أو cookies؛ رفض 401/403 يوقف إصدار نسخة خريطة غير صالحة، دون عرض المفتاح أو تفاصيل المزود. مفتاح native عام بصلاحيات القراءة المناسبة، مستقل عن مفتاح الويب المقيد بعناوين URL؛ لا تُزال قيود الويب لتجاوز الرفض. نجاح الطلبين لا يثبت قبول tiles/GPS على الهاتف.

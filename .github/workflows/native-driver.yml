@@ -19,7 +19,7 @@ jobs:
       run:
         working-directory: driver-app
     env:
-      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_NATIVE_PUBLIC_TOKEN || secrets.MAPBOX_PUBLIC_TOKEN }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -29,6 +29,8 @@ jobs:
           cache: npm
           cache-dependency-path: driver-app/package-lock.json
       - run: npm ci
+      - name: Verify native Mapbox access without a browser referrer
+        run: node scripts/check-mapbox-access.mjs
       - run: npm run lint && npm run typecheck && npm test && npx expo install --check
       - run: npx expo prebuild --platform android --no-install
       - name: Compile bundled preview application
@@ -46,7 +48,7 @@ jobs:
       run:
         working-directory: driver-app
     env:
-      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_NATIVE_PUBLIC_TOKEN || secrets.MAPBOX_PUBLIC_TOKEN }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -56,6 +58,8 @@ jobs:
           cache: npm
           cache-dependency-path: driver-app/package-lock.json
       - run: npm ci
+      - name: Verify native Mapbox access without a browser referrer
+        run: node scripts/check-mapbox-access.mjs
       - run: npx expo prebuild --platform ios --no-install
       - name: Warm simulator during native compilation
         run: |
