@@ -1,0 +1,19 @@
+{
+  "revision": "a83314d49446d695d968423a6e9b957997c72145",
+  "releaseRun": 38577286555,
+  "backupRestoreRun": 38576993172,
+  "deploymentRun": 38578779046,
+  "workflow": "update-customer-portal.yml",
+  "result": "passed",
+  "publicChecks": {
+    "/privacy-policy": 200,
+    "/next_api/drivers/me": 401,
+    "/next_api/drivers/trips": 401
+  },
+  "nativeMapboxProbe": {
+    "run": 38576442094,
+    "styleStatus": 403,
+    "deviceMapAcceptance": "pending"
+  },
+  "realNativeTripAcceptance": "pending"
+}
