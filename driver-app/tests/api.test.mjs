@@ -51,7 +51,7 @@ test('fleet requires matching durable acknowledgement and clears only latest ser
 test('native completion freezes original driver identity before any write',async()=>{
  const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return ok({native_trip_contract_version:1,driver:{id:2},company:{id:1}});});await assert.rejects(api.completeTrip({_native_driver_id:1}));assert.equal(calls.some(url=>url.endsWith('/trips/end')),false);
 });
-const assigned = () => ({native_trip_contract_version:1, driver:{id:1,company_id:10,current_vehicle_id:20},company:{id:10,name:'Synthetic',chiron_mode:'PRODUCTION'}});
+const assigned = () => ({native_trip_contract_version:1, driver:{id:1,status:'active',company_id:10,current_vehicle_id:20},company:{id:10,name:'Synthetic',chiron_mode:'PRODUCTION'}});
 const vehicle = {id:20,company_id:10,plate_number:'SYNTHETIC',status:'active'};
 test('vehicle selection uses company list, one PUT and matching refreshed assignment',async()=>{
  const calls=[]; const api=createDriverApi(async(url,options)=>{calls.push({url,options});if(url.endsWith('/drivers/me'))return ok(assigned());return ok(options.method==='PUT'?{driver_id:1,current_vehicle_id:20,vehicle}:{driver_id:1,current_vehicle_id:20,vehicles:[vehicle]});});
@@ -70,7 +70,7 @@ test('ambiguous vehicle mutation is never retried or represented as saved',async
  }
 });
 test('new native trip requires current active vehicle and supported server assignment guard',async()=>{
- for(const current of [{...assigned(),native_trip_contract_version:0},{...assigned(),driver:{...assigned().driver,current_vehicle_id:21}}]){
+ for(const current of [{...assigned(),native_trip_contract_version:0},{...assigned(),driver:{...assigned().driver,current_vehicle_id:21}},{...assigned(),driver:{...assigned().driver,status:'inactive'}}]){
   const api=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?current:{driver_id:1,vehicles:[vehicle]}));await assert.rejects(api.tripAssignment(1));
  }
  const current={...assigned(),company:{...assigned().company,chiron_mode:'TEST'}};const api=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?current:{driver_id:1,vehicles:[vehicle]}));assert.equal((await api.tripAssignment(1)).company.chiron_mode,'TEST');
@@ -81,4 +81,13 @@ test('post-selection reassignment refuses confirmation and unavailable vehicle n
   if(options.method==='PUT'){writes++;return ok({driver_id:1,current_vehicle_id:20,vehicle});}return ok({driver_id:1,vehicles:[vehicle]});
  });await assert.rejects(api.selectVehicle(1,20));assert.equal(writes,1);
  const missing=createDriverApi(async(url,options)=>{assert.notEqual(options.method,'PUT');return ok(url.endsWith('/drivers/me')?assigned():{driver_id:1,vehicles:[]});});await assert.rejects(missing.selectVehicle(1,20));await assert.rejects(missing.selectVehicle(1,NaN));
+});
+const historyTrip={id:5,driver_id:1,start_time:'2026-10-14T10:00:00Z',end_time:'2026-10-14T10:05:00Z',start_address:'Synthetic A',end_address:'Synthetic B',price:2,currency:'EUR',distance:1,duration:5,chiron_environment:'production',chiron_sync_state:'COMPLETED'};
+test('native history uses bounded driver endpoint and rejects another owner or malformed page',async()=>{
+ const calls=[];const api=createDriverApi(async(url,options)=>{calls.push({url,options});return ok(url.endsWith('/drivers/me')?assigned():{driver_id:1,trips:[historyTrip],next_offset:null});});assert.equal((await api.history(1,25)).trips[0].id,5);assert.equal(new URL(calls[1].url).pathname,'/next_api/drivers/trips');assert.equal(new URL(calls[1].url).searchParams.get('offset'),'25');assert.equal(calls[1].options.method,'GET');
+ for(const page of [{driver_id:2,trips:[historyTrip],next_offset:null},{driver_id:1,trips:[{...historyTrip,driver_id:2}],next_offset:null},{driver_id:1,trips:[{...historyTrip,price:NaN}],next_offset:null},{driver_id:1,trips:[historyTrip],next_offset:1}]){const bad=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?assigned():page));await assert.rejects(bad.history(1));}
+ await assert.rejects(api.history(1,-1));
+});
+test('history refuses account switch before any history request',async()=>{
+ const calls=[];const api=createDriverApi(async url=>{calls.push(url);return ok({...assigned(),driver:{...assigned().driver,id:2}});});await assert.rejects(api.history(1));assert.equal(calls.length,1);
 });

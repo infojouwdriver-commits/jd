@@ -6,6 +6,7 @@ import DriverMap from './src/DriverMap';
 import FleetLocation from './src/FleetLocation';
 import {stopFleetPublishing} from './src/native-fleet-runtime';
 import TripPanel from './src/TripPanel';
+import TripHistory from './src/TripHistory';
 import {createActionGate} from './src/action-gate';
 import type {MeterPoint} from './src/trip-meter';
 import {ApiError, driverApi, DriverProfile} from './src/api';
@@ -49,6 +50,7 @@ export default function App() {
         <FleetLocation key={fleetGeneration} owner={profile.driver.id} registerStop={registerFleetStop}/>
         <TripPanel profile={profile} onProfile={setProfile} sessionBusy={busy} actionGate={actionGate} onBlockLogout={setBlockLogout} onLocation={setDriverPosition}/>
         <DriverMap position={driverPosition}/>
+        <TripHistory key={profile.driver.id} owner={profile.driver.id}/>
         <View style={styles.card}><Text style={styles.cardTitle}>حسابك متصل</Text><Text style={styles.subtitle}>{profile.company.name}</Text><Text style={styles.note}>موقعك يظهر على هاتفك عند السماح بالوصول إليه.</Text></View>
         <Pressable accessibilityRole="button" onPress={logout} disabled={busy || blockLogout} style={styles.secondary}><Text style={styles.secondaryText}>تسجيل الخروج</Text></Pressable>
       </> : <View style={styles.card}>
