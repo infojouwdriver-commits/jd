@@ -2,6 +2,12 @@
 export class ChironError extends Error {
  constructor(message:string,public status=422,public code='CHIRON_CONFIGURATION',public uncertain=false){super(message);}
 }
+/** Accept both persisted legacy uppercase values and the canonical event values. */
+export function canonicalChironEnvironment(value:unknown):'test'|'production' {
+ if(value==='TEST'||value==='test')return 'test';
+ if(value==='PRODUCTION'||value==='production')return 'production';
+ throw new ChironError('بيئة Chiron المخزنة غير صالحة. راجع إعدادات الرحلة.',409,'CHIRON_ENVIRONMENT_INVALID');
+}
 export function chironDestination(input:string,mode:'TEST'|'PRODUCTION',kind:'auth'|'trip'|'hello'):string{
  const host=mode==='TEST'?'mow-acc.api.vlaanderen.be':'mow.api.vlaanderen.be';
  const path=kind==='auth'?'/oauth/token':kind==='trip'?'/chiron/taxirit':'/chiron/hello';

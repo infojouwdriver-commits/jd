@@ -148,7 +148,8 @@ try {
  const finish=await appApi('/next_api/trips/end','POST',tripBody,cookie);assert.equal(finish.status,201,'Native application trip completion failed');const finished=finish.data.data;
  assert.equal(finished.user_id,2);assert.equal(finished.driver_id,1);assert.equal(finished.vehicle_id,1);assert.equal(finished.company_id,1);assert.equal(finished.locked_after_completion,true);assert.equal(finished.price,22.55);assert.equal(finished.end_lat,0);assert.equal(finished.end_lon,0);
  assert.equal(Date.parse(finished.start_time),Date.parse(originalStart));assert.equal(Date.parse(finished.end_time),Date.parse(originalEnd));assert.ok(finished.warning);
- checks.push('Real application completion persists original offline times, exact owner/vehicle/price and zero coordinates without Chiron');
+ assert.equal((await success('/trips?id=eq.'+finished.id,service))[0].chiron_environment,'test');
+ checks.push('Real application completion persists canonical Chiron environment, original offline times, exact owner/vehicle/price and zero coordinates without Chiron');
  const replays=await Promise.all([appApi('/next_api/trips/end','POST',{...tripBody,price:999},cookie),appApi('/next_api/trips/end','POST',tripBody,cookie)]);
  assert.ok(replays.every(result=>result.status===200&&result.data.data.id===finished.id&&result.data.data.replayed===true&&result.data.data.price===22.55));
  assert.equal((await success('/trips?completion_request_key=eq.'+appKey,service)).length,1);checks.push('Two application retries return the original completed record without duplication or repricing');
