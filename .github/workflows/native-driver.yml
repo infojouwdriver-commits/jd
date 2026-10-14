@@ -83,6 +83,9 @@ jobs:
           kill -0 "$simulator_console_pid"
           xcrun simctl spawn "$simulator_id" launchctl list | awk '$3 ~ /be[.]jouwdriver[.]driver/ && $1 ~ /^[0-9]+$/ && $1 > 0 {found=1} END {exit !found}'
           if grep -Eq 'Unhandled JS Exception|Terminating app due|RCTFatalException' build/ios/simulator-console.raw; then exit 1; fi
+          # Compilation alone cannot prove native AES bridge compatibility.
+          grep -q 'JD_NATIVE_CRYPTO_OK' build/ios/simulator-console.raw
+          if grep -q 'JD_NATIVE_CRYPTO_FAILED' build/ios/simulator-console.raw; then exit 1; fi
           xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png
       - name: Preserve simulator application package
         run: ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app build/ios/JOUWDRIVER-simulator.zip

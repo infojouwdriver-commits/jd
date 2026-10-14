@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import {AESEncryptionKey, AESSealedData, aesEncryptAsync, aesDecryptAsync} from 'expo-crypto';
 import {createSqlTripStore, type Database} from './trip-store';
 import {journalBytes} from './journal-bytes';
+import {assertNativeCryptoReady} from './native-crypto-preflight';
 const keys = new Map<string, Promise<AESEncryptionKey>>();
 function ownerKey(owner: string, create = false) {
   const existing = keys.get(owner); if (existing) return existing;
@@ -19,7 +20,7 @@ function ownerKey(owner: string, create = false) {
 }
 let journal: ReturnType<typeof createSqlTripStore> | null = null;
 export function nativeJournal() {
-  return journal ?? (journal = SQLite.openDatabaseAsync('driver-trips.db').then(db => createSqlTripStore(db as unknown as Database, {
+  return journal ?? (journal = assertNativeCryptoReady().then(() => SQLite.openDatabaseAsync('driver-trips.db')).then(db => createSqlTripStore(db as unknown as Database, {
     async encrypt(owner, identity, plaintext) {
       const sealed = await aesEncryptAsync(new TextEncoder().encode(plaintext), await ownerKey(owner, true), {additionalData: new TextEncoder().encode(identity)});
       return sealed.combined('base64');
