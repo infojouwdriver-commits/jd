@@ -67,16 +67,23 @@ jobs:
           xcrun simctl boot "$simulator_id"
           xcrun simctl bootstatus "$simulator_id" -b
           xcrun simctl install "$simulator_id" build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app
-          xcrun simctl launch "$simulator_id" be.jouwdriver.driver
+          trap 'xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png || true; python3 scripts/simulator-diagnostics.py' EXIT
+          xcrun simctl launch --console "$simulator_id" be.jouwdriver.driver > build/ios/simulator-console.raw 2>&1 &
+          simulator_console_pid=$!
           sleep 20
+          # --console remains attached while the app is alive; crash/exit must fail acceptance.
+          kill -0 "$simulator_console_pid"
+          xcrun simctl spawn "$simulator_id" launchctl list | grep be.jouwdriver.driver
           xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png
       - name: Preserve simulator application package
         run: ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app build/ios/JOUWDRIVER-simulator.zip
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
           name: driver-ios-simulator-${{ github.sha }}
           path: |
             driver-app/build/ios/JOUWDRIVER-simulator.zip
             driver-app/build/ios/driver-login-simulator.png
+            driver-app/build/ios/simulator-diagnostics.txt
           if-no-files-found: error
           retention-days: 14
