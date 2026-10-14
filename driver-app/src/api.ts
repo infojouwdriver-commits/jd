@@ -1,3 +1,4 @@
+import type {MeterPoint} from './trip-meter';
 export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
   native_trip_contract_version?: number;
@@ -54,6 +55,20 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       const {_native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
       return request<{id: number; warning?: string}>('/next_api/trips/end', {...body, expected_company_id: _native_company_id, expected_vehicle_id: _native_vehicle_id, expected_chiron_environment: _native_environment});
     },
+    async reportFleet(owner: number, point: MeterPoint) {
+      if (![point.lat, point.lon, point.timestamp, point.accuracy].every(Number.isFinite)
+        || Math.abs(point.lat) > 90 || Math.abs(point.lon) > 180 || point.accuracy! < 0 || point.accuracy! > 50
+        || Date.now() - point.timestamp > 30000 || point.timestamp - Date.now() > 5000) throw new ApiError(400);
+      const current = await profile();
+      if (current.driver.id !== owner) throw new ApiError(403);
+      const receipt = await request<{driver_id: number; sharing_enabled: boolean; shift_active: boolean; recorded_at: string}>('/next_api/fleet/location', {
+        shift_active: true, sharing_enabled: true, latitude: point.lat, longitude: point.lon,
+        accuracy_m: point.accuracy, recorded_at: new Date(point.timestamp).toISOString(),
+      });
+      if (receipt.driver_id !== owner || !receipt.sharing_enabled || !receipt.shift_active || Date.parse(receipt.recorded_at) !== point.timestamp) throw new ApiError(502);
+      return receipt;
+    },
+    clearFleet: () => request('/next_api/fleet/location', {shift_active: false, sharing_enabled: false}),
     // Do not clear the session UI when server revocation fails.
     logout: () => request('/next_api/auth/logout', {}),
   };
