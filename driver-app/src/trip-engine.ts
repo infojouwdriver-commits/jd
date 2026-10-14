@@ -54,8 +54,8 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
         meter: addMeterPoint(emptyMeter(), input.point)};
       await store.create(trip); return trip;
     }),
-    point: (point: MeterPoint) => serial(async () => {
-      const trip = await store.active(owner); if (!trip) return null;
+    point: (point: MeterPoint, expectedKey?: string) => serial(async () => {
+      const trip = await store.active(owner); if (!trip || (expectedKey && trip.key !== expectedKey)) return null;
       if (!validPoint(point, clock())) return trip;
       const next = {...trip, revision: trip.revision + 1, meter: addMeterPoint(trip.meter, point)};
       await store.update(next); return next;

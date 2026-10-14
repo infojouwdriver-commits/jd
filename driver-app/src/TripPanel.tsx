@@ -1,9 +1,10 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import * as Location from 'expo-location';
-import {randomUUID} from 'expo-crypto';
+import {nativeEngine} from './native-runtime';
+import {enableBackgroundMeter, stopBackgroundMeter} from './background-meter';
 import {nativeJournal} from './native-journal';
-import {createTripEngine, tripDurationSeconds, validPoint, type NativeTrip} from './trip-engine';
+import {tripDurationSeconds, validPoint, type NativeTrip} from './trip-engine';
 import type {MeterPoint} from './trip-meter';
 import {createDriverApi, type DriverProfile} from './api';
 const api = createDriverApi();
@@ -22,7 +23,7 @@ async function currentPoint() {
   finally {clearTimeout(timer);}
 }
 export default function TripPanel({profile, onBlockLogout, onLocation}: {profile: DriverProfile; onBlockLogout: (blocked: boolean) => void; onLocation: (point: MeterPoint | null) => void}) {
-  const engine = useRef<ReturnType<typeof createTripEngine> | null>(null);
+  const engine = useRef<Awaited<ReturnType<typeof nativeEngine>> | null>(null);
   const activeRef = useRef<NativeTrip | null>(null);
   const disposed = useRef(false);
   const [trip, setTrip] = useState<NativeTrip | null>(null);
@@ -35,16 +36,19 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
   const [payment, setPayment] = useState<'cash' | 'card'>('card');
   const [seconds, setSeconds] = useState(0);
   const [pending, setPending] = useState(0);
+  const [background, setBackground] = useState(false);
   const updateTrip = (value: NativeTrip | null) => {activeRef.current = value; if (!disposed.current) setTrip(value);};
   useEffect(() => {
     disposed.current = false;
     nativeJournal().then(async store => {
       if (disposed.current) return;
-      const next = createTripEngine(String(profile.driver.id), store, randomUUID);
+      const next = await nativeEngine(String(profile.driver.id));
       const restored = await next.restore();
       const waiting = await store.pending(String(profile.driver.id));
       if (disposed.current) return;
       engine.current = next; updateTrip(restored); setPending(waiting.length); setReady(true);
+      if (restored) enableBackgroundMeter(restored).then(value => {if (!disposed.current) setBackground(value);}).catch(() => {if (!disposed.current) setBackground(false);});
+      else await stopBackgroundMeter();
     }).catch(() => {if (!disposed.current) setError('تعذّر فتح سجل الرحلات. لا تحذف بيانات التطبيق.');});
     return () => {disposed.current = true; engine.current = null;};
   }, [profile.driver.id]);
@@ -62,10 +66,18 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
       if (stopped) return;
       try {
         const point = pointOf(value); onLocation(point);
-        engine.current?.point(point).then(next => {if (!stopped) {updateTrip(next); setError('');}}).catch(() => {if (!stopped) setError('تعذّر حفظ قياس الموقع. أبقِ الرحلة مفتوحة.');});
+        engine.current?.point(point, trip.key).then(next => {if (!stopped) {updateTrip(next); setError('');}}).catch(() => {if (!stopped) setError('تعذّر حفظ قياس الموقع. أبقِ الرحلة مفتوحة.');});
       } catch {if (!stopped) setError('قياس الموقع غير دقيق. انتظر إشارة GPS أفضل.');}
     }).then(value => {if (stopped) value.remove(); else watcher = value;}).catch(() => {if (!stopped) setError('تعذّر تشغيل قياس الموقع.');});
     return () => {stopped = true; watcher?.remove();};
+  }, [trip?.key, onLocation]);
+  useEffect(() => {
+    if (!trip?.key) return;
+    let stopped = false;
+    const timer = setInterval(() => {engine.current?.restore().then(next => {
+      if (!stopped && next?.key === trip.key) {updateTrip(next); if (next.meter.lastPoint) onLocation(next.meter.lastPoint);}
+    }).catch(() => {if (!stopped) setError('تعذّر استعادة قياس الرحلة.');});}, 2000);
+    return () => {stopped = true; clearInterval(timer);};
   }, [trip?.key, onLocation]);
   async function start() {
     if (!engine.current || busy) return;
@@ -75,6 +87,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
       const next = await engine.current.start({companyId: profile.driver.company_id, vehicleId: profile.driver.current_vehicle_id ?? 0,
         environment: profile.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment});
       updateTrip(next);
+      try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
     } catch(error) {setError(error instanceof Error ? error.message : 'تعذّر بدء الرحلة.');}
     finally {setBusy(false);}
   }
@@ -89,7 +102,8 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
     try {
       const current = activeRef.current; if (!current) return;
       await engine.current.end(await currentPoint(), current.proposedPrice);
-      updateTrip(null); setPending(count => count + 1);
+      updateTrip(null); setPending(count => count + 1); setBackground(false);
+      try {await stopBackgroundMeter();} catch {setError('حُفظت الرحلة؛ تعذّر إيقاف خدمة الموقع على الهاتف.');}
       await synchronize();
     } catch(error) {setError(error instanceof Error ? error.message : 'تعذّر إنهاء الرحلة.');}
     finally {setBusy(false);}
@@ -101,7 +115,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
     {trip ? <>
       <Text style={styles.timer}>{time}</Text><Text style={styles.distance}>{trip.meter.distanceKm.toFixed(2)} كم</Text>
       <Text style={styles.text}>السعر المتفق عليه: {trip.proposedPrice.toFixed(2)} €</Text>
-      <Text style={styles.note}>أبقِ التطبيق مفتوحاً أثناء هذه التجربة.</Text>
+      <Text style={styles.note}>{background ? 'خدمة القياس الخلفي مسجلة · قبول الهاتف قيد الاختبار.' : 'القياس أمامي فقط · أبقِ التطبيق مفتوحاً.'}</Text>
       <Pressable disabled={busy} accessibilityRole="button" onPress={end} style={styles.button}>{busy ? <ActivityIndicator/> : <Text>إنهاء الرحلة وحفظها</Text>}</Pressable>
     </> : <>
       <TextInput accessibilityLabel="عنوان الانطلاق" placeholder="عنوان الانطلاق" placeholderTextColor="#8294a6" style={styles.input} value={startAddress} onChangeText={setStartAddress} editable={ready && !busy}/>
@@ -111,6 +125,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
       {!profile.driver.current_vehicle_id && <Text style={styles.note}>حدد مركبتك قبل بدء الرحلة.</Text>}
       <Pressable disabled={!ready || busy || !profile.driver.current_vehicle_id} accessibilityRole="button" onPress={start} style={[styles.button, (!ready || busy || !profile.driver.current_vehicle_id) && {opacity: 0.5}]}>{busy ? <ActivityIndicator/> : <Text>بدء الرحلة</Text>}</Pressable>
     </>}
+    {!trip && <Text style={styles.note}>عند بدء الرحلة نطلب إذن الموقع في الخلفية لقياس المسافة أثناء قفل الشاشة. إن رفضته يبقى القياس أمامياً. إنهاء الرحلة يوقف الخدمة.</Text>}
     {pending > 0 && <Pressable disabled={busy} accessibilityRole="button" onPress={() => {setBusy(true); synchronize().catch(() => setError('تعذّر إرسال الرحلة. البيانات محفوظة على الهاتف.')).finally(() => setBusy(false));}}><Text style={styles.note}>رحلات تنتظر الإرسال: {pending} · إعادة المحاولة</Text></Pressable>}
   </View>;
 }
