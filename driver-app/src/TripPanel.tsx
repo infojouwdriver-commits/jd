@@ -8,6 +8,7 @@ import {tripDurationSeconds, validPoint, type TripSyncReceipt, type NativeTrip} 
 import type {MeterPoint} from './trip-meter';
 import {driverApi, type DriverProfile, type DriverVehicle} from './api';
 import type {ActionGate} from './action-gate';
+import {tripError} from './trip-error';
 const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
@@ -93,7 +94,7 @@ export default function TripPanel({profile, onProfile, sessionBusy, actionGate, 
         environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment});
       updateTrip(next);
       try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
-    } catch(error) {setError(error instanceof Error ? error.message : 'تعذّر بدء الرحلة.');}
+    } catch(error) {setError(tripError(error, 'تعذّر بدء الرحلة. لا تحذف بيانات التطبيق.'));}
     finally {setBusy(false); actionGate.release();}
   }
   async function synchronize() {
@@ -110,7 +111,7 @@ export default function TripPanel({profile, onProfile, sessionBusy, actionGate, 
       updateTrip(null); setPending(count => count + 1); setBackground(false);
       try {await stopBackgroundMeter();} catch {setError('حُفظت الرحلة؛ تعذّر إيقاف خدمة الموقع على الهاتف.');}
       await synchronize();
-    } catch(error) {setError(error instanceof Error ? error.message : 'تعذّر إنهاء الرحلة.');}
+    } catch(error) {setError(tripError(error, 'تعذّر إنهاء الرحلة أو إرسالها. أبقِ بيانات التطبيق وحاول مجدداً.'));}
     finally {setBusy(false); actionGate.release();}
   }
   async function changeVehicle(vehicleId?: number) {
