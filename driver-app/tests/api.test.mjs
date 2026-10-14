@@ -47,3 +47,7 @@ test('fleet requires matching durable acknowledgement and clears only latest ser
  await api.clearFleet();assert.deepEqual(JSON.parse(calls.at(-1).options.body),{shift_active:false,sharing_enabled:false});
  const ambiguous=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?{driver:{id:1}}:{}));await assert.rejects(ambiguous.reportFleet(1,point));
 });
+
+test('native completion freezes original driver identity before any write',async()=>{
+ const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return ok({native_trip_contract_version:1,driver:{id:2},company:{id:1}});});await assert.rejects(api.completeTrip({_native_driver_id:1}));assert.equal(calls.some(url=>url.endsWith('/trips/end')),false);
+});

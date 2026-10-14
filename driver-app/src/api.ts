@@ -52,8 +52,9 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     async completeTrip(payload: Record<string, unknown>) {
       const current = await profile();
       if ((current.native_trip_contract_version ?? 0) < 1) throw new ApiError(409);
-      const {_native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
-      return request<{id: number; warning?: string}>('/next_api/trips/end', {...body, expected_company_id: _native_company_id, expected_vehicle_id: _native_vehicle_id, expected_chiron_environment: _native_environment});
+      const {_native_driver_id, _native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
+      if (_native_driver_id !== undefined && current.driver.id !== _native_driver_id) throw new ApiError(409);
+      return request<{id: number; completion_request_key: string; warning?: string; chiron_environment?: string; chiron_sync_state?: string}>('/next_api/trips/end', {...body, expected_company_id: _native_company_id, expected_vehicle_id: _native_vehicle_id, expected_chiron_environment: _native_environment});
     },
     async reportFleet(owner: number, point: MeterPoint) {
       if (![point.lat, point.lon, point.timestamp, point.accuracy].every(Number.isFinite)

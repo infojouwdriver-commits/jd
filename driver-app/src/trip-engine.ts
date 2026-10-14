@@ -4,6 +4,15 @@ export interface NativeTrip {
   startTime: string; start: MeterPoint; startAddress: string; endAddress: string;
   proposedPrice: number; paymentMethod: string; meter: MeterState;
 }
+export interface TripSyncReceipt {id: number; chiron: 'production' | 'test' | 'unconfirmed'}
+function durableReceipt(value: unknown, key: string, owner: string, expectedEnvironment: unknown): TripSyncReceipt | null {
+  if (!value || typeof value !== 'object') return null;
+  const receipt = value as Record<string, unknown>;
+  if (!Number.isSafeInteger(receipt.id) || Number(receipt.id) < 1 || typeof receipt.completion_request_key !== 'string' || receipt.completion_request_key.toLowerCase() !== key.toLowerCase() || receipt.driver_id !== Number(owner)) return null;
+  const environment = typeof receipt.chiron_environment === 'string' ? receipt.chiron_environment.toLowerCase() : '';
+  const confirmed = receipt.chiron_sync_state === 'COMPLETED' && !receipt.warning && typeof expectedEnvironment === 'string' && environment === expectedEnvironment.toLowerCase();
+  return {id: Number(receipt.id), chiron: confirmed && (environment === 'production' || environment === 'test') ? environment : 'unconfirmed'};
+}
 export interface TripStore {
   active(owner: string): Promise<NativeTrip | null>;
   create(trip: NativeTrip): Promise<void>;
@@ -35,7 +44,7 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
   const serial = <T>(operation: () => Promise<T>): Promise<T> => {
     const task = sequence.then(operation); sequence = task.catch(() => {}); return task;
   };
-  let syncing: Promise<{sent: number; remaining: number}> | null = null;
+  let syncing: Promise<{sent: number; remaining: number; receipts: TripSyncReceipt[]}> | null = null;
   return {
     restore: () => serial(() => store.active(owner)),
     start: (input: {companyId: number; vehicleId: number; environment: string; point: MeterPoint; startAddress: string; endAddress: string; proposedPrice: number; paymentMethod: string}) => serial(async () => {
@@ -78,15 +87,15 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
     }),
     sync(send: (payload: Record<string, unknown>) => Promise<unknown>) {
       return syncing ?? (syncing = serial(async () => {
-        let sent = 0;
+        let sent = 0; const receipts: TripSyncReceipt[] = [];
         for (const item of await store.pending(owner)) {
           try {
-            const receipt = await send(item.payload);
-            if (!receipt || typeof receipt !== 'object' || !Number.isSafeInteger((receipt as {id?: unknown}).id) || Number((receipt as {id: number}).id) < 1) break;
+            const receipt = durableReceipt(await send({...item.payload, _native_driver_id: Number(owner)}), item.key, owner, item.payload._native_environment);
+            if (!receipt) break;
+            await store.acknowledge(owner, item.key); sent++; receipts.push(receipt);
           } catch {break;}
-          await store.acknowledge(owner, item.key); sent++;
         }
-        return {sent, remaining: (await store.pending(owner)).length};
+        return {sent, remaining: (await store.pending(owner)).length, receipts};
       }).finally(() => {syncing = null;}));
     },
   };

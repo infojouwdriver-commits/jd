@@ -23,7 +23,7 @@ test('trip persists encrypted, restores elapsed wall time and isolates driver ow
  const f=await fixture();try{await f.engine.start(f.input());f.advance(121000);const restored=await createTripEngine('1',f.store,()=>f.key,f.now).restore();assert.equal(tripDurationSeconds(restored,f.now()),121);assert.equal(await f.store.active('2'),null);const bytes=f.db.prepare('SELECT ciphertext FROM trips').get().ciphertext;assert.equal(bytes.includes('Synthetic'),false);await assert.rejects(f.engine.start(f.input()));}finally{f.db.close();}
 });
 test('bad endpoint keeps active trip; failed server receipt keeps same completion key',async()=>{
- const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await assert.rejects(f.engine.end({...f.point(),accuracy:100},2));assert.ok(await f.engine.restore());const payload=await f.engine.end(f.point(),2);assert.equal(payload.completion_request_key,f.key);assert.equal(await f.engine.restore(),null);assert.equal((await f.engine.sync(async()=>{throw Error('lost receipt');})).remaining,1);const sent=[];const [a,b]=await Promise.all([f.engine.sync(async p=>{sent.push(p);return {id:1};}),f.engine.sync(async p=>{sent.push(p);return {id:1};})]);assert.equal(sent.length,1);assert.equal(sent[0].completion_request_key,f.key);assert.equal(a.remaining,0);assert.equal(b.remaining,0);}finally{f.db.close();}
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await assert.rejects(f.engine.end({...f.point(),accuracy:100},2));assert.ok(await f.engine.restore());const payload=await f.engine.end(f.point(),2);assert.equal(payload.completion_request_key,f.key);assert.equal(await f.engine.restore(),null);assert.equal((await f.engine.sync(async()=>{throw Error('lost receipt');})).remaining,1);const sent=[];const [a,b]=await Promise.all([f.engine.sync(async p=>{sent.push(p);return {id:1,driver_id:1,completion_request_key:f.key};}),f.engine.sync(async p=>{sent.push(p);return {id:1,driver_id:1,completion_request_key:f.key};})]);assert.equal(sent.length,1);assert.equal(sent[0].completion_request_key,f.key);assert.equal(a.remaining,0);assert.equal(b.remaining,0);}finally{f.db.close();}
 });
 test('GPS duplicate and stale points cannot inflate distance, concurrent writes cannot overwrite',async()=>{
  const f=await fixture();try{await f.engine.start(f.input());const stale=await f.engine.restore();f.advance(30000);const next=await f.engine.point({...f.point(),lat:50.8503});assert.ok(next.meter.distanceKm>0);const distance=next.meter.distanceKm;await f.engine.point({...f.point(),lat:50.8503});assert.equal((await f.engine.restore()).meter.distanceKm,distance);f.advance(31000);await f.engine.point({...f.point(),timestamp:f.now()-40000,lat:51});assert.equal((await f.engine.restore()).meter.distanceKm,distance);await assert.rejects(f.store.update({...stale,revision:1}));}finally{f.db.close();}
@@ -36,4 +36,23 @@ test('HTTP success without a durable trip identifier never clears queued trip',a
 
 test('queued background callback cannot update a different active trip', async()=>{
  const f=await fixture();try{await f.engine.start(f.input());f.advance(10000);const before=await f.engine.restore();assert.equal(await f.engine.point({...f.point(),lat:50.8503},'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),null);assert.equal((await f.engine.restore()).revision,before.revision);assert.equal((await f.engine.restore()).meter.distanceKm,before.meter.distanceKm);}finally{f.db.close();}
+});
+
+test('wrong completion UUID never acknowledges local data; Chiron confirmation requires state and environment',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await f.engine.end(f.point(),2);
+ assert.equal((await f.engine.sync(async()=>({id:1,driver_id:1,completion_request_key:'another-trip'}))).remaining,1);
+ const result=await f.engine.sync(async()=>({id:1,driver_id:1,completion_request_key:f.key,chiron_sync_state:'COMPLETED',chiron_environment:'TEST'}));assert.equal(result.remaining,0);assert.equal(result.receipts[0].chiron,'test');
+ }finally{f.db.close();}
+});
+test('durable server storage without Chiron acceptance is reported separately',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await f.engine.end(f.point(),2);
+ const result=await f.engine.sync(async()=>({id:1,driver_id:1,completion_request_key:f.key,chiron_sync_state:'CREATED',chiron_environment:'production',warning:'synthetic provider unavailable'}));assert.equal(result.remaining,0);assert.equal(result.receipts[0].chiron,'unconfirmed');
+ }finally{f.db.close();}
+});
+
+test('receipt from another driver is retained; UUID case is canonical and wrong environment is not confirmed',async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await f.engine.end(f.point(),2);
+ assert.equal((await f.engine.sync(async()=>({id:1,driver_id:2,completion_request_key:f.key}))).remaining,1);
+ const result=await f.engine.sync(async()=>({id:1,driver_id:1,completion_request_key:f.key.toUpperCase(),chiron_sync_state:'COMPLETED',chiron_environment:'production'}));assert.equal(result.remaining,0);assert.equal(result.receipts[0].chiron,'unconfirmed');
+ }finally{f.db.close();}
 });

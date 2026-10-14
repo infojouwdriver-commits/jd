@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import {nativeEngine} from './native-runtime';
 import {enableBackgroundMeter, stopBackgroundMeter} from './background-meter';
 import {nativeJournal} from './native-journal';
-import {tripDurationSeconds, validPoint, type NativeTrip} from './trip-engine';
+import {tripDurationSeconds, validPoint, type TripSyncReceipt, type NativeTrip} from './trip-engine';
 import type {MeterPoint} from './trip-meter';
 import {driverApi, type DriverProfile} from './api';
 const api = driverApi;
@@ -36,6 +36,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
   const [payment, setPayment] = useState<'cash' | 'card'>('card');
   const [seconds, setSeconds] = useState(0);
   const [pending, setPending] = useState(0);
+  const [receipt, setReceipt] = useState<TripSyncReceipt | null>(null);
   const [background, setBackground] = useState(false);
   const updateTrip = (value: NativeTrip | null) => {activeRef.current = value; if (!disposed.current) setTrip(value);};
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
   }, [trip?.key, onLocation]);
   async function start() {
     if (!engine.current || busy) return;
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setReceipt(null);
     try {
       const point = await currentPoint(); onLocation(point);
       const next = await engine.current.start({companyId: profile.driver.company_id, vehicleId: profile.driver.current_vehicle_id ?? 0,
@@ -94,7 +95,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
   async function synchronize() {
     if (!engine.current) return;
     const result = await engine.current.sync(payload => api.completeTrip(payload));
-    if (!disposed.current) {setPending(result.remaining); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
+    if (!disposed.current) {setPending(result.remaining); if (result.receipts.length) setReceipt(result.receipts[result.receipts.length - 1]); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
   }
   async function end() {
     if (!engine.current || busy) return;
@@ -111,6 +112,7 @@ export default function TripPanel({profile, onBlockLogout, onLocation}: {profile
   const time = `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds / 60 % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   return <View style={styles.panel}>
     <Text style={styles.heading}>الرحلة</Text>
+    {receipt && <Text accessibilityRole="text" style={styles.note}>حُفظت الرحلة رقم {receipt.id} على الخادم · {receipt.chiron === 'production' ? 'الخادم أكد إقرار Chiron في الإنتاج' : receipt.chiron === 'test' ? 'إقرار Chiron في بيئة الاختبار' : 'إقرار Chiron لم يتأكد'}</Text>}
     {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
     {trip ? <>
       <Text style={styles.timer}>{time}</Text><Text style={styles.distance}>{trip.meter.distanceKm.toFixed(2)} كم</Text>
