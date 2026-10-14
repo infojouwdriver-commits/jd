@@ -2,7 +2,9 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
 import {nativeEngine} from './native-runtime';
+import {publishFleetPoint} from './native-fleet-runtime';
 import {validPoint, type NativeTrip} from './trip-engine';
+import type {MeterPoint} from './trip-meter';
 const TASK = 'jouw-driver-active-trip-meter-v1';
 const CONTEXT = 'jd-active-meter-context';
 interface Context {owner: string; key: string}
@@ -19,11 +21,18 @@ TaskManager.defineTask<{locations: Location.LocationObject[]}>(TASK, async ({dat
   const current = await context();
   if (!current) return;
   const engine = await nativeEngine(current.owner);
+  let latest: MeterPoint | null = null;
   for (const value of [...data.locations].sort((a, b) => a.timestamp - b.timestamp)) {
     if (value.mocked) continue;
     const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity};
     // Delayed batches are rejected instead of billing an invented gap.
-    if (validPoint(point)) await engine.point(point, current.key);
+    if (validPoint(point)) {
+      const active = await engine.point(point, current.key);
+      if (active) latest = point;
+    }
+  }
+  if (latest && (await engine.restore())?.key === current.key) {
+    try {await publishFleetPoint(Number(current.owner), latest);} catch { /* Meter remains durable if fleet network/session fails. */ }
   }
 });
 export async function enableBackgroundMeter(trip: NativeTrip, askPermission = false): Promise<boolean> {

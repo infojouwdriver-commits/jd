@@ -4,6 +4,7 @@ import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
 import DriverMap from './src/DriverMap';
 import FleetLocation from './src/FleetLocation';
+import {stopFleetPublishing} from './src/native-fleet-runtime';
 import TripPanel from './src/TripPanel';
 import type {MeterPoint} from './src/trip-meter';
 import {ApiError, driverApi, DriverProfile} from './src/api';
@@ -29,7 +30,7 @@ export default function App() {
   }
   async function logout() {
     setBusy(true); setError('');
-    try {await fleetStop.current?.(); await api.clearFleet(); await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
+    try {await fleetStop.current?.(); if (profile) await stopFleetPublishing(profile.driver.id); await api.clearFleet(); await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
     catch {setFleetGeneration(value => value + 1); setError('تعذّر إكمال تسجيل الخروج ومسح موقع الأسطول على الخادم. حاول مجدداً.');}
     finally {setBusy(false);}
   }
