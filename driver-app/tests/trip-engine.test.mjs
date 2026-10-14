@@ -33,3 +33,7 @@ test('tampered owner/AAD or encrypted record cannot silently restore as a new tr
 });
 
 test('HTTP success without a durable trip identifier never clears queued trip',async()=>{const f=await fixture();try{await f.engine.start(f.input());f.advance(60000);await f.engine.end(f.point(),2);assert.equal((await f.engine.sync(async()=>({success:true}))).remaining,1);assert.equal((await f.store.pending('1')).length,1);}finally{f.db.close();}});
+
+test('queued background callback cannot update a different active trip', async()=>{
+ const f=await fixture();try{await f.engine.start(f.input());f.advance(10000);const before=await f.engine.restore();assert.equal(await f.engine.point({...f.point(),lat:50.8503},'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),null);assert.equal((await f.engine.restore()).revision,before.revision);assert.equal((await f.engine.restore()).meter.distanceKm,before.meter.distanceKm);}finally{f.db.close();}
+});

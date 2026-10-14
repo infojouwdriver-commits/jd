@@ -34,3 +34,16 @@ test('completion sends frozen assignment to capable server, allowing idempotent 
  const body=JSON.parse(calls[1].options.body);assert.equal(body.expected_company_id,1);assert.equal(body.expected_vehicle_id,2);assert.equal(body.expected_chiron_environment,'TEST');assert.equal('_native_company_id' in body,false);
 });
 test('email login forwards MFA code without weakening administrator verification',async()=>{const calls=[];const api=createDriverApi(async(url,options)=>{calls.push({url,options});return ok(url.endsWith('/drivers/me')?{driver:{id:1},company:{id:1}}:true);});await api.login('synthetic@example.invalid','synthetic-password','000000');assert.equal(JSON.parse(calls[0].options.body).otp,'000000');assert.equal(calls[0].url.endsWith('/auth/login'),true);});
+
+test('fleet refuses stale GPS and another driver session before sending coordinates',async()=>{
+ const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return ok({driver:{id:2},company:{id:1}});});
+ const point={lat:50.85,lon:4.35,accuracy:5,timestamp:Date.now()};await assert.rejects(api.reportFleet(1,point));assert.equal(calls.some(url=>url.endsWith('/fleet/location')),false);
+ calls.length=0;await assert.rejects(api.reportFleet(1,{...point,timestamp:Date.now()-40000}));assert.equal(calls.length,0);
+});
+test('fleet requires matching durable acknowledgement and clears only latest server location',async()=>{
+ const calls=[];const point={lat:50.85,lon:4.35,accuracy:5,timestamp:Date.now()};
+ const api=createDriverApi(async(url,options)=>{calls.push({url,options});if(url.endsWith('/drivers/me'))return ok({driver:{id:1},company:{id:1}});return ok({driver_id:1,sharing_enabled:true,shift_active:true,recorded_at:new Date(point.timestamp).toISOString()});});
+ await api.reportFleet(1,point);const body=JSON.parse(calls[1].options.body);assert.equal('driver_id' in body,false);assert.equal(body.latitude,point.lat);
+ await api.clearFleet();assert.deepEqual(JSON.parse(calls.at(-1).options.body),{shift_active:false,sharing_enabled:false});
+ const ambiguous=createDriverApi(async url=>ok(url.endsWith('/drivers/me')?{driver:{id:1}}:{}));await assert.rejects(ambiguous.reportFleet(1,point));
+});

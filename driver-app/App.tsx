@@ -1,13 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View} from 'react-native';
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
 import DriverMap from './src/DriverMap';
+import FleetLocation from './src/FleetLocation';
 import TripPanel from './src/TripPanel';
 import type {MeterPoint} from './src/trip-meter';
-import {ApiError, createDriverApi, DriverProfile} from './src/api';
-const api = createDriverApi();
+import {ApiError, driverApi, DriverProfile} from './src/api';
+const api = driverApi;
 export default function App() {
+  const fleetStop = useRef<(() => Promise<void>) | null>(null);
+  const registerFleetStop = useCallback((stop: (() => Promise<void>) | null) => {fleetStop.current = stop;}, []);
+  const [fleetGeneration, setFleetGeneration] = useState(0);
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
@@ -25,8 +29,8 @@ export default function App() {
   }
   async function logout() {
     setBusy(true); setError('');
-    try {await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
-    catch {setError('تعذّر تسجيل الخروج على الخادم. حاول مجدداً.');}
+    try {await fleetStop.current?.(); await api.clearFleet(); await api.logout(); setProfile(null); setIdentity(''); setDriverPosition(null);}
+    catch {setFleetGeneration(value => value + 1); setError('تعذّر إكمال تسجيل الخروج ومسح موقع الأسطول على الخادم. حاول مجدداً.');}
     finally {setBusy(false);}
   }
   return <SafeAreaProvider><SafeAreaView style={styles.screen}><StatusBar style="light"/>
@@ -38,6 +42,7 @@ export default function App() {
       <Text style={styles.subtitle}>{profile ? profile.company.name : 'ادخل بحسابك الحالي للوصول إلى بوابة السائق.'}</Text>
       {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
       {profile ? <>
+        <FleetLocation key={fleetGeneration} owner={profile.driver.id} registerStop={registerFleetStop}/>
         <TripPanel profile={profile} onBlockLogout={setBlockLogout} onLocation={setDriverPosition}/>
         <DriverMap position={driverPosition}/>
         <View style={styles.card}><Text style={styles.cardTitle}>حسابك متصل</Text><Text style={styles.subtitle}>{profile.company.name}</Text><Text style={styles.note}>موقعك يظهر على هاتفك عند السماح بالوصول إليه.</Text></View>
