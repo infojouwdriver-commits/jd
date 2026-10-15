@@ -9,6 +9,7 @@ import TripPanel from './src/TripPanel';
 import TripHistory from './src/TripHistory';
 import {createActionGate} from './src/action-gate';
 import {assertNativeCryptoReady} from './src/native-crypto-preflight';
+import {recordNativeCryptoResult} from './src/native-smoke-result';
 import type {MeterPoint} from './src/trip-meter';
 import {ApiError, driverApi, DriverProfile} from './src/api';
 const api = driverApi;
@@ -25,7 +26,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [blockLogout, setBlockLogout] = useState(true);
   const [driverPosition, setDriverPosition] = useState<MeterPoint | null>(null);
-  useEffect(() => {let disposed = false; assertNativeCryptoReady().then(() => {console.info('JD_NATIVE_CRYPTO_OK');}).catch(() => {console.info('JD_NATIVE_CRYPTO_FAILED'); if (!disposed) setError('تعذّر فحص حماية حفظ الرحلة. لا تحذف بيانات التطبيق.');}); return () => {disposed = true;};}, []);
+  useEffect(() => {let disposed = false; assertNativeCryptoReady().then(() => {void recordNativeCryptoResult('passed').catch(() => {});}).catch(() => {void recordNativeCryptoResult('failed').catch(() => {}); if (!disposed) setError('تعذّر فحص حماية حفظ الرحلة. لا تحذف بيانات التطبيق.');}); return () => {disposed = true;};}, []);
   useEffect(() => {let disposed = false; api.profile().then(value => {if (!disposed) setProfile(value);}).catch(error => {if (!disposed && (!(error instanceof ApiError) || error.status !== 401)) setError('تعذّر استعادة الجلسة. تحقق من الاتصال.');}).finally(() => {if (!disposed) setBusy(false);}); return () => {disposed = true;};}, []);
   async function login() {
     setBusy(true); setError('');
