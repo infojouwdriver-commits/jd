@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-15",
+  "source_commit": "224eec64b85fe6d69e58741672a948d9c504829d",
+  "source_pull_request": 63,
+  "build_run": 38711503832,
+  "application_database_restore_run": 38711503733,
+  "android_artifact_id": 11960609399,
+  "android": {
+    "archive_sha256": "a64f0ead32f05e17d5605e0e777470139336417f7da7eb6dcac7ca740ac69f6e",
+    "apk_sha256": "f0ae2b208bc944a4bd6d6fff39f61bbcadf90eeb3cc644612144a0043c88f070",
+    "apk_size_bytes": 68590623,
+    "signer_sha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "v2_signature_and_signed_content": "verified",
+    "same_signer_as_previous_apk": true,
+    "package": "be.jouwdriver.driver",
+    "versionCode": 3,
+    "versionName": "0.2.1"
+  },
+  "checks": {
+    "native_tests": 67,
+    "typescript": "passed",
+    "eslint": "passed",
+    "sdk_compatibility": "passed",
+    "native_mapbox_access": "passed",
+    "android_compilation": "passed",
+    "application_database_restore": "passed",
+    "synthetic_visual_captures": 9,
+    "address_search": "explicit queries only; Belgium-only filtering; nearest first with fresh accurate GPS; editing clears selected coordinates; superseded requests rejected"
+  },
+  "limitations": {
+    "new_build_on_phone": "pending",
+    "native_map_device_acceptance": "pending; browser map fixtures do not prove native rendering",
+    "closed_app_push": "Firebase/FCM account authorization and end-to-end delivery still required",
+    "firebase_cli": {
+      "version": "15.34.0",
+      "installed": true,
+      "authorized_accounts": 0,
+      "chatgpt_plugin_installed": false
+    },
+    "ios": "deferred by user",
+    "library_apk_save": "failed with transfer_failed; verified local APK and GitHub build artifact available"
+  },
+  "preservation": "Encrypted journal key/AAD unchanged. Planned destination does not replace actual arrival GPS or metered distance. No production backend, signed-contract or account changes."
+}
