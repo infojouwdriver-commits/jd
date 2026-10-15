@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "277074236432",
+    "project_id": "jouw-driver",
+    "storage_bucket": "jouw-driver.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277074236432:android:4f75f2ab5a3b670355a695",
+        "android_client_info": {
+          "package_name": "be.jouwdriver.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCSdehGNk2TqSRvMfrxmBseW8AUWrhPBlY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
