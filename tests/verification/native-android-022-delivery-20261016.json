@@ -1,0 +1,52 @@
+{
+  "verifiedAt": "2026-10-16",
+  "source_commit": "360a4504117659158177349df042ec697af02f8a",
+  "pull_request": 67,
+  "merge_commit": "8f2d65715742848343833d35fae10cf2d13c0a3e",
+  "build_revision": "6f363782a811245a347d61eff60e7bda2caa5b64",
+  "source_and_build_tree": "1b1e4f6020a584752a1b38cb682ff24760a9807e",
+  "build_run": 38813093467,
+  "application_database_restore_runs": [
+    38813093417,
+    38813084767
+  ],
+  "android_artifact_id": 12010486036,
+  "archive_sha256": "0aec7b89200ce52c3ff19706f724d4ea74ed031787ea1f8c7708eec6240cabf6",
+  "android": {
+    "apk_sha256": "34a30e886f370850f99b21d2dfec217e0b5c9bb7f494a1a6565f5d0c653662d0",
+    "apk_size_bytes": 68590623,
+    "signer_sha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+    "v2_signature_and_signed_content": "verified with official Android SDK apksigner",
+    "same_signer_as_previous_apk": true,
+    "package": "be.jouwdriver.driver",
+    "versionCode": 4,
+    "versionName": "0.2.2"
+  },
+  "dependencies": {
+    "expo": "57.0.30",
+    "router": "57.0.28",
+    "sdk": 57
+  },
+  "checks": {
+    "root_typescript": "passed",
+    "root_tests": 121,
+    "native_typescript": "passed",
+    "native_eslint": "passed",
+    "native_tests": 67,
+    "online_sdk_compatibility": "passed",
+    "native_mapbox_access": "passed",
+    "android_compilation": "passed",
+    "visual_review": {
+      "screens": 9,
+      "manual_inspection": "passed",
+      "scope": "React Native Web synthetic fixtures; not device/native-map acceptance"
+    }
+  },
+  "limitations": {
+    "new_build_on_phone": "pending",
+    "closed_app_push": "Not configured; zero authorized Firebase accounts; Google authorization, project selection, FCM setup and real delivery acceptance required",
+    "ios": "deferred and skipped",
+    "library_apk_save": "failed: transfer_failed; verified APK download and GitHub artifact available"
+  },
+  "preservation": "Same signer and Android application ID; encrypted journal key/AAD and format unchanged. No production handler, environment, account or signed-contract changes."
+}
