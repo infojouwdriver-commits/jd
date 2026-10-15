@@ -62,3 +62,12 @@ test('platform snapshot and completion preserve source, reference and UUID acros
  const now=Date.now(),point={lat:50.85,lon:4.35,timestamp:now,accuracy:5};const engine=createTripEngine('1',store,()=> 'ba2f1c12-21a5-4f20-8ef2-2e570ee29919',()=>now);
  await engine.start({companyId:2,vehicleId:3,environment:'PRODUCTION',point,startAddress:'Synthetic start',endAddress:'Synthetic end',proposedPrice:12,paymentMethod:'card',platform:'BOLT',externalReference:'test-platform-42'});assert.equal((await engine.restore()).platform,'BOLT');await engine.end(point,12);assert.equal(pending[0].payload.ride_type,'EXTERNAL');assert.equal(pending[0].payload.external_source,'BOLT');assert.equal(pending[0].payload.external_ride_number,'test-platform-42');assert.equal(pending[0].payload._native_environment,'PRODUCTION');await engine.sync(async()=>{throw Error('offline');});assert.equal(pending.length,1);const key=pending[0].key;await engine.sync(async payload=>({id:99,driver_id:1,completion_request_key:payload.completion_request_key,chiron_environment:'production',chiron_sync_state:'COMPLETED'}));assert.equal(key,'ba2f1c12-21a5-4f20-8ef2-2e570ee29919');assert.equal(pending.length,0);
 });
+
+test('selected navigation destination survives encrypted restore, while completion uses actual arrival GPS',async()=>{
+ const f=await fixture();try{
+  const destination={lat:51,lon:4.5};await f.engine.start({...f.input(),navigationDestination:destination});destination.lat=0;
+  const restored=await createTripEngine('1',f.store,()=>f.key,f.now).restore();assert.deepEqual(JSON.parse(JSON.stringify(restored.navigationDestination)),{lat:51,lon:4.5});
+  f.advance(60000);const end={...f.point(),lat:50.8502,lon:4.3502};const payload=await f.engine.end(end,2);assert.equal(payload.end_lat,end.lat);assert.equal(payload.end_lon,end.lon);assert.equal(payload.navigationDestination,undefined);assert.equal(payload.distance_km,payload.actual_distance_km);
+ }finally{f.db.close();}
+ const bad=await fixture();try{await assert.rejects(bad.engine.start({...bad.input(),navigationDestination:{lat:91,lon:4}}));assert.equal(await bad.engine.restore(),null);}finally{bad.db.close();}
+});

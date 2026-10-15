@@ -9,6 +9,7 @@ import {driverApi, type DriverProfile, type DriverVehicle} from './api';
 import type {ActionGate} from './action-gate';
 import {tripError} from './trip-error';
 import {completedBatchReceipt} from './completed-batch-receipt';
+import type {NativeAddress} from './native-addresses';
 const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
@@ -34,6 +35,7 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
   const [error, setError] = useState('');
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
+  const [startSelection,setStartSelection]=useState<NativeAddress|null>(null),[endSelection,setEndSelection]=useState<NativeAddress|null>(null);
   const [price, setPrice] = useState('');
   const [platform, setPlatform] = useState<'INTERNAL' | 'UBER' | 'BOLT' | 'HEETCH'>('INTERNAL');
   const [externalReference, setExternalReference] = useState('');
@@ -93,7 +95,7 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
       const current = await api.tripAssignment(profile.driver.id);
       onProfile(current);
       const next = await engine.current.start({companyId: current.driver.company_id, vehicleId: current.driver.current_vehicle_id ?? 0,
-        environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment, platform, externalReference});
+        environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment, platform, externalReference, ...(endSelection&&endSelection.label===endAddress?{navigationDestination:{lat:endSelection.lat,lon:endSelection.lon}}:{})});
       updateTrip(next);
       try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
     } catch(error) {setError(tripError(error, 'تعذّر بدء الرحلة. لا تحذف بيانات التطبيق.'));}
@@ -135,5 +137,5 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     try {await synchronize();} catch {setError('تعذّر إرسال الرحلة. البيانات محفوظة على الهاتف.');}
     finally {setBusy(false); actionGate.release();}
   }
-  return {trip, ready, busy, error, startAddress, setStartAddress, endAddress, setEndAddress, price, setPrice, payment, setPayment, seconds, pending, receipt, background, vehicles, start, end, changeVehicle, retrySync, platform, setPlatform, externalReference, setExternalReference};
+  return {trip, ready, busy, error, startAddress, setStartAddress:(value:string)=>{setStartAddress(value);setStartSelection(null);}, endAddress, setEndAddress:(value:string)=>{setEndAddress(value);setEndSelection(null);}, startSelection,endSelection,selectStart:(value:NativeAddress)=>{setStartAddress(value.label);setStartSelection(value);},selectEnd:(value:NativeAddress)=>{setEndAddress(value.label);setEndSelection(value);}, price, setPrice, payment, setPayment, seconds, pending, receipt, background, vehicles, start, end, changeVehicle, retrySync, platform, setPlatform, externalReference, setExternalReference};
 }
