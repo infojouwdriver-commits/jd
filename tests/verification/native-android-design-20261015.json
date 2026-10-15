@@ -1,0 +1,31 @@
+{
+  "source": "dcccb1a832c6446e2fbf80e3408bb9d3094819b2",
+  "pull_request": 61,
+  "android": {
+    "package": "be.jouwdriver.driver",
+    "version": "0.2.0",
+    "version_code": 2,
+    "artifact_id": 11959677265,
+    "archive_sha256": "beb2fe4124363f960ab40c6037e7a2e14ace553fe536af380c955bfcd0402ac0",
+    "apk_sha256": "01f55503f7162c59ee7a72ee62d73e97144dbbda66ac084d4764fd36721dd7a8",
+    "v2_signature_and_signed_content": "verified",
+    "same_signer_as_previous_apk": true
+  },
+  "checks": {
+    "native_tests": 60,
+    "typescript": "passed",
+    "eslint": "passed",
+    "native_mapbox_access": "passed",
+    "native_and_visual_run": 38707926473,
+    "application_database_restore_run": 38707926601,
+    "visual_captures": 8,
+    "visual_scope": "React Native Web with synthetic isolated fixtures; no physical-device or live native-map acceptance"
+  },
+  "acceptance": {
+    "previous_native_android_trip_to_chiron": "confirmed by user on 2026-10-15",
+    "redesigned_build_on_phone": "pending",
+    "closed_app_push": "not configured; requires provider/FCM and delivery verification",
+    "ios": "deferred by user"
+  },
+  "scope": "Android app only. Existing backend APIs, encrypted trip format and signed contracts unchanged."
+}
