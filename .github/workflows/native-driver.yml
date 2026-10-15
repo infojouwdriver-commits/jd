@@ -6,6 +6,11 @@ on:
     branches: ['feat/native-driver-app-20261014']
     paths: ['driver-app/**', '.github/workflows/native-driver.yml']
   workflow_dispatch:
+    inputs:
+      build_ios:
+        description: Build and probe the iOS simulator (deferred for Android-first delivery)
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -42,6 +47,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   ios-simulator:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_ios
     runs-on: macos-latest
     timeout-minutes: 45
     defaults:

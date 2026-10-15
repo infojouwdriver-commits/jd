@@ -1,0 +1,7 @@
+import React,{useState} from 'react';
+import {useInbox} from './inbox';
+import {usePreferences} from './preferences';
+import {Button,Card,Icon,Label,Notice,Row,Screen} from './ui';
+export default function Notifications(){const inbox=useInbox();const {t,colors}=usePreferences();const [pending,setPending]=useState<number|null>(null),[error,setError]=useState(false);
+ async function read(id:number){if(pending!==null)return;setPending(id);setError(false);try{await inbox.readNotification(id);}catch{setError(true);}finally{setPending(null);}}
+ return <Screen title={t('notifications')}><Label muted size={13}>{t('notificationNote')}</Label><Button secondary label={t('refresh')} icon="refresh-outline" busy={inbox.busy} onPress={()=>void inbox.refresh()}/>{(error||inbox.error)&&<Notice error>{t('error')}</Notice>}{!inbox.busy&&inbox.notifications.length===0&&<Notice>{t('empty')}</Notice>}{inbox.notifications.map(row=><Card key={row.id} style={{borderColor:row.is_read?colors.line:colors.accent}}><Row><Icon name={row.is_read?'notifications-outline':'notifications'} color={colors.accent}/><Label bold size={18}>{row.title}</Label></Row><Label>{row.message}</Label>{row.is_read?<Label muted size={12}>{t('read')}</Label>:<Button secondary label={t('markRead')} busy={pending===row.id} disabled={pending!==null} onPress={()=>void read(row.id)}/>}</Card>)}<Notice>{t('pushNote')}</Notice></Screen>;}
