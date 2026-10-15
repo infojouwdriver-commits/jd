@@ -8,6 +8,7 @@ import type {MeterPoint} from './trip-meter';
 import {driverApi, type DriverProfile, type DriverVehicle} from './api';
 import type {ActionGate} from './action-gate';
 import {tripError} from './trip-error';
+import {completedBatchReceipt} from './completed-batch-receipt';
 const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
@@ -101,7 +102,7 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
   async function synchronize() {
     if (!engine.current) return;
     const result = await engine.current.sync(payload => api.completeTrip(payload));
-    if (!disposed.current) {setPending(result.remaining); if (result.receipts.length) setReceipt(result.receipts[result.receipts.length - 1]); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
+    if (!disposed.current) {setPending(result.remaining); setReceipt(completedBatchReceipt(result)); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
   }
   async function end() {
     if (!engine.current || busy || sessionBusy || !actionGate.acquire()) return;
