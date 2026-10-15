@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-15",
+  "source_commit": "fc1d8ea1428a60ff20a1d422d8fc81a847dabc6d",
+  "source_pr": 59,
+  "crypto_preflight_pr": 57,
+  "simulator_observation_pr": 58,
+  "checks": {
+    "native_tests": 54,
+    "lint": "passed",
+    "typescript": "passed",
+    "online_sdk_compatibility": "passed",
+    "application_run": 38694145211,
+    "application_verify": "success",
+    "native_database": "success"
+  },
+  "android": {
+    "run": 38694145178,
+    "job": 116286673347,
+    "status": "success",
+    "artifact_id": 11953149186,
+    "artifact_sha256": "49e007b3534a2ab463fe462f246d579c253f73c1f9552cace2fe525ec23421e6",
+    "apk_sha256": "3e4415d6bf797edbba2955a985615a1dc8a5dadda7071cb08d0a1d93e3cc8686",
+    "embedded_signer_matches_previous": true
+  },
+  "acceptance": {
+    "ios_simulator": "in_progress",
+    "physical_native_trip_completion": "not_verified",
+    "physical_native_background": "not_verified",
+    "native_chiron": "not_verified"
+  }
+}
