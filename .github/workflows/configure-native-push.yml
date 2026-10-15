@@ -1,0 +1,89 @@
+name: Configure native Android push sender
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [prepare, activate]
+        default: prepare
+      tested_revision:
+        type: string
+        required: true
+        description: Tested tooling revision reachable from main
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  configure:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ inputs.tested_revision }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable main tooling
+        env:
+          REVISION: ${{ inputs.tested_revision }}
+        run: |
+          set -euo pipefail
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          git merge-base --is-ancestor "$REVISION" origin/main
+          node --test deploy/tests/native-push-envelope.test.mjs
+      - name: Prepare server-only transfer key or activate an approved sender
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          ACTION: ${{ inputs.action }}
+          REVISION: ${{ inputs.tested_revision }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$ACTION" == prepare || "$ACTION" == activate ]]
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/foundation/.push-transfer; chmod 700 /srv/jouw-driver/foundation/.push-transfer' </dev/null
+          scp "${args[@]}" deploy/configure-native-push.mjs deploy/native-push-envelope.mjs "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/.push-transfer/"
+          if [ "$ACTION" = prepare ]; then
+            ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'cd /srv/jouw-driver/foundation && node .push-transfer/configure-native-push.mjs prepare' </dev/null
+            exit 0
+          fi
+          # Only RSA-OAEP + AES-GCM ciphertext enters the repository or runner. The
+          # private transfer key and decrypted service account stay on the OVH host.
+          test -s deploy/fcm-credential.sealed.json
+          scp "${args[@]}" deploy/fcm-credential.sealed.json "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/.push-transfer/credential.sealed.json"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "cd /srv/jouw-driver/foundation && node .push-transfer/configure-native-push.mjs activate '$REVISION'" </dev/null
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /srv/jouw-driver/foundation
+          configured=false
+          cleanup(){
+            if [ "$configured" != true ]; then
+              if test -s .app-staging.env.before-push; then cp .app-staging.env.before-push .app-staging.env; fi
+              docker compose --project-name jouw-driver-push --file push-worker.yaml down </dev/null >/dev/null 2>&1 || true
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --force-recreate --wait --wait-timeout 180 app </dev/null >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+          image=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/srv/jouw-driver/release.json")).image)')
+          docker network inspect jouw-driver_database >/dev/null
+          docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network jouw-driver_database --env-file .push-worker.env --entrypoint node "$image" scripts/push-worker.mjs --check
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --force-recreate --wait --wait-timeout 180 app </dev/null
+          docker compose --project-name jouw-driver-push --file push-worker.yaml up -d --wait </dev/null
+          test -n "$(docker compose --project-name jouw-driver-push --file push-worker.yaml ps -q --status running push)"
+          configured=true
+          rm -f .push-transfer/private.pem .push-transfer/credential.sealed.json
+          printf 'FCM authorization and private queue passed; worker is running. Phone delivery still needs device acceptance.\n'
+          REMOTE

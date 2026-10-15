@@ -7,6 +7,7 @@ import {assertNativeCryptoReady} from '../native-crypto-preflight';
 import {recordNativeCryptoResult} from '../native-smoke-result';
 import {stopFleetPublishing} from '../native-fleet-runtime';
 import FleetLocation from '../FleetLocation';
+import {stopPushRuntime} from '../push-lifecycle';
 import {useTripController} from '../useTripController';
 import type {MeterPoint} from '../trip-meter';
 import {usePreferences} from './preferences';
@@ -19,8 +20,8 @@ function useSessionState(){
  const [profile,setProfile]=useState<DriverProfile|null>(null),[busy,setBusy]=useState(true),[error,setError]=useState(''),[blockLogout,setBlockLogout]=useState(true),[position,setPosition]=useState<MeterPoint|null>(null),[fleetGeneration,setFleetGeneration]=useState(0);
  useEffect(()=>{let disposed=false;clearReceiptCache();assertNativeCryptoReady().then(()=>{void recordNativeCryptoResult('passed').catch(()=>{});}).catch(()=>{void recordNativeCryptoResult('failed').catch(()=>{});if(!disposed)setError('security');});driverApi.profile().then(value=>{if(!disposed)setProfile(value);}).catch(e=>{if(!disposed&&(!(e instanceof ApiError)||e.status!==401))setError('network');}).finally(()=>{if(!disposed)setBusy(false);});return()=>{disposed=true;};},[]);
  async function login(identity:string,password:string,otp:string){if(busy)return;setBusy(true);setError('');try{setProfile(await driverApi.login(identity,password,otp));}catch{setError('network');}finally{setBusy(false);}}
- async function logout(){if(blockLogout||!actionGate.acquire())return;setBusy(true);setError('');try{await fleetStop.current?.();if(profile)await stopFleetPublishing(profile.driver.id);await driverApi.clearFleet();await driverApi.logout();clearReceiptCache();setProfile(null);setPosition(null);}catch{setFleetGeneration(v=>v+1);setError('network');}finally{setBusy(false);actionGate.release();}}
- async function accountChanged(){try{await fleetStop.current?.();if(profile)await stopFleetPublishing(profile.driver.id);}finally{clearReceiptCache();setProfile(null);setPosition(null);}}
+ async function logout(){if(blockLogout||!actionGate.acquire())return;setBusy(true);setError('');try{await fleetStop.current?.();if(profile)await stopFleetPublishing(profile.driver.id);await driverApi.clearFleet();await stopPushRuntime();await driverApi.logout();clearReceiptCache();setProfile(null);setPosition(null);}catch{setFleetGeneration(v=>v+1);setError('network');}finally{setBusy(false);actionGate.release();}}
+ async function accountChanged(){try{await stopPushRuntime().catch(()=>{});await fleetStop.current?.();if(profile)await stopFleetPublishing(profile.driver.id);}finally{clearReceiptCache();setProfile(null);setPosition(null);}}
  return {profile,setProfile,busy,error,login,logout,accountChanged,blockLogout,setBlockLogout,actionGate,position,setPosition,registerFleetStop,fleetGeneration};
 }
 export function useSession(){const value=useContext(Context);if(!value)throw Error('Session required');return value;}

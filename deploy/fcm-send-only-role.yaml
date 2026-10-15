@@ -1,0 +1,5 @@
+title: JOUW DRIVER Push Sender
+description: Send Android push notifications for JOUW DRIVER only
+stage: GA
+includedPermissions:
+  - cloudmessaging.messages.create
