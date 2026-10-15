@@ -51,7 +51,9 @@ try {
  await docker(['pull',images.postgres]);await docker(['pull',images.postgrest]);
  await docker(['network','create','--internal',network]);await docker(['network','create',front]);
  await docker(['run','--detach','--name',database,'--network',network,'--network-alias','db','--env','POSTGRES_DB','--env','POSTGRES_PASSWORD',images.postgres],{env:{POSTGRES_DB:'jd_test',POSTGRES_PASSWORD:postgresPassword}});
- let ready=false;for(let i=0;i<60;i++){try{await docker(['exec',database,'pg_isready','-U','postgres','-d','jd_test'],{timeout:5000});ready=true;break;}catch{await delay(1000);}}
+ // The image's bootstrap server accepts Unix sockets before initialization finishes.
+ // Require a real query over TCP so migrations cannot race that temporary server.
+ let ready=false;for(let i=0;i<60;i++){try{const probe=await docker(['exec','--env','PGPASSWORD',database,'psql','-h','127.0.0.1','-U','postgres','-d','jd_test','-v','ON_ERROR_STOP=1','-Atc','SELECT 1'],{env:{PGPASSWORD:postgresPassword},timeout:5000});if(probe==='1'){ready=true;break;}}catch{}await delay(1000);}
  assert.ok(ready,'Native PostgreSQL did not become ready');
  const bindings=JSON.parse(await docker(['inspect','--format','{{json .HostConfig.PortBindings}}',database]));assert.ok(!bindings||Object.keys(bindings).length===0);checks.push('PostgreSQL has no published host port');
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));

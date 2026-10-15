@@ -35,3 +35,8 @@ test('legacy TEST casing matches but actual cross-environment and invalid stored
  const same=fixture();same.rows.trips[0].chiron_environment='TEST';await same.service.sendTripStart(1,1,{});assert.equal(same.messages.length,1);
  for(const stored of ['production','PRODUCTION','staging']){const f=fixture();f.rows.trips[0].chiron_environment=stored;await assert.rejects(f.service.sendTripStart(1,1,{}));assert.equal(f.requests.length,0);}
 });
+
+test('acceptance report metadata matches the sent events and persists without credentials',async()=>{
+ const f=fixture();const result=await f.service.runAcceptanceTest(1,1,1);assert.equal(result.reportContext.company.id,1);assert.equal(result.reportContext.environment,'TEST');assert.equal(JSON.stringify(result).includes('test-only-secret'),false);assert.equal(new Set(result.results.map(r=>r.startAddress)).size,5);
+ for(let i=0;i<10;i++){const row=result.results[i],stored=f.rows.test_trips[i],sent=f.messages[i];assert.ok(row.startAddress);assert.ok(row.endAddress);assert.ok(Number.isFinite(Date.parse(row.startTime)));assert.ok(Number.isFinite(Date.parse(row.endTime)));assert.equal(stored.start_address,row.startAddress);assert.equal(stored.end_address,row.endAddress);assert.equal(stored.start_time,row.startTime);assert.equal(stored.end_time,row.endTime);assert.equal(sent.rit.vertrekpunt.breedtegraad,row.startLat);assert.equal(stored.start_lat,row.startLat);}
+});
