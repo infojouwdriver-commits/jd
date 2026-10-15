@@ -1,6 +1,6 @@
 import {jsPDF} from 'jspdf';
 import {configurePdfFonts} from '../legal/pdf-fonts';
-import {acceptanceSummary,reportEventAccepted,type AcceptanceReportData,type ChironTestMessage} from './chiron-test-result';
+import {acceptanceSummary,reportEventAccepted,isAcceptedTestMessage,type AcceptanceReportData,type ChironTestMessage} from './chiron-test-result';
 
 /** Technical evidence only: an HTTP response is not a municipal approval. */
 export function generateAcceptanceReportPdf(data:AcceptanceReportData):jsPDF {
@@ -16,7 +16,7 @@ export function generateAcceptanceReportPdf(data:AcceptanceReportData):jsPDF {
  function line(label:string,value:unknown,size=9){doc.setFontSize(size);const lines=doc.splitTextToSize(`${label}${label?': ':''}${text(value)}`,174) as string[];const h=lines.length*4.8;ensure(h+2);doc.setFontSize(size);doc.setTextColor(...muted);doc.text(lines,18,y);y+=h+1;}
  function heading(value:string){ensure(17);y+=3;doc.setTextColor(...ink);doc.setFontSize(12);doc.text(value,18,y);y+=8;}
  function event(label:string,events:ChironTestMessage[]){
-  const m=events[0];let value=reportEventAccepted(events)?'HTTP-ontvangst bevestigd':!m?'Niet geregistreerd':events.length>1?'Meerdere resultaten - controle vereist':m.deliveryState==='not_sent'?'Niet verzonden':m.deliveryState==='uncertain'?'Ontvangst niet bevestigd': 'Niet bevestigd / mislukt';
+  const m=events[0];let value=reportEventAccepted(events)?'HTTP-ontvangst bevestigd':!m?'Niet geregistreerd':events.length>1?'Meerdere resultaten - controle vereist':m.deliveryState==='not_sent'?'Niet verzonden':m.deliveryState==='uncertain'?'Ontvangst niet bevestigd':isAcceptedTestMessage(m)&&!Number.isInteger(m.httpStatus)?'Geslaagd geregistreerd; HTTP-status ontbreekt':'Niet bevestigd / mislukt';
   if(m&&Number.isInteger(m.httpStatus))value+=` (HTTP ${m.httpStatus})`;
   ensure(7);color(reportEventAccepted(events)?green:red);doc.setFontSize(9);doc.text(`${label}: ${value}`,18,y);y+=6;
  }

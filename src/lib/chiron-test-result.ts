@@ -54,11 +54,11 @@ export function acceptanceTrips(messages:ChironTestMessage[]):AcceptanceTrip[] {
   return [...groups.values()];
 }
 export function reportEventAccepted(events:ChironTestMessage[]):boolean {
-  return events.length===1&&isAcceptedTestMessage(events[0])&&!['uncertain','not_sent','failed'].includes(String(events[0].deliveryState));
+  return events.length===1&&isAcceptedTestMessage(events[0])&&Number.isInteger(events[0].httpStatus)&&events[0].httpStatus!>=200&&events[0].httpStatus!<300&&!['uncertain','not_sent','failed'].includes(String(events[0].deliveryState));
 }
 export function acceptanceSummary(data:AcceptanceReportData){
  const trips=acceptanceTrips(data.results),events=trips.flatMap(t=>[...t.departure,...t.arrival]);
- const accepted=events.filter(m=>isAcceptedTestMessage(m)&&!['uncertain','not_sent','failed'].includes(String(m.deliveryState))).length;
+ const accepted=events.filter(m=>reportEventAccepted([m])).length;
  const complete=trips.length===5&&events.length===10&&data.totalMessages===10&&data.successCount===10&&data.failedCount===0&&trips.every(t=>!t.conflictingDetails&&!t.ritnummer.startsWith('Niet geregistreerd')&&reportEventAccepted(t.departure)&&reportEventAccepted(t.arrival));
  return {trips,total:events.length,accepted,unconfirmed:events.length-accepted,complete};
 }

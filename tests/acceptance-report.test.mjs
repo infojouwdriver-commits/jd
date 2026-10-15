@@ -18,8 +18,8 @@ test('ten actual event results form five rides with original addresses, times an
  if(process.env.JD_REPORT_PREVIEW){fs.mkdirSync(process.env.JD_REPORT_PREVIEW,{recursive:true});doc.save(process.env.JD_REPORT_PREVIEW+'/acceptance-report-demo.pdf');}
 });
 test('missing, duplicate, conflicting or uncertain events never become a completed acceptance dossier',()=>{
- for(const mutate of [d=>d.results.pop(),d=>d.results.push({...d.results[0]}),d=>d.results[1].startAddress='Conflicting address',d=>d.results[1].deliveryState='uncertain',d=>d.results[1].success=false,d=>d.totalMessages=0]){const d=fixture();mutate(d);assert.equal(model.acceptanceSummary(d).complete,false);}
- const historical=fixture();historical.results=[{ritnummer:'LEGACY',status:'success',vertrek:true,aankomst:false}];assert.equal(model.acceptanceSummary(historical).accepted,1);assert.equal(model.acceptanceSummary(historical).complete,false);
+ for(const mutate of [d=>d.results.pop(),d=>d.results.push({...d.results[0]}),d=>d.results[1].startAddress='Conflicting address',d=>d.results[1].deliveryState='uncertain',d=>d.results[1].success=false,d=>d.totalMessages=0,d=>delete d.results[1].httpStatus,d=>d.results[1].httpStatus=400]){const d=fixture();mutate(d);assert.equal(model.acceptanceSummary(d).complete,false);}
+ const historical=fixture();historical.results=[{ritnummer:'LEGACY',status:'success',vertrek:true,aankomst:false}];assert.equal(model.acceptanceSummary(historical).accepted,0);assert.equal(model.acceptanceSummary(historical).complete,false);
 });
 test('missing historical metadata stays explicitly missing and long fields paginate without clipping',()=>{
  const d=fixture();d.results=d.results.map(({startAddress,endAddress,startTime,endTime,startLat,startLon,endLat,endLon,...row})=>row);rendered=[];generateAcceptanceReportPdf(d);assert.ok(rendered.flatMap(r=>r.text).filter(v=>v.includes('Niet geregistreerd')).length>=20);
