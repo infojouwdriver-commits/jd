@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-15",
+  "scope": "Chiron TEST municipality report detail restoration",
+  "pullRequest": 65,
+  "sourceRevision": "c3e99045a351b512bb8ad7855c6211a4a488baa4",
+  "mergeRevision": "7076ded0cc2c478e190e2e7f6a2181c6ced9b5ef",
+  "localTests": {
+    "passed": 121,
+    "failed": 0,
+    "typecheck": true,
+    "realPdfGenerated": true,
+    "normalPdfPages": 3,
+    "visuallyReviewed": [
+      "all normal pages",
+      "long field pagination"
+    ]
+  },
+  "ci": {
+    "pullRequest": 38808707489,
+    "push": 38808699495,
+    "verifiedImage": 38808868049,
+    "encryptedBackupAndNativeRestore": 38807506498,
+    "protectedDeployment": 38809820329,
+    "conclusion": "success"
+  },
+  "image": "ghcr.io/infojouwdriver-commits/jd@sha256:e4165029454f2c0de1233a6e228813328583d5db88c4883fd35eb96ea16e380e",
+  "postDeployment": {
+    "httpsPages200": [
+      "/",
+      "/login",
+      "/privacy-policy"
+    ],
+    "deploymentGuardsPassed": true,
+    "preflightPassed": true,
+    "databaseReadinessPassed": true
+  },
+  "limitations": [
+    "No live Chiron test transmitted by the agent",
+    "New TEST run is required to obtain restored metadata",
+    "Historical missing fields are not fabricated",
+    "HTTP acknowledgement does not establish production or municipal approval"
+  ],
+  "sensitiveDataIncluded": false
+}
