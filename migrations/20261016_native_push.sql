@@ -29,7 +29,7 @@ DECLARE saved native_push_devices; actor users;
 BEGIN
  SELECT * INTO actor FROM users WHERE id=p_user_id FOR UPDATE;
  IF NOT FOUND OR to_timestamp(p_issued_at)<=coalesce(actor.security_revoked_before,'-infinity'::timestamptz) THEN RAISE EXCEPTION 'Session revoked' USING ERRCODE='42501'; END IF;
- IF NOT EXISTS(SELECT FROM drivers WHERE user_id=p_user_id AND status='active') OR NOT EXISTS(SELECT FROM users WHERE id=p_user_id AND is_active IS DISTINCT FROM false AND status IS DISTINCT FROM 'disabled') THEN RAISE EXCEPTION 'Driver unavailable' USING ERRCODE='42501'; END IF;
+ IF NOT EXISTS(SELECT FROM drivers WHERE user_id=p_user_id AND status='active') OR (to_jsonb(actor)->>'is_active')='false' OR (to_jsonb(actor)->>'status')='disabled' THEN RAISE EXCEPTION 'Driver unavailable' USING ERRCODE='42501'; END IF;
  IF NOT p_enabled THEN
   UPDATE native_push_devices SET enabled=false WHERE installation_id=p_installation AND user_id=p_user_id;
   UPDATE native_push_jobs SET state='cancelled' WHERE installation_id=p_installation AND user_id=p_user_id AND state IN ('pending','sending');
@@ -82,7 +82,7 @@ BEGIN
  ) SELECT coalesce(jsonb_agg(to_jsonb(c)||jsonb_build_object('encrypted_token',d.encrypted_token,'language',d.language,
  'authorized',d.enabled AND d.user_id=c.user_id AND d.registered_at=c.registration_at
  AND d.last_seen_at>clock_timestamp()-interval '30 days'
- AND u.is_active IS DISTINCT FROM false AND u.status IS DISTINCT FROM 'disabled'
+ AND (to_jsonb(u)->>'is_active') IS DISTINCT FROM 'false' AND (to_jsonb(u)->>'status') IS DISTINCT FROM 'disabled'
  AND d.registered_at>coalesce(u.security_revoked_before,'-infinity'::timestamptz)
  AND EXISTS(SELECT FROM drivers dr WHERE dr.user_id=c.user_id AND dr.status='active')
  AND CASE c.source_kind WHEN 'message' THEN EXISTS(SELECT FROM message_recipients r JOIN internal_messages m ON m.id=r.message_id WHERE r.message_id=c.source_id AND r.recipient_user_id=c.user_id AND r.is_deleted IS DISTINCT FROM true AND r.is_read IS DISTINCT FROM true)
