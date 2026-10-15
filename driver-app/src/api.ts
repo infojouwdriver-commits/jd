@@ -7,6 +7,10 @@ export interface DriverProfile {
 }
 export interface DriverVehicle {id: number; company_id: number; plate_number: string; status: string; brand?: string; model?: string}
 export interface DriverTripSummary {id:number; driver_id:number; start_time:string|null; end_time:string|null; start_address:string|null; end_address:string|null; price:number; currency:string; distance:number|null; duration:number|null; chiron_environment:string|null; chiron_sync_state:string|null}
+export interface DriverMessage {id:number;subject:string;message_body:string;sender_name?:string;sender_type?:string;is_read:boolean;is_locked?:boolean;created_at?:string;last_activity_at?:string}
+export interface DriverReply {id:number;reply_body:string;sender_name?:string;sender_type?:string;created_at?:string}
+export interface DriverNotification {id:number;title:string;message:string;notification_type?:string;is_read:boolean;created_at?:string}
+export interface AccountInfo {id:number;email:string;display_name?:string;email_verification_available:boolean}
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number) {
@@ -108,6 +112,58 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       });
       if (receipt.driver_id !== owner || !receipt.sharing_enabled || !receipt.shift_active || Date.parse(receipt.recorded_at) !== point.timestamp) throw new ApiError(502);
       return receipt;
+    },
+    async messages(owner:number) {
+      if ((await profile()).driver.id !== owner) throw new ApiError(403);
+      const rows=await request<DriverMessage[]>('/next_api/messages/driver');
+      if(!Array.isArray(rows)||rows.length>100||rows.some(row=>!Number.isSafeInteger(row.id)||row.id<1||typeof row.subject!=='string'||typeof row.message_body!=='string'||row.message_body.length>10000))throw new ApiError(502);
+      return rows;
+    },
+    async sendMessage(owner:number,subject:string,message:string,parent?:number) {
+      if ((await profile()).driver.id !== owner) throw new ApiError(403);
+      if(!message.trim()||message.length>10000||(!parent&&(!subject.trim()||subject.length>200))||(parent!==undefined&&(!Number.isSafeInteger(parent)||parent<1)))throw new ApiError(400);
+      return parent?request('/next_api/messages/replies',{parent_message_id:parent,reply_body:message.trim()}):request('/next_api/messages',{subject:subject.trim(),message_body:message.trim()});
+    },
+    async replies(owner:number,id:number) {
+      if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const rows=await request<DriverReply[]>('/next_api/messages/replies',undefined,'GET',{message_id:id});
+      if(!Array.isArray(rows)||rows.length>500||rows.some(row=>!Number.isSafeInteger(row.id)||typeof row.reply_body!=='string'))throw new ApiError(502);
+      return rows;
+    },
+    async readMessage(owner:number,id:number) {
+      if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      return request('/next_api/messages/mark-read',{message_id:id});
+    },
+    async notifications(owner:number) {
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const rows=await request<DriverNotification[]>('/next_api/notifications/driver');
+      if(!Array.isArray(rows)||rows.length>100||rows.some(row=>!Number.isSafeInteger(row.id)||row.id<1||typeof row.title!=='string'||typeof row.message!=='string'))throw new ApiError(502);
+      return rows;
+    },
+    async readNotification(owner:number,id:number) {
+      if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      return request('/next_api/notifications/mark-read',{notification_id:id});
+    },
+    account:()=>request<AccountInfo>('/next_api/auth/account'),
+    async changeAccount(owner:number,body:{action:'request_email_code'|'update_email'|'update_password';current_password:string;email?:string;passcode?:string;password?:string}) {
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      return request<{sent?:boolean;updated?:boolean;sign_in_required?:boolean}>('/next_api/auth/account',body);
+    },
+    async invoice(owner:number,id:number) {
+      if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),30000);
+      try {
+        const response=await transport(API_ORIGIN+'/next_api/trips/generate-invoice?id='+id,{method:'POST',credentials:'include',redirect:'error',headers:{Origin:API_ORIGIN,Accept:'application/pdf'},signal:controller.signal});
+        if(!response.ok)throw new ApiError(response.status);
+        if(!response.headers.get('content-type')?.toLowerCase().startsWith('application/pdf')||Number(response.headers.get('content-length'))>8000000)throw new ApiError(502);
+        const bytes=new Uint8Array(await response.arrayBuffer());
+        if(bytes.length<5||bytes.length>8000000||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-')throw new ApiError(502);
+        return bytes;
+      }finally{clearTimeout(timer);}
     },
     clearFleet: () => request('/next_api/fleet/location', {shift_active: false, sharing_enabled: false}),
     // Do not clear the session UI when server revocation fails.

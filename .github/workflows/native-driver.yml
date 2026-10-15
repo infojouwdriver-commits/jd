@@ -6,6 +6,11 @@ on:
     branches: ['feat/native-driver-app-20261014']
     paths: ['driver-app/**', '.github/workflows/native-driver.yml']
   workflow_dispatch:
+    inputs:
+      build_ios:
+        description: Build and probe the iOS simulator (deferred for Android-first delivery)
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -41,7 +46,32 @@ jobs:
           path: driver-app/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 14
+  visual-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: driver-app
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - run: npm ci && npm ci --prefix visual-review
+      - run: node visual-review/node_modules/playwright/cli.js install --with-deps chromium
+      - run: node visual-review/review.cjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: driver-android-visual-review-${{ github.sha }}
+          path: |
+            driver-app/build/visual-review/*.png
+            driver-app/build/visual-review/result.json
+          if-no-files-found: error
+          retention-days: 14
   ios-simulator:
+    if: github.event_name == 'workflow_dispatch' && inputs.build_ios
     runs-on: macos-latest
     timeout-minutes: 45
     defaults:

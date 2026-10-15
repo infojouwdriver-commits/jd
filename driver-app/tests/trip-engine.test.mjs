@@ -56,3 +56,9 @@ test('receipt from another driver is retained; UUID case is canonical and wrong 
  const result=await f.engine.sync(async()=>({id:1,driver_id:1,completion_request_key:f.key.toUpperCase(),chiron_sync_state:'COMPLETED',chiron_environment:'production'}));assert.equal(result.remaining,0);assert.equal(result.receipts[0].chiron,'unconfirmed');
  }finally{f.db.close();}
 });
+
+test('platform snapshot and completion preserve source, reference and UUID across retries',async()=>{
+ let active=null,pending=[];const store={active:async()=>active,create:async trip=>{active=structuredClone(trip);},update:async trip=>{active=structuredClone(trip);},complete:async(_trip,payload)=>{pending.push({key:payload.completion_request_key,payload:structuredClone(payload)});active=null;},pending:async()=>pending,acknowledge:async()=>{pending=[];}};
+ const now=Date.now(),point={lat:50.85,lon:4.35,timestamp:now,accuracy:5};const engine=createTripEngine('1',store,()=> 'ba2f1c12-21a5-4f20-8ef2-2e570ee29919',()=>now);
+ await engine.start({companyId:2,vehicleId:3,environment:'PRODUCTION',point,startAddress:'Synthetic start',endAddress:'Synthetic end',proposedPrice:12,paymentMethod:'card',platform:'BOLT',externalReference:'test-platform-42'});assert.equal((await engine.restore()).platform,'BOLT');await engine.end(point,12);assert.equal(pending[0].payload.ride_type,'EXTERNAL');assert.equal(pending[0].payload.external_source,'BOLT');assert.equal(pending[0].payload.external_ride_number,'test-platform-42');assert.equal(pending[0].payload._native_environment,'PRODUCTION');await engine.sync(async()=>{throw Error('offline');});assert.equal(pending.length,1);const key=pending[0].key;await engine.sync(async payload=>({id:99,driver_id:1,completion_request_key:payload.completion_request_key,chiron_environment:'production',chiron_sync_state:'COMPLETED'}));assert.equal(key,'ba2f1c12-21a5-4f20-8ef2-2e570ee29919');assert.equal(pending.length,0);
+});

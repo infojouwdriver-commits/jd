@@ -3,7 +3,7 @@ import {Text} from 'react-native';
 import * as Location from 'expo-location';
 import {publishFleetPoint, resumeFleetPublishing} from './native-fleet-runtime';
 import {validPoint} from './trip-engine';
-export default function FleetLocation({owner, registerStop}: {owner: number; registerStop: (stop: (() => Promise<void>) | null) => void}) {
+export default function FleetLocation({owner, registerStop, compact=false}: {owner: number; registerStop: (stop: (() => Promise<void>) | null) => void;compact?:boolean}) {
   const [status, setStatus] = useState('مشاركة الموقع: بانتظار إذن الهاتف أو GPS');
   useEffect(() => {
     resumeFleetPublishing(owner);
@@ -30,5 +30,6 @@ export default function FleetLocation({owner, registerStop}: {owner: number; reg
     }).catch(() => {if (!stopped) setStatus('تعذّر تشغيل مشاركة الموقع');});
     return () => {registerStop(null); void stop();};
   }, [owner, registerStop]);
+  if(compact)return null;
   return <Text accessibilityRole="text" accessibilityLabel={`${status}. مشاركة أثناء الجلسة بإذن الهاتف. يُحفظ آخر موقع فقط؛ الشركة ترى سائقيها والإدارة ترى الجميع. مشاركة الخلفية متاحة أثناء رحلة نشطة فقط وتحتاج قبول الجهاز.`} style={{color:'#a6b5c4',fontSize:12,textAlign:'right',lineHeight:20}}>{status} · أثناء الجلسة · للشركة والإدارة · آخر موقع فقط</Text>;
 }
