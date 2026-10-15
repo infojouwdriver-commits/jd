@@ -51,8 +51,11 @@ try {
  await docker(['pull',images.postgres]);await docker(['pull',images.postgrest]);
  await docker(['network','create','--internal',network]);await docker(['network','create',front]);
  await docker(['run','--detach','--name',database,'--network',network,'--network-alias','db','--env','POSTGRES_DB','--env','POSTGRES_PASSWORD',images.postgres],{env:{POSTGRES_DB:'jd_test',POSTGRES_PASSWORD:postgresPassword}});
- let ready=false;for(let i=0;i<60;i++){try{await docker(['exec',database,'pg_isready','-U','postgres','-d','jd_test'],{timeout:5000});ready=true;break;}catch{await delay(1000);}}
+ // The image first starts a socket-only bootstrap server, then restarts it.
+ // Wait for the final TCP server and the actual database, with authentication.
+ let ready=false;for(let i=0;i<60;i++){try{const value=await docker(['exec','--env','PGPASSWORD',database,'psql','--host','127.0.0.1','--username','postgres','--dbname','jd_test','--no-password','--tuples-only','--no-align','--command','SELECT 1'],{env:{PGPASSWORD:postgresPassword},timeout:5000});if(value==='1'){ready=true;break;}}catch{}await delay(1000);}
  assert.ok(ready,'Native PostgreSQL did not become ready');
+ checks.push('Final PostgreSQL TCP server accepts authenticated SELECT 1 after bootstrap');
  const bindings=JSON.parse(await docker(['inspect','--format','{{json .HostConfig.PortBindings}}',database]));assert.ok(!bindings||Object.keys(bindings).length===0);checks.push('PostgreSQL has no published host port');
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await psql(`CREATE FUNCTION public.stack_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
