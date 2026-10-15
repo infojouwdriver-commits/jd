@@ -136,9 +136,9 @@ export default function AcceptanceTestPage() {
     }
 
     try {
-      const company = companies.find(c => c.id === parseInt(selectedCompany));
-      const driver = drivers.find(d => d.id === parseInt(selectedDriver));
-      const vehicle = vehicles.find(v => v.id === parseInt(selectedVehicle));
+      const company = testResult.reportContext?.company ?? companies.find(c => c.id === parseInt(selectedCompany));
+      const driver = testResult.reportContext?.driver ?? drivers.find(d => d.id === parseInt(selectedDriver));
+      const vehicle = testResult.reportContext?.vehicle ?? vehicles.find(v => v.id === parseInt(selectedVehicle));
 
       if (!company || !driver || !vehicle) {
         toast.error('فشل جلب معلومات الشركة أو السائق أو المركبة');
@@ -167,7 +167,7 @@ export default function AcceptanceTestPage() {
           model: vehicle.model,
           plate_number: vehicle.plate_number
         },
-        testDate: new Date().toISOString(),
+        testDate: testResult.reportContext?.testDate ?? testResult.testDate ?? new Date().toISOString(),
         totalMessages: testResult.totalMessages || 0,
         successCount: testResult.successCount || 0,
         failedCount: testResult.failedCount || 0,
@@ -193,9 +193,9 @@ export default function AcceptanceTestPage() {
     }
 
     try {
-      const company = companies.find(c => c.id === parseInt(selectedCompany));
-      const driver = drivers.find(d => d.id === parseInt(selectedDriver));
-      const vehicle = vehicles.find(v => v.id === parseInt(selectedVehicle));
+      const company = testResult.reportContext?.company ?? companies.find(c => c.id === parseInt(selectedCompany));
+      const driver = testResult.reportContext?.driver ?? drivers.find(d => d.id === parseInt(selectedDriver));
+      const vehicle = testResult.reportContext?.vehicle ?? vehicles.find(v => v.id === parseInt(selectedVehicle));
 
       if (!company || !driver || !vehicle) {
         toast.error('فشل جلب معلومات الشركة أو السائق أو المركبة');
@@ -224,7 +224,7 @@ export default function AcceptanceTestPage() {
           model: vehicle.model,
           plate_number: vehicle.plate_number
         },
-        testDate: new Date().toISOString(),
+        testDate: testResult.reportContext?.testDate ?? testResult.testDate ?? new Date().toISOString(),
         totalMessages: testResult.totalMessages || 0,
         successCount: testResult.successCount || 0,
         failedCount: testResult.failedCount || 0,
@@ -282,7 +282,7 @@ export default function AcceptanceTestPage() {
             {/* اختيار الشركة */}
             <div>
               <label className="text-sm font-medium mb-2 block">الشركة</label>
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+              <Select value={selectedCompany} disabled={loading} onValueChange={value=>{setSelectedCompany(value);setSelectedDriver('');setSelectedVehicle('');setTestResult(null);}}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الشركة" />
                 </SelectTrigger>
@@ -301,8 +301,8 @@ export default function AcceptanceTestPage() {
               <label className="text-sm font-medium mb-2 block">السائق</label>
               <Select 
                 value={selectedDriver} 
-                onValueChange={setSelectedDriver}
-                disabled={!selectedCompany}
+                onValueChange={value=>{setSelectedDriver(value);setTestResult(null);}}
+                disabled={loading||!selectedCompany}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="اختر السائق" />
@@ -322,8 +322,8 @@ export default function AcceptanceTestPage() {
               <label className="text-sm font-medium mb-2 block">المركبة</label>
               <Select 
                 value={selectedVehicle} 
-                onValueChange={setSelectedVehicle}
-                disabled={!selectedCompany}
+                onValueChange={value=>{setSelectedVehicle(value);setTestResult(null);}}
+                disabled={loading||!selectedCompany}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="اختر المركبة" />
