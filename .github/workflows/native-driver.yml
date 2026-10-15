@@ -48,6 +48,7 @@ jobs:
       run:
         working-directory: driver-app
     env:
+      EXPO_PUBLIC_NATIVE_SMOKE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_NATIVE_PUBLIC_TOKEN || secrets.MAPBOX_PUBLIC_TOKEN }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
@@ -84,8 +85,8 @@ jobs:
           xcrun simctl spawn "$simulator_id" launchctl list | awk '$3 ~ /be[.]jouwdriver[.]driver/ && $1 ~ /^[0-9]+$/ && $1 > 0 {found=1} END {exit !found}'
           if grep -Eq 'Unhandled JS Exception|Terminating app due|RCTFatalException' build/ios/simulator-console.raw; then exit 1; fi
           # Compilation alone cannot prove native AES bridge compatibility.
-          grep -q 'JD_NATIVE_CRYPTO_OK' build/ios/simulator-console.raw
-          if grep -q 'JD_NATIVE_CRYPTO_FAILED' build/ios/simulator-console.raw; then exit 1; fi
+          simulator_container=$(xcrun simctl get_app_container "$simulator_id" be.jouwdriver.driver data)
+          python3 scripts/check-native-crypto-result.py "$simulator_container" "$EXPO_PUBLIC_NATIVE_SMOKE_ID"
           xcrun simctl io "$simulator_id" screenshot build/ios/driver-login-simulator.png
       - name: Preserve simulator application package
         run: ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Release-iphonesimulator/JOUWDRIVER.app build/ios/JOUWDRIVER-simulator.zip
@@ -97,5 +98,6 @@ jobs:
             driver-app/build/ios/JOUWDRIVER-simulator.zip
             driver-app/build/ios/driver-login-simulator.png
             driver-app/build/ios/simulator-diagnostics.txt
+            driver-app/build/ios/native-crypto-result.json
           if-no-files-found: error
           retention-days: 14
