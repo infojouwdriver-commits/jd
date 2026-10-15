@@ -41,6 +41,7 @@
     "node_modules",
     "capacitor.config.ts",
     ".next-http",
-    ".next-delivery"
+    ".next-delivery",
+    "driver-app"
   ]
 }

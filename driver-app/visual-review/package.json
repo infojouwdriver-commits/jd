@@ -1,0 +1,1 @@
+{"private":true,"scripts":{"test":"node review.cjs"},"devDependencies":{"esbuild":"0.25.12","playwright":"1.56.1"}}
