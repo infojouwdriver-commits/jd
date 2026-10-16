@@ -91,3 +91,29 @@ test('native history uses bounded driver endpoint and rejects another owner or m
 test('history refuses account switch before any history request',async()=>{
  const calls=[];const api=createDriverApi(async url=>{calls.push(url);return ok({...assigned(),driver:{...assigned().driver,id:2}});});await assert.rejects(api.history(1));assert.equal(calls.length,1);
 });
+
+// A resume/push event and inbox polling can arrive together on the same cookie jar.
+test('simultaneous profile consumers share the entire read and refresh flight, without caching later assignment reads',async()=>{
+ let reads=0,refreshes=0,expired=true;
+ const api=createDriverApi(async url=>{if(url.endsWith('/auth/refresh')){refreshes++;expired=false;return ok(true);}reads++;await new Promise(r=>setTimeout(r,5));return expired?Response.json({}, {status:401}):ok(assigned());});
+ await Promise.all(Array.from({length:8},()=>api.profile()));assert.equal(refreshes,1);assert.equal(reads,2);
+ await api.profile();assert.equal(reads,3,'later assignment checks must still reach the server');
+});
+test('read expired between owner check and inbox request refreshes once and recovers',async()=>{
+ let expired=false,refreshes=0,reads=0;
+ const api=createDriverApi(async url=>{
+  if(url.endsWith('/auth/refresh')){refreshes++;expired=false;return ok(true);}
+  if(url.endsWith('/drivers/me'))return expired?Response.json({}, {status:401}):ok(assigned());
+  reads++;if(reads===1){expired=true;return Response.json({}, {status:401});}return ok([]);
+ });assert.deepEqual(await api.messages(1),[]);assert.equal(refreshes,1);assert.equal(reads,2);
+});
+test('recovered read rechecks driver identity before requesting private inbox again',async()=>{
+ let profiles=0,inboxes=0;
+ const api=createDriverApi(async url=>{if(url.endsWith('/drivers/me'))return ok(profiles++===0?assigned():{...assigned(),driver:{...assigned().driver,id:2}});inboxes++;return Response.json({}, {status:401});});
+ await assert.rejects(api.messages(1),e=>e.status===403);assert.equal(inboxes,1);
+});
+test('temporary transport loss retries a safe read once, never mutations or HTTP rejections',async()=>{
+ let reads=0;const api=createDriverApi(async()=>{if(++reads===1)throw new TypeError('Network request failed');return ok(assigned());});assert.equal((await api.profile()).driver.id,1);assert.equal(reads,2);
+ for(const code of [403,429,503]){let calls=0;const bad=createDriverApi(async()=>{calls++;return Response.json({}, {status:code});});await assert.rejects(bad.profile(),e=>e.status===code);assert.equal(calls,1);}
+ let writes=0;const bad=createDriverApi(async()=>{writes++;throw new TypeError('Network request failed');});await assert.rejects(bad.logout());assert.equal(writes,1);
+});
