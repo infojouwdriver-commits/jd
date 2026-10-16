@@ -6,7 +6,7 @@ if(e.FCM_PROJECT_ID!=='jouw-driver'||!e.JWT_SECRET||!e.SCHEMA_ADMIN_USER||!e.POS
 const origin=new URL(e.POSTGREST_URL);if(!['http:','https:'].includes(origin.protocol)||origin.username||origin.password)throw Error('Invalid database gateway');
 let running=true;process.on('SIGTERM',()=>{running=false;});process.on('SIGINT',()=>{running=false;});
 let access='',refreshAt=0;
-function jwt(){const now=Math.floor(Date.now()/1000),b64=v=>Buffer.from(JSON.stringify(v)).toString('base64url');const body=b64({alg:'HS256',typ:'JWT'})+'.'+b64({sub:'0',role:e.SCHEMA_ADMIN_USER,iat:now,exp:now+120});return body+'.'+createHmac('sha256',e.JWT_SECRET).update(body).digest('base64url');}
+function jwt(){const now=Math.floor(Date.now()/1000),b64=v=>Buffer.from(JSON.stringify(v)).toString('base64url');const body=b64({alg:'HS256',typ:'JWT'})+'.'+b64({sub:'0',role:e.SCHEMA_ADMIN_USER,iat:now,exp:now+120,aud:'jouw-driver'});return body+'.'+createHmac('sha256',e.JWT_SECRET).update(body).digest('base64url');}
 async function rpc(name,body={}){const r=await fetch(e.POSTGREST_URL.replace(/\/$/,'')+'/rpc/'+name,{method:'POST',headers:{Authorization:'Bearer '+jwt(),'Content-Type':'application/json','Content-Profile':e.POSTGREST_SCHEMA||'public',...(e.POSTGREST_API_KEY?{'Postgrest-API-Key':e.POSTGREST_API_KEY}:{})},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error('Push queue unavailable');return r.status===204?null:r.json();}
 if(process.argv.includes('--check')){await fcmAccessToken(account);if(await rpc('security_native_push_ready')!==true)throw Error('Push schema unavailable');console.log('FCM authorization and protected push queue ready');process.exit(0);}
 while(running){

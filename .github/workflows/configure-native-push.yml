@@ -10,6 +10,10 @@ on:
         type: string
         required: true
         description: Tested tooling revision reachable from main
+      credential_envelope:
+        type: string
+        required: false
+        description: RSA-OAEP and AES-GCM encrypted envelope for activate only; never paste a private key
 permissions:
   contents: read
 concurrency:
@@ -43,6 +47,7 @@ jobs:
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           ACTION: ${{ inputs.action }}
           REVISION: ${{ inputs.tested_revision }}
+          CREDENTIAL_ENVELOPE: ${{ inputs.credential_envelope }}
         run: |
           set -euo pipefail
           umask 077
@@ -51,6 +56,7 @@ jobs:
           [[ "$ACTION" == prepare || "$ACTION" == activate ]]
           keydir=$(mktemp -d)
           trap 'rm -rf "$keydir"' EXIT
+          export ENVELOPE_FILE="$keydir/credential.sealed.json"
           printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
           printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
           args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
@@ -60,10 +66,17 @@ jobs:
             ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'cd /srv/jouw-driver/foundation && node .push-transfer/configure-native-push.mjs prepare' </dev/null
             exit 0
           fi
-          # Only RSA-OAEP + AES-GCM ciphertext enters the repository or runner. The
+          # Only RSA-OAEP + AES-GCM ciphertext enters the runner. The
           # private transfer key and decrypted service account stay on the OVH host.
-          test -s deploy/fcm-credential.sealed.json
-          scp "${args[@]}" deploy/fcm-credential.sealed.json "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/.push-transfer/credential.sealed.json"
+          node --input-type=module <<'ENVELOPE'
+          import fs from 'node:fs';
+          const envelope=JSON.parse(process.env.CREDENTIAL_ENVELOPE||'null');
+          if(!envelope||envelope.version!==1||Object.keys(envelope).sort().join(',')!=='data,encrypted_key,iv,tag,version')throw Error('Encrypted credential envelope required');
+          for(const key of ['data','encrypted_key','iv','tag'])if(typeof envelope[key]!=='string'||!envelope[key].length||!/^[A-Za-z0-9+/]+={0,2}$/.test(envelope[key]))throw Error('Invalid ciphertext');
+          if(Buffer.from(envelope.iv,'base64').length!==12||Buffer.from(envelope.tag,'base64').length!==16||Buffer.from(envelope.encrypted_key,'base64').length!==384)throw Error('Invalid envelope lengths');
+          fs.writeFileSync(process.env.ENVELOPE_FILE,JSON.stringify(envelope),{mode:0o600});
+          ENVELOPE
+          scp "${args[@]}" "$ENVELOPE_FILE" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/foundation/.push-transfer/credential.sealed.json"
           ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "cd /srv/jouw-driver/foundation && node .push-transfer/configure-native-push.mjs activate '$REVISION'" </dev/null
           ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
@@ -79,7 +92,7 @@ jobs:
           trap cleanup EXIT
           image=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/srv/jouw-driver/release.json")).image)')
           docker network inspect jouw-driver_database >/dev/null
-          docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network jouw-driver_database --env-file .push-worker.env --entrypoint node "$image" scripts/push-worker.mjs --check
+          docker compose --project-name jouw-driver-push --file push-worker.yaml run --rm --no-deps push node scripts/push-worker.mjs --check </dev/null
           docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --force-recreate --wait --wait-timeout 180 app </dev/null
           docker compose --project-name jouw-driver-push --file push-worker.yaml up -d --wait </dev/null
           test -n "$(docker compose --project-name jouw-driver-push --file push-worker.yaml ps -q --status running push)"
