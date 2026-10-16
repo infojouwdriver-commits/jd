@@ -54,7 +54,7 @@ const fixtures={session,push:`import{useState}from'react';export function usePus
  await page.getByRole('button',{name:'كلمة المرور',exact:true}).click();
  const secret=page.getByLabel('كلمة المرور الحالية',{exact:true});await secret.fill('Synthetic-password-only');
  assert.equal(await secret.evaluate(el=>el.type),'password');
- await page.getByRole('button',{name:'إظهار كلمة المرور',exact:true}).first().click();assert.equal(await secret.evaluate(el=>el.type),'text');
+ await page.getByRole('button',{name:'إظهار كلمة المرور',exact:true}).first().click();assert.equal(await secret.evaluate(el=>el.type),'text');assert.equal(await secret.getAttribute('autocapitalize'),'none');assert.equal(await secret.inputValue(),'Synthetic-password-only');
  await page.getByRole('button',{name:'إخفاء كلمة المرور',exact:true}).click();assert.equal(await secret.evaluate(el=>el.type),'password');
  await page.getByRole('radio',{name:'Français',exact:true}).click();
 await page.getByRole('radio',{name:'Clair',exact:true}).click();await page.waitForTimeout(300);assert.match(await page.locator('body').innerText(),/Préférences/);await page.screenshot({path:path.join(output,'account-fr-light.png')});await page.reload();await page.getByText('Préférences',{exact:true}).waitFor();assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('jd-ui-preferences-v1'))).theme,'light');await page.setViewportSize({width:360,height:800});await page.goto(origin+'/?screen=home');await page.getByText('Prêt pour votre prochaine course ?',{exact:true}).waitFor();await page.screenshot({path:path.join(output,'home-fr-light-360.png')});
