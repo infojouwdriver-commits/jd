@@ -93,8 +93,12 @@ for(const path of ['/','/login','/driver-login','/privacy-policy']){
  if(r.status!==200)throw Error('HTTPS page failed');
  if(path==='/login'&&!r.headers.get('content-security-policy')?.includes("default-src 'self'"))throw Error('Login CSP absent');
 }
-for(const [path,status,headers] of [['/next_api/auth/user',401,{}],['/next_api/auth/account',401,{}],['/next_api/messages/replies?message_id=1',401,{}],['/next_api/trips',401,{}],['/next_api/fleet',401,{}],['/next_api/fleet/location',401,{}],['/next_api/push/devices',401,{}],['/next_api/auth/user',403,{Origin:'https://untrusted.example'}],['/admin-setup',404,{}]]){
+for(const [path,status,headers] of [['/next_api/auth/user',401,{}],['/next_api/auth/account',401,{}],['/next_api/messages/replies?message_id=1',401,{}],['/next_api/trips',401,{}],['/next_api/fleet',401,{}],['/next_api/fleet/location',401,{}],['/next_api/auth/user',403,{Origin:'https://untrusted.example'}],['/admin-setup',404,{}]]){
  if((await fetch(base+path,{headers,redirect:'error',signal:AbortSignal.timeout(15000)})).status!==status)throw Error('Public access guard failed');
+}
+for(const path of ['/next_api/push/devices','/next_api/push/test','/next_api/push/receipt']){
+ const response=await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}',redirect:'error',signal:AbortSignal.timeout(15000)});
+ if(response.status!==401)throw Error('Native push authentication guard failed');
 }
 console.log('HTTPS pages and protected portal endpoints passed.');
 ACCEPT
