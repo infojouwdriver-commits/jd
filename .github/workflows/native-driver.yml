@@ -67,6 +67,7 @@ jobs:
           name: driver-android-visual-review-${{ github.sha }}
           path: |
             driver-app/build/visual-review/*.png
+            driver-app/build/visual-review/*.webm
             driver-app/build/visual-review/result.json
           if-no-files-found: error
           retention-days: 14
