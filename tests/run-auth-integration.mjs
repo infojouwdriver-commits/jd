@@ -7,13 +7,15 @@ import {once} from 'node:events';
 import bcrypt from 'bcryptjs';
 import {SignJWT,jwtVerify} from 'jose';
 import {totpAt} from '../src/lib/totp.ts';
+import {createDriverApi} from '../driver-app/src/api.ts';
 
 const secret='integration-only-jwt-secret-01234567890123456789';
 const totpSecret='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 const password='IntegrationPassword123!';
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
 const claims=new Set();let unavailable=false;const databaseTokens=[];
-rows.drivers=[{id:1,user_id:2,status:'active',company_id:1}];
+rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
+rows.companies=[{id:1,name:'Synthetic Company',chiron_mode:'TEST'}];rows.vehicles=[];
 const mock=http.createServer(async(req,res)=>{
  try {
   const token=req.headers.authorization?.replace(/^Bearer /,'');
@@ -25,6 +27,10 @@ const mock=http.createServer(async(req,res)=>{
    if(url.pathname==='/rpc/security_rate_limit'){if(unavailable){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}data=true;}
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
+   else if(url.pathname==='/rpc/security_create_trip_invoice'){
+    let invoice=rows.invoices.find(row=>row.trip_id===body.p_trip_id);
+    if(!invoice){invoice={id:rows.invoices.length+1,trip_id:body.p_trip_id,invoice_number:`TRIP-${body.p_trip_id}`,receipt_snapshot:body.p_receipt};rows.invoices.push(invoice);}data=invoice;
+   }
    else throw Error('Unhandled RPC');
   } else {
    const table=rows[url.pathname.slice(1)];if(!table)throw Error('Unhandled table');
@@ -63,6 +69,15 @@ try {
  const driverHistory=await status('Native history ignores hostile driver/company scope',request('/next_api/drivers/trips?driver_id=2&company_id=99&limit=25','GET',null,driverToken),200);
  const ownHistory=(await driverHistory.json()).data;assert.deepEqual(ownHistory.trips.map(row=>row.id),[103]);assert.equal(ownHistory.driver_id,1);assert.equal('private_payload' in ownHistory.trips[0],false);
  const adminHistory=await status('Native administrator driver history remains self-scoped',request('/next_api/drivers/trips?limit=25','GET',null,refreshedToken),200);assert.deepEqual((await adminHistory.json()).data.trips.map(row=>row.id),[105]);
+
+ // Exercise the actual native PDF request against production middleware and PDF generation.
+ await status('Legacy native invoice without JSON type is rejected',fetch(base+'/next_api/trips/generate-invoice?id=103',{method:'POST',headers:{Origin:base,Authorization:`Bearer ${driverToken}`,Accept:'application/pdf'}}),415);
+ const native=createDriverApi((url,options)=>{const target=new URL(url);return fetch(base+target.pathname+target.search,{...options,headers:{...options.headers,Origin:base,Authorization:`Bearer ${driverToken}`}});});
+ for(let attempt=0;attempt<2;attempt++){
+  const pdf=await native.invoice(1,103);assert.equal(new TextDecoder().decode(pdf.subarray(0,5)),'%PDF-');assert.ok(pdf.length>1000);
+ }
+ assert.equal(rows.invoices.filter(row=>row.trip_id===103).length,1);checks.push('Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice');
+ await assert.rejects(native.invoice(1,104),error=>error.status===404);checks.push('Native PDF still denies another driver trip');
 
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);
