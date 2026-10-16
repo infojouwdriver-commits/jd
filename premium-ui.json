@@ -1,0 +1,16 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["driver-app/src/experience", "driver-app/src/app"],
+  "locale": "ar-BE",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Select/Listbox", "Scrollbar", "Toast", "CRUD"],
+  "ownership": {"Select/Listbox": "native"},
+  "requiredCommands": ["lint", "typecheck", "unit", "visual"],
+  "commands": {
+    "lint": "npm run lint --prefix driver-app",
+    "typecheck": "npm run typecheck --prefix driver-app",
+    "unit": "npm test --prefix driver-app",
+    "visual": "cd driver-app && node visual-review/review.cjs"
+  },
+  "evidence": {"crudFullFlow": "driver-app/visual-review/review.cjs", "failurePaths": "driver-app/visual-review/review.cjs"}
+}
