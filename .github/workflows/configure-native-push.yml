@@ -92,7 +92,7 @@ jobs:
           trap cleanup EXIT
           image=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/srv/jouw-driver/release.json")).image)')
           docker network inspect jouw-driver_database >/dev/null
-          docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --network jouw-driver_database --env-file .push-worker.env --entrypoint node "$image" scripts/push-worker.mjs --check
+          docker compose --project-name jouw-driver-push --file push-worker.yaml run --rm --no-deps push node scripts/push-worker.mjs --check </dev/null
           docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --force-recreate --wait --wait-timeout 180 app </dev/null
           docker compose --project-name jouw-driver-push --file push-worker.yaml up -d --wait </dev/null
           test -n "$(docker compose --project-name jouw-driver-push --file push-worker.yaml ps -q --status running push)"

@@ -30,7 +30,7 @@ if(mode==='prepare'){
     env_file:
       - path: .push-worker.env
         format: raw
-    networks: [database]
+    networks: [database, egress]
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -40,6 +40,7 @@ if(mode==='prepare'){
       options: {max-size: "2m", max-file: "2"}
 networks:
   database: {external: true, name: jouw-driver_database}
+  egress: {}
 `;
  fs.writeFileSync('push-worker.yaml',compose,{mode:0o600});
  fs.writeFileSync('.app-staging.env.before-push',fs.readFileSync('.app-staging.env'),{mode:0o600,flag:'wx'});
