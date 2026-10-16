@@ -17,6 +17,8 @@ COPY --from=build --chown=app:app /app/.next/static ./.next/static
 COPY --from=build --chown=app:app /app/public ./public
 COPY --from=build --chown=app:app /app/scripts/preflight.mjs ./scripts/preflight.mjs
 COPY --from=build --chown=app:app /app/scripts/database-readiness.mjs ./scripts/database-readiness.mjs
+COPY --from=build --chown=app:app /app/scripts/push-worker.mjs ./scripts/push-worker.mjs
+COPY --from=build --chown=app:app /app/scripts/push-fcm.mjs ./scripts/push-fcm.mjs
 USER app
 EXPOSE 3000
 CMD ["sh","-c","node scripts/preflight.mjs && node scripts/database-readiness.mjs && exec node server.js"]

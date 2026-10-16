@@ -60,6 +60,19 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async pushRegistration(owner:number,installation_id:string,enabled:boolean,token?:string,language='ar') {
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const receipt=await request<{enabled:boolean}>('/next_api/push/devices',{installation_id,enabled,...(token?{token}:{}),language});
+      if(receipt.enabled!==enabled)throw new ApiError(502);return receipt;
+    },
+    async pushTest(owner:number,installation_id:string) {
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      return request<{job_id:string;state:string}>('/next_api/push/test',{installation_id});
+    },
+    async pushReceipt(owner:number,job_id:string) {
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      return request<{recorded:boolean}>('/next_api/push/receipt',{job_id});
+    },
     async history(owner:number, offset=0) {
       if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) throw new ApiError(400);
       const current = await profile(); if (current.driver.id !== owner) throw new ApiError(403);
