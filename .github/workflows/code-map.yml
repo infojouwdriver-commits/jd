@@ -1,0 +1,20 @@
+name: Code reference freshness
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  code-map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Verify privacy scope and stale-map detection
+        run: python3 tests/code-map.test.py
+      - name: Verify the committed reference matches indexed source
+        run: python3 scripts/code-map.py --check
