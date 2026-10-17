@@ -28,3 +28,11 @@ mobile/android/.gradle
 mobile/android/app/build
 mobile/ios/App/Pods
 tests/verification
+
+# Developer-only code map; never ship source graphs or agent skills in runtime images.
+graphify-out
+.codex
+.venv-code-map
+tests/code-map.test.py
+scripts/code-map.py
+scripts/requirements-code-map.txt
