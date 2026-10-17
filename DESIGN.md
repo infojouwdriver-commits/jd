@@ -1,17 +1,17 @@
 ---
 version: alpha
 name: JOUW DRIVER mobile
-description: A calm driver cockpit with a moving route signature and clear operational controls.
+description: A navy and gold driver workspace aligned with the driver portal, with profile, trips and revenue.
 colors:
-  primary: "#B6EF62"
-  on-primary: "#172B16"
-  dark-background: "#0D252E"
-  dark-surface: "#16353F"
-  light-background: "#EDF3F4"
+  primary: "#E0BD5B"
+  on-primary: "#302408"
+  dark-background: "#0D1626"
+  dark-surface: "#172338"
+  light-background: "#F1F3F7"
   light-surface: "#FFFFFF"
-  hero: "#12313C"
+  hero: "#101E33"
   hero-text: "#F2F7F8"
-  light-icon: "#426719"
+  light-icon: "#765514"
 typography:
   body:
     fontFamily: "system-ui, sans-serif"
@@ -42,9 +42,11 @@ operations, as established by `driver-app/README_AR.md` and its Brussels trip
 history contract. Arabic, French, Dutch and English are supported. No Japan
 market or Japanese-language scope is implied.
 
-The user explicitly requested a more professional visual system and more motion
-on 16 October 2026. Keep the existing lime identity, but place it within deep
-petrol surfaces and quiet blue-white light surfaces. The signature is a small
+On 17 October 2026 the user requested parity with the driver portal. Adopt its
+navy and gold language through the canonical runtime palette. The native app now
+organizes five destinations: home, trips, revenue, messages and profile. Driver
+and company information and vehicle selection belong in profile; preferences
+and account-security actions belong in a separate settings screen. The signature is a small
 animated street route on the home trip card. It is decorative, never a real map,
 GPS claim or progress indicator. Real navigation remains in DriverMap.
 
@@ -56,10 +58,10 @@ The web administration and marketing site are outside this redesign.
 ## Colors
 
 Primary is reserved for the main action, selected navigation, and route artwork.
-On-primary provides action text. Hero stays petrol in both themes. The full
+On-primary provides action text. Hero stays navy in both themes. The full
 semantic palette, including text, muted, borders, error and icon roles, is owned
 by `palette.dark` and `palette.light` in tokens.ts. Light-theme icons use the
-darker icon role; lime is not used for small informational text on white.
+darker icon role; gold is not used for small informational text on white.
 Error states contain an icon and readable text as well as a danger tone.
 
 ## Typography
@@ -78,7 +80,7 @@ Use the existing 20px page inset, 24px section rhythm and 20px card padding.
 The main action appears before the vehicle and inbox. Native safe areas remain
 owned by SafeAreaView and the bottom navigation's inset adapter. Each screen
 owns one vertical ScrollView. The bottom navigation occupies normal layout
-space, rather than floating above controls or the keyboard. At 360px all four
+space, rather than floating above controls or the keyboard. At 360px all five
 navigation labels remain visible; all controls are at least 44px tall.
 Loading indicators reserve space and never replace a loaded data set with a
 blank screen. No fabricated metrics or delivery claims are shown.
@@ -86,7 +88,7 @@ blank screen. No fabricated metrics or delivery claims are shown.
 ## Elevation & Depth
 
 Use tonal layers and thin borders. Keep shadows out of operational cards;
-active navigation receives an inset lime capsule rather than a large glow.
+active navigation receives an inset gold capsule rather than a large glow.
 The hero is the only expressive surface. Avoid translucent blur, neon glows,
 large gradients and motion behind a running trip meter.
 
@@ -121,6 +123,19 @@ Use Ionicons throughout; retain text labels for actions and navigation. Badges
 show real unread counts, and unread cards retain a textual state. Money, route
 lifecycle, push permissions and FCM receipt semantics remain governed by the
 existing APIs, not by animation or visual state.
+
+### Reporting and portal parity
+
+ActivityFilters owns typed Gregorian date ranges, localized preset labels, platform
+and trip-status choices, draft/apply/reset behavior and accessible disclosure.
+The shared ActivityProvider keeps committed non-sensitive filters in session
+memory across trips and revenue. The signature financial surface is one gold-on-
+navy gross-revenue panel followed by restrained, labelled metric and breakdown
+cards. It never represents net profit, tax advice or payout after commissions.
+The authenticated server owns period-wide totals; page rows are never summed into
+period revenue. Profile uses quiet information rows and the existing guarded
+vehicle-selection controller. Screens use the same native system fonts and safe
+areas, not a scaled copy of desktop tables.
 
 ## Do's and Don'ts
 

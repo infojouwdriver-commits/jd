@@ -32,10 +32,11 @@ export const GET = requestMiddleware(async (request: NextRequest, context) => {
 
     // 3. جلب بيانات المركبة المخصصة
     let vehicle = null;
-    const vehicleId = driver.assigned_vehicle_id || driver.current_vehicle_id;
+    const vehicleId = driver.current_vehicle_id || driver.assigned_vehicle_id;
     if (vehicleId) {
       const vehiclesCrud = new CrudOperations('vehicles', adminToken);
       vehicle = await vehiclesCrud.findById(vehicleId);
+      if(vehicle && vehicle.company_id !== driver.company_id) vehicle = null;
     }
 
     // 4. جلب جميع مركبات الشركة
