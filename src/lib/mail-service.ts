@@ -1,12 +1,13 @@
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {mailConfiguration,mailEventKey} from './mail-policy';
-export interface MailMessage {to:string;subject:string;html:string;text:string;purpose:'verification'|'contract_invitation'|'contract_confirmation';event:string;}
+export interface MailMessage {to:string;subject:string;html:string;text:string;purpose:'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder';event:string;attachments?:{filename:string;content:Buffer}[];}
 export interface MailResult {accepted:boolean;status:string;}
 export async function sendTransactionalMail(message:MailMessage):Promise<MailResult> {
  const config=mailConfiguration(process.env);
  if(!config.ready)return {accepted:false,status:'not_configured'};
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(message.to) || /[\r\n]/.test(message.subject) || !message.text || message.html.length>128000)return {accepted:false,status:'invalid_message'};
+ if(message.attachments?.some(a=>!/^[A-Z][A-Z0-9-]{2,80}\.pdf$/.test(a.filename)||a.content.length>4000000||a.content.subarray(0,5).toString()!=='%PDF-'))return {accepted:false,status:'invalid_message'};
  const secret=config.metadataKey;
  const eventKey=mailEventKey(message.event,secret);
  const recipientKey=mailEventKey('recipient:'+message.to.trim().toLowerCase(),secret);
@@ -17,7 +18,7 @@ export async function sendTransactionalMail(message:MailMessage):Promise<MailRes
  if(!reservation.reserved)return {accepted:['accepted','delivered','delayed'].includes(reservation.status),status:reservation.status};
  let status:'accepted'|'uncertain'|'failed'='uncertain';let providerId:string|null=null;
  try {
-  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+config.key,'Content-Type':'application/json','Idempotency-Key':eventKey},body:JSON.stringify({from:config.sender,to:[message.to],subject:message.subject,html:message.html,text:message.text}),signal:AbortSignal.timeout(10000)});
+  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+config.key,'Content-Type':'application/json','Idempotency-Key':eventKey},body:JSON.stringify({from:config.sender,to:[message.to],subject:message.subject,html:message.html,text:message.text,...(message.attachments?{attachments:message.attachments.map(a=>({filename:a.filename,content:a.content.toString('base64')}))}:{})}),signal:AbortSignal.timeout(10000)});
   if(response.ok){const data=await response.json();if(typeof data.id==='string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(data.id)){providerId=data.id;status='accepted';}}
   else if(response.status>=400 && response.status<500)status='failed';
  } catch { /* Connection failure cannot establish whether the provider accepted the message. */ }

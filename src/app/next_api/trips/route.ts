@@ -25,6 +25,7 @@ export const GET = requestMiddleware(async (request, context) => {
       if (!Number.isSafeInteger(companyId) || companyId < 1) return createErrorResponse({errorMessage:'معرف الشركة غير صالح',status:400});
       filters.company_id = companyId;
     }
+    if(context.payload?.isAdmin){const scope=request.nextUrl.searchParams.get('scope')||'live';if(!['live','test','all'].includes(scope))return createErrorResponse({status:400,errorMessage:'Invalid account scope'});if(scope!=='all')filters.is_test=scope==='test';}
     const trips = await tripsCrud.findMany(
       filters,
       { 

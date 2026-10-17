@@ -1,3 +1,4 @@
+import {companyMembership} from '@/lib/company-membership';
 import {isPlatformAdmin} from '@/lib/security-policy';
 
 
@@ -73,16 +74,8 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
     }
 
     // Validate that the company actually exists
-    const companyLink = links[0];
-    const companiesCrud = new CrudOperations('companies', adminToken);
-    const company = await companiesCrud.findById(companyLink.company_id);
-
-    if (!company) {
-      return createErrorResponse({
-        errorMessage: 'Linked company not found. Please contact your administrator.',
-        status: 403,
-      });
-    }
+    const companyLink=await companyMembership(adminToken,Number(user.id),'overview');
+    const company=companyLink.company;
 
     // Optional: prefer accounts whose user_type is manager, but allow legacy records
     if (user.user_type && !['manager', 'company', 'owner'].includes(user.user_type)) {
@@ -117,6 +110,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
 
     return createAuthResponse({ accessToken, refreshToken });
   } catch (error: any) {
+    if(error instanceof Response)return error;
     console.error("Operation failed");
     return createErrorResponse({
       errorMessage: error.message || 'Login failed',

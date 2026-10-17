@@ -19,7 +19,7 @@ export interface RevenueSummary {driver_id:number;from:string;to:string;total_tr
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number) {
-    super(status === 401 ? 'انتهت الجلسة أو بيانات الدخول غير صحيحة.' : status === 403 ? 'ليس لديك صلاحية لهذا الإجراء.' : 'تعذّر الاتصال بالخادم. حاول مجدداً.');
+    super(status === 408 ? 'انتهت مهلة الطلب. تحقق من حالة العملية قبل إعادة المحاولة.' : status===0 ? 'تعذّر الوصول إلى الخادم؛ لا يمكن تأكيد انقطاع الإنترنت.' : status>=500 ? 'الخادم غير متاح أو أعاد استجابة غير صالحة.' : status === 401 ? 'انتهت الجلسة أو بيانات الدخول غير صحيحة.' : status === 403 ? 'ليس لديك صلاحية لهذا الإجراء.' : 'تعذّر الاتصال بالخادم. حاول مجدداً.');
     this.status = status;
   }
 }
@@ -91,6 +91,11 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async billingNotice(owner:number){
+      const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
+      const result=await ownerRead<{driver_id:number;notice:{notice_key:string;company_id:number}|null}>(owner,'/next_api/drivers/billing-notice');
+      if(result.driver_id!==owner || (result.notice&&result.notice.company_id!==current.company.id))throw new ApiError(403);return result.notice;
+    },
     async profileDetails(owner:number){
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
       const result=await ownerRead<DriverDetails>(owner,'/next_api/drivers/profile');

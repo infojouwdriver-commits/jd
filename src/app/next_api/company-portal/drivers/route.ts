@@ -1,3 +1,4 @@
+import {companyMembership} from '@/lib/company-membership';
 import {hashString} from "@/lib/server-utils";
 
 import CrudOperations from '@/lib/crud-operations';
@@ -6,11 +7,8 @@ import { requestMiddleware, parseQueryParams, validateRequestBody } from '@/lib/
 import { generateAdminUserToken } from '@/lib/auth';
 import { parseDriverFields, mutateDriverAccount, driverValidationError } from '@/lib/driver-account';
 
-async function getManagerCompanyId(userId: string, adminToken: string): Promise<number | null> {
-  const companyUsersCrud = new CrudOperations('company_users', adminToken);
-  const links = await companyUsersCrud.findMany({ user_id: parseInt(userId) });
-  if (!links || links.length === 0) return null;
-  return links[0].company_id;
+async function getManagerCompanyId(userId: string, adminToken: string, company: string | null): Promise<number> {
+  return Number((await companyMembership(adminToken,Number(userId),'fleet',company===null?undefined:Number(company))).company_id);
 }
 
 // POST - Add driver to company
@@ -22,7 +20,7 @@ export const POST = requestMiddleware(async (request, context) => {
     const body = await validateRequestBody(request);
     const fields = parseDriverFields(body, true);
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked to this account', status: 403 });
 
     const created = await mutateDriverAccount(adminToken, 'create', {companyId:Number(company_id),fields});
@@ -45,7 +43,7 @@ export const PUT = requestMiddleware(async (request, context) => {
 
     const body = await validateRequestBody(request);
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked', status: 403 });
 
     const driversCrud = new CrudOperations('drivers', adminToken);
@@ -74,7 +72,7 @@ export const DELETE = requestMiddleware(async (request, context) => {
     if (!id) return createErrorResponse({ errorMessage: 'Driver ID required', status: 400 });
 
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked', status: 403 });
 
     const driversCrud = new CrudOperations('drivers', adminToken);

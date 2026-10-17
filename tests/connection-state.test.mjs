@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {connectionFailure,connectionMessage} from '../src/lib/connection-state.ts';
+test('network hints never mislabel server errors or uncertain transport as proof of no internet',()=>{assert.equal(connectionFailure(new TypeError('fetch failed'),true),'transport');assert.equal(connectionFailure(new Error(),false),'offline');assert.equal(connectionFailure(new DOMException('Timeout','TimeoutError'),true),'timeout');for(const language of ['ar','fr','nl']){assert.ok(connectionMessage('server_response',language));assert.notEqual(connectionMessage('transport',language),connectionMessage('offline',language));}});

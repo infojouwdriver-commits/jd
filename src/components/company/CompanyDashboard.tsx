@@ -1,168 +1,19 @@
-
-"use client";
-
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Building2, Car, Users, LogOut, Loader2, RefreshCw, RadioTower } from 'lucide-react';
-import { api } from '@/lib/api-client';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { toast } from 'sonner';
-import AccountSettings from '@/components/account/AccountSettings';
-import DriversTab from './DriversTab';
-import VehiclesTab from './VehiclesTab';
-import FleetPanel from '@/components/fleet/FleetPanel';
-
-interface CompanyData {
-  company: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    subscription_status: string;
-  };
-  drivers: any[];
-  vehicles: any[];
-}
-
-export default function CompanyDashboard() {
-  const { logout } = useAuth();
-  const [data, setData] = useState<CompanyData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
-    try {
-      const result = await api.get<CompanyData>('/company-portal');
-      setData(result);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load company data');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const statusColor = (s: string) =>
-    s === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
-    s === 'suspended' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
-    'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { company, drivers, vehicles } = data;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-bold text-sm leading-tight">{company.name}</h1>
-              <Badge variant="outline" className={`text-[10px] h-4 ${statusColor(company.subscription_status)}`}>
-                {company.subscription_status}
-              </Badge>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => fetchData(true)} disabled={refreshing}>
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
-            <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={logout} className="text-destructive hover:text-destructive">
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{drivers.length}</p>
-                <p className="text-xs text-muted-foreground">Drivers</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <Car className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{vehicles.length}</p>
-                <p className="text-xs text-muted-foreground">Vehicles</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                <Car className="w-5 h-5 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {vehicles.filter((v: any) => v.status === 'active').length}
-                </p>
-                <p className="text-xs text-muted-foreground">Active Vehicles</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Company Management</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="drivers">
-              <TabsList className="w-full mb-4">
-                <TabsTrigger value="drivers" className="flex-1 gap-2">
-                  <Users className="w-4 h-4" /> Drivers ({drivers.length})
-                </TabsTrigger>
-                <TabsTrigger value="vehicles" className="flex-1 gap-2">
-                  <Car className="w-4 h-4" /> Vehicles ({vehicles.length})
-                </TabsTrigger>
-                <TabsTrigger value="fleet" className="flex-1 gap-2">
-                  <RadioTower className="w-4 h-4" /> الأسطول
-                </TabsTrigger>
-                <TabsTrigger value="account">حسابي</TabsTrigger>
-          </TabsList>
-              <TabsContent value="drivers">
-                <DriversTab drivers={drivers} onRefresh={() => fetchData(true)} />
-              </TabsContent>
-              <TabsContent value="vehicles">
-                <VehiclesTab vehicles={vehicles} onRefresh={() => fetchData(true)} />
-              </TabsContent>
-              <TabsContent value="fleet"><FleetPanel /></TabsContent>
-              <TabsContent value="account"><AccountSettings /></TabsContent>
-        </Tabs>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
-  );
+'use client';
+import {useState} from 'react';import {useAuth} from '@/components/auth/AuthProvider';import {useLanguage} from '@/contexts/LanguageContext';import {ThemeToggle} from '@/components/ThemeToggle';import {Tabs,TabsContent,TabsList,TabsTrigger} from '@/components/ui/tabs';import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';import {Button} from '@/components/ui/button';import {Input} from '@/components/ui/input';import {Label} from '@/components/ui/label';import {Badge} from '@/components/ui/badge';import AccountSettings from '@/components/account/AccountSettings';import DriversTab from './DriversTab';import VehiclesTab from './VehiclesTab';import FleetPanel from '@/components/fleet/FleetPanel';import BillingPanel from '@/components/operations/BillingPanel';import StaffPanel from '@/components/operations/StaffPanel';import {operationsCopy} from '@/components/operations/operations-copy';import {useOperationData} from '@/components/operations/useOperationData';
+interface PortalData{company:{id:number;name:string;is_test:boolean;subscription_status:string};companies:{id:number;name:string;is_test:boolean}[];membership_role:string;can_manage_fleet:boolean;can_view_billing:boolean;can_manage_staff:boolean;drivers:any[];vehicles:any[];drivers_total:number;vehicles_total:number;summary:{drivers:number;vehicles:number;active_vehicles:number};}
+export default function CompanyDashboard(){
+ const {logout}=useAuth(),{language}=useLanguage(),c=operationsCopy[language];const [company,setCompany]=useState(''),[tab,setTab]=useState('account'),[driverOffset,setDriverOffset]=useState(0),[vehicleOffset,setVehicleOffset]=useState(0),[search,setSearch]=useState(''),[query,setQuery]=useState(''),[state,setState]=useState('all');
+ const params=new URLSearchParams({drivers_offset:String(driverOffset),vehicles_offset:String(vehicleOffset),q:query,state});if(company)params.set('company_id',company);
+ const {data,error,loading,reload}=useOperationData<PortalData>('/company-portal?'+params.toString());
+ function move(kind:string,n:number){if(kind==='drivers')setDriverOffset(n);else setVehicleOffset(n);}
+ return <div className="min-h-screen bg-background" dir={language==='ar'?'rtl':'ltr'}><header className="border-b bg-card"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 p-5"><div><p className="text-xs tracking-widest text-muted-foreground">JOUW DRIVER / COMPANY</p><h1 className="mt-1 text-xl font-semibold">{data?.company.name||c.profile}</h1></div><div className="flex gap-2"><ThemeToggle/><Button variant="outline" onClick={reload} disabled={loading}>{c.refresh}</Button><Button variant="outline" onClick={logout}>{language==='ar'?'تسجيل الخروج':language==='fr'?'Déconnexion':'Afmelden'}</Button></div></div></header><main className="mx-auto max-w-6xl space-y-6 p-5 sm:p-8">
+ {loading&&<p role="status">{c.loading}</p>}{error&&<div role="alert"><p>{c.error}</p><Button onClick={reload}>{c.retry}</Button></div>}{data&&<>
+ <div className="flex flex-wrap items-center justify-between gap-4"><div className="flex gap-2"><Badge variant="outline">{c[data.membership_role as 'owner']||data.membership_role}</Badge><Badge variant="outline">{data.company.subscription_status}</Badge>{data.company.is_test&&<Badge variant="outline">{c.test}</Badge>}</div>{data.companies.length>1&&<Select value={String(data.company.id)} onValueChange={v=>{setCompany(v);setDriverOffset(0);setVehicleOffset(0);setTab('account');}}><SelectTrigger className="w-64" aria-label={c.profile}><SelectValue/></SelectTrigger><SelectContent>{data.companies.map(co=><SelectItem key={co.id} value={String(co.id)}>{co.name}{co.is_test?' · '+c.test:''}</SelectItem>)}</SelectContent></Select>}</div>
+ {data.company.is_test&&<p className="rounded-xl border p-4 text-sm">{c.trial}</p>}
+ {data.can_manage_fleet&&<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{[[c.drivers,data.summary.drivers],[c.vehicles,data.summary.vehicles],[c.active+' · '+c.vehicles,data.summary.active_vehicles]].map(([label,value])=><div key={label} className="rounded-2xl border bg-card p-5"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-semibold tabular-nums">{value}</p></div>)}</div>}
+ <Tabs value={tab} onValueChange={setTab} dir={language==='ar'?'rtl':'ltr'}><div className="overflow-x-auto"><TabsList className="h-auto min-w-max justify-start p-1">{data.can_manage_fleet&&<><TabsTrigger className="min-h-11" value="drivers">{c.drivers}</TabsTrigger><TabsTrigger className="min-h-11" value="vehicles">{c.vehicles}</TabsTrigger><TabsTrigger className="min-h-11" value="fleet">{language==='ar'?'الأسطول':language==='fr'?'Flotte':'Vloot'}</TabsTrigger></>}{data.can_view_billing&&<TabsTrigger className="min-h-11" value="billing">{c.billing}</TabsTrigger>}{data.can_manage_staff&&<TabsTrigger className="min-h-11" value="staff">{c.staff}</TabsTrigger>}<TabsTrigger className="min-h-11" value="account">{c.profile}</TabsTrigger></TabsList></div>
+ {data.can_manage_fleet&&(['drivers','vehicles'] as const).map(kind=><TabsContent key={kind} value={kind} className="space-y-4"><form className="flex flex-wrap items-end gap-3 rounded-xl border p-4" onSubmit={e=>{e.preventDefault();setQuery(search);setDriverOffset(0);setVehicleOffset(0);}}><div className="min-w-40 flex-1 space-y-2"><Label htmlFor={'portal-search-'+kind}>{c.search}</Label><Input id={'portal-search-'+kind} value={search} maxLength={100} onChange={e=>setSearch(e.target.value)}/></div><Select value={state} onValueChange={v=>{setState(v);setDriverOffset(0);setVehicleOffset(0);}}><SelectTrigger className="w-40" aria-label={c.status}><SelectValue/></SelectTrigger><SelectContent>{['all','active','inactive','suspended','maintenance'].map(value=><SelectItem key={value} value={value}>{c[value as 'active']||value}</SelectItem>)}</SelectContent></Select><Button variant="outline">{c.search}</Button></form>{kind==='drivers'?<DriversTab drivers={data.drivers} companyId={data.company.id} onRefresh={reload}/>:<VehiclesTab vehicles={data.vehicles} companyId={data.company.id} onRefresh={reload}/>}<div className="flex flex-wrap justify-between gap-3"><span>{c.total}: {kind==='drivers'?data.drivers_total:data.vehicles_total}</span><div className="flex gap-2"><Button variant="outline" disabled={(kind==='drivers'?driverOffset:vehicleOffset)===0} onClick={()=>move(kind,Math.max(0,(kind==='drivers'?driverOffset:vehicleOffset)-25))}>{c.previous}</Button><Button variant="outline" disabled={(kind==='drivers'?driverOffset:vehicleOffset)+25>=(kind==='drivers'?data.drivers_total:data.vehicles_total)} onClick={()=>move(kind,(kind==='drivers'?driverOffset:vehicleOffset)+25)}>{c.next}</Button></div></div></TabsContent>)}
+ {data.can_manage_fleet&&<TabsContent value="fleet"><FleetPanel companyId={data.company.id}/></TabsContent>}{data.can_view_billing&&<TabsContent value="billing"><BillingPanel companyId={data.company.id} isTest={data.company.is_test}/></TabsContent>}{data.can_manage_staff&&<TabsContent value="staff"><StaffPanel companyId={data.company.id}/></TabsContent>}<TabsContent value="account"><AccountSettings/></TabsContent></Tabs>
+ </>}
+ </main></div>;
 }

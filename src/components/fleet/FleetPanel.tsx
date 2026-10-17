@@ -31,7 +31,7 @@ function formatUpdate(value: string | null): string {
   return new Intl.DateTimeFormat('ar-BE', { dateStyle: 'short', timeStyle: 'medium', timeZone: 'Europe/Brussels' }).format(date);
 }
 
-export default function FleetPanel({ showCompany = false }: { showCompany?: boolean }) {
+export default function FleetPanel({ showCompany = false,companyId }: { showCompany?: boolean;companyId?:number }) {
   const [rows, setRows] = useState<FleetLocationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,7 +40,7 @@ export default function FleetPanel({ showCompany = false }: { showCompany?: bool
   const load = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true); else setLoading(true);
     try {
-      const result = await api.get<FleetLocationRow[]>('/fleet');
+      const result = await api.get<FleetLocationRow[]>('/fleet',companyId?{company_id:String(companyId)}:undefined);
       setRows(Array.isArray(result) ? result : []);
       setFailed(false);
     } catch (error: any) {
@@ -50,7 +50,7 @@ export default function FleetPanel({ showCompany = false }: { showCompany?: bool
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     void load();

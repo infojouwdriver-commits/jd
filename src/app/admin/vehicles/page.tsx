@@ -1,7 +1,11 @@
-
 'use client';
+import {AlertDialog,AlertDialogContent,AlertDialogHeader,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel} from '@/components/ui/alert-dialog';
+import {DirectoryToolbar} from '@/components/operations/DirectoryToolbar';
+import {useCompanyDirectory} from '@/components/operations/useCompanyDirectory';
 
-import { useState, useEffect } from 'react';
+
+
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -42,6 +46,9 @@ interface Company {
 }
 
 interface Vehicle {
+  archived_at?:string|null;
+  is_test?:boolean;
+  company_name?:string;
   id: number;
   company_id: number;
   brand: string;
@@ -52,19 +59,23 @@ interface Vehicle {
   status: string;
 }
 
-export default function VehiclesPage() {
+function VehiclesPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const directory=useCompanyDirectory<Vehicle>('vehicles',user?.isAdmin===true);
+  const vehicles=directory.result.rows;
+  const filteredVehicles=vehicles;
+
+
+  const loading=directory.loading && !directory.result.rows.length && !directory.error;
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [deletingVehicle,setDeletingVehicle]=useState<number|null>(null);
+  const [deleteBusy,setDeleteBusy]=useState(false);
+  const [deleteError,setDeleteError]=useState('');
 
   const [newVehicle, setNewVehicle] = useState({
     company_id: '',
@@ -85,47 +96,8 @@ export default function VehiclesPage() {
     }
   }, [user, isLoading, router]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [companiesData, vehiclesData] = await Promise.all([
-        api.get<Company[]>('/companies'),
-        api.get<Vehicle[]>('/vehicles')
-      ]);
-      
-      setCompanies(companiesData);
-      setVehicles(vehiclesData);
-      setFilteredVehicles(vehiclesData);
-    } catch (error: any) {
-      toast.error(error.message || 'فشل تحميل البيانات');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.isAdmin === true) {
-      fetchData();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    let filtered = vehicles;
-
-    if (selectedCompany) {
-      filtered = filtered.filter(v => v.company_id === parseInt(selectedCompany));
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(v => 
-        v.plate_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.model.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    setFilteredVehicles(filtered);
-  }, [selectedCompany, searchQuery, vehicles]);
+  const fetchData=directory.reload;
+  useEffect(()=>{if(user?.isAdmin)api.get<Company[]>('/companies').then(setCompanies).catch(()=>toast.error('فشل تحميل الشركات'));},[user]);
 
   const handleCreateVehicle = async () => {
     if (!newVehicle.company_id || !newVehicle.brand || !newVehicle.model || !newVehicle.plate_number) {
@@ -170,18 +142,13 @@ export default function VehiclesPage() {
     }
   };
 
-  const handleDeleteVehicle = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه المركبة؟')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/vehicles?id=${id}`);
-      toast.success('تم حذف المركبة بنجاح');
-      fetchData();
-    } catch (error: any) {
-      toast.error(error.message || 'فشل حذف المركبة');
-    }
+  const handleDeleteVehicle=(id:number)=>{setDeleteError('');setDeletingVehicle(id);};
+  const confirmDeleteVehicle=async()=>{
+    if(deleteBusy||deletingVehicle===null)return;
+    setDeleteBusy(true);setDeleteError('');
+    try{await api.delete(`/vehicles?id=${deletingVehicle}`);setDeletingVehicle(null);fetchData();toast.success('تم حذف المركبة');}
+    catch{setDeleteError('تعذر حذف المركبة. قد تكون مرتبطة برحلات محفوظة؛ تبقى السجلات التاريخية محمية.');}
+    finally{setDeleteBusy(false);}
   };
 
   const getStatusBadge = (status: string) => {
@@ -334,45 +301,13 @@ export default function VehiclesPage() {
         </div>
       </header>
 
+      <AlertDialog open={deletingVehicle!==null} onOpenChange={open=>{if(!open&&!deleteBusy)setDeletingVehicle(null);}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>حذف المركبة</AlertDialogTitle><AlertDialogDescription>المركبة #{deletingVehicle}. لا يمكن حذف مركبة مرتبطة بسجلات تاريخية محفوظة.</AlertDialogDescription></AlertDialogHeader>{deleteError&&<p role="alert" className="text-destructive">{deleteError}</p>}<AlertDialogFooter><AlertDialogCancel disabled={deleteBusy}>إلغاء</AlertDialogCancel><Button variant="destructive" disabled={deleteBusy} aria-busy={deleteBusy} onClick={confirmDeleteVehicle}>تأكيد الحذف</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* الفلاتر */}
-        <Card className="p-6 rounded-3xl border-0 shadow-xl mb-8 bg-white dark:bg-slate-900">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>تصفية حسب الشركة</Label>
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger className="rounded-2xl">
-                  <SelectValue placeholder="جميع الشركات" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">جميع الشركات</SelectItem>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id.toString()}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>البحث</Label>
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث برقم اللوحة أو الماركة..."
-                  className="pr-12 rounded-2xl"
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
+        <DirectoryToolbar kind="vehicles" filters={directory.filters} setFilter={directory.setFilter} total={directory.result.total} loading={directory.loading} error={directory.error} reload={directory.reload}/>
 
         {/* قائمة المركبات */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredVehicles.length === 0 ? (
+          {directory.error && filteredVehicles.length === 0 ? <div /> : filteredVehicles.length === 0 ? (
             <Card className="col-span-2 p-12 rounded-3xl border-0 shadow-xl bg-white dark:bg-slate-900">
               <div className="text-center">
                 <Car className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
@@ -437,7 +372,7 @@ export default function VehiclesPage() {
                     تعديل
                   </Button>
                   <Button
-                    onClick={() => handleDeleteVehicle(vehicle.id)}
+                    disabled={!!vehicle.archived_at} onClick={() => handleDeleteVehicle(vehicle.id)}
                     variant="destructive"
                     className="rounded-2xl"
                   >
@@ -547,3 +482,5 @@ export default function VehiclesPage() {
     </div>
   );
 }
+
+export default function VehiclesPage(){return <Suspense fallback={<div role="status" className="p-6">جارٍ التحميل…</div>}><VehiclesPageContent/></Suspense>;}

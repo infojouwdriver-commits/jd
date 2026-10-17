@@ -1,7 +1,10 @@
-
 'use client';
+import {DirectoryToolbar} from '@/components/operations/DirectoryToolbar';
+import {useCompanyDirectory} from '@/components/operations/useCompanyDirectory';
 
-import { useState, useEffect } from 'react';
+
+
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -54,6 +57,9 @@ import {
 } from "@/components/ui/select";
 
 interface Driver {
+  archived_at?:string|null;
+  is_test?:boolean;
+  company_name?:string;
   id: number;
   user_id: number;
   company_id: number;
@@ -83,14 +89,15 @@ function getErrorMessage(error: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
-export default function AdminDriversPage() {
+function AdminDriversPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const directory=useCompanyDirectory<Driver>('drivers',user?.isAdmin===true);
+  const drivers=directory.result.rows;
   const [companies, setCompanies] = useState<Company[]>([]);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const loading=directory.loading && !directory.result.rows.length && !directory.error;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -126,18 +133,7 @@ export default function AdminDriversPage() {
     }
   }, [user, isLoading, router]);
 
-  const fetchDrivers = async () => {
-    setLoading(true);
-
-    try {
-      const data = await api.get<Driver[]>('/drivers');
-      setDrivers(data);
-    } catch (error) {
-      toast.error(getErrorMessage(error, 'فشل تحميل السائقين'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchDrivers=directory.reload;
 
   const fetchCompanies = async () => {
     try {
@@ -150,7 +146,6 @@ export default function AdminDriversPage() {
 
   useEffect(() => {
     if (user?.isAdmin) {
-      fetchDrivers();
       fetchCompanies();
     }
   }, [user]);
@@ -314,11 +309,7 @@ export default function AdminDriversPage() {
     }
   };
 
-  const filteredDrivers = drivers.filter((driver) =>
-    driver.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    driver?.phone?.includes(searchQuery) ||
-    driver?.national_id?.includes(searchQuery)
-  );
+  const filteredDrivers=drivers;
 
   if (isLoading || loading) {
     return (
@@ -460,24 +451,14 @@ export default function AdminDriversPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث عن سائق..."
-              className="pr-12 rounded-2xl border-slate-200 dark:border-slate-700 h-12"
-            />
-          </div>
-        </div>
+        <DirectoryToolbar kind="drivers" filters={directory.filters} setFilter={directory.setFilter} total={directory.result.total} loading={directory.loading} error={directory.error} reload={directory.reload}/>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6 rounded-3xl border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">إجمالي السائقين</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white">{drivers.length}</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white">{directory.result.total}</p>
               </div>
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <Users className="w-7 h-7 text-white" />
@@ -490,7 +471,7 @@ export default function AdminDriversPage() {
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">السائقون النشطون</p>
                 <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {drivers.filter((driver) => driver.status === 'active').length}
+                  {directory.result.active}
                 </p>
               </div>
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
@@ -504,7 +485,7 @@ export default function AdminDriversPage() {
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">السائقون الموقوفون</p>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                  {drivers.filter((driver) => driver.status === 'suspended').length}
+                  {directory.result.suspended}
                 </p>
               </div>
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/30">
@@ -515,7 +496,7 @@ export default function AdminDriversPage() {
         </div>
 
         <div className="space-y-4">
-          {filteredDrivers.length === 0 ? (
+          {directory.error && filteredDrivers.length === 0 ? <div /> : filteredDrivers.length === 0 ? (
             <Card className="p-12 rounded-3xl border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
               <div className="text-center">
                 <div className="w-20 h-20 rounded-3xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
@@ -552,7 +533,7 @@ export default function AdminDriversPage() {
                       variant="outline"
                       size="icon"
                       className="rounded-2xl"
-                      onClick={() => handleEditDriver(driver)}
+                      disabled={!!driver.archived_at} onClick={() => handleEditDriver(driver)}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -560,7 +541,7 @@ export default function AdminDriversPage() {
                       variant="outline"
                       size="icon"
                       className="rounded-2xl text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                      onClick={() => handleDeleteDriver(driver)}
+                      disabled={!!driver.archived_at} onClick={() => handleDeleteDriver(driver)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -768,3 +749,5 @@ export default function AdminDriversPage() {
     </div>
   );
 }
+
+export default function AdminDriversPage(){return <Suspense fallback={<div role="status" className="p-6">جارٍ التحميل…</div>}><AdminDriversPageContent/></Suspense>;}

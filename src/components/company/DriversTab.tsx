@@ -24,11 +24,12 @@ interface Driver {
 interface DriversTabProps {
   drivers: Driver[];
   onRefresh: () => void;
+  companyId:number;
 }
 
 const emptyForm = { full_name: '', phone: '', password: '', national_id: '', driver_license: '' };
 
-export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
+export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -59,10 +60,10 @@ export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
     try {
       if (editingDriver) {
         const { password, ...profile } = form;
-        await api.put(`/company-portal/drivers?id=${editingDriver.id}`, { ...profile, ...(password ? { password } : {}) });
+        await api.put(`/company-portal/drivers?company_id=${companyId}&id=${editingDriver.id}`, { ...profile, ...(password ? { password } : {}) });
         toast.success('Driver updated successfully');
       } else {
-        await api.post('/company-portal/drivers', form);
+        await api.post(`/company-portal/drivers?company_id=${companyId}`, form);
         toast.success('Driver added successfully');
       }
       setShowDialog(false);
@@ -78,7 +79,7 @@ export default function DriversTab({ drivers, onRefresh }: DriversTabProps) {
     if (deletingId !== null || !window.confirm('Deactivate this driver? Their trip history will be retained.')) return;
     setDeletingId(id);
     try {
-      await api.delete(`/company-portal/drivers?id=${id}`);
+      await api.delete(`/company-portal/drivers?company_id=${companyId}&id=${id}`);
       toast.success('Driver deactivated; trip history retained');
       onRefresh();
     } catch (err: any) {

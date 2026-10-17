@@ -7,6 +7,7 @@ import { createPostgrestClient } from "./postgrest";
 type QueryFilters = Record<string, unknown>;
 
 interface FindManyParams {
+  includeArchived?: boolean;
   limit?: number;
   offset?: number;
   orderBy?: {
@@ -47,11 +48,13 @@ export default class CrudOperations {
   }
 
   async findMany(filters?: QueryFilters, params?: FindManyParams): Promise<any[]> {
-    const { limit, offset, orderBy } = params || {};
+    const { limit, offset, orderBy, includeArchived } = params || {};
 
     try {
       const client = this.getClient();
       let query = client.from(this.tableName).select("*");
+      if(!includeArchived && ['companies','drivers','vehicles'].includes(this.tableName)) query=query.is('archived_at',null);
+      if(!includeArchived && this.tableName==='company_users') query=query.eq('is_active',true);
 
       if (orderBy) {
         query = query.order(orderBy.column, {

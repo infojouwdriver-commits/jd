@@ -24,11 +24,12 @@ interface Vehicle {
 interface VehiclesTabProps {
   vehicles: Vehicle[];
   onRefresh: () => void;
+  companyId:number;
 }
 
 const emptyForm = { brand: '', model: '', plate_number: '', vin: '' };
 
-export default function VehiclesTab({ vehicles, onRefresh }: VehiclesTabProps) {
+export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesTabProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -50,10 +51,10 @@ export default function VehiclesTab({ vehicles, onRefresh }: VehiclesTabProps) {
     setLoading(true);
     try {
       if (editingVehicle) {
-        await api.put(`/company-portal/vehicles?id=${editingVehicle.id}`, form);
+        await api.put(`/company-portal/vehicles?company_id=${companyId}&id=${editingVehicle.id}`, form);
         toast.success('Vehicle updated successfully');
       } else {
-        await api.post('/company-portal/vehicles', form);
+        await api.post(`/company-portal/vehicles?company_id=${companyId}`, form);
         toast.success('Vehicle added successfully');
       }
       setShowDialog(false);
@@ -68,7 +69,7 @@ export default function VehiclesTab({ vehicles, onRefresh }: VehiclesTabProps) {
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      await api.delete(`/company-portal/vehicles?id=${id}`);
+      await api.delete(`/company-portal/vehicles?company_id=${companyId}&id=${id}`);
       toast.success('Vehicle removed');
       onRefresh();
     } catch (err: any) {

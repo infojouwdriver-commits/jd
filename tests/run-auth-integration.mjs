@@ -38,7 +38,7 @@ const mock=http.createServer(async(req,res)=>{
   } else {
    const table=rows[url.pathname.slice(1)];if(!table)throw Error('Unhandled table');
    const matches=row=>[...url.searchParams].filter(([key])=>!['select','order','limit','offset','columns'].includes(key)).every(([key,value])=>{
-    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
+    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='is')return arg==='null'?row[key]==null:arg==='true'?row[key]===true:row[key]===false;if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
    });
    if(req.method==='POST'){const record={...(Array.isArray(body)?body[0]:body),id:table.length+1,created_at:new Date().toISOString(),revoked:false};table.push(record);data=record;}
    else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));

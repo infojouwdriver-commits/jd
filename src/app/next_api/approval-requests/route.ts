@@ -1,3 +1,4 @@
+import {createPostgrestClient} from '@/lib/postgrest';
 
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
@@ -152,6 +153,13 @@ export const PUT = requestMiddleware(async (request, context) => {
         errorMessage: "طلب الموافقة غير موجود",
         status: 404,
       });
+    }
+
+    if(existing.entity_type==='company' && existing.request_type==='delete'){
+      if(!['approved','rejected'].includes(status))return createErrorResponse({status:400,errorMessage:'Invalid decision'});
+      const reviewed=await createPostgrestClient(adminToken).rpc('security_review_company_archive',{p_approval:Number(id),p_actor:Number(context.payload!.sub),p_decision:status,p_notes:typeof review_notes==='string'?review_notes:''});
+      if(reviewed.error)return createErrorResponse({status:reviewed.error.code==='40001'?409:503,errorMessage:'Archive review unavailable; finish active trips and review pending Chiron deliveries'});
+      return createSuccessResponse(reviewed.data);
     }
 
     const user_id = context.payload?.sub;
