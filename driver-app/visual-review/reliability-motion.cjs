@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),path=require('node:path');
+exports.run=async(page,origin,output)=>{
+ await page.goto(origin+'/?screen=settings');await page.getByRole('radio',{name:'العربية',exact:true}).click();await page.getByRole('radio',{name:'داكن',exact:true}).click();
+ await page.goto(origin+'/?screen=home');assert.equal(await page.getByRole('button',{name:'تغيير المركبة',exact:true}).count(),0,'Home does not fetch/select company vehicles');
+ await page.goto(origin+'/?screen=settings');await page.getByRole('button',{name:'تغيير المركبة',exact:true}).click();await page.getByText('معلومات السائق',{exact:true}).waitFor();
+ for(const [scenario,text] of [['missing','خدمة التقارير تحتاج تحديث الخادم.'],['offline','لم يصل الطلب إلى الخادم']]){await page.goto(origin+'/?screen=trips&scenario='+scenario);await page.getByRole('alert').filter({hasText:text}).waitFor();assert.equal(await page.getByText('#701',{exact:true}).count(),0);}
+ await page.emulateMedia({reducedMotion:'reduce'});await page.goto(origin+'/?screen=startup');await page.getByTestId('startup-screen').waitFor();await page.screenshot({path:path.join(output,'startup-ar-dark.png')});const beam=page.getByTestId('loading-beam');const still=await beam.evaluate(el=>getComputedStyle(el).transform);await page.waitForTimeout(350);assert.equal(await beam.evaluate(el=>getComputedStyle(el).transform),still);
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.goto(origin+'/?screen=settings');await page.getByRole('radio',{name:'حركات خفيفة',exact:true}).click();await page.goto(origin+'/?screen=startup');await page.waitForTimeout(250);const moving=await page.getByTestId('loading-beam').evaluate(el=>getComputedStyle(el).transform);await page.waitForTimeout(350);assert.notEqual(await page.getByTestId('loading-beam').evaluate(el=>getComputedStyle(el).transform),moving,'Real pending loader moves');
+ await page.goto(origin+'/?screen=trips&scenario=loading');await page.getByTestId('journey-loading').waitFor();await page.screenshot({path:path.join(output,'loading-trips-ar-dark.png')});
+ await page.goto(origin+'/?screen=notifications');await page.getByText(/تنبيهات الهاتف موقوفة مؤقتًا/).waitFor();await page.screenshot({path:path.join(output,'notifications-paused-ar-dark.png')});
+};

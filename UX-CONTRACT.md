@@ -101,3 +101,24 @@ Sources: src/components/driver/DriverProfilePage.tsx, src/app/driver/trips/page.
 src/app/driver/summary/page.tsx, src/lib/driver-activity.ts and existing vehicle
 controller/API. Verification: driver-activity unit and native API tests, real HTTP
 integration over simulated PostgREST (1031 trips), and portal-parity browser QA.
+
+## Reliability revision · 0.2.7
+
+Phone push is temporarily paused at the user's request after repeated activation
+failures. The provider never requests notification permissions, obtains tokens,
+restores opt-in, subscribes token listeners or queues tests. It stores local opt-out
+and attempts to revoke only an existing installation; failure is isolated from
+session/trips/reports/logout. Messages and the in-app notification inbox continue.
+The phone-push panel explains this state and exposes no unusable activation action.
+A previously registered phone's OS delivery may continue if server revocation is
+unreachable; no successful revocation is claimed without server confirmation.
+
+Live verification on 17 October found `/drivers/activity` returned 404 because
+the tested reporting backend was not deployed. Deployment must complete before
+0.2.7 is accepted. The two report screens distinguish a missing backend, session
+expiry, forbidden access, transport timeout/offline, and report-server failure.
+No fallback may silently sum one loaded page into a period total. A non-JSON proxy
+response is a server error, not an assertion that the phone has no Internet.
+Startup shows the app-owned JourneyLoading only while preferences/session are
+pending. There is no fake progress, welcome timer or blocking animation. Error
+and login recovery remain reachable after the real request settles.
