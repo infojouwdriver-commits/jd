@@ -13,7 +13,7 @@ export function isPlatformAdmin(userId: string, configured = ''): boolean {
   return configured.split(',').map(s => s.trim()).filter(Boolean).includes(String(userId));
 }
 export function publicEndpoint(path: string, method: string): boolean {
-  return (method === 'POST' && ['/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout'].includes(path)) ||
+  return (method === 'POST' && ['/next_api/company-registrations', '/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout'].includes(path)) ||
     (method === 'GET' && ['/next_api/gdpr/privacy-policy', '/next_api/gdpr/cookie-categories'].includes(path));
 }
 export function disabledEndpoint(path: string): boolean {

@@ -122,3 +122,25 @@ response is a server error, not an assertion that the phone has no Internet.
 Startup shows the app-owned JourneyLoading only while preferences/session are
 pending. There is no fake progress, welcome timer or blocking animation. Error
 and login recovery remain reachable after the real request settles.
+
+## Web company onboarding scope — 17 October 2026
+
+| Capability | Canonical owner | Observable contract |
+|---|---|---|
+| Locale and direction | LanguageContext + registration/copy.ts | Arabic RTL, French/Dutch LTR; labels stay visible |
+| Fields and actions | ui/Input, Label, Button | Mask secrets; inline validation; single-flight submission |
+| Dialog and discard | ui/Dialog + ui/AlertDialog | Trapped focus, Escape guards dirty data, confirmation above form |
+| Registration | CompanyRegistrationDialog + company-registrations POST | Five steps; review excludes secrets; no storage or URL credentials |
+| Pending lifecycle | security_submit_company_registration | One atomic record group, inactive accounts/vehicle/subscription until review |
+| Retry | request UUID + server HMAC fingerprint | Uncertain response freezes payload; same request safely retries |
+| Administration | CompanyRegistrationApprovals + authenticated GET/PUT | Admin MFA authority; filters/pagination; explicit approve/reject with notes |
+| Activation | security_review_company_registration | Atomic decision; changed ownership conflicts; no production Chiron switch or payment |
+
+Required identity collisions reject the whole request, never attach a new user
+to an existing tenant. Passwords are hashed and Chiron secrets encrypted before
+persistence. Browser roles cannot read the registration ledger or execute its
+functions. Server responses and administrator summaries exclude credentials.
+On success clear secrets, show request reference and actual decision status.
+Known errors preserve editable fields; uncertain responses preserve a frozen
+retry. Cancel confirms loss of unsent data. Reject requires an administrator
+reason. Approval leaves Chiron TEST pending separate production acceptance.

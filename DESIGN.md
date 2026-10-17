@@ -162,3 +162,20 @@ custom transition. Existing route artwork/press feedback is retained.
 Reference: Expo's MIT animation skill, reviewed at revision
 927dd7cc2088ec2f0c73589fe2e94c3c973afc45, `expo/skills`,
 `plugins/expo/skills/expo-animation/SKILL.md`. No runtime package was added.
+
+## Company registration and marketing website — 17 October 2026
+
+The web scope now adopts midnight navy (#0D1727), gold (#E0BD5B), warm paper
+and system typography. Marketing uses restrained route animation and section
+reveals; both respect reduced motion and pause when the document is hidden.
+Illustrative journeys remain explicitly labeled demo data. No invented prices,
+customer counts, certifications or Chiron acceptance claims are published.
+
+Registration is an operational five-step dialog, not a decorative contact form.
+Its canonical web owners are ui/Dialog, AlertDialog, Button, Input and Label;
+LanguageContext owns Arabic/French/Dutch. registration.css owns its scoped
+layout tokens. The administrator widget reuses those same web primitives.
+Global layers are cookie 400, dialog backdrop 500, dialog 600, confirmation
+700/710 and toast 900. Portaled selects, menus and popovers use 650 so
+controls opened inside a dialog remain visible. Keyboard focus stays in the current modal. Scrollable
+content and a visible footer preserve submission on short mobile viewports.

@@ -884,3 +884,18 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ring); outline-
 }
 @keyframes jd-home-float { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-8px) rotate(-3deg); } }
 @media(max-width:650px){ .jd-home-audiences { padding:0 22px 50px; }.jd-home-audience-grid { grid-template-columns:1fr; gap:16px; }.jd-home-audience-grid article { padding:26px; } }
+
+:root{--z-cookie:400;--z-dialog-backdrop:500;--z-dialog:600;--z-confirm-backdrop:700;--z-confirm:710;--z-toast:900;}
+
+/* Shared scrollbars stay visible in operational forms and modal bodies. */
+html { scrollbar-gutter: stable; scrollbar-color: #718199 #edf1f6; scrollbar-width: thin; }
+* { scrollbar-color: #718199 #edf1f6; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #edf1f6; }
+::-webkit-scrollbar-thumb { background: #718199; border: 2px solid #edf1f6; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #52647b; }
+::-webkit-scrollbar-thumb:active { background: #33445d; }
+@media (forced-colors: active) { * { scrollbar-color: auto; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+:root { --z-popover: 650; }
