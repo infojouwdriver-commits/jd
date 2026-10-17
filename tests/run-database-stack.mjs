@@ -128,8 +128,8 @@ try {
  const envArgs=Object.keys(appEnv).flatMap(key=>['--env',key]);
  await docker(['run','--detach','--name',application,'--network',front,'--publish','127.0.0.1::3000','--read-only','--tmpfs','/tmp','--tmpfs','/app/.next/cache:uid=10001,gid=10001','--cap-drop','ALL','--security-opt','no-new-privileges:true',...envArgs,appImage],{env:appEnv});
  const appAddress=await docker(['port',application,'3000/tcp']);assert.match(appAddress,/^127\.0\.0\.1:\d+$/);const appBase=`http://${appAddress}`;
- async function appApi(path,method='GET',body,cookie,bearer){
-  const response=await fetch(appBase+path,{method,signal:AbortSignal.timeout(15000),headers:{Origin:appOrigin,'Content-Type':'application/json','X-Real-IP':'127.0.0.1',...(cookie?{Cookie:cookie}:{}),...(bearer?{Authorization:`Bearer ${bearer}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});
+ async function appApi(path,method='GET',body,cookie,bearer,clientIp='127.0.0.1'){
+  const response=await fetch(appBase+path,{method,signal:AbortSignal.timeout(15000),headers:{Origin:appOrigin,'Content-Type':'application/json','X-Real-IP':clientIp,...(cookie?{Cookie:cookie}:{}),...(bearer?{Authorization:`Bearer ${bearer}`}:{})},body:body===undefined?undefined:JSON.stringify(body)});
   let data;try{data=await response.clone().json();}catch{data=null;}return {response,status:response.status,data};
  }
  ready=false;for(let i=0;i<90;i++){try{if((await appApi('/privacy-policy')).status===200){ready=true;break;}}catch{}await delay(1000);}assert.ok(ready,'Standalone application did not start with native database');
@@ -163,18 +163,20 @@ try {
  await psql("SELECT setval(pg_get_serial_sequence('companies','id'),(SELECT max(id) FROM companies));");
 
  // Public onboarding through the real application, PostgreSQL and service role.
+ // Model a separate registering client so independent login/logout tests retain their own rate bucket.
+ const onboardingApi=(path,method,body,cookie)=>appApi(path,method,body,cookie,undefined,'127.0.0.2');
  await psql("SELECT setval(pg_get_serial_sequence('vehicles','id'),(SELECT max(id) FROM vehicles)); SELECT setval(pg_get_serial_sequence('drivers','id'),(SELECT max(id) FROM drivers)); SELECT setval(pg_get_serial_sequence('users','id'),(SELECT max(id) FROM users));");
  const onboarding={request_id:randomUUID(),company_name:'Synthetic Onboarding',company_email:'onboarding@example.invalid',company_password:appPassword,company_phone:'+32470000001',company_address:'Synthetic address only',vat_number:'BE0222222222',kbo_number:'0222222222',chiron_test_client_id:'synthetic-test',chiron_test_client_secret:'synthetic-test-secret',chiron_prod_client_id:'synthetic-production',chiron_prod_client_secret:'synthetic-production-secret',vehicle_brand:'Demo',vehicle_model:'Car',plate_number:'SYN-ONBOARD',vin:'WVWZZZ1JZXW000001',chiron_vehicle_id:'',driver_name:'Synthetic Onboarding Driver',driver_phone:'+32470000000',driver_password:appPassword,driver_license:'SYN-LICENCE',bestuurderspas:'SYN-PASS',language:'fr'};
- const onboarded=await appApi('/next_api/company-registrations','POST',onboarding);assert.equal(onboarded.status,201,'Native public onboarding must persist atomically');assert.equal(onboarded.data.data.status,'pending');
+ const onboarded=await onboardingApi('/next_api/company-registrations','POST',onboarding);assert.equal(onboarded.status,201,'Native public onboarding must persist atomically');assert.equal(onboarded.data.data.status,'pending');
  const pending=(await success('/company_registrations?request_id=eq.'+onboarding.request_id,service))[0];assert.equal(pending.status,'pending');
  const pendingCompany=(await success('/companies?id=eq.'+pending.company_id,service))[0];assert.equal(pendingCompany.subscription_status,'pending_approval');assert.match(pendingCompany.chiron_test_client_secret,/^enc:v1:/);assert.match(pendingCompany.chiron_prod_client_secret,/^enc:v1:/);
- assert.equal((await appApi('/next_api/company-portal/login','POST',{email:onboarding.company_email,password:appPassword})).status,401);assert.equal((await appApi('/next_api/auth/driver-login','POST',{phone:onboarding.driver_phone,password:appPassword})).status,401);
+ assert.equal((await onboardingApi('/next_api/company-portal/login','POST',{email:onboarding.company_email,password:appPassword})).status,401);assert.equal((await onboardingApi('/next_api/auth/driver-login','POST',{phone:onboarding.driver_phone,password:appPassword})).status,401);
  await denied('/company_registrations',browser);await denied('/rpc/security_review_company_registration',browser,'POST',{p_request:onboarding.request_id,p_action:'approve',p_notes:'',p_reviewer:1});
- const retried=await appApi('/next_api/company-registrations','POST',onboarding);assert.equal(retried.status,201);assert.equal((await success('/company_registrations?request_id=eq.'+onboarding.request_id,service)).length,1);
- const decision=await appApi('/next_api/company-registrations','PUT',{request_id:onboarding.request_id,action:'approve',notes:'Synthetic acceptance'},adminCookie);assert.equal(decision.status,200);assert.equal(decision.data.data.status,'approved');
- assert.equal((await appApi('/next_api/company-portal/login','POST',{email:onboarding.company_email,password:appPassword})).status,200);assert.equal((await appApi('/next_api/auth/driver-login','POST',{phone:onboarding.driver_phone,password:appPassword})).status,200);
+ const retried=await onboardingApi('/next_api/company-registrations','POST',onboarding);assert.equal(retried.status,201);assert.equal((await success('/company_registrations?request_id=eq.'+onboarding.request_id,service)).length,1);
+ const decision=await onboardingApi('/next_api/company-registrations','PUT',{request_id:onboarding.request_id,action:'approve',notes:'Synthetic acceptance'},adminCookie);assert.equal(decision.status,200);assert.equal(decision.data.data.status,'approved');
+ assert.equal((await onboardingApi('/next_api/company-portal/login','POST',{email:onboarding.company_email,password:appPassword})).status,200);assert.equal((await onboardingApi('/next_api/auth/driver-login','POST',{phone:onboarding.driver_phone,password:appPassword})).status,200);
  const approvedCompany=(await success('/companies?id=eq.'+pending.company_id,service))[0];assert.equal(approvedCompany.subscription_status,'active');assert.equal(approvedCompany.chiron_mode,'TEST');
- const safeRequests=await appApi('/next_api/company-registrations?status=all','GET',undefined,adminCookie);assert.equal(safeRequests.status,200);assert.equal(JSON.stringify(safeRequests.data).includes(onboarding.chiron_test_client_secret),false);
+ const safeRequests=await onboardingApi('/next_api/company-registrations?status=all','GET',undefined,adminCookie);assert.equal(safeRequests.status,200);assert.equal(JSON.stringify(safeRequests.data).includes(onboarding.chiron_test_client_secret),false);
  checks.push('Native company onboarding persists encrypted pending records, blocks both logins until MFA approval, denies browser RPCs and retries without duplication; approval preserves Chiron TEST');
  const createdCompany=await appApi('/next_api/companies','POST',{name:'Native created company',vat_number:'BE0111111111',kbo_number:'0111111111',email:'native-company@example.invalid',password:appPassword},adminCookie);
  assert.equal(createdCompany.status,201,'Administrator company creation must work');const newCompanyId=createdCompany.data.data.id;
