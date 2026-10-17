@@ -1,5 +1,5 @@
 {
-  "passed": 19,
+  "passed": 26,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -11,6 +11,13 @@
     "Password-only admin access is denied in production",
     "Native history ignores hostile driver/company scope",
     "Native administrator driver history remains self-scoped",
+    "Legacy native invoice without JSON type is rejected",
+    "Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice",
+    "Native PDF still denies another driver trip",
+    "Native activity paginates all own matching records and summary covers the entire period",
+    "Activity ignores hostile owner filters even for administrator",
+    "Invalid activity date rejected",
+    "Native profile shows own company and authoritative selected vehicle",
     "Driver cannot enter admin company endpoint",
     "Client admin role claims do not grant platform authority",
     "Driver cannot edit another driver trip",

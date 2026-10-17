@@ -5,8 +5,9 @@
 Android driver app; Arabic RTL, French, Dutch and English; system native input
 and safe areas; Brussels trip timestamps. Accessibility target: WCAG 2.2 AA
 principles applied to native controls. Native device acceptance remains required.
-Visual-only redesign: no authorization, money calculation, trip lifecycle,
-message delivery or storage-policy changes.
+Portal parity expansion authorized 2026-10-17: profile/company data, selected
+vehicle, bounded filtered history and gross completed-trip reporting. Trip
+lifecycle, invoice persistence and push contracts remain authoritative.
 
 ## Business-context sources
 
@@ -33,13 +34,27 @@ are the shared consumers. No changes apply to web admin or marketing.
 | Scrollbar | experience/ui.tsx Screen | Native ScrollView | Platform-owned scrollbar | narrow-screen scroll and no clipped controls |
 | Toast | experience/ui.tsx Notice and Loading | Error/status owned by the caller | Persistent inline status, error and busy | loading/error/empty synthetic fixtures |
 | CRUD | experience/session.tsx, Trips.tsx, Messages.tsx, ActiveTrip.tsx | Driver API and trip controller | Existing create/reply/refresh/load-more flows | existing unit tests and visual-review workflows |
+| Date | experience/ActivityFilters.tsx and activity-filters.ts | Brussels civil dates; server driver-activity.ts | Typed YYYY-MM-DD with localized format guidance; no calendar popup | DST boundaries, invalid ranges and draft/apply tests |
 
-Table selection and date picking are not part of this native app change.
-Formatting a trip timestamp is not a new calendar control.
+No table selection or calendar popup is introduced. Typed dates are Gregorian,
+inclusive from/through dates; the server converts them to a half-open Brussels
+instant range with DST. Range maximum is 366 elapsed days. Today, rolling seven
+days, calendar month-to-date and year-to-date are explicit presets. Trips and
+revenue reuse committed date/platform state; status filters apply only to trips.
+Filter editing does not request data until Apply. Applying/resetting clears paging.
+Stale requests cannot replace a newer query. Native session memory overrides URL
+persistence: no financial records or profile PII are stored in route parameters or
+disk caches. Revenue excludes unfinished trips and reports gross prices only.
+All pages are self-scoped on the server, including administrator sessions. Reports
+scan bounded 1000-row batches and reject oversized requests instead of silently
+returning a partial total. Vehicle choice uses current_vehicle_id first and the
+existing active/pending-trip guard. Preference, logout and password flows remain
+on Settings.
 
 ## Navigation and state
 
-Four persistent destinations: home, trips, messages and account. Active trip and
+Five persistent destinations: home, trips, revenue, messages and profile.
+Settings is a child of profile and preserves its existing account/security forms. Active trip and
 notifications stay outside the primary tab list. Use tabPress/tabLongPress events;
 never route around a prevented navigation event. Notifications are reachable
 from the labeled home bell. The bottom bar reserves its own space and safe inset.
@@ -73,3 +88,16 @@ workflow. Synthetic visual QA covers narrow RTL/LTR screens, both themes,
 preference persistence, loading/empty/error, navigation controls, message forms,
 notification opt-in UI and reduced-motion behavior. Native Mapbox, GPS, physical
 push delivery and TalkBack are not proven by browser fixtures.
+
+## Portal parity evidence and drift · 2026-10-17
+
+| Prior rule | Evidence / new user requirement | Resolution |
+|---|---|---|
+| Lime/petrol native palette | User asks for closer portal design; portal uses navy/gold | Canonical tokens updated to navy/gold; light icons use dark gold for contrast |
+| Four destinations and settings-only account | Portal has profile/company/vehicle and Revenus | Five destinations; Profile and Settings separated |
+| First loaded-page revenue | User expects organized period reporting | Authenticated activity endpoint supplies full-period gross totals; pagination stays independent |
+
+Sources: src/components/driver/DriverProfilePage.tsx, src/app/driver/trips/page.tsx,
+src/app/driver/summary/page.tsx, src/lib/driver-activity.ts and existing vehicle
+controller/API. Verification: driver-activity unit and native API tests, real HTTP
+integration over simulated PostgREST (1031 trips), and portal-parity browser QA.

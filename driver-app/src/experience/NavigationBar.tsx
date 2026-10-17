@@ -4,7 +4,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {usePreferences} from './preferences';
 import {design} from './tokens';
 import {Icon,type IconName} from './ui';
-export const navigationItems=[['index','home','home-outline','home'],['trips','trips','receipt-outline','receipt'],['messages','messages','chatbubbles-outline','chatbubbles'],['account','account','person-circle-outline','person-circle']] as const;
+export const navigationItems=[['index','home','home-outline','home'],['trips','trips','receipt-outline','receipt'],['revenues','revenues','bar-chart-outline','bar-chart'],['messages','messages','chatbubbles-outline','chatbubbles'],['account','profileNav','person-circle-outline','person-circle']] as const;
 export type NavigationRoute=typeof navigationItems[number][0];
 function NavigationItem({name,label,icon,activeIcon,selected,count=0,onPress,onLongPress}:{name:NavigationRoute;label:string;icon:IconName;activeIcon:IconName;selected:boolean;count?:number;onPress:()=>void;onLongPress?:()=>void}){
  const {colors,animate}=usePreferences();const [progress]=useState(()=>new Animated.Value(selected?1:0));const [focused,setFocused]=useState(false),[hovered,setHovered]=useState(false);
@@ -13,5 +13,5 @@ function NavigationItem({name,label,icon,activeIcon,selected,count=0,onPress,onL
 }
 export function NavigationBar({active,onNavigate,onLongPress,unreadMessages=0}:{active:string;onNavigate:(route:NavigationRoute)=>void;onLongPress?:(route:NavigationRoute)=>void;unreadMessages?:number}){
  const {colors,t,rtl}=usePreferences();const insets=useSafeAreaInsets();
- return <View style={{backgroundColor:colors.bg,paddingHorizontal:16,paddingTop:8,paddingBottom:Math.max(8,insets.bottom)}}><View accessibilityRole="tablist" style={{width:'100%',maxWidth:600,alignSelf:'center',flexDirection:rtl?'row-reverse':'row',backgroundColor:colors.surface,borderRadius:23,borderWidth:1,borderColor:colors.line,paddingHorizontal:5,paddingVertical:4}}>{navigationItems.map(([name,label,icon,activeIcon])=><NavigationItem key={name} name={name} label={t(label)} icon={icon} activeIcon={activeIcon} selected={active===name} count={name==='messages'?unreadMessages:0} onPress={()=>onNavigate(name)} onLongPress={()=>onLongPress?.(name)}/>)}</View></View>;
+ return <View style={{backgroundColor:colors.bg,paddingHorizontal:10,paddingTop:8,paddingBottom:Math.max(8,insets.bottom)}}><View accessibilityRole="tablist" style={{width:'100%',maxWidth:600,alignSelf:'center',flexDirection:rtl?'row-reverse':'row',backgroundColor:colors.surface,borderRadius:23,borderWidth:1,borderColor:colors.line,paddingHorizontal:5,paddingVertical:4}}>{navigationItems.map(([name,label,icon,activeIcon])=><NavigationItem key={name} name={name} label={t(label)} icon={icon} activeIcon={activeIcon} selected={active===name} count={name==='messages'?unreadMessages:0} onPress={()=>onNavigate(name)} onLongPress={()=>onLongPress?.(name)}/>)}</View></View>;
 }

@@ -11,6 +11,11 @@ export interface DriverMessage {id:number;subject:string;message_body:string;sen
 export interface DriverReply {id:number;reply_body:string;sender_name?:string;sender_type?:string;created_at?:string}
 export interface DriverNotification {id:number;title:string;message:string;notification_type?:string;is_read:boolean;created_at?:string}
 export interface AccountInfo {id:number;email:string;display_name?:string;email_verification_available:boolean}
+export interface DriverDetails {hasProfile:boolean;driver:{id:number;full_name:string;phone?:string;national_id?:string;driver_license?:string;bestuurderspas_number?:string;status?:string;registration_status?:string;preferred_language?:string;created_at?:string};company:{id:number;name:string;vat_number?:string;kbo_number?:string;address?:string;email?:string;phone?:string;subscription_status?:string}|null;vehicle:{id:number;brand?:string;model?:string;plate_number:string;vin?:string;status:string}|null;all_vehicles:{id:number;brand?:string;model?:string;plate_number:string;status:string}[]}
+export type ActivityTrip=Omit<DriverTripSummary,'price'>&{price:number|null;status:string;ride_type?:string;external_source?:string|null;payment_method?:string|null};
+export interface ActivityQuery {from:string;to:string;platform:string;status:string}
+export interface ActivityPage {driver_id:number;trips:ActivityTrip[];total:number;next_offset:number|null}
+export interface RevenueSummary {driver_id:number;from:string;to:string;total_trips:number;total_revenue:number;total_distance:number;total_duration:number;average_trip_value:number;platform_stats:Record<string,{count:number;revenue:number}>;payment_stats:Record<string,{count:number;revenue:number}>;daily_stats:Record<string,{count:number;revenue:number}>;basis:'completed_gross_eur'}
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number) {
@@ -21,13 +26,13 @@ export class ApiError extends Error {
 // Uses the OS cookie store with the existing HttpOnly session contract.
 // Native cookie persistence/refresh must pass device acceptance before release.
 export function createDriverApi(transport: typeof fetch = fetch) {
-  async function requestOnce<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, number>): Promise<T> {
+  async function requestOnce<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, string|number>): Promise<T> {
     if (!/^\/next_api\/[a-z0-9/-]+$/.test(path)) throw new Error('Invalid API path');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
     try {
       const params = new URLSearchParams();
-      for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) || !Number.isSafeInteger(value) || value < 0) throw new ApiError(400); params.set(key,String(value));}
+      for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) || (typeof value==='number'?(!Number.isSafeInteger(value)||value<0):value.length>64)) throw new ApiError(400); params.set(key,String(value));}
       const response = await transport(API_ORIGIN + path + (params.size ? `?${params}` : ''), {
         method, credentials: 'include', redirect: 'error',
         headers: {Origin: API_ORIGIN, Accept: 'application/json', ...(body ? {'Content-Type': 'application/json'} : {})},
@@ -41,7 +46,7 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   }
   // Only a safe read may repeat after an ambiguous transport failure. Writes,
   // including invoice persistence, never repeat automatically.
-  async function request<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, number>): Promise<T> {
+  async function request<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, string|number>): Promise<T> {
     try {return await requestOnce<T>(path, body, method, query);}
     catch (error) {
       if (method !== 'GET' || !(error instanceof ApiError) || ![0,408].includes(error.status)) throw error;
@@ -65,7 +70,7 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   function profile(): Promise<DriverProfile> {
     return profileFlight ?? (profileFlight = loadProfile().finally(() => {profileFlight = null;}));
   }
-  async function ownerRead<T>(owner: number, path: string, query?: Record<string, number>): Promise<T> {
+  async function ownerRead<T>(owner: number, path: string, query?: Record<string, string|number>): Promise<T> {
     try {return await request<T>(path, undefined, 'GET', query);}
     catch (error) {
       if (!(error instanceof ApiError) || error.status !== 401) throw error;
@@ -86,6 +91,25 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async profileDetails(owner:number){
+      const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
+      const result=await ownerRead<DriverDetails>(owner,'/next_api/drivers/profile');
+      if(result.hasProfile!==true||result.driver?.id!==owner||typeof result.driver.full_name!=='string'||!result.company||result.company.id!==current.driver.company_id||!Array.isArray(result.all_vehicles)||result.all_vehicles.some(v=>!Number.isSafeInteger(v.id)||v.id<1||typeof v.plate_number!=='string'||v.status!=='active'))throw new ApiError(502);
+      return result;
+    },
+    async activity(owner:number,filters:ActivityQuery,offset=0){
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      if(!Number.isSafeInteger(offset)||offset<0||offset>100000)throw new ApiError(400);
+      const page=await ownerRead<ActivityPage>(owner,'/next_api/drivers/activity',{...filters,offset,mode:'trips'});
+      if(page.driver_id!==owner||!Number.isSafeInteger(page.total)||page.total<0||!Array.isArray(page.trips)||page.trips.length>25||(page.next_offset!==null&&page.next_offset!==offset+page.trips.length)||page.trips.some(r=>r.driver_id!==owner||!Number.isSafeInteger(r.id)||r.id<1||(r.price!==null&&(!Number.isFinite(r.price)||r.price<0))||typeof r.status!=='string'||(r.currency&&r.currency!=='EUR')))throw new ApiError(502);
+      return page;
+    },
+    async revenue(owner:number,filters:ActivityQuery){
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const result=await ownerRead<RevenueSummary>(owner,'/next_api/drivers/activity',{...filters,status:'completed',mode:'summary'});
+      if(result.driver_id!==owner||result.from!==filters.from||result.to!==filters.to||result.basis!=='completed_gross_eur'||!Number.isSafeInteger(result.total_trips)||result.total_trips<0||[result.total_revenue,result.total_distance,result.total_duration,result.average_trip_value].some(v=>!Number.isFinite(v)||v<0)||[result.platform_stats,result.payment_stats,result.daily_stats].some(map=>!map||typeof map!=='object'||Object.values(map).some(v=>!v||!Number.isSafeInteger(v.count)||v.count<0||!Number.isFinite(v.revenue)||v.revenue<0)))throw new ApiError(502);
+      return result;
+    },
     async pushRegistration(owner:number,installation_id:string,enabled:boolean,token?:string,language='ar') {
       if((await profile()).driver.id!==owner)throw new ApiError(403);
       const receipt=await request<{enabled:boolean}>('/next_api/push/devices',{installation_id,enabled,...(token?{token}:{}),language});

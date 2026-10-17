@@ -34,9 +34,15 @@ const mock=http.createServer(async(req,res)=>{
    else throw Error('Unhandled RPC');
   } else {
    const table=rows[url.pathname.slice(1)];if(!table)throw Error('Unhandled table');
-   const matches=row=>[...url.searchParams].filter(([key])=>!['select','order','limit','offset','columns'].includes(key)).every(([key,value])=>String(row[key])===value.replace(/^eq\./,''));
+   const matches=row=>[...url.searchParams].filter(([key])=>!['select','order','limit','offset','columns'].includes(key)).every(([key,value])=>{
+    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
+   });
    if(req.method==='POST'){const record={...(Array.isArray(body)?body[0]:body),id:table.length+1,created_at:new Date().toISOString(),revoked:false};table.push(record);data=record;}
-   else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));data=req.headers.accept?.includes('vnd.pgrst.object')?found[0]:found;}
+   else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));
+    if(req.method==='GET'&&req.headers.prefer?.includes('count=exact')){const total=found.length;const offset=Number(url.searchParams.get('offset')||0),limit=Number(url.searchParams.get('limit')||1000);found=found.slice(offset,offset+limit);res.setHeader('Content-Range',`${offset}-${offset+found.length-1}/${total}`);}
+    const columns=url.searchParams.get('select');if(columns&&columns!=='*')found=found.map(row=>Object.fromEntries(columns.split(',').filter(k=>k in row).map(k=>[k,row[k]])));
+    data=req.headers.accept?.includes('vnd.pgrst.object')?found[0]:found;}
+
   }
   if(data===undefined){res.writeHead(406,{'Content-Type':'application/json'});res.end(JSON.stringify({code:'PGRST116',message:'Not found'}));return;}
   res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(data));
@@ -78,6 +84,16 @@ try {
  }
  assert.equal(rows.invoices.filter(row=>row.trip_id===103).length,1);checks.push('Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice');
  await assert.rejects(native.invoice(1,104),error=>error.status===404);checks.push('Native PDF still denies another driver trip');
+
+ const activityQuery={from:'2026-10-14',to:'2026-10-15',platform:'all',status:'all'};
+ for(let n=0;n<1030;n++)rows.trips.push({...completed(200+n,2,1),price:'2.00',ride_type:'INTERNAL',payment_method:'cash'});
+ const activity=await native.activity(1,activityQuery);assert.equal(activity.total,1031);assert.equal(activity.trips.length,25);assert.equal(activity.next_offset,25);assert.equal('private_payload' in activity.trips[0],false);
+ const tail=await native.activity(1,activityQuery,1025);assert.equal(tail.trips.length,6);assert.equal(tail.next_offset,null);
+ const revenue=await native.revenue(1,activityQuery);assert.equal(revenue.total_trips,1031);assert.equal(revenue.total_revenue,2062);checks.push('Native activity paginates all own matching records and summary covers the entire period');
+ const hostile=await status('Activity ignores hostile owner filters even for administrator',request('/next_api/drivers/activity?from=2026-10-14&to=2026-10-15&driver_id=1&user_id=2','GET',null,refreshedToken),200);assert.deepEqual((await hostile.json()).data.trips.map(r=>r.id),[105]);
+ const filtered=await native.activity(1,{...activityQuery,platform:'INTERNAL'});assert.equal(filtered.total,1030);await status('Invalid activity date rejected',request('/next_api/drivers/activity?from=2026-02-30&to=2026-10-17','GET',null,driverToken),400);
+ rows.driver_registration_requests=[];rows.drivers[0].current_vehicle_id=21;rows.drivers[0].assigned_vehicle_id=20;rows.vehicles.push({id:20,company_id:1,status:'active',plate_number:'OLD'},{id:21,company_id:1,status:'active',plate_number:'CURRENT'});
+ const details=await native.profileDetails(1);assert.equal(details.driver.id,1);assert.equal(details.vehicle.id,21);checks.push('Native profile shows own company and authoritative selected vehicle');
 
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);

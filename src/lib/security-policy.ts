@@ -25,7 +25,7 @@ export function memberEndpoint(path: string, method: string, userType: string): 
   if (userType === 'distributor') return method === 'GET' && ['/next_api/distributors/my-companies','/next_api/invoices/my-invoices'].includes(path);
   if (userType !== 'driver') return false;
   if (['/next_api/push/devices','/next_api/push/test','/next_api/push/receipt'].includes(path)) return method === 'POST';
-  if (path === '/next_api/drivers/trips') return method === 'GET';
+  if (['/next_api/drivers/trips','/next_api/drivers/activity'].includes(path)) return method === 'GET';
   if (path === '/next_api/messages') return method === 'POST';
   if (path === '/next_api/messages/replies') return method === 'GET' || method === 'POST';
   return ['/next_api/drivers/me', '/next_api/drivers/pricing', '/next_api/drivers/vehicles', '/next_api/drivers/profile', '/next_api/driver-profile', '/next_api/trips', '/next_api/trips/start', '/next_api/trips/end', '/next_api/trips/summary', '/next_api/trips/export-pdf', '/next_api/trips/generate-invoice', '/next_api/trips/retry-sync', '/next_api/notifications/driver', '/next_api/notifications/mark-read', '/next_api/messages/driver', '/next_api/messages/mark-read', '/next_api/fleet/location'].includes(path) && !(path === '/next_api/drivers/profile' && method !== 'GET') && !(path === '/next_api/fleet/location' && !['GET','POST'].includes(method));
