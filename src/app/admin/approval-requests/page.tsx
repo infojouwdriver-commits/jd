@@ -254,7 +254,7 @@ export default function ApprovalRequestsPage() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <Tabs defaultValue="company-registration">
-          <TabsList className="h-auto flex-wrap w-full mb-6 rounded-2xl bg-white dark:bg-slate-800 shadow-md p-1">
+          <TabsList className="grid h-auto grid-cols-1 gap-1 sm:grid-cols-3 w-full mb-6 rounded-2xl bg-white dark:bg-slate-800 shadow-md p-1">
             <TabsTrigger value="company-registration" className="flex-1 rounded-xl gap-2"><Building2 className="w-4 h-4"/>تسجيل الشركات</TabsTrigger>
             <TabsTrigger value="driver-registration" className="flex-1 rounded-xl gap-2">
               <UserCheck className="w-4 h-4" />
