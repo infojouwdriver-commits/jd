@@ -39,7 +39,7 @@ export function createDriverApi(transport: typeof fetch = fetch) {
         ...(body ? {body: JSON.stringify(body)} : {}), signal: controller.signal,
       }).catch(() => {throw new ApiError(controller.signal.aborted ? 408 : 0);});
       if (!response.ok) throw new ApiError(response.status);
-      const result = await response.json();
+      const result = await response.json().catch(() => {throw new ApiError(502);});
       if (result.success !== true) throw new ApiError(502);
       return result.data as T;
     } finally { clearTimeout(timer); }

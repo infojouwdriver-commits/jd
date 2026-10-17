@@ -1,0 +1,244 @@
+{
+  "findings": [
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Account.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Account.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Account.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/ActiveTrip.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/ActiveTrip.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/ActivityFilters.tsx",
+      "line": 11,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/ActivityFilters.tsx",
+      "line": 11,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/ActivityFilters.tsx",
+      "line": 11,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Home.tsx",
+      "line": 14,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Home.tsx",
+      "line": 17,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Home.tsx",
+      "line": 18,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Home.tsx",
+      "line": 18,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Messages.tsx",
+      "line": 13,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Notifications.tsx",
+      "line": 10,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Notifications.tsx",
+      "line": 10,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Revenues.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Revenues.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Settings.tsx",
+      "line": 13,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Settings.tsx",
+      "line": 16,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Trips.tsx",
+      "line": 20,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Trips.tsx",
+      "line": 20,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Trips.tsx",
+      "line": 20,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    },
+    {
+      "category": "violation",
+      "file": "driver-app/src/experience/Trips.tsx",
+      "line": 20,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error",
+      "adjudication": "HTML scanner treats native Button as an HTML button; source has native onPress. Runtime browser interactions verify actions."
+    }
+  ],
+  "mode": "strict",
+  "projectRoot": "/workspace/scratch/80e755459694/jd-repair",
+  "schemaVersion": 1,
+  "summary": {
+    "errors": 23,
+    "total": 23,
+    "unresolved": 0,
+    "violations": 23,
+    "warnings": 0
+  }
+}

@@ -145,3 +145,20 @@ areas, not a scaled copy of desktop tables.
 - Do not turn the driver app into a promotional landing page.
 - Do not use decorative counters, fake live data, endless status pulsing or
   full-screen motion while a driver is using trip controls.
+
+### Recovery and startup · 0.2.7
+
+The home screen prioritizes the trip action and messages; vehicle selection is
+owned by Profile, with a Settings shortcut. It does not fetch the vehicle list
+just to draw a home card. JourneyLoading owns all indeterminate loading regions,
+including session startup. A short route line and gold travelling beam express
+work in progress, never a percentage, GPS location or completion claim. The
+welcome surface reuses navy/gold, native fonts and the route motif. It adds no
+minimum delay and yields immediately to the actual session result. The beam
+stops in background and with OS/user reduced motion; static text remains.
+New motion uses the installed Reanimated 4.5.1 UI runtime/CSS support (transform
+and opacity only). Welcome enters with a 280ms fade; peer tab navigation has no
+custom transition. Existing route artwork/press feedback is retained.
+Reference: Expo's MIT animation skill, reviewed at revision
+927dd7cc2088ec2f0c73589fe2e94c3c973afc45, `expo/skills`,
+`plugins/expo/skills/expo-animation/SKILL.md`. No runtime package was added.
