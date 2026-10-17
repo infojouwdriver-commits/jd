@@ -13,6 +13,7 @@ const secret='integration-only-jwt-secret-01234567890123456789';
 const totpSecret='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 const password='IntegrationPassword123!';
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
+const registrationCalls=[];rows.company_registrations=[];
 const claims=new Set();let unavailable=false;const databaseTokens=[];
 rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
 rows.companies=[{id:1,name:'Synthetic Company',chiron_mode:'TEST'}];rows.vehicles=[];
@@ -25,6 +26,8 @@ const mock=http.createServer(async(req,res)=>{
   let data;
   if(url.pathname.startsWith('/rpc/')) {
    if(url.pathname==='/rpc/security_rate_limit'){if(unavailable){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}data=true;}
+   else if(url.pathname==='/rpc/security_submit_company_registration'){registrationCalls.push(body);data={request_id:body.p_request,status:'pending'};}
+   else if(url.pathname==='/rpc/security_review_company_registration'){assert.equal(body.p_reviewer,1);data={request_id:body.p_request,status:body.p_action==='approve'?'approved':'rejected'};}
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
    else if(url.pathname==='/rpc/security_create_trip_invoice'){
@@ -50,7 +53,7 @@ const mock=http.createServer(async(req,res)=>{
 });
 mock.listen(0,'127.0.0.1');await once(mock,'listening');
 const dbUrl=`http://127.0.0.1:${mock.address().port}`;const base='http://127.0.0.1:3003';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3003'],{env:{...process.env,NODE_ENV:'production',JWT_SECRET:secret,HASH_SALT_KEY:'integration-only-salt',SCHEMA_USER:'test_user',SCHEMA_ADMIN_USER:'test_admin',POSTGREST_URL:dbUrl,POSTGREST_SCHEMA:'public',POSTGREST_API_KEY:'',PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':totpSecret}),RATE_LIMIT_SECRET:'integration-only-rate-limit-secret',APP_ORIGIN:base,TRUST_PROXY:'false',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3003'],{env:{...process.env,NODE_ENV:'production',JWT_SECRET:secret,HASH_SALT_KEY:'integration-only-salt',DATA_ENCRYPTION_KEY:'a'.repeat(64),SCHEMA_USER:'test_user',SCHEMA_ADMIN_USER:'test_admin',POSTGREST_URL:dbUrl,POSTGREST_SCHEMA:'public',POSTGREST_API_KEY:'',PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':totpSecret}),RATE_LIMIT_SECRET:'integration-only-rate-limit-secret',APP_ORIGIN:base,TRUST_PROXY:'false',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
 const checks=[];
 async function request(path,method='GET',body,token,cookie){return fetch(base+path,{method,headers:{...(method!=='GET'?{'Content-Type':'application/json',origin:base}:{}),...(token?{Authorization:`Bearer ${token}`} :{}),...(cookie?{cookie}: {})},body:body?JSON.stringify(body):undefined});}
 async function status(name,promise,expected){const response=await promise;assert.equal(response.status,expected,name);checks.push(name);return response;}
@@ -69,6 +72,25 @@ try {
  await status('Rotated refresh cookie cannot be replayed',request('/next_api/auth/refresh','POST',{},null,cookie),401);
  await status('Password-only admin access is denied in production',request('/next_api/trips','GET',null,await sign(1)),401);
  const driverToken=await sign(2);
+ await status('Anonymous company registration list denied',request('/next_api/company-registrations'),401);
+ await status('Anonymous company review denied',request('/next_api/company-registrations','PUT',{}),401);
+ await status('Driver cannot list company registrations',request('/next_api/company-registrations','GET',null,driverToken),403);
+ await status('Driver cannot review company registrations',request('/next_api/company-registrations','PUT',{},driverToken),403);
+ await status('Public company registration validates required fields',request('/next_api/company-registrations','POST',{}),400);
+ assert.equal(registrationCalls.length,0);
+ const registration={request_id:'684778fa-9fd4-4a31-aa18-a44df9d97bd1',company_name:'Synthetic Transport',company_email:'register@example.invalid',company_password:'SyntheticPassword123!',company_phone:'+32470000001',company_address:'Synthetic street 123',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_test_client_id:'synthetic-test',chiron_test_client_secret:'synthetic-secret',chiron_prod_client_id:'synthetic-production',chiron_prod_client_secret:'synthetic-production-secret',vehicle_brand:'Demo',vehicle_model:'Car',plate_number:'DEMO-123',vin:'WVWZZZ1JZXW000001',chiron_vehicle_id:'',driver_name:'Synthetic Driver',driver_phone:'+32470000000',driver_password:'DriverPassword123!',driver_license:'SYN-LICENCE',bestuurderspas:'SYN-PASS',language:'fr'};
+ await status('Public onboarding rejects caller privilege fields',request('/next_api/company-registrations','POST',{...registration,is_active:true}),400);
+ await status('Foreign origin cannot submit company onboarding',fetch(base+'/next_api/company-registrations',{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:JSON.stringify(registration)}),403);
+ const registered=await status('Public complete registration returns pending receipt',request('/next_api/company-registrations','POST',registration),201);
+ assert.deepEqual((await registered.json()).data,{request_id:registration.request_id,status:'pending'});
+ const protectedData=registrationCalls[0].p_data;assert.match(protectedData.company.chiron_test_client_secret,/^enc:v1:/);assert.match(protectedData.company.chiron_prod_client_secret,/^enc:v1:/);assert.equal(await bcrypt.compare(registration.company_password,protectedData.manager_hash),true);assert.equal(await bcrypt.compare(registration.driver_password,protectedData.driver_hash),true);assert.equal(protectedData.user_role,'test_user');
+ assert.equal(JSON.stringify(protectedData).includes('synthetic-production-secret'),false);
+ await status('Identical request safely reuses its keyed fingerprint',request('/next_api/company-registrations','POST',registration),201);assert.equal(registrationCalls[0].p_fingerprint,registrationCalls[1].p_fingerprint);
+ rows.company_registrations.push({...registration,status:'pending',submitted_at:new Date().toISOString(),fingerprint:'synthetic-private',manager_hash:'synthetic-private',test_configured:true,production_configured:true});
+ const listing=await status('MFA administrator can review company registrations',request('/next_api/company-registrations','GET',null,refreshedToken),200);const safeListing=JSON.stringify(await listing.json());assert.equal(safeListing.includes('synthetic-private'),false);assert.equal(safeListing.includes('synthetic-production-secret'),false);
+ await status('Rejection needs an administrator reason',request('/next_api/company-registrations','PUT',{request_id:registration.request_id,action:'reject',notes:''},refreshedToken),400);
+ await status('MFA administrator approval uses server reviewer identity',request('/next_api/company-registrations','PUT',{request_id:registration.request_id,action:'approve',notes:'Reviewed synthetic request'},refreshedToken),200);
+
  rows.drivers.push({id:11,user_id:1,status:'active',company_id:1});
  const completed=(id,user_id,driver_id)=>({id,user_id,driver_id,company_id:1,status:'completed',start_time:'2026-10-14T10:00:00Z',end_time:'2026-10-14T10:05:00Z',start_address:'Synthetic A',end_address:'Synthetic B',price:2,currency:'EUR',distance_km:1,duration_minutes:5,private_payload:'synthetic-internal-only'});
  rows.trips.push(completed(103,2,1),completed(104,3,2),completed(105,1,11));

@@ -145,7 +145,7 @@ export default function CookieBanner() {
           transition={{ type: "spring", stiffness: 280, damping: 28 }}
           dir={isRtl ? "rtl" : "ltr"}
           data-cookie-banner
-          className="fixed bottom-0 left-0 right-0 z-[99999] p-3 sm:p-4"
+          className="fixed bottom-0 left-0 right-0 z-[var(--z-cookie,400)] p-3 sm:p-4"
         >
           <div className="max-w-2xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
             <div className="p-4 flex items-start gap-3">
