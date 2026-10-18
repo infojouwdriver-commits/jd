@@ -1,3 +1,4 @@
+import {connectionFailure,connectionMessage} from './connection-state';
 
 import { AUTH_ENABLED, authConfig } from "../config/auth-config";
 import { AUTH_CODE } from "@/constants/auth";
@@ -94,16 +95,20 @@ async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> 
   if (!isJson) {
     return {
       success: false,
-      errorMessage: rawText,
+      errorMessage: connectionMessage('server_response',typeof document==='undefined'?'fr':document.documentElement.lang),
+      errorCode:'INVALID_SERVER_RESPONSE',
     };
   }
 
   try {
-    return JSON.parse(rawText) as ApiResponse<T>;
+    const parsed=JSON.parse(rawText);
+    if(!parsed||typeof parsed!=='object'||typeof parsed.success!=='boolean')throw new Error('Invalid API envelope');
+    return parsed as ApiResponse<T>;
   } catch {
     return {
       success: false,
-      errorMessage: "Invalid JSON response",
+      errorMessage: connectionMessage('server_response',typeof document==='undefined'?'fr':document.documentElement.lang),
+      errorCode:'INVALID_SERVER_RESPONSE',
     };
   }
 }
@@ -117,6 +122,7 @@ async function refreshToken(): Promise<boolean> {
       },
       credentials: "include",
       cache: "no-store",
+      signal:AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -174,6 +180,7 @@ async function apiRequest<T = any>(
       credentials: "include",
       cache: "no-store",
       ...options,
+      signal:options?.signal??AbortSignal.timeout(20000),
     });
 
     const result = await parseApiResponse<T>(response);
@@ -250,17 +257,18 @@ async function apiRequest<T = any>(
     }
 
     console.error("Operation failed");
-    throw new ApiError(500, "Network error or invalid response");
+    const kind=connectionFailure(error,typeof navigator==='undefined'?undefined:navigator.onLine);
+    throw new ApiError(0,connectionMessage(kind,typeof document==='undefined'?'fr':document.documentElement.lang),kind.toUpperCase());
   }
 }
 
 export const api = {
-  get: <T = any>(endpoint: string, params?: Record<string, string>) => {
+  get: <T = any>(endpoint: string, params?: Record<string, string>, options?: RequestInit) => {
     const url = params
       ? `${endpoint}?${new URLSearchParams(params).toString()}`
       : endpoint;
 
-    return apiRequest<T>(url, { method: "GET" });
+    return apiRequest<T>(url, { ...options, method: "GET" });
   },
 
   post: <T = any>(endpoint: string, data?: any) =>

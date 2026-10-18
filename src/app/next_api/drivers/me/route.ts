@@ -54,6 +54,7 @@ export const GET = requestMiddleware(async (request, context) => {
         id: company.id,
         name: company.name,
         chiron_mode: company.chiron_mode,
+        is_test: company.is_test===true,
         pricing: pricing,
       },
       vehicles_count: vehicles ? vehicles.length : 0,

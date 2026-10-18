@@ -35,7 +35,7 @@ test('broadcast recipient cannot read another driver reply, and deleting a recip
  for(const id of [2,3])await assert.rejects(helper.accessibleMessage('token',id,'7',false),error=>error.status===404);
  assert.equal((await helper.accessibleMessage('token',2,'8',false)).id,2);
 });
-test('trip listing uses all tenants for admin, selected tenant when requested, and authenticated driver ownership otherwise',async()=>{
+test('trip listing defaults admin to live snapshots across tenants, selected tenant when requested, and authenticated driver ownership otherwise',async()=>{
  const queries=[];
  class Crud {constructor(table){this.table=table;}async findMany(filter){if(this.table==='trips')queries.push(filter);return [];}}
  const route=load('../src/app/next_api/trips/route.ts',{
@@ -43,10 +43,10 @@ test('trip listing uses all tenants for admin, selected tenant when requested, a
  '@/lib/api-utils':{requestMiddleware:handler=>handler,parseQueryParams:request=>({limit:50,offset:0,company_id:request.company})},
  '@/lib/auth':{generateAdminUserToken:async()=>''},
  });
- assert.equal((await route.GET({}, {payload:{sub:'1',isAdmin:true}})).status,200);assert.equal(Object.keys(queries[0]).length,0);
- await route.GET({company:'9'},{payload:{sub:'1',isAdmin:true}});assert.equal(queries[1].company_id,9);
- await route.GET({company:'9'},{payload:{sub:'7',isAdmin:false}});assert.equal(queries[2].user_id,'7');assert.equal(queries[2].company_id,undefined);
- assert.equal((await route.GET({company:'bad'},{payload:{sub:'1',isAdmin:true}})).status,400);
+ assert.equal((await route.GET({nextUrl:new URL('https://app.example/next_api/trips')}, {payload:{sub:'1',isAdmin:true}})).status,200);assert.equal(queries[0].is_test,false);
+ await route.GET({company:'9',nextUrl:new URL('https://app.example/next_api/trips')},{payload:{sub:'1',isAdmin:true}});assert.equal(queries[1].company_id,9);
+ await route.GET({company:'9',nextUrl:new URL('https://app.example/next_api/trips')},{payload:{sub:'7',isAdmin:false}});assert.equal(queries[2].user_id,'7');assert.equal(queries[2].company_id,undefined);
+ assert.equal((await route.GET({company:'bad',nextUrl:new URL('https://app.example/next_api/trips')},{payload:{sub:'1',isAdmin:true}})).status,400);
 });
 test('company identity uses normalized email and canonical user password; invalid credentials never call storage',async()=>{
  const calls=[];

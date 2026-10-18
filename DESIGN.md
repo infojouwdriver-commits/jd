@@ -179,3 +179,9 @@ Global layers are cookie 400, dialog backdrop 500, dialog 600, confirmation
 700/710 and toast 900. Portaled selects, menus and popovers use 650 so
 controls opened inside a dialog remain visible. Keyboard focus stays in the current modal. Scrollable
 content and a visible footer preserve submission on short mobile viewports.
+
+## Company operations extension (2026-10-18)
+
+The approved company workspaces extend the existing web management shell and its semantic CSS/Tailwind tokens. They do not change the native palette or rebrand the marketing site. The visual aim is a calm operational ledger: a clear company identity header, compact status badges, scannable monetary totals, natural-height tab panels, and consistent shared Radix dialogs/selects. Financial state is expressed in text, never only in colour. Tables scroll horizontally when comparison requires it; cards retain every available action at narrow widths.
+
+Behavior and business references are maintained in docs/OPERATIONS_UX.md and docs/COMPANY_PLATFORM_CONTRACT.md. Runtime owners are src/components/operations, src/components/ui and the existing globals.css theme. No new parallel colour token system is introduced.

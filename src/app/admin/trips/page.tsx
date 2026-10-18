@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -55,6 +56,7 @@ export default function AdminTripsPage() {
   const [companies, setCompanies] = useState<{id:number;name:string}[]>([]);
   const [companyId, setCompanyId] = useState('all');
   const [page, setPage] = useState(0);
+  const [scope,setScope]=useState('live');
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
@@ -78,7 +80,7 @@ export default function AdminTripsPage() {
   const fetchTrips = useCallback(async () => {
     setLoading(true);
     try {
-      const query = new URLSearchParams({limit:'50',offset:String(page*50)});
+      const query = new URLSearchParams({limit:'50',offset:String(page*50),scope});
       if (companyId !== 'all') query.set('company_id', companyId);
       const data = await api.get<Trip[]>('/trips?' + query);
       setTrips(data);
@@ -87,7 +89,7 @@ export default function AdminTripsPage() {
     } finally {
       setLoading(false);
     }
-  }, [companyId, page]);
+  }, [companyId, page,scope]);
 
   useEffect(() => {
     if (user?.isAdmin === true) {
@@ -224,10 +226,8 @@ export default function AdminTripsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-4 space-y-2">
           <Label htmlFor="trip-company">الشركة</Label>
-          <select id="trip-company" value={companyId} onChange={event => {setPage(0);setCompanyId(event.target.value);}} className="w-full rounded-xl border bg-background p-3">
-            <option value="all">جميع الشركات</option>
-            {companies.map(company => <option key={company.id} value={String(company.id)}>{company.name}</option>)}
-          </select>
+          <Select value={companyId} onValueChange={v=>{setPage(0);setCompanyId(v);}}><SelectTrigger id="trip-company"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">جميع الشركات</SelectItem>{companies.map(company=><SelectItem key={company.id} value={String(company.id)}>{company.name}</SelectItem>)}</SelectContent></Select>
+          <Label htmlFor="trip-scope">نوع الحساب</Label><Select value={scope} onValueChange={v=>{setPage(0);setScope(v);}}><SelectTrigger id="trip-scope"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="live">حسابات فعلية</SelectItem><SelectItem value="test">حسابات التجربة</SelectItem><SelectItem value="all">الكل</SelectItem></SelectContent></Select>
           <p className="text-xs text-muted-foreground">الأعداد والبحث أدناه تخص الصفحة الحالية (حتى 50 رحلة).</p>
         </div>
         {/* Search */}

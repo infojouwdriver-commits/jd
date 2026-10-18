@@ -63,6 +63,8 @@ jobs:
           node "$RUNNER_TEMP/portal-ui/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Company, account, trip and fleet browser regressions
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-portal-ui.mjs
+      - name: Company archive, ledger and permission UI acceptance
+        run: OPERATIONS_QA_DIR="$RUNNER_TEMP/operations-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-operations-ui.mjs
       - name: Mapbox failure and durable driver trip start regression
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-mapbox-trip-ui.mjs
       - name: Cookie preferences persistence and non-blocking dismissal

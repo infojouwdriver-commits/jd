@@ -1,0 +1,200 @@
+"use client";
+import { Suspense } from "react";
+import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { operationsCopy } from "./operations-copy";
+import { useOperationData } from "./useOperationData";
+const words = {
+  ar: {
+    pending_registrations: "تسجيلات بانتظار الموافقة",
+    overdue: "فواتير متأخرة",
+    incomplete: "رحلات مفتوحة منذ أكثر من 12 ساعة",
+    chiron: "إرسال Chiron يحتاج متابعة",
+    prepared: "مستندات بانتظار الإصدار",
+    not_ready: "اشتراكات تحتاج إعداد التبادل",
+    mail_attention: "بريد يحتاج متابعة",
+    note: "الأعداد تشمل كامل النتائج؛ التفاصيل أدناه تعرض أول 50 حالة. الرحلات الطويلة تستدعي المراجعة ولا تُنهى تلقائيًا.",
+  },
+  fr: {
+    pending_registrations: "Inscriptions à approuver",
+    overdue: "Factures en retard",
+    incomplete: "Trajets ouverts depuis plus de 12 heures",
+    chiron: "Envois Chiron à vérifier",
+    prepared: "Documents à émettre",
+    not_ready: "Abonnements : échange à configurer",
+    mail_attention: "E-mails à vérifier",
+    note: "Les compteurs couvrent tous les résultats ; les détails montrent les 50 premiers cas. Un long trajet n’est jamais clôturé automatiquement.",
+  },
+  nl: {
+    pending_registrations: "Inschrijvingen ter goedkeuring",
+    overdue: "Achterstallige facturen",
+    incomplete: "Ritten langer dan 12 uur open",
+    chiron: "Chiron-verzendingen controleren",
+    prepared: "Documenten nog uit te reiken",
+    not_ready: "Abonnementen: uitwisseling instellen",
+    mail_attention: "E-mails controleren",
+    note: "Tellingen omvatten alle resultaten; de details tonen de eerste 50 gevallen. Lange ritten worden nooit automatisch afgesloten.",
+  },
+};
+interface Item {
+  id: number;
+  company_id: number;
+  company_name: string;
+  document_number?: string;
+  balance_cents?: number;
+  due_date?: string;
+  start_time?: string;
+  chiron_sync_state?: string;
+}
+function Centre() {
+  const { language } = useLanguage(),
+    c = operationsCopy[language],
+    w = words[language],
+    params = useSearchParams(),
+    router = useRouter(),
+    pathname = usePathname(),
+    scope = params.get("scope") || "live";
+  const { data, error, loading, reload } = useOperationData<{
+    counts: Record<string, number>;
+    overdue: Item[];
+    incomplete: Item[];
+    chiron: Item[];
+    generated_at: string;
+    scheduler: { last_run_at: string | null; failed_count: number };
+  }>("/operations-centre?scope=" + scope);
+  const targets: Record<string, string> = {
+    pending_registrations: "/admin/approval-requests",
+    overdue: "#overdue",
+    incomplete: "#incomplete",
+    chiron: "#chiron",
+    prepared: "/admin/companies?scope=" + scope,
+    not_ready: "/admin/companies?scope=" + scope,
+    mail_attention: "/admin/companies?scope=" + scope,
+  };
+  return (
+    <div
+      className="mx-auto max-w-7xl space-y-6"
+      dir={language === "ar" ? "rtl" : "ltr"}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-xs tracking-widest text-muted-foreground">
+            JOUW DRIVER / OPERATIONS
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold">{c.attention}</h1>
+        </div>
+        <div className="flex gap-2">
+          <Select
+            value={scope}
+            onValueChange={(v) =>
+              router.replace(pathname + "?scope=" + v, { scroll: false })
+            }
+          >
+            <SelectTrigger className="w-44" aria-label={c.scope}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["live", "test", "all"] as const).map((k) => (
+                <SelectItem value={k} key={k}>
+                  {c[k]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button disabled={loading} variant="outline" onClick={reload}>
+            {c.refresh}
+          </Button>
+        </div>
+      </header>
+      <p className="rounded-xl border bg-card p-4 text-sm">{c.noSuspension}</p>
+      {loading && <p role="status">{c.loading}</p>}
+      {error && (
+        <div role="alert">
+          <p>{c.error}</p>
+          <Button onClick={reload}>{c.retry}</Button>
+        </div>
+      )}
+      {data && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Object.entries(data.counts).map(([key, n]) => (
+              <Link
+                key={key}
+                href={targets[key]}
+                className="rounded-2xl border bg-card p-5 transition-colors hover:border-primary/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <p className="text-sm text-muted-foreground">
+                  {w[key as "overdue"]}
+                </p>
+                <p className="mt-3 text-3xl font-semibold tabular-nums">{n}</p>
+              </Link>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">{w.note}</p>
+          {(["overdue", "incomplete", "chiron"] as const).map((kind) => (
+            <section key={kind} id={kind} className="scroll-mt-24 space-y-3">
+              <h2 className="text-xl font-semibold">{w[kind]}</h2>
+              {data[kind].map((item) => (
+                <article
+                  key={item.id}
+                  className="flex flex-wrap justify-between gap-3 rounded-xl border bg-card p-4"
+                >
+                  <div>
+                    <p className="font-medium">{item.company_name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {item.document_number || "#" + item.id} ·{" "}
+                      {item.due_date || item.start_time} ·{" "}
+                      {kind === "overdue"
+                        ? new Intl.NumberFormat(language + "-BE", {
+                            style: "currency",
+                            currency: "EUR",
+                          }).format(Number(item.balance_cents) / 100)
+                        : item.chiron_sync_state}
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link
+                      href={
+                        "/admin/companies/" +
+                        item.company_id +
+                        "?tab=" +
+                        (kind === "overdue" ? "billing" : "trips")
+                      }
+                    >
+                      {c.open}
+                    </Link>
+                  </Button>
+                </article>
+              ))}
+              {!data[kind].length && (
+                <p className="rounded-xl border border-dashed p-6 text-muted-foreground">
+                  {c.empty}
+                </p>
+              )}
+            </section>
+          ))}
+          <p className="text-xs text-muted-foreground">
+            {c.scheduler}: {data.scheduler.last_run_at || "—"} ·{" "}
+            {data.generated_at}
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+export default function OperationsCentre() {
+  return (
+    <Suspense>
+      <Centre />
+    </Suspense>
+  );
+}

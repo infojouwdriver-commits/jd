@@ -3,7 +3,7 @@ export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
   native_trip_contract_version?: number;
   driver: {id: number; status?: string; full_name: string; company_id: number; current_vehicle_id: number | null};
-  company: {id: number; name: string; chiron_mode: string};
+  company: {id: number; name: string; chiron_mode: string;is_test?:boolean};
 }
 export interface DriverVehicle {id: number; company_id: number; plate_number: string; status: string; brand?: string; model?: string}
 export interface DriverTripSummary {id:number; driver_id:number; start_time:string|null; end_time:string|null; start_address:string|null; end_address:string|null; price:number; currency:string; distance:number|null; duration:number|null; chiron_environment:string|null; chiron_sync_state:string|null}
@@ -19,10 +19,11 @@ export interface RevenueSummary {driver_id:number;from:string;to:string;total_tr
 export class ApiError extends Error {
   readonly status: number;
   constructor(status: number) {
-    super(status === 401 ? 'انتهت الجلسة أو بيانات الدخول غير صحيحة.' : status === 403 ? 'ليس لديك صلاحية لهذا الإجراء.' : 'تعذّر الاتصال بالخادم. حاول مجدداً.');
+    super(status === 408 ? 'انتهت مهلة الطلب. تحقق من حالة العملية قبل إعادة المحاولة.' : status===0 ? 'تعذّر الوصول إلى الخادم؛ لا يمكن تأكيد انقطاع الإنترنت.' : status>=500 ? 'الخادم غير متاح أو أعاد استجابة غير صالحة.' : status === 401 ? 'انتهت الجلسة أو بيانات الدخول غير صحيحة.' : status === 403 ? 'ليس لديك صلاحية لهذا الإجراء.' : 'تعذّر الاتصال بالخادم. حاول مجدداً.');
     this.status = status;
   }
 }
+export function apiConnectionKey(error:unknown){return error instanceof ApiError?(error.status===408?'requestTimeout':error.status===0?'requestTransport':error.status>=500?'requestServer':error.status===401?'signInAgain':'error'):'error';}
 // Uses the OS cookie store with the existing HttpOnly session contract.
 // Native cookie persistence/refresh must pass device acceptance before release.
 export function createDriverApi(transport: typeof fetch = fetch) {
@@ -91,6 +92,11 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async billingNotice(owner:number){
+      const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
+      const result=await ownerRead<{driver_id:number;notice:{notice_key:string;company_id:number}|null}>(owner,'/next_api/drivers/billing-notice');
+      if(result.driver_id!==owner || (result.notice&&result.notice.company_id!==current.company.id))throw new ApiError(403);return result.notice;
+    },
     async profileDetails(owner:number){
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
       const result=await ownerRead<DriverDetails>(owner,'/next_api/drivers/profile');

@@ -1,0 +1,167 @@
+{
+  "scope": "new shared company operations web UI",
+  "strict_audit": {
+    "findings": [
+      {
+        "category": "violation",
+        "file": "src/components/operations/CompanyLifecycleAction.tsx",
+        "line": 156,
+        "message": "Enabled literal button has no detectable action or submit behavior.",
+        "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+        "ruleId": "affordance.actionless-button",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/DirectoryToolbar.tsx",
+        "line": 108,
+        "message": "Enabled literal button has no detectable action or submit behavior.",
+        "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+        "ruleId": "affordance.actionless-button",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/OperationsCentre.tsx",
+        "line": 164,
+        "message": "Enabled literal button has no detectable action or submit behavior.",
+        "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+        "ruleId": "affordance.actionless-button",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/BillingPanel.tsx",
+        "line": 301,
+        "message": "Native select conflicts with recorded Select/Listbox ownership: authored.",
+        "remediation": "Record Select/Listbox as native or reuse the authored canonical owner.",
+        "ruleId": "ownership.native-select-conflict",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/DirectoryToolbar.tsx",
+        "line": 246,
+        "message": "Native select conflicts with recorded Select/Listbox ownership: authored.",
+        "remediation": "Record Select/Listbox as native or reuse the authored canonical owner.",
+        "ruleId": "ownership.native-select-conflict",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/OperationForm.tsx",
+        "line": 157,
+        "message": "Native select conflicts with recorded Select/Listbox ownership: authored.",
+        "remediation": "Record Select/Listbox as native or reuse the authored canonical owner.",
+        "ruleId": "ownership.native-select-conflict",
+        "severity": "error"
+      },
+      {
+        "category": "violation",
+        "file": "src/components/operations/OperationsCentre.tsx",
+        "line": 96,
+        "message": "Native select conflicts with recorded Select/Listbox ownership: authored.",
+        "remediation": "Record Select/Listbox as native or reuse the authored canonical owner.",
+        "ruleId": "ownership.native-select-conflict",
+        "severity": "error"
+      }
+    ],
+    "mode": "strict",
+    "projectRoot": "/workspace/scratch/80e755459694/jd-graphify",
+    "schemaVersion": 1,
+    "summary": {
+      "errors": 7,
+      "total": 7,
+      "unresolved": 0,
+      "violations": 7,
+      "warnings": 0
+    }
+  },
+  "review": {
+    "real_findings_fixed": [
+      "History search form validation ownership",
+      "Archive reason textarea resize and minimum usable height"
+    ],
+    "remaining_static_findings": "7 false positives: case-insensitive HTML parsing treats Radix Select as native select and fails to resolve asChild/trigger action composition. Actual authored popup geometry, selection, dismissal and triggers are exercised by browser QA. No fake event handlers were added to satisfy the parser.",
+    "native_audit_limit": "The same HTML parser does not model React Native Button/onPress. Native lint/typecheck/unit/rendered checks are separate evidence."
+  },
+  "verification": {
+    "unit_postgres": "153 passed",
+    "http_auth": "50 passed, production Next handlers and simulated PostgREST",
+    "native_unit": "85 passed",
+    "native_visual": {
+      "status": "passed",
+      "screenshots": 32,
+      "reliabilityMotion": {
+        "homeVehicleRemoved": true,
+        "settingsVehicleLink": true,
+        "missingServerVsOffline": true,
+        "startupLoading": true,
+        "reducedMotion": true,
+        "pushPaused": true
+      },
+      "portalParity": {
+        "profile": true,
+        "vehicleSelection": true,
+        "activeTripGuard": true,
+        "filters": true,
+        "pagination": true,
+        "staleRequests": true,
+        "invoiceButtons": true,
+        "revenue": true
+      },
+      "locales": [
+        "ar",
+        "fr",
+        "en",
+        "nl"
+      ],
+      "navigation": true,
+      "messageReply": true,
+      "pushPausedUI": true,
+      "passwordVisibility": true,
+      "narrowOverflow": false,
+      "historyStates": [
+        "loading",
+        "empty",
+        "error"
+      ],
+      "motion": {
+        "enabled": true,
+        "userOff": true,
+        "systemReduced": true
+      },
+      "addressSearch": {
+        "explicitRequest": true,
+        "belgiumOnly": true,
+        "nearestFirst": true,
+        "editingClearsSelection": true
+      },
+      "preferencePersistence": true,
+      "network": "local page and intercepted synthetic geocoder fixtures only",
+      "scope": "React Native Web visual review; not a native Mapbox or physical-device acceptance"
+    },
+    "operations_browser": {
+      "passed": true,
+      "checks": [
+        "desktop: company deep link, remote search/clear and company picker work",
+        "desktop: archive preview, failure and frozen idempotent retry work",
+        "desktop: payment exact cents and same UUID survive ambiguous failure plus closing/reopening",
+        "desktop: staff dialog, password visibility, authored role dropdown and Escape work",
+        "desktop: administration attention centre renders without document overflow",
+        "desktop: fr dark/reduced-motion billing and authored popup geometry work",
+        "desktop: nl dark/reduced-motion billing and authored popup geometry work",
+        "desktop: billing read failure/retry and explicit empty state work",
+        "mobile: company deep link, remote search/clear and company picker work",
+        "mobile: archive preview, failure and frozen idempotent retry work",
+        "mobile: payment exact cents and same UUID survive ambiguous failure plus closing/reopening",
+        "mobile: staff dialog, password visibility, authored role dropdown and Escape work",
+        "mobile: administration attention centre renders without document overflow",
+        "mobile: fr dark/reduced-motion billing and authored popup geometry work",
+        "mobile: nl dark/reduced-motion billing and authored popup geometry work",
+        "mobile: billing read failure/retry and explicit empty state work"
+      ]
+    },
+    "pdf": "Synthetic bilingual invoice rendered and visually inspected; original Unicode font retained; preparatory/demo marking and exact EUR arithmetic verified."
+  }
+}

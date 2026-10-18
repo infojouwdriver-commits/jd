@@ -1,3 +1,4 @@
+import {companyMembership} from './company-membership';
 import type { NextRequest } from 'next/server';
 import { authCrudOperations, generateAdminUserToken } from './auth';
 import CrudOperations from './crud-operations';
@@ -30,7 +31,10 @@ export async function authorizeEndpoint(request: NextRequest, payload: JWTPayloa
     } else if (!['/next_api/trips/start', '/next_api/trips/end', '/next_api/trips/summary', '/next_api/trips/export-pdf'].includes(path)) throw new Response(null, {status: 400});
   }
   if (path.startsWith('/next_api/company-portal')) {
-    const links = await new CrudOperations('company_users', token).findMany({user_id: user.id});
-    if (!links?.length) throw new Response(null, {status: 403});
+    const capability = path.includes('/billing') ? 'billing' : path.includes('/staff') ? 'staff' : /\/(drivers|vehicles|directory)$/.test(path) ? 'fleet' : 'overview';
+    const rawCompany=request.nextUrl.searchParams.get('company_id');
+    const companyId=rawCompany===null?undefined:Number(rawCompany);
+    if(companyId!==undefined&&(!Number.isSafeInteger(companyId)||companyId<1))throw new Response(null,{status:400});
+    await companyMembership(token,Number(user.id),capability,companyId);
   }
 }

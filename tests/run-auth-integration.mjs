@@ -28,6 +28,8 @@ const mock=http.createServer(async(req,res)=>{
    if(url.pathname==='/rpc/security_rate_limit'){if(unavailable){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}data=true;}
    else if(url.pathname==='/rpc/security_submit_company_registration'){registrationCalls.push(body);data={request_id:body.p_request,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_registration'){assert.equal(body.p_reviewer,1);data={request_id:body.p_request,status:body.p_action==='approve'?'approved':'rejected'};}
+   else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
+   else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
    else if(url.pathname==='/rpc/security_create_trip_invoice'){
@@ -38,7 +40,7 @@ const mock=http.createServer(async(req,res)=>{
   } else {
    const table=rows[url.pathname.slice(1)];if(!table)throw Error('Unhandled table');
    const matches=row=>[...url.searchParams].filter(([key])=>!['select','order','limit','offset','columns'].includes(key)).every(([key,value])=>{
-    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
+    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='is')return arg==='null'?row[key]==null:arg==='true'?row[key]===true:row[key]===false;if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
    });
    if(req.method==='POST'){const record={...(Array.isArray(body)?body[0]:body),id:table.length+1,created_at:new Date().toISOString(),revoked:false};table.push(record);data=record;}
    else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));
@@ -116,6 +118,23 @@ try {
  const filtered=await native.activity(1,{...activityQuery,platform:'INTERNAL'});assert.equal(filtered.total,1030);await status('Invalid activity date rejected',request('/next_api/drivers/activity?from=2026-02-30&to=2026-10-17','GET',null,driverToken),400);
  rows.driver_registration_requests=[];rows.drivers[0].current_vehicle_id=21;rows.drivers[0].assigned_vehicle_id=20;rows.vehicles.push({id:20,company_id:1,status:'active',plate_number:'OLD'},{id:21,company_id:1,status:'active',plate_number:'CURRENT'});
  const details=await native.profileDetails(1);assert.equal(details.driver.id,1);assert.equal(details.vehicle.id,21);checks.push('Native profile shows own company and authoritative selected vehicle');
+
+ rows.users.push(...[3,4,5,6].map(id=>({id,email:'staff'+id+'@example.invalid',user_type:'manager',is_active:true})));
+ rows.company_users=[{id:3,user_id:3,company_id:1,role:'owner',is_active:true},{id:4,user_id:4,company_id:1,role:'accountant',is_active:true},{id:5,user_id:5,company_id:1,role:'fleet_manager',is_active:true},{id:6,user_id:6,company_id:1,role:'owner',is_active:false},{id:7,user_id:5,company_id:2,role:'owner',is_active:true}];
+ rows.companies.push({id:2,name:'Another synthetic company',archived_at:null});rows.subscription_billing_profiles=[];
+ const ownerToken=await sign(3),accountantToken=await sign(4),fleetToken=await sign(5),inactiveToken=await sign(6);
+ const accountantOverview=await status('Accountant overview contains no fleet records',request('/next_api/company-portal?company_id=1','GET',null,accountantToken),200);const accountantData=(await accountantOverview.json()).data;assert.equal(accountantData.can_manage_fleet,false);assert.deepEqual(accountantData.drivers,[]);assert.equal(accountantData.can_view_billing,true);
+ await status('Accountant can read own statement',request('/next_api/company-portal/billing?company_id=1','GET',null,accountantToken),200);
+ await status('Accountant cannot write payments',request('/next_api/company-portal/billing?company_id=1','POST',{action:'payment'},accountantToken),403);
+ await status('Accountant cannot create drivers',request('/next_api/company-portal/drivers?company_id=1','POST',{},accountantToken),403);
+ await status('Accountant cannot bypass fleet permission via map endpoint',request('/next_api/fleet?company_id=1','GET',null,accountantToken),403);
+ await status('Accountant cannot read staff',request('/next_api/company-portal/staff?company_id=1','GET',null,accountantToken),403);
+ await status('Fleet manager cannot read billing',request('/next_api/company-portal/billing?company_id=1','GET',null,fleetToken),403);
+ await status('Inactive membership cannot enter company portal',request('/next_api/company-portal?company_id=1','GET',null,inactiveToken),403);
+ await status('Owner cannot select an unrelated tenant',request('/next_api/company-portal/billing?company_id=2','GET',null,ownerToken),403);
+ await status('Owner can view own staff',request('/next_api/company-portal/staff?company_id=1','GET',null,ownerToken),200);
+ const scopedFleet=await status('Fleet map excludes other shared memberships',request('/next_api/fleet?company_id=1','GET',null,fleetToken),200);assert.deepEqual((await scopedFleet.json()).data.map(x=>x.company_id),[1]);
+ await status('Company owner cannot access admin workspace handler',request('/next_api/company-workspace?company_id=1','GET',null,ownerToken),403);
 
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);

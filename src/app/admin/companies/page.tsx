@@ -1,7 +1,11 @@
-
 'use client';
+import CompanyLifecycleAction from '@/components/operations/CompanyLifecycleAction';
+import {DirectoryToolbar} from '@/components/operations/DirectoryToolbar';
+import {useCompanyDirectory} from '@/components/operations/useCompanyDirectory';
 
-import { useState, useEffect } from 'react';
+
+
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -35,6 +39,8 @@ interface Company {
   phone: string;
   chiron_mode: string;
   subscription_status: string;
+  archived_at?:string|null;
+  is_test?:boolean;
   current_contract_id: number | null;
   payment_overdue_days: number;
   portal_login_enabled?: boolean;
@@ -43,18 +49,17 @@ interface Company {
 
 const emptyNew = { name: '', vat_number: '', kbo_number: '', address: '', email: '', phone: '', password: '' };
 
-export default function CompaniesPage() {
+function CompaniesPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const directory=useCompanyDirectory<Company>('companies',user?.isAdmin===true);
+  const companies=directory.result.rows;
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const loading=directory.loading && !directory.result.rows.length && !directory.error;
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [modeTarget,setModeTarget]=useState<{id:number;mode:string}|null>(null);
   const [switchingMode, setSwitchingMode] = useState<number | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [newCompany, setNewCompany] = useState(emptyNew);
   const [editCompany, setEditCompany] = useState({
     id: 0, name: '', vat_number: '', kbo_number: '',
@@ -66,21 +71,7 @@ export default function CompaniesPage() {
     if (!isLoading && user && !user.isAdmin) router.push('/');
   }, [user, isLoading, router]);
 
-  const fetchCompanies = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<Company[]>('/companies');
-      setCompanies(data);
-    } catch (error: any) {
-      toast.error(error.message || 'فشل تحميل الشركات');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.isAdmin) fetchCompanies();
-  }, [user]);
+  const fetchCompanies=directory.reload;
 
   const handleCreateCompany = async () => {
     if (saving) return;
@@ -156,35 +147,16 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleDeleteCompany = async () => {
-    if (!selectedCompany) return;
-    setDeleting(true);
-    try {
-      await api.delete(`/companies?id=${selectedCompany.id}`);
-      toast.success('تم حذف الشركة بنجاح');
-      setShowDeleteDialog(false);
-      setSelectedCompany(null);
-      fetchCompanies();
-    } catch (error: any) {
-      toast.error(error.message || 'فشل حذف الشركة');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleSwitchMode = async (companyId: number, currentMode: string) => {
-    const newMode = currentMode === 'TEST' ? 'PRODUCTION' : 'TEST';
-    if (newMode === 'PRODUCTION') {
-      const confirmed = confirm(
-        '⚠️ تحذير: الانتقال إلى وضع PRODUCTION يعني أن جميع الرحلات سيتم إرسالها إلى نظام Chiron الحقيقي.\n\nهل أنت متأكد من المتابعة؟'
-      );
-      if (!confirmed) return;
-    }
+  const handleSwitchMode=(companyId:number,currentMode:string)=>setModeTarget({id:companyId,mode:currentMode==='TEST'?'PRODUCTION':'TEST'});
+  const applySwitchMode=async()=>{
+    if(!modeTarget||switchingMode!==null)return;
+    const companyId=modeTarget.id,newMode=modeTarget.mode;
     setSwitchingMode(companyId);
     try {
       await api.put('/companies', { id: companyId, chiron_mode: newMode });
       toast.success(`تم التبديل إلى وضع ${newMode} بنجاح`);
       fetchCompanies();
+      setModeTarget(null);
     } catch (error: any) {
       toast.error(error.message || 'فشل تبديل الوضع');
     } finally {
@@ -316,26 +288,13 @@ export default function CompaniesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>حذف الشركة</AlertDialogTitle>
-            <AlertDialogDescription>
-              هل أنت متأكد من حذف شركة "{selectedCompany?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCompany} disabled={deleting} className="bg-red-600 hover:bg-red-700">
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
-              حذف
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
+
+      <AlertDialog open={!!modeTarget} onOpenChange={open=>{if(!open&&switchingMode===null)setModeTarget(null);}}>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>تغيير بيئة Chiron</AlertDialogTitle><AlertDialogDescription>البيئة المطلوبة: {modeTarget?.mode}. اختيار الإنتاج يغيّر وجهة إرسال الرحلات التالية، ويحتاج استيفاء شروط قبول Chiron. تصنيف الشركة التجريبية مستقل عن هذه البيئة.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={switchingMode!==null}>إلغاء</AlertDialogCancel><Button disabled={switchingMode!==null} aria-busy={switchingMode!==null} onClick={applySwitchMode}>تأكيد تغيير البيئة</Button></AlertDialogFooter></AlertDialogContent>
+      </AlertDialog>
       <main className="container mx-auto px-4 py-8 max-w-6xl">
+        <DirectoryToolbar kind="companies" filters={directory.filters} setFilter={directory.setFilter} total={directory.result.total} loading={directory.loading} error={directory.error} reload={directory.reload}/>
         {!companies.length && <div className="mb-6 rounded-2xl border border-dashed p-6 text-center">
           <h2 className="font-semibold">لا توجد شركات في القائمة الحالية</h2>
           <p className="mt-2 text-sm text-muted-foreground">أنشئ شركة لتظهر إعدادات التسعير والعقود والسائقين الخاصة بها.</p>
@@ -350,7 +309,7 @@ export default function CompaniesPage() {
                     <Building2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{company.name}</h3>
+                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{company.name}</h3>{company.is_test&&<Badge variant="outline">حساب تجريبي · Test</Badge>}{company.archived_at&&<Badge variant="outline">مؤرشف · Archived</Badge>}
                     <p className="text-sm text-slate-600 dark:text-slate-400">{company.vat_number}</p>
                     {company.kbo_number && (
                       <p className="text-xs text-slate-500">KBO: {company.kbo_number}</p>
@@ -367,7 +326,7 @@ export default function CompaniesPage() {
                       <Lock className="w-3 h-3 ml-1" />حساب دخول مفعّل
                     </Badge>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => handleSwitchMode(company.id, company.chiron_mode)} disabled={switchingMode === company.id} className="rounded-xl text-xs">
+                  <Button size="sm" variant="outline" onClick={() => handleSwitchMode(company.id, company.chiron_mode)} disabled={!!company.archived_at || switchingMode === company.id} className="rounded-xl text-xs">
                     {switchingMode === company.id ? <Loader2 className="w-3 h-3 ml-1 animate-spin" /> : <RefreshCw className="w-3 h-3 ml-1" />}
                     تبديل الوضع
                   </Button>
@@ -382,12 +341,11 @@ export default function CompaniesPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full rounded-2xl" onClick={() => handleOpenEditDialog(company)}>
+                <Button variant="outline" className="w-full rounded-2xl" disabled={!!company.archived_at} onClick={() => handleOpenEditDialog(company)}>
                   <Edit className="w-4 h-4 ml-2" />تعديل
                 </Button>
-                <Button variant="outline" className="w-full rounded-2xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => { setSelectedCompany(company); setShowDeleteDialog(true); }}>
-                  <Trash2 className="w-4 h-4 ml-2" />حذف
-                </Button>
+                <CompanyLifecycleAction company={company} onSuccess={directory.reload}/>
+                <Link href={`/admin/companies/${company.id}`} className="col-span-2"><Button variant="outline" className="w-full">ملف الشركة · Company workspace</Button></Link>
                 <Link href={`/admin/companies/${company.id}/pricing`}>
                   <Button variant="outline" className="w-full rounded-2xl"><DollarSign className="w-4 h-4 ml-2" />التسعيرة</Button>
                 </Link>
@@ -414,3 +372,5 @@ export default function CompaniesPage() {
     </div>
   );
 }
+
+export default function CompaniesPage(){return <Suspense fallback={<div role="status" className="p-6">جارٍ التحميل…</div>}><CompaniesPageContent/></Suspense>;}

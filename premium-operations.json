@@ -1,0 +1,11 @@
+{
+  "profile":"product-admin",
+  "sourceRoots":["src/components/operations"],
+  "locale":"ar-BE",
+  "canonicalMap":"docs/OPERATIONS_UX.md",
+  "requiredCapabilities":["Form","Select/Listbox","Scrollbar","Toast","CRUD","Date"],
+  "ownership":{"Select/Listbox":"authored","Date":"typed"},
+  "requiredCommands":["lint","typecheck","unit","visual"],
+  "commands":{"lint":"pnpm exec eslint src/components/operations src/lib/company-*.ts src/lib/subscription-*.ts","typecheck":"pnpm typecheck","unit":"node --experimental-strip-types --test tests/*.test.mjs","visual":"node tests/run-operations-ui.mjs"},
+  "evidence":{"crudFullFlow":"tests/run-operations-ui.mjs","failurePaths":"tests/run-operations-ui.mjs"}
+}

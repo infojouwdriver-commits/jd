@@ -1,14 +1,13 @@
+import {createPostgrestClient} from '@/lib/postgrest';
+import {companyMembership} from '@/lib/company-membership';
 
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams, validateRequestBody } from '@/lib/api-utils';
 import { generateAdminUserToken } from '@/lib/auth';
 
-async function getManagerCompanyId(userId: string, adminToken: string): Promise<number | null> {
-  const companyUsersCrud = new CrudOperations('company_users', adminToken);
-  const links = await companyUsersCrud.findMany({ user_id: parseInt(userId) });
-  if (!links || links.length === 0) return null;
-  return links[0].company_id;
+async function getManagerCompanyId(userId: string, adminToken: string, company: string | null): Promise<number> {
+  return Number((await companyMembership(adminToken,Number(userId),'fleet',company===null?undefined:Number(company))).company_id);
 }
 
 // POST - Add vehicle
@@ -25,7 +24,7 @@ export const POST = requestMiddleware(async (request, context) => {
     }
 
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked', status: 403 });
 
     const vehiclesCrud = new CrudOperations('vehicles', adminToken);
@@ -41,6 +40,7 @@ export const POST = requestMiddleware(async (request, context) => {
 
     return createSuccessResponse(newVehicle, 201);
   } catch (error: any) {
+    if(error instanceof Response)return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to add vehicle', status: 500 });
   }
@@ -57,7 +57,7 @@ export const PUT = requestMiddleware(async (request, context) => {
 
     const body = await validateRequestBody(request);
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked', status: 403 });
 
     const vehiclesCrud = new CrudOperations('vehicles', adminToken);
@@ -70,6 +70,7 @@ export const PUT = requestMiddleware(async (request, context) => {
     const updated = await vehiclesCrud.update(id, {...fields, updated_at: new Date().toISOString()});
     return createSuccessResponse(updated);
   } catch (error: any) {
+    if(error instanceof Response)return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to update vehicle', status: 500 });
   }
@@ -85,7 +86,7 @@ export const DELETE = requestMiddleware(async (request, context) => {
     if (!id) return createErrorResponse({ errorMessage: 'Vehicle ID required', status: 400 });
 
     const adminToken = await generateAdminUserToken();
-    const company_id = await getManagerCompanyId(user_id, adminToken);
+    const company_id = await getManagerCompanyId(user_id, adminToken, request.nextUrl.searchParams.get('company_id'));
     if (!company_id) return createErrorResponse({ errorMessage: 'No company linked', status: 403 });
 
     const vehiclesCrud = new CrudOperations('vehicles', adminToken);
@@ -94,9 +95,12 @@ export const DELETE = requestMiddleware(async (request, context) => {
       return createErrorResponse({ errorMessage: 'Vehicle not found in your company', status: 404 });
     }
 
-    await vehiclesCrud.delete(id);
+    const client=createPostgrestClient(adminToken);
+    const running=await client.from('trips').select('id',{count:'exact',head:true}).eq('vehicle_id',id).eq('status','in_progress').is('end_time',null);if(running.error)throw running.error;if(running.count)return createErrorResponse({status:409,errorMessage:'Finish the active trip first'});
+    await vehiclesCrud.update(id,{status:'inactive',updated_at:new Date().toISOString()});
     return createSuccessResponse({ id });
   } catch (error: any) {
+    if(error instanceof Response)return error;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to delete vehicle', status: 500 });
   }

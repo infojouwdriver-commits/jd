@@ -1,6 +1,7 @@
 
 "use client";
 
+import BillingReminder from './BillingReminder';
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -280,6 +281,7 @@ export default function DriverDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <BillingReminder/>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">

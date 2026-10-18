@@ -1,3 +1,5 @@
+import {randomUUID} from 'node:crypto';
+import {changeCompanyLifecycle} from '@/lib/company-lifecycle';
 
 import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
@@ -123,6 +125,7 @@ export const PUT = requestMiddleware(async (request, context) => {
     if (!existing) {
       return createErrorResponse({ errorMessage: "الشركة غير موجودة", status: 404 });
     }
+    if(existing.archived_at)return createErrorResponse({status:409,errorMessage:'Restore the company before editing operational settings'});
 
     if (!context.payload?.isAdmin) {
       const distributorsCrud = new CrudOperations("distributors", adminToken);
@@ -247,8 +250,8 @@ export const DELETE = requestMiddleware(async (request, context) => {
       });
     }
 
-    await companiesCrud.delete(id);
-    return createSuccessResponse({ id });
+    const archived = await changeCompanyLifecycle(adminToken, Number(context.payload!.sub), {company_id:Number(id), action:'archive', reason:'Company archived by administrator', request_id:randomUUID()});
+    return createSuccessResponse(archived);
   } catch (error: any) {
     if (error instanceof Response) return error;
     console.error("Operation failed");
