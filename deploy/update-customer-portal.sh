@@ -57,6 +57,7 @@ cleanup(){
     # Additive functions preserve compatibility with the previous application.
     # Never overwrite the database with an older dump or discard new records.
     cat "$work/private-app.yaml" > private-app.yaml
+    cat "$work/app.env" > .app-staging.env
     cat "$work/runtime-mode.json" > runtime-mode.json
     cat "$work/release.json" > "$root/release.json"
     docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --wait --wait-timeout 180 app </dev/null >/dev/null 2>&1 || printf 'Previous app requires operator recovery\n' >&2
@@ -67,6 +68,7 @@ cleanup(){
 trap cleanup EXIT
 work=$(mktemp -d .portal-update.XXXXXX)
 cp private-app.yaml "$work/private-app.yaml"
+cp .app-staging.env "$work/app.env"
 cp runtime-mode.json "$work/runtime-mode.json"
 cp "$root/release.json" "$work/release.json"
 # All SQL and environment values stay on the server; diagnostics contain no rows.
@@ -91,7 +93,19 @@ import fs from 'node:fs';
 const config=fs.readFileSync('private-app.yaml','utf8'),pattern=/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g;
 if((config.match(pattern)||[]).length!==1)throw Error('Expected one application image');
 let updated=config.replace(pattern,process.env.CUSTOMER_IMAGE);
-if(!updated.includes('SUBSCRIPTION_SCHEDULER_ENABLED:')){const pattern=/^(\s+)DEPLOYMENT_MODE:.*$/m;if(!pattern.test(updated))throw Error('App environment mapping unavailable');updated=updated.replace(pattern,line=>line+'\n'+line.match(/^\s*/)[0]+'SUBSCRIPTION_SCHEDULER_ENABLED: ${SUBSCRIPTION_SCHEDULER_ENABLED:-false}');}
+// The accepted foundation uses app.env_file; newer installations use a mapping.
+// Scope inspection to app so another service cannot authorize an env injection.
+const lines=updated.split('\n'), start=lines.findIndex(line=>/^  app:\s*$/.test(line));
+if(start<0)throw Error('App service unavailable');
+let end=start+1;while(end<lines.length&&(!lines[end].trim()||/^ {4}/.test(lines[end])))end++;
+let app=lines.slice(start,end).join('\n');
+const inherited=/^    env_file:\s*\[\s*\.app-staging\.env\s*\]\s*$/m.test(app);
+if(!inherited){
+ const mapping=/^( {6})DEPLOYMENT_MODE:.*$/m;
+ if(!mapping.test(app))throw Error('App environment mapping unavailable');
+ if(!/^      SUBSCRIPTION_SCHEDULER_ENABLED:/m.test(app))app=app.replace(mapping,line=>line+'\n      SUBSCRIPTION_SCHEDULER_ENABLED: ${SUBSCRIPTION_SCHEDULER_ENABLED:-false}');
+}
+lines.splice(start,end-start,...app.split('\n'));updated=lines.join('\n');
 fs.writeFileSync('private-app.yaml',updated,{mode:0o600});
 const appEnv=fs.readFileSync('.app-staging.env','utf8').replace(/^SUBSCRIPTION_SCHEDULER_ENABLED=.*\n?/gm,'');
 fs.writeFileSync('.app-staging.env',appEnv.trimEnd()+'\nSUBSCRIPTION_SCHEDULER_ENABLED=true\n',{mode:0o600});
