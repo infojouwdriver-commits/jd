@@ -1,4 +1,6 @@
 "use client";
+import ContractBillingPanel from "./ContractBillingPanel";
+import {subscriptionOfferCopy} from "@/lib/subscription-offer";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api-client";
@@ -26,6 +28,8 @@ interface Doc {
   vat_cents: number;
   vat_bps: number;
   due_date: string | null;
+  contract_number?:string|null;
+  installment_number?:number|null;
   balance_cents: number | null;
 }
 interface BillingData {
@@ -85,6 +89,8 @@ export default function BillingPanel({
   const { language } = useLanguage(),
     c = operationsCopy[language],
     base = admin ? "/subscription-billing" : "/company-portal/billing";
+  const [showContracts,setShowContracts]=useState(false);
+  const offer=subscriptionOfferCopy[language];
   const [scope, setScope] = useState(isTest ? "test" : "live"),
     [offset, setOffset] = useState(0),
     [mode, setMode] = useState<string | null>(null),
@@ -370,6 +376,9 @@ export default function BillingPanel({
           </Button>
         </div>
       </div>
+      <Button variant="outline" onClick={()=>setShowContracts(v=>!v)} aria-expanded={showContracts}>{offer.contracts}</Button>
+      {showContracts&&<ContractBillingPanel key={companyId} companyId={companyId} admin={admin} linked={!!data?.profile?.contract_id} onChanged={reload}/>}
+      {data?.profile?.contract_id&&<p className="rounded-xl border p-4 text-sm">{offer.linked} #{String(data.profile.contract_id)} · {offer.readonly}</p>}
       <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
         {c.noSuspension}
       </p>
@@ -418,7 +427,7 @@ export default function BillingPanel({
                 </Button>
                 <Button
                   variant="outline"
-                  disabled={archived}
+                  disabled={archived || !!p?.contract_id}
                   onClick={() => open("profile")}
                 >
                   {c.configure}
@@ -446,7 +455,7 @@ export default function BillingPanel({
               >
                 <div>
                   <p className="font-semibold" dir="ltr">
-                    {d.document_number}
+                    {d.document_number}{d.contract_number&&<small className="block font-normal">{d.contract_number} · {d.installment_number}/12</small>}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {c[d.kind]} · {d.period_start} · {d.due_date || "—"}

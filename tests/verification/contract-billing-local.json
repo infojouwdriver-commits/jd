@@ -1,0 +1,41 @@
+{
+  "scope": "website only; synthetic data; not a production acceptance claim",
+  "offer": {
+    "gross_monthly_cents": 5000,
+    "vat_bps": 2100,
+    "net_monthly_cents": 4132,
+    "vat_monthly_cents": 868,
+    "installments": 12,
+    "gross_total_cents": 60000,
+    "automatic_renewal": false
+  },
+  "unit_tests_passed": 169,
+  "contract_database_cases_passed": 8,
+  "engine": "PGlite PostgreSQL, synthetic isolated database",
+  "ui": {
+    "passed": true,
+    "checks": [
+      "ar/390: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access",
+      "ar/1280: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access",
+      "fr/390: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access",
+      "fr/1280: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access",
+      "nl/390: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access",
+      "nl/1280: contract review, required consent, retained idempotent signature retry, linked invoice and accountant read-only access"
+    ]
+  },
+  "other_passed": [
+    "TypeScript",
+    "scoped ESLint",
+    "clean production build and valid JSON manifests",
+    "registration browser suite: ar/fr/nl, narrow/desktop plus administrative review",
+    "production HTTP auth/ownership integration",
+    "existing web approval and cash billing browser acceptance",
+    "existing operations UI acceptance",
+    "deployment fail-closed tests and shell syntax"
+  ],
+  "native_postgresql_acceptance": "pending GitHub release workflow",
+  "premium_static_audit": {
+    "errors": 7,
+    "note": "Seven pre-existing false positives on Radix Select and asChild wrappers, documented in WEB_APPROVALS_BILLING_REVIEW_AR.md. No strict audit pass claimed."
+  }
+}

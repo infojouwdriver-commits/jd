@@ -18,7 +18,7 @@ function failed(error: unknown) {
 }
 function document(company: any, number: string, period: ReturnType<typeof contractPeriod>, fees: ReturnType<typeof contractFee>, language: 'nl'|'fr' = 'nl') {
   return generateContractHTML({contractNumber:number,companyName:company.name,companyVAT:company.vat_number,companyKBO:company.kbo_number,
-    companyEmail:company.email,companyPhone:company.phone,companyAddress:company.address,...period,...fees,language});
+    companyEmail:company.email,companyPhone:company.phone,companyAddress:company.address,...period,...fees,language,grossBilling:{vatBps:2100,autoRenew:false}});
 }
 
 export const GET = requestMiddleware(async (request, context) => {
@@ -42,6 +42,7 @@ export const POST = requestMiddleware(async (request, context) => {
     if (body.auto_renew !== undefined && typeof body.auto_renew !== 'boolean') throw new ContractValidationError('إعداد التجديد غير صالح');
     if (body.language !== undefined && !['nl','fr'].includes(body.language)) throw new ContractValidationError('اختر اللغة الهولندية أو الفرنسية للعقد');
     const period = contractPeriod(body.contract_start_date,body.contract_duration_months ?? 12);
+    if(period.durationMonths!==12)throw new ContractValidationError('مدة عقد الاشتراك سنة واحدة');
     const fees = contractFee(body.monthly_fee);
     const notice = body.renewal_notice_days ?? 90;
     if (!Number.isInteger(notice) || notice < 0 || notice > 365) throw new ContractValidationError('مدة إشعار التجديد غير صالحة');
@@ -52,7 +53,7 @@ export const POST = requestMiddleware(async (request, context) => {
     const contract = await new CrudOperations('company_contracts',token).create({company_id:companyId,contract_number:body.contract_number.trim(),contract_type:'annual_subscription',
       contract_start_date:period.startDate,contract_end_date:period.endDate,contract_duration_months:period.durationMonths,
       monthly_fee:fees.monthlyFee,annual_fee:fees.annualFee,contract_status:'pending_signature',contract_html_template:html,
-      auto_renew:body.auto_renew ?? true,renewal_notice_days:notice});
+      auto_renew:false,renewal_notice_days:0,billing_model:'gross_monthly_v1',monthly_gross_cents:Math.round(fees.monthlyFee*100),vat_bps:2100,contract_language:body.language??'nl'});
     return createSuccessResponse(contract,201);
   } catch (error) {return failed(error);}
 }, true);
@@ -70,7 +71,7 @@ export const PUT = requestMiddleware(async (request, context) => {
     if (!existing) return createErrorResponse({errorMessage:'العقد غير موجود',status:404});
     const termsChanged = ['monthly_fee','annual_fee','contract_duration_months','auto_renew'].some(key=>Object.hasOwn(body,key));
     const immutable = contractIsImmutable(existing);
-    if (immutable && termsChanged) return createErrorResponse({errorMessage:'شروط العقد الموقّع أو النهائي محفوظة؛ أنشئ عقداً جديداً لتغييرها',status:409});
+    if ((immutable || existing.registration_request_id) && termsChanged) return createErrorResponse({errorMessage:'شروط العقد الموقّع أو النهائي محفوظة؛ أنشئ عقداً جديداً لتغييرها',status:409});
     const update: Record<string,unknown> = {updated_at:new Date().toISOString()};
     if (body.contract_status !== undefined) {
       const permitted = immutable ? ['active','suspended','expired','cancelled'] : ['draft','pending_signature','cancelled'];
@@ -87,7 +88,7 @@ export const PUT = requestMiddleware(async (request, context) => {
       if (!company) return createErrorResponse({errorMessage:'الشركة غير موجودة',status:404});
       const language = /<html\s+lang="fr"/.test(existing.contract_html_template || '') ? 'fr' : 'nl';
       Object.assign(update,{monthly_fee:fees.monthlyFee,annual_fee:fees.annualFee,contract_duration_months:period.durationMonths,
-        contract_end_date:period.endDate,auto_renew:body.auto_renew ?? existing.auto_renew,
+        contract_end_date:period.endDate,auto_renew:false,...(existing.billing_model?{monthly_gross_cents:Math.round(fees.monthlyFee*100)}:{}),
         contract_html_template:document(company,existing.contract_number,period,fees,language)});
     }
     return createSuccessResponse(await crud.update(id,update));

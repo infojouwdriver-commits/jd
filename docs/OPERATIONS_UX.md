@@ -51,3 +51,21 @@ Demo documents offer local test issuance instead of a fake exchange reference.
 Real issuance remains disabled until structured exchange is configured. Cash is
 the initial visible manual receipt method and can be changed explicitly to bank
 transfer. No electronic collection action or provider claims are introduced.
+
+## Annual contract and billing
+
+Registration's final review discloses 50 EUR/month including 21% VAT, 12 months,
+600 EUR total, and no automatic renewal. Its required acknowledgement uses the
+canonical Checkbox/Label and server schema; uncertain retries retain the complete
+original acknowledged offer and UUID.
+
+BillingPanel owns the expandable ContractBillingPanel for both admin and company
+views. The latter uses bounded 10-contract server pages and sanitized canonical
+ContractDocument previews. Owner signing reuses OperationForm with required
+`mustBeTrue` consent, name, current revision and a named financial submit action.
+The exact reviewed document is inside that dialog. Pending/ambiguous failure
+retains its fields, document revision and request UUID across close/reopen.
+Accountants see documents without signing; fleet users have no billing access.
+Profile controls explain that contract-linked price/schedule is read-only.
+PDF and invoice rows show contract number and installment. Existing settings,
+manual receipts, issuance gates and ledger states remain canonical.

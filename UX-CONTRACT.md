@@ -148,3 +148,14 @@ reason. Approval leaves Chiron TEST pending separate production acceptance.
 ## Company lifecycle and billing extension (2026-10-18)
 
 The approved company business scope is maintained in docs/COMPANY_PLATFORM_CONTRACT.md. Web operations behavior, canonical owners and verification are maintained in docs/OPERATIONS_UX.md. A billing reminder never blocks native or web trip work. Driver notices are generic and dismissible, suppressed during active trips; failures are isolated from authentication and trip synchronization. Home distinguishes durable local trip storage, pending server confirmation, and server receipt; Chiron delivery remains a separate state. Native API errors distinguish timeout, uncertain transport and server response rather than asserting an Internet outage.
+
+## Contract-backed website subscriptions — 2026-10-18
+
+The confirmed offer and lifecycle are in docs/COMPANY_PLATFORM_CONTRACT.md;
+observable flow is in docs/OPERATIONS_UX.md. Canonical owners remain
+LanguageContext, UI Checkbox/Label, OperationForm, ContractDocument and BillingPanel.
+OperationForm's business variant adds mandatory true consent, a document review
+slot and explicit signing label. No second form/retry/modal system is introduced.
+Server-side company membership and SQL locks authorize signing; frontend controls
+only present that authority. Signing never sends mail, charges a payment method,
+or claims real invoice delivery. Signed records and financial evidence are immutable.

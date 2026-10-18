@@ -6,6 +6,8 @@ export interface SubscriptionDocument {
   document_number: string;
   kind: "invoice" | "credit";
   original_id: number | null;
+  contract_number?: string | null;
+  installment_number?: number | null;
   state: "prepared" | "issued" | "void";
   is_test: boolean;
   currency: "EUR";
@@ -67,6 +69,8 @@ export function subscriptionPdf(d: SubscriptionDocument) {
   line("Date / Datum: " + (d.issued_date || d.prepared_date));
   if (d.due_date) line("Échéance / Vervaldatum: " + d.due_date);
   line("Période / Periode: " + d.period_start + " — " + d.period_end);
+  if(d.contract_number)line("Contrat / Contract: "+d.contract_number);
+  if(d.installment_number)line("Mensualité / Maandtermijn: "+d.installment_number+" / 12");
   line(d.description);
   if (d.original_id)
     line("Facture d’origine / Oorspronkelijke factuur: #" + d.original_id);

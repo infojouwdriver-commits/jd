@@ -43,3 +43,5 @@ test('document generation escapes customer text and preserves literal replacemen
     assert.ok(html.includes('99.95'));
   }
 });
+
+test('new annual gross contracts state the monthly VAT split and have no automatic renewal clause',()=>{for(const language of ['fr','nl']){const html=generateContractHTML({contractNumber:'SYN-50',companyName:'Synthetic Company',companyVAT:'BE0123456789',companyKBO:'0123456789',startDate:'2026-01-31',endDate:'2027-01-31',durationMonths:12,monthlyFee:50,annualFee:600,language,grossBilling:{vatBps:2100,autoRenew:false}});assert.ok(html.includes('41.32'));assert.ok(html.includes('8.68'));assert.ok(html.includes('600.00'));assert.ok(html.includes(language==='fr'?'Pas de renouvellement automatique':'Geen automatische verlenging'));assert.equal(html.includes(language==='fr'?'tacitement':'stilzwijgend'),false);}});
