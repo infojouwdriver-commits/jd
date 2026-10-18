@@ -15,7 +15,7 @@ fixtures.api=fixtures.api.replace('export const driverApi={','export const drive
  try{
  for(const screen of ['home','active','trips','revenues','messages','notifications','account','settings']){await page.goto(origin+'/?screen='+screen);await page.waitForTimeout(500);await page.screenshot({path:path.join(output,screen+'-ar-dark.png')});assert.ok((await page.locator('body').innerText()).trim().length>40,screen+' must render');}
 
- await page.goto(origin+'/?screen=home&scenario=billing');await page.getByText('تذكير لاشتراك الشركة',{exact:true}).waitFor();await page.getByRole('button',{name:'فهمت، متابعة العمل',exact:true}).click();assert.equal(await page.getByText('تذكير لاشتراك الشركة',{exact:true}).count(),0);await page.getByRole('button',{name:'ابدأ رحلة',exact:true}).count();
+ await page.goto(origin+'/?screen=home&scenario=billing');await page.getByText('تذكير لاشتراك الشركة',{exact:true}).waitFor();await page.getByRole('button',{name:'فهمت، متابعة العمل',exact:true}).click();await page.getByText('تذكير لاشتراك الشركة',{exact:true}).waitFor({state:'detached'});assert.equal(await page.getByText('تذكير لاشتراك الشركة',{exact:true}).count(),0);
  // Real shared navigation, content recovery states, and the opt-in controls.
  await page.goto(origin+'/?screen=home');
  await page.getByRole('button',{name:/فتح الإشعارات/}).click();await page.getByText('تنبيهات الهاتف',{exact:true}).waitFor();await page.getByTestId('nav-trips').click();await page.getByText('#701',{exact:true}).waitFor();
