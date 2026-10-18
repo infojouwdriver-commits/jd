@@ -23,6 +23,8 @@
 | صفحة الموقع الإعلاني | [page.tsx](../src/app/page.tsx)، [LandingPage](../src/components/landing/LandingPage.tsx)، [PlatformLanding](../src/components/landing/PlatformLanding.tsx) | `platform.css` و`onboarding-copy.ts` في مجلد landing، واللغات الثلاث |
 | نموذج تسجيل الشركة | [CompanyRegistrationDialog](../src/components/registration/CompanyRegistrationDialog.tsx)، [الحقول والتحقق](../src/lib/company-registration.ts) | `copy.ts` و`registration.css` في registration، والتحقق على الخادم |
 | حفظ التسجيل ومراجعته | [واجهة التسجيل](../src/app/next_api/company-registrations/route.ts)، [معاملات قاعدة البيانات](../migrations/20261017_company_registration.sql) | التشفير، عدم تكرار الطلب، عزل الشركة وحالة الحسابات |
+| طلبات تعديل الشركة على الموقع | `src/lib/company-changes.ts`، `src/components/operations/CompanyChangesPanel.tsx`، `migrations/20261018_web_change_approvals.sql` | عزل الشركة، بيانات الطلب الآمنة، مراجعة ذرية دون تفعيل قبل الموافقة |
+| فواتير الاشتراك والدفع النقدي | `src/components/operations/BillingPanel.tsx`، `src/lib/subscription-billing.ts`، `migrations/20261018_web_billing.sql` | TVA افتراضية 21%، دفعات يدوية، إصدار تجريبي دون بريد أو Peppol |
 | موافقات الإدارة | [صفحة الموافقات](../src/app/admin/approval-requests/page.tsx)، [CompanyRegistrationApprovals](../src/components/registration/CompanyRegistrationApprovals.tsx) | صلاحية الإدارة وMFA؛ الحقول المعروضة لا تتضمن المفاتيح |
 | بوابة السائق على الويب | [مجلد driver](../src/app/driver)، [واجهة السائق](../src/app/next_api/drivers) | الرحلات والملخص والملف الشخصي والمركبات |
 | واجهة تطبيق Android/iOS | [توجيه الشاشات](../driver-app/src/app)، [شاشات experience](../driver-app/src/experience) | تعليمات `driver-app/AGENTS.md` وDESIGN.md وUX-CONTRACT.md |

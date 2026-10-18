@@ -23,10 +23,20 @@ interface Doc {
   period_start: string;
   gross_cents: number;
   net_cents: number;
+  vat_cents: number;
+  vat_bps: number;
   due_date: string | null;
   balance_cents: number | null;
 }
 interface BillingData {
+  payments: {
+    request_id: string;
+    invoice_id: number;
+    amount_cents: number;
+    payment_date: string;
+    reference: string;
+    payment_method: "cash" | "bank_transfer" | "manual";
+  }[];
   documents: Doc[];
   entries: {
     entry_id: string;
@@ -140,7 +150,9 @@ export default function BillingPanel({
     initial = {
       enabled: p?.enabled === true,
       net: p ? String(Number(p.net_cents) / 100) : "",
-      vat: p ? String(Number(p.vat_bps) / 100) : "",
+      vat: p
+        ? String(Number(p.vat_bps) / 100)
+        : String(Number(s?.default_vat_bps ?? 2100) / 100),
       tax_category: String(p?.tax_category || "S"),
       tax_reason: String(p?.tax_reason || ""),
       billing_day: String(p?.billing_day ?? ""),
@@ -152,7 +164,14 @@ export default function BillingPanel({
     };
   } else if (mode === "settings") {
     fields = [
-      { key: "issuer_company_id", label: c.issuer, type: "number", min: 1 },
+      {
+        key: "issuer_company_id",
+        label: c.issuer,
+        type: "number",
+        min: 1,
+        optional: true,
+      },
+      { key: "default_vat", label: c.defaultVat },
       { key: "invoice_prefix", label: c.prefix, maxLength: 10 },
       {
         key: "exchange_mode",
@@ -171,6 +190,7 @@ export default function BillingPanel({
     ];
     initial = {
       issuer_company_id: String(s?.issuer_company_id || ""),
+      default_vat: String(Number(s?.default_vat_bps ?? 2100) / 100),
       invoice_prefix: String(s?.invoice_prefix || "JDS"),
       exchange_mode: String(s?.exchange_mode || "unconfigured"),
       exchange_provider: String(s?.exchange_provider || ""),
@@ -181,6 +201,14 @@ export default function BillingPanel({
     ];
   else if (mode === "payment")
     fields = [
+      {
+        key: "payment_method",
+        label: c.paymentMethod,
+        options: [
+          { value: "cash", label: c.cash },
+          { value: "bank_transfer", label: c.bank_transfer },
+        ],
+      },
       { key: "amount", label: c.amount + " (€)" },
       { key: "payment_date", label: c.paymentDate },
       { key: "reference", label: c.paymentReference, maxLength: 140 },
@@ -191,7 +219,22 @@ export default function BillingPanel({
       { key: "net", label: c.net },
       { key: "reason", label: c.reason },
     ];
+  if (mode === "payment")
+    initial = {
+      payment_method: "cash",
+      amount: selected?.balance_cents
+        ? String(selected.balance_cents / 100)
+        : "",
+      payment_date: new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Brussels",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date()),
+      reference: "",
+    };
   const titles: Record<string, string> = {
+    demo_issue: c.demoIssue,
     void: c.voidPreparation,
     profile: c.configure,
     settings: c.settings,
@@ -228,7 +271,10 @@ export default function BillingPanel({
         ...payload,
         expected: s?.updated_at || null,
         data: {
-          issuer_company_id: Number(v.issuer_company_id),
+          issuer_company_id: v.issuer_company_id
+            ? Number(v.issuer_company_id)
+            : null,
+          default_vat_bps: cents(v.default_vat),
           invoice_prefix: v.invoice_prefix,
           exchange_mode: v.exchange_mode,
           exchange_provider: v.exchange_provider || null,
@@ -238,6 +284,8 @@ export default function BillingPanel({
       payload = { ...payload, document_id: selected!.id, reason: v.reason };
     else if (mode === "prepare")
       payload = { ...payload, request_id: requestId };
+    else if (mode === "demo_issue")
+      payload = { ...payload, document_id: selected!.id };
     else if (mode === "issue")
       payload = {
         ...payload,
@@ -252,6 +300,7 @@ export default function BillingPanel({
         amount_cents: cents(v.amount),
         payment_date: v.payment_date,
         reference: v.reference,
+        payment_method: v.payment_method,
       };
     else if (mode === "credit")
       payload = {
@@ -297,7 +346,7 @@ export default function BillingPanel({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">{c.billing}</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select
             value={scope}
             onValueChange={(v) => {
@@ -350,6 +399,9 @@ export default function BillingPanel({
               </div>
             ))}
           </div>
+          {isTest && (
+            <p className="rounded-xl border p-4 text-sm">{c.demoNotice}</p>
+          )}
           {admin && (
             <div className="space-y-3 rounded-2xl border p-4">
               <p className="text-sm text-muted-foreground">{c.readiness}</p>
@@ -399,11 +451,40 @@ export default function BillingPanel({
                   <p className="mt-1 text-sm text-muted-foreground">
                     {c[d.kind]} · {d.period_start} · {d.due_date || "—"}
                   </p>
+                  <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                    <div>
+                      <dt className="text-muted-foreground">{c.net}</dt>
+                      <dd className="tabular-nums">{money(d.net_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">
+                        {c.vatAmount} ({Number(d.vat_bps ?? 2100) / 100}%)
+                      </dt>
+                      <dd className="tabular-nums">
+                        {money(d.vat_cents ?? d.gross_cents - d.net_cents)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{c.gross}</dt>
+                      <dd className="font-semibold tabular-nums">
+                        {money(d.gross_cents)}
+                      </dd>
+                    </div>
+                  </dl>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Badge variant="outline">
                       {c[d.state as "prepared" | "issued" | "void"] || d.state}
                     </Badge>
                     {d.is_test && <Badge variant="outline">{c.test}</Badge>}
+                    {d.state === "issued" && d.kind === "invoice" && (
+                      <Badge variant="outline">
+                        {Number(d.balance_cents) <= 0
+                          ? c.paid
+                          : Number(d.balance_cents) < d.gross_cents
+                            ? c.partial
+                            : c.unpaid}
+                      </Badge>
+                    )}
                     <span className="text-sm tabular-nums">
                       {money(d.gross_cents)}
                       {d.balance_cents !== null
@@ -420,9 +501,15 @@ export default function BillingPanel({
                     <>
                       <Button
                         variant="outline"
-                        onClick={() => open("issue", d)}
+                        disabled={
+                          !d.is_test &&
+                          data.settings?.exchange_mode !== "external_structured"
+                        }
+                        onClick={() =>
+                          open(d.is_test ? "demo_issue" : "issue", d)
+                        }
                       >
-                        {c.issue}
+                        {d.is_test ? c.demoIssue : c.issue}
                       </Button>
                       <Button variant="outline" onClick={() => open("void", d)}>
                         {c.voidPreparation}
@@ -433,6 +520,7 @@ export default function BillingPanel({
                     <>
                       <Button
                         variant="outline"
+                        disabled={Number(d.balance_cents) <= 0}
                         onClick={() => open("payment", d)}
                       >
                         {c.recordPayment}
@@ -454,6 +542,26 @@ export default function BillingPanel({
               </p>
             )}
           </div>
+          {(data.payments || []).length > 0 && (
+            <section className="space-y-3">
+              <h3 className="font-semibold">{c.receipts}</h3>
+              {data.payments.map((receipt) => (
+                <div
+                  key={receipt.request_id}
+                  className="flex flex-wrap justify-between gap-3 rounded-xl border p-4 text-sm"
+                >
+                  <span>
+                    #{receipt.invoice_id} · {receipt.payment_date} ·{" "}
+                    {c[receipt.payment_method]}
+                  </span>
+                  <span className="break-all">{receipt.reference}</span>
+                  <strong className="tabular-nums">
+                    {money(receipt.amount_cents)}
+                  </strong>
+                </div>
+              ))}
+            </section>
+          )}
           <h3 className="font-semibold">{c.statement}</h3>
           <div className="overflow-x-auto rounded-xl border">
             <table className="w-full text-start text-sm">
@@ -529,11 +637,13 @@ export default function BillingPanel({
           key={mode + String(selected?.id || "")}
           title={titles[mode]}
           description={
-            mode === "issue"
-              ? c.readiness
-              : mode === "prepare"
-                ? c.noSuspension
-                : undefined
+            mode === "demo_issue"
+              ? c.demoNotice
+              : mode === "issue"
+                ? c.readiness
+                : mode === "prepare"
+                  ? c.noSuspension
+                  : undefined
           }
           fields={fields}
           initial={initial}

@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api-client";
@@ -54,6 +55,9 @@ export default function StaffPanel({
         </div>
       </div>
       <p className="text-sm text-muted-foreground">{c.staffNotice}</p>
+      {!admin && (
+        <p className="rounded-xl border p-4 text-sm">{c.approvalNotice}</p>
+      )}
       {loading && <p role="status">{c.loading}</p>}
       {error && <p role="alert">{c.error}</p>}
       {data?.rows.map((s) => (
@@ -146,14 +150,16 @@ export default function StaffPanel({
             { key: "reason", label: c.reason },
           ]}
           onClose={() => setTarget(undefined)}
-          onSubmit={async (v) => {
+          onSubmit={async (v, requestId) => {
             await api.post(base + "?company_id=" + companyId, {
+              request_id: requestId,
               membership_id: target?.id ?? null,
               role: v.role,
               is_active: v.is_active,
               reason: v.reason,
               ...(!target ? { email: v.email, password: v.password } : {}),
             });
+            if (!admin) toast.success(c.submitted);
             reload();
           }}
         />

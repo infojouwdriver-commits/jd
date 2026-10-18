@@ -75,3 +75,30 @@ Connectivity separates transport/offline or timeout, server errors, auth expiry,
 and upstream failures. Sync distinguishes local saved, pending, server saved and
 uncertain delivery. Never discard a local trip on billing notices, session errors,
 or a failed refresh; never claim that a provider accepted a trip without evidence.
+
+## Web amendment — 18 October 2026
+
+The owner's existing viewing capabilities remain. Company-originated creation,
+editing and deactivation of drivers/vehicles, and owner staff/access changes,
+are proposals requiring platform-administrator review. The fleet manager can
+propose fleet changes, never staff or billing changes. The accountant retains
+read-only company financial access. Password/account self-service is unchanged.
+Only the authenticated administrator with MFA executes the atomic review.
+Proposals retain company ownership, requester, safe summary, private hashed
+credentials, concurrency snapshot and review history. No pending account becomes
+active; a failed/stale execution cannot mark a request approved. Rejection never
+changes the operational record. Deactivation retains history and waits for active
+trips to finish. No physical deletion is added.
+
+Subscription invoice default VAT is 21%, editable in invoice system settings.
+The default seeds new billing profiles; existing explicit tax treatment and
+prepared/issued document snapshots are preserved. It does not change trip fare
+VAT. Cash and bank transfer are explicit manual receipt methods, recorded by
+administrators only. Exact-cent partial receipts reduce outstanding balances;
+replays cannot duplicate them or switch method, and overpayment is rejected.
+
+Local demo issuance operates only on documents already snapshotted as is_test.
+It has no fiscal value, no mail dispatch and no Peppol acceptance claim. Real
+issuance still requires configured issuer and structured exchange evidence.
+The payment provider and Peppol integration remain a separate future task.
+This amendment changes only the website/server; no native build or update.

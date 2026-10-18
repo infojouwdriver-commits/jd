@@ -1,0 +1,50 @@
+{
+  "scope": "Website/server only; local synthetic data; no native update, remote push, production migration, payment-provider or Peppol dispatch",
+  "base_commit": "486953d01fc4daee2154c12ef0a666b304e9a08d",
+  "checks": {
+    "production_build": "passed",
+    "scoped_eslint": "passed",
+    "typecheck": "passed",
+    "full_unit_suite_before_final_extra_case": 159,
+    "final_targeted_database_tests": 7,
+    "http_security_checks": 16,
+    "production_handler_integration": 61,
+    "deployment_script_tests": 18,
+    "web_browser_checks": 18,
+    "existing_operations_browser_checks": 16,
+    "graphify": "507 indexed source files; artifacts verified"
+  },
+  "browser": {
+    "passed": true,
+    "checks": [
+      "ar/1280: edit remains pending; ambiguous retry retains UUID and payload",
+      "ar/1280: accountant read-only finance; fleet has no billing or staff controls",
+      "ar/1280: admin approval, demo issuance, 21% VAT and cash settlement work",
+      "ar/390: edit remains pending; ambiguous retry retains UUID and payload",
+      "ar/390: accountant read-only finance; fleet has no billing or staff controls",
+      "ar/390: admin approval, demo issuance, 21% VAT and cash settlement work",
+      "fr/1280: edit remains pending; ambiguous retry retains UUID and payload",
+      "fr/1280: accountant read-only finance; fleet has no billing or staff controls",
+      "fr/1280: admin approval, demo issuance, 21% VAT and cash settlement work",
+      "fr/390: edit remains pending; ambiguous retry retains UUID and payload",
+      "fr/390: accountant read-only finance; fleet has no billing or staff controls",
+      "fr/390: admin approval, demo issuance, 21% VAT and cash settlement work",
+      "nl/1280: edit remains pending; ambiguous retry retains UUID and payload",
+      "nl/1280: accountant read-only finance; fleet has no billing or staff controls",
+      "nl/1280: admin approval, demo issuance, 21% VAT and cash settlement work",
+      "nl/390: edit remains pending; ambiguous retry retains UUID and payload",
+      "nl/390: accountant read-only finance; fleet has no billing or staff controls",
+      "nl/390: admin approval, demo issuance, 21% VAT and cash settlement work"
+    ]
+  },
+  "static_audit": {
+    "raw_result": "web-operations-premium-audit.json",
+    "reported_findings": 7,
+    "review": "Existing shared Radix Select components are misclassified as native select; Radix asChild triggers and Link-backed buttons are misclassified as actionless. Source inspection and browser interaction checks confirm authored popups and working actions. This is not a claim of a clean strict audit or a full legacy-site accessibility audit."
+  },
+  "limits": [
+    "Native PostgreSQL/Docker stack not executed on this host; database behavior tested with isolated PGlite PostgreSQL fixtures.",
+    "Build retains pre-existing legacy hook/image lint warnings.",
+    "No deployment or real transport acceptance claimed."
+  ]
+}
