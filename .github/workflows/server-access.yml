@@ -50,7 +50,8 @@ jobs:
           docker system df
           if test "$1" = true; then
             # Reproducible cache only; never remove volumes, backups or application files.
-            docker builder prune --force --filter until=24h --keep-storage 2GB
+            # No build cache exists on this pull-only host; avoid buildx creating
+            # client configuration while the filesystem is already full.
             node --input-type=module <<'RECLAIM'
           import fs from 'node:fs';
           import {execFileSync} from 'node:child_process';
