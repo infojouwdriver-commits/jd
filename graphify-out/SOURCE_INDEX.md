@@ -104,23 +104,24 @@ Links target the working tree, so line positions can move after changes.
 
 - `update-customer-portal.sh` — [L1](../deploy/update-customer-portal.sh#L1)
 - `update-customer-portal.sh script` — [L1](../deploy/update-customer-portal.sh#L1)
-- `BILLING_MAIL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `BILLING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `COMPANY_STAFF_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `CUSTOMER_IMAGE` — [L46](../deploy/update-customer-portal.sh#L46)
-- `CUSTOMER_REVISION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `FLEET_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `LIFECYCLE_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `MAIL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `OPERATIONS_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `PORTAL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `PRICING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `PUSH_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `REGISTRATION_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `VERIFIED_BACKUP_TAG` — [L46](../deploy/update-customer-portal.sh#L46)
-- `WEB_APPROVALS_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `WEB_BILLING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
-- `cleanup()` — [L59](../deploy/update-customer-portal.sh#L59)
+- `BILLING_MAIL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `COMPANY_STAFF_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `CONTRACT_BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `CUSTOMER_IMAGE` — [L48](../deploy/update-customer-portal.sh#L48)
+- `CUSTOMER_REVISION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `FLEET_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `LIFECYCLE_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `MAIL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `OPERATIONS_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `PORTAL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `PRICING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `PUSH_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `REGISTRATION_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `VERIFIED_BACKUP_TAG` — [L48](../deploy/update-customer-portal.sh#L48)
+- `WEB_APPROVALS_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `WEB_BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
+- `cleanup()` — [L61](../deploy/update-customer-portal.sh#L61)
 
 ## [deploy/update-customer-ui.sh](../deploy/update-customer-ui.sh)
 
@@ -838,6 +839,24 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261018_company_staff.sql` — [source](../migrations/20261018_company_staff.sql#)
 - `"schema".company_staff_events` — [L2](../migrations/20261018_company_staff.sql#L2)
+
+## [migrations/20261018_contract_billing.sql](../migrations/20261018_contract_billing.sql)
+
+- `20261018_contract_billing.sql` — [source](../migrations/20261018_contract_billing.sql#)
+- `contract_registration_request` — [L6](../migrations/20261018_contract_billing.sql#L6)
+- `contract_signature_request` — [L10](../migrations/20261018_contract_billing.sql#L10)
+- `"schema".security_submit_company_subscription()` — [L12](../migrations/20261018_contract_billing.sql#L12)
+- `"schema".security_review_company_subscription()` — [L21](../migrations/20261018_contract_billing.sql#L21)
+- `"schema".security_activate_contract_billing()` — [L47](../migrations/20261018_contract_billing.sql#L47)
+- `"schema".security_sign_company_contract()` — [L70](../migrations/20261018_contract_billing.sql#L70)
+- `"schema".security_preserve_signed_contract()` — [L106](../migrations/20261018_contract_billing.sql#L106)
+- `signed_contract_preserved` — [L117](../migrations/20261018_contract_billing.sql#L117)
+- `signature_evidence_preserved` — [L119](../migrations/20261018_contract_billing.sql#L119)
+- `"schema".security_contract_credit_snapshot()` — [L120](../migrations/20261018_contract_billing.sql#L120)
+- `subscription_contract_credit` — [L131](../migrations/20261018_contract_billing.sql#L131)
+- `"schema".security_guard_contract_profile()` — [L133](../migrations/20261018_contract_billing.sql#L133)
+- `subscription_contract_profile` — [L140](../migrations/20261018_contract_billing.sql#L140)
+- `"schema".security_prepare_subscription_invoice()` — [L142](../migrations/20261018_contract_billing.sql#L142)
 
 ## [migrations/20261018_operations_centre.sql](../migrations/20261018_operations_centre.sql)
 
@@ -1875,6 +1894,10 @@ Links target the working tree, so line positions can move after changes.
 
 - `changes/route.ts` — [L1](../src/app/next_api/company-portal/changes/route.ts#L1)
 
+## [src/app/next_api/company-portal/contracts/route.ts](../src/app/next_api/company-portal/contracts/route.ts)
+
+- `company-portal/contracts/route.ts` — [L1](../src/app/next_api/company-portal/contracts/route.ts#L1)
+
 ## [src/app/next_api/company-portal/directory/route.ts](../src/app/next_api/company-portal/directory/route.ts)
 
 - `directory/route.ts` — [L1](../src/app/next_api/company-portal/directory/route.ts#L1)
@@ -1928,10 +1951,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
-- `POST` — [L11](../src/app/next_api/company-registrations/route.ts#L11)
-- `GET` — [L25](../src/app/next_api/company-registrations/route.ts#L25)
-- `review` — [L31](../src/app/next_api/company-registrations/route.ts#L31)
-- `PUT` — [L32](../src/app/next_api/company-registrations/route.ts#L32)
+- `POST` — [L13](../src/app/next_api/company-registrations/route.ts#L13)
+- `GET` — [L27](../src/app/next_api/company-registrations/route.ts#L27)
+- `review` — [L33](../src/app/next_api/company-registrations/route.ts#L33)
+- `PUT` — [L34](../src/app/next_api/company-registrations/route.ts#L34)
 
 ## [src/app/next_api/company-staff/route.ts](../src/app/next_api/company-staff/route.ts)
 
@@ -1941,16 +1964,20 @@ Links target the working tree, so line positions can move after changes.
 
 - `company-workspace/route.ts` — [L1](../src/app/next_api/company-workspace/route.ts#L1)
 
+## [src/app/next_api/contract-billing/route.ts](../src/app/next_api/contract-billing/route.ts)
+
+- `contract-billing/route.ts` — [L1](../src/app/next_api/contract-billing/route.ts#L1)
+
 ## [src/app/next_api/contracts/route.ts](../src/app/next_api/contracts/route.ts)
 
-- `contracts/route.ts` — [L1](../src/app/next_api/contracts/route.ts#L1)
+- `next_api/contracts/route.ts` — [L1](../src/app/next_api/contracts/route.ts#L1)
 - `positiveId()` — [L8](../src/app/next_api/contracts/route.ts#L8)
 - `failed()` — [L14](../src/app/next_api/contracts/route.ts#L14)
 - `document()` — [L19](../src/app/next_api/contracts/route.ts#L19)
 - `GET` — [L24](../src/app/next_api/contracts/route.ts#L24)
 - `POST` — [L36](../src/app/next_api/contracts/route.ts#L36)
-- `PUT` — [L60](../src/app/next_api/contracts/route.ts#L60)
-- `DELETE` — [L97](../src/app/next_api/contracts/route.ts#L97)
+- `PUT` — [L61](../src/app/next_api/contracts/route.ts#L61)
+- `DELETE` — [L98](../src/app/next_api/contracts/route.ts#L98)
 
 ## [src/app/next_api/contracts/send-signature-link/route.ts](../src/app/next_api/contracts/send-signature-link/route.ts)
 
@@ -2952,13 +2979,13 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/operations/BillingPanel.tsx](../src/components/operations/BillingPanel.tsx)
 
 - `BillingPanel.tsx` — [L1](../src/components/operations/BillingPanel.tsx#L1)
-- `Doc` — [L17](../src/components/operations/BillingPanel.tsx#L17)
-- `BillingData` — [L31](../src/components/operations/BillingPanel.tsx#L31)
-- `cents()` — [L68](../src/components/operations/BillingPanel.tsx#L68)
-- `BillingPanel()` — [L74](../src/components/operations/BillingPanel.tsx#L74)
-- `open()` — [L108](../src/components/operations/BillingPanel.tsx#L108)
-- `submit()` — [L246](../src/components/operations/BillingPanel.tsx#L246)
-- `download()` — [L316](../src/components/operations/BillingPanel.tsx#L316)
+- `Doc` — [L19](../src/components/operations/BillingPanel.tsx#L19)
+- `BillingData` — [L35](../src/components/operations/BillingPanel.tsx#L35)
+- `cents()` — [L72](../src/components/operations/BillingPanel.tsx#L72)
+- `BillingPanel()` — [L78](../src/components/operations/BillingPanel.tsx#L78)
+- `open()` — [L114](../src/components/operations/BillingPanel.tsx#L114)
+- `submit()` — [L252](../src/components/operations/BillingPanel.tsx#L252)
+- `download()` — [L322](../src/components/operations/BillingPanel.tsx#L322)
 
 ## [src/components/operations/CompanyChangesPanel.tsx](../src/components/operations/CompanyChangesPanel.tsx)
 
@@ -2984,6 +3011,12 @@ Links target the working tree, so line positions can move after changes.
 - `HistorySection()` — [L321](../src/components/operations/CompanyWorkspace.tsx#L321)
 - `CompanyWorkspace()` — [L467](../src/components/operations/CompanyWorkspace.tsx#L467)
 
+## [src/components/operations/ContractBillingPanel.tsx](../src/components/operations/ContractBillingPanel.tsx)
+
+- `ContractBillingPanel.tsx` — [L1](../src/components/operations/ContractBillingPanel.tsx#L1)
+- `Contract` — [L12](../src/components/operations/ContractBillingPanel.tsx#L12)
+- `ContractBillingPanel()` — [L13](../src/components/operations/ContractBillingPanel.tsx#L13)
+
 ## [src/components/operations/DirectoryToolbar.tsx](../src/components/operations/DirectoryToolbar.tsx)
 
 - `DirectoryToolbar.tsx` — [L1](../src/components/operations/DirectoryToolbar.tsx#L1)
@@ -3001,9 +3034,9 @@ Links target the working tree, so line positions can move after changes.
 
 - `OperationForm.tsx` — [L1](../src/components/operations/OperationForm.tsx#L1)
 - `OperationField` — [L24](../src/components/operations/OperationForm.tsx#L24)
-- `uncertain` — [L34](../src/components/operations/OperationForm.tsx#L34)
-- `OperationForm()` — [L38](../src/components/operations/OperationForm.tsx#L38)
-- `submit()` — [L69](../src/components/operations/OperationForm.tsx#L69)
+- `uncertain` — [L35](../src/components/operations/OperationForm.tsx#L35)
+- `OperationForm()` — [L39](../src/components/operations/OperationForm.tsx#L39)
+- `submit()` — [L74](../src/components/operations/OperationForm.tsx#L74)
 
 ## [src/components/operations/OperationsCentre.tsx](../src/components/operations/OperationsCentre.tsx)
 
@@ -3053,14 +3086,14 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
 - `CompanyRegistrationDialog.tsx` — [L1](../src/components/registration/CompanyRegistrationDialog.tsx#L1)
-- `Field` — [L14](../src/components/registration/CompanyRegistrationDialog.tsx#L14)
-- `groups` — [L15](../src/components/registration/CompanyRegistrationDialog.tsx#L15)
-- `blank()` — [L16](../src/components/registration/CompanyRegistrationDialog.tsx#L16)
-- `RegistrationField()` — [L17](../src/components/registration/CompanyRegistrationDialog.tsx#L17)
-- `CompanyRegistrationDialog()` — [L21](../src/components/registration/CompanyRegistrationDialog.tsx#L21)
-- `close()` — [L28](../src/components/registration/CompanyRegistrationDialog.tsx#L28)
-- `validate()` — [L29](../src/components/registration/CompanyRegistrationDialog.tsx#L29)
-- `submit()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
+- `Field` — [L16](../src/components/registration/CompanyRegistrationDialog.tsx#L16)
+- `groups` — [L17](../src/components/registration/CompanyRegistrationDialog.tsx#L17)
+- `blank()` — [L18](../src/components/registration/CompanyRegistrationDialog.tsx#L18)
+- `RegistrationField()` — [L19](../src/components/registration/CompanyRegistrationDialog.tsx#L19)
+- `CompanyRegistrationDialog()` — [L23](../src/components/registration/CompanyRegistrationDialog.tsx#L23)
+- `close()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
+- `validate()` — [L31](../src/components/registration/CompanyRegistrationDialog.tsx#L31)
+- `submit()` — [L32](../src/components/registration/CompanyRegistrationDialog.tsx#L32)
 
 ## [src/components/registration/copy.ts](../src/components/registration/copy.ts)
 
@@ -3821,6 +3854,13 @@ Links target the working tree, so line positions can move after changes.
 - `connectionFailure` — [L2](../src/lib/connection-state.ts#L2)
 - `connectionMessage()` — [L7](../src/lib/connection-state.ts#L7)
 
+## [src/lib/contract-billing.ts](../src/lib/contract-billing.ts)
+
+- `contract-billing.ts` — [L1](../src/lib/contract-billing.ts#L1)
+- `command` — [L5](../src/lib/contract-billing.ts#L5)
+- `contractBillingGET` — [L9](../src/lib/contract-billing.ts#L9)
+- `contractBillingPOST` — [L20](../src/lib/contract-billing.ts#L20)
+
 ## [src/lib/contract-document-style.ts](../src/lib/contract-document-style.ts)
 
 - `contract-document-style.ts` — [L1](../src/lib/contract-document-style.ts#L1)
@@ -3832,7 +3872,7 @@ Links target the working tree, so line positions can move after changes.
 - `CONTRACT_TEMPLATE_HTML_NL` — [L2](../src/lib/contract-template.ts#L2)
 - `CONTRACT_TEMPLATE_HTML_FR` — [L629](../src/lib/contract-template.ts#L629)
 - `ContractData` — [L1256](../src/lib/contract-template.ts#L1256)
-- `generateContractHTML()` — [L1272](../src/lib/contract-template.ts#L1272)
+- `generateContractHTML()` — [L1273](../src/lib/contract-template.ts#L1273)
 
 ## [src/lib/contract-terms.ts](../src/lib/contract-terms.ts)
 
@@ -4093,8 +4133,14 @@ Links target the working tree, so line positions can move after changes.
 
 - `subscription-document.ts` — [L1](../src/lib/subscription-document.ts#L1)
 - `SubscriptionDocument` — [L3](../src/lib/subscription-document.ts#L3)
-- `euro()` — [L29](../src/lib/subscription-document.ts#L29)
-- `subscriptionPdf()` — [L33](../src/lib/subscription-document.ts#L33)
+- `euro()` — [L31](../src/lib/subscription-document.ts#L31)
+- `subscriptionPdf()` — [L35](../src/lib/subscription-document.ts#L35)
+
+## [src/lib/subscription-offer.ts](../src/lib/subscription-offer.ts)
+
+- `SUBSCRIPTION_OFFER` — [L1](../src/lib/subscription-offer.ts#L1)
+- `subscription-offer.ts` — [L1](../src/lib/subscription-offer.ts#L1)
+- `subscriptionOfferCopy` — [L2](../src/lib/subscription-offer.ts#L2)
 
 ## [src/lib/subscription-scheduler.ts](../src/lib/subscription-scheduler.ts)
 

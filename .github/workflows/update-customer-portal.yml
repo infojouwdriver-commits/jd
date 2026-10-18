@@ -91,6 +91,7 @@ jobs:
           test -s migrations/20261018_operations_centre.sql
           test -s migrations/20261018_web_change_approvals.sql
           test -s migrations/20261018_web_billing.sql
+          test -s migrations/20261018_contract_billing.sql
           keydir=$(mktemp -d)
           trap 'rm -rf "$keydir"' EXIT
           printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
@@ -98,6 +99,6 @@ jobs:
           args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
           remote_dir="/srv/jouw-driver/customer-release/$REVISION"
           ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p '$remote_dir'; chmod 700 '$remote_dir'" </dev/null
-          scp "${args[@]}" deploy/update-customer-portal.sh migrations/20261012_accounts_messages.sql migrations/20261013_company_pricing.sql migrations/20261013_mail_delivery.sql migrations/20261013_fleet_tracking.sql migrations/20261016_native_push.sql migrations/20261017_company_registration.sql migrations/20261018_company_lifecycle.sql migrations/20261018_subscription_billing.sql migrations/20261018_subscription_mail.sql migrations/20261018_company_staff.sql migrations/20261018_operations_centre.sql migrations/20261018_web_change_approvals.sql migrations/20261018_web_billing.sql "$DEPLOY_USER@$DEPLOY_HOST:$remote_dir/"
+          scp "${args[@]}" deploy/update-customer-portal.sh migrations/20261012_accounts_messages.sql migrations/20261013_company_pricing.sql migrations/20261013_mail_delivery.sql migrations/20261013_fleet_tracking.sql migrations/20261016_native_push.sql migrations/20261017_company_registration.sql migrations/20261018_company_lifecycle.sql migrations/20261018_subscription_billing.sql migrations/20261018_subscription_mail.sql migrations/20261018_company_staff.sql migrations/20261018_operations_centre.sql migrations/20261018_web_change_approvals.sql migrations/20261018_web_billing.sql migrations/20261018_contract_billing.sql "$DEPLOY_USER@$DEPLOY_HOST:$remote_dir/"
           printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
           ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash '$remote_dir/update-customer-portal.sh' '$IMAGE' '$REVISION' '$BACKUP_TAG'" </dev/null

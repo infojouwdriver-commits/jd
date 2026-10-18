@@ -111,15 +111,15 @@ export default function CompanyContractsPage() {
   const [newContract, setNewContract] = useState({
     contract_start_date: todayInBrussels(),
     contract_duration_months: 12,
-    monthly_fee: 99.00,
-    auto_renew: true,
+    monthly_fee: 50.00,
+    auto_renew: false,
     renewal_notice_days: 90
   });
 
   const [editForm, setEditForm] = useState({
     monthly_fee: 0,
     contract_duration_months: 12,
-    auto_renew: true
+    auto_renew: false
   });
 
   useEffect(() => {
@@ -201,8 +201,8 @@ export default function CompanyContractsPage() {
       setNewContract({
         contract_start_date: todayInBrussels(),
         contract_duration_months: 12,
-        monthly_fee: 99.00,
-        auto_renew: true,
+        monthly_fee: 50.00,
+        auto_renew: false,
         renewal_notice_days: 90
       });
       fetchContracts();

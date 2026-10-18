@@ -30,6 +30,7 @@ export interface OperationField {
   maxLength?: number;
   options?: { value: string; label: string }[];
   optional?: boolean;
+  mustBeTrue?: boolean;
 }
 const uncertain = new Map<
   string,
@@ -44,6 +45,8 @@ export function OperationForm({
   onClose,
   c,
   intentKey,
+  children,
+  submitLabel,
 }: {
   title: string;
   description?: string;
@@ -56,6 +59,8 @@ export function OperationForm({
   onClose: () => void;
   c: OperationsWords;
   intentKey?: string;
+  children?: React.ReactNode;
+  submitLabel?: string;
 }) {
   const pending = intentKey ? uncertain.get(intentKey) : undefined;
   const [values, setValues] = useState(pending?.values || initial),
@@ -71,7 +76,7 @@ export function OperationForm({
     if (flight.current) return;
     const bad = fields.find((f) => {
       const v = values[f.key];
-      if (f.type === "checkbox") return false;
+      if (f.type === "checkbox") return f.mustBeTrue === true && v !== true;
       if (f.optional && !String(v || "").trim()) return false;
       if (!f.optional && !String(v || "").trim()) return true;
       if (f.type === "password" && String(v).length < 12) return true;
@@ -140,6 +145,7 @@ export function OperationForm({
           <DialogDescription>{description || title}</DialogDescription>
         </DialogHeader>
         <form noValidate onSubmit={submit} className="space-y-4">
+          {children}
           <fieldset disabled={busy || !!frozen.current} className="space-y-4">
             {fields.map((f) => (
               <div key={f.key} className="space-y-2">
@@ -149,6 +155,8 @@ export function OperationForm({
                     <Checkbox
                       id={`operation-${f.key}`}
                       checked={values[f.key] === true}
+                      aria-invalid={invalid === f.key}
+                      aria-describedby={invalid === f.key ? "operation-error" : undefined}
                       onCheckedChange={(v) =>
                         setValues({ ...values, [f.key]: v === true })
                       }
@@ -236,7 +244,7 @@ export function OperationForm({
               {c.cancel}
             </Button>
             <Button type="submit" disabled={busy} aria-busy={busy}>
-              {busy ? c.loading : frozen.current ? c.retry : c.save}
+              {busy ? c.loading : frozen.current ? c.retry : submitLabel || c.save}
             </Button>
           </DialogFooter>
         </form>

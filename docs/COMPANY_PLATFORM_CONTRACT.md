@@ -102,3 +102,37 @@ It has no fiscal value, no mail dispatch and no Peppol acceptance claim. Real
 issuance still requires configured issuer and structured exchange evidence.
 The payment provider and Peppol integration remain a separate future task.
 This amendment changes only the website/server; no native build or update.
+
+## Contract-backed billing — 18 October 2026
+
+The user confirmed 50 EUR per month including 21% VAT for a twelve-month
+contract: 600 EUR total. The new public registration requires acknowledgement of
+`annual-50-v1`; this is disclosure, not a signature or payment. Approval creates
+one pending-signature contract and one disabled billing schedule atomically.
+The contract starts on its displayed Brussels approval date and ends exclusively
+twelve calendar months later. It does not automatically renew.
+
+Only an authenticated active owner/portal_owner in the same approved, unarchived
+company may sign through the company portal. Accountant/fleet/admin sessions
+cannot sign on the company's behalf through this flow. A revision check prevents
+signing changed text; request UUID retries cannot duplicate signature evidence.
+Signing enables the schedule and prepares the first due document only if the
+issuer's legal identity is complete. Preparation never proves issuance, delivery,
+payment or Peppol acceptance. Existing real-issuance gates remain in force.
+
+The contract is the price and period authority. Monthly gross is exactly 5000
+cents; net is rounded to 4132 cents, VAT is the remaining 868 cents. The twelve
+monthly gross amounts sum to exactly 60000 cents. Each period is derived from the
+original start plus installment index, with calendar-month day clamping, and ends
+the day before the following period. The twelfth preparation disables scheduling.
+A suspended/cancelled contract cannot prepare another invoice. No renewal,
+penalty, automatic payment or service-access suspension is introduced.
+
+Every new linked invoice snapshots contract number, ID, installment and terms;
+credit notes inherit that evidence. Global VAT edits cannot rewrite the signed
+contract, its profile or old documents. Existing signed documents and manual
+profiles are not migrated to the new price. Administrators can explicitly link
+an existing signed, active annual contract only when no billing profile would
+be overwritten. That operation uses its existing monthly gross and explicit VAT,
+or the current system default if the historical contract has no stored VAT.
+Legacy public token-signing/email paths remain disabled.

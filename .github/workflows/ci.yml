@@ -67,6 +67,8 @@ jobs:
         run: OPERATIONS_QA_DIR="$RUNNER_TEMP/operations-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-operations-ui.mjs
       - name: Web proposals, roles and local cash billing acceptance
         run: OPERATIONS_QA_DIR="$RUNNER_TEMP/web-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-web-approvals-ui.mjs
+      - name: Annual contract, signature and linked billing UI acceptance
+        run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-contract-billing-ui.mjs
       - name: Mapbox failure and durable driver trip start regression
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-mapbox-trip-ui.mjs
       - name: Cookie preferences persistence and non-blocking dismissal

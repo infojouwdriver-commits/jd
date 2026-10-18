@@ -1267,10 +1267,23 @@ export interface ContractData {
   annualFee: number;
   durationMonths: number;
   language?: 'nl' | 'fr';
+  grossBilling?: {vatBps:number;autoRenew:boolean};
 }
 
 export function generateContractHTML(data: ContractData): string {
-  const template = data.language === 'fr' ? CONTRACT_TEMPLATE_HTML_FR : CONTRACT_TEMPLATE_HTML_NL;
+  let template = data.language === 'fr' ? CONTRACT_TEMPLATE_HTML_FR : CONTRACT_TEMPLATE_HTML_NL;
+  if (data.grossBilling) {
+    const fr=data.language==='fr',rate=data.grossBilling.vatBps/100;
+    const net=Math.round(data.monthlyFee*100*10000/(10000+data.grossBilling.vatBps))/100;
+    const tax=Math.round((data.monthlyFee-net)*100)/100;
+    const details=fr?`<section class="contract-info"><h3>Prix et facturation</h3><p>${data.monthlyFee.toFixed(2)} EUR par mois, TVA ${rate}% comprise : ${net.toFixed(2)} EUR hors TVA + ${tax.toFixed(2)} EUR de TVA. ${data.durationMonths} mensualités, total ${data.annualFee.toFixed(2)} EUR TVA comprise.</p><p>Facturation après approbation et signature. Chaque facture indique le contrat et sa période. La signature ne confirme aucun paiement.</p></section>`:`<section class="contract-info"><h3>Prijs en facturatie</h3><p>${data.monthlyFee.toFixed(2)} EUR per maand, inclusief ${rate}% btw: ${net.toFixed(2)} EUR excl. btw + ${tax.toFixed(2)} EUR btw. ${data.durationMonths} maandtermijnen, totaal ${data.annualFee.toFixed(2)} EUR inclusief btw.</p><p>Facturatie na goedkeuring en ondertekening. Elke factuur vermeldt het contract en de periode. Ondertekening bevestigt geen betaling.</p></section>`;
+    template=template.replace('<!-- Top banner -->',details+'<!-- Top banner -->');
+    if(!data.grossBilling.autoRenew) {
+      const heading=fr?'6. Abonnement':'6. Abonnement';
+      template=template.replace(new RegExp('<section>\\s*<h3>'+heading+'[\\s\\S]*?</section>'),`<section><h3>${fr?'6. Durée du contrat':'6. Looptijd'}</h3><p>${fr?'Durée déterminée de 12 mois. Pas de renouvellement automatique. La période suivante nécessite un nouveau contrat.':'Bepaalde looptijd van 12 maanden. Geen automatische verlenging. Een volgende periode vereist een nieuw contract.'}</p></section>`);
+      template=template.replace(/<span class="pill"><strong>Opzeg<\/strong>[\s\S]*?<\/span>/,'').replace(/<span class="pill"><strong>Résiliation<\/strong>[\s\S]*?<\/span>/,'');
+    }
+  }
   const locale = data.language === 'fr' ? 'fr-BE' : 'nl-BE';
   
   const escape = (value: string) => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
