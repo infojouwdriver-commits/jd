@@ -1,6 +1,11 @@
 name: Verify server access
 on:
   workflow_dispatch:
+    inputs:
+      reclaim_reproducible_cache:
+        type: boolean
+        default: false
+        description: Reclaim old build cache and unused JD images, preserving live and rollback images
 permissions:
   contents: read
 concurrency:
@@ -18,6 +23,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          RECLAIM_CACHE: ${{ inputs.reclaim_reproducible_cache }}
         shell: bash
         run: |
           set -euo pipefail
@@ -29,7 +35,8 @@ jobs:
           trap 'rm -f "$keydir/key" "$keydir/known_hosts"; rmdir "$keydir"' EXIT
           printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
           printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
-          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          [[ "$RECLAIM_CACHE" = true || "$RECLAIM_CACHE" = false ]]
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE'" <<'REMOTE'
           set -euo pipefail
           printf 'SSH identity verified\n'
           uname -sr
@@ -39,6 +46,37 @@ jobs:
           command -v docker || true
           command -v node || true
           df -h /
+          df -i /
+          docker system df
+          if test "$1" = true; then
+            # Reproducible cache only; never remove volumes, backups or application files.
+            docker builder prune --force --filter until=24h --keep-storage 2GB
+            node --input-type=module <<'RECLAIM'
+          import fs from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8'}).trim();
+          const state=JSON.parse(fs.readFileSync('/srv/jouw-driver/foundation/runtime-mode.json'));
+          const release=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(state.mode!=='public'||state.image!==release.image)throw Error('Runtime state mismatch');
+          const protectedIds=new Set();
+          for(const ref of [state.image,state.previousImage,release.image,release.previousImage].filter(Boolean)){
+            protectedIds.add(JSON.parse(docker('image','inspect',ref))[0].Id);
+          }
+          const containers=docker('ps','--all','--quiet').split('\n').filter(Boolean);
+          for(const container of containers)protectedIds.add(JSON.parse(docker('container','inspect',container))[0].Image);
+          const source='https://github.com/infojouwdriver-commits/jd';
+          const ids=[...new Set(docker('image','ls','--quiet','--no-trunc','--filter','label=org.opencontainers.image.source='+source).split('\n').filter(Boolean))];
+          for(const id of ids){
+            const image=JSON.parse(docker('image','inspect',id))[0];
+            if(protectedIds.has(id)||image.Config.Labels?.['org.opencontainers.image.source']!==source||Date.now()-Date.parse(image.Created)<48*60*60*1000)continue;
+            // No force: Docker also refuses to remove images referenced by a container.
+            console.log(docker('image','rm',id));
+          }
+          console.log('Live/rollback images and every container image preserved.');
+          RECLAIM
+            df -h /
+            docker system df
+          fi
           free -h
           test ! -e /srv/jouw-driver/.env || printf 'Server configuration already exists; preserve it\n'
           REMOTE
