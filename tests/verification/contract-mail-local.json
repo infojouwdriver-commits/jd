@@ -1,0 +1,47 @@
+{
+  "scope": "website/server only; synthetic local checks",
+  "full_unit_suite": {
+    "passed": 177,
+    "failed": 0
+  },
+  "mail_preflight_after_extension": {
+    "passed": 5,
+    "failed": 0
+  },
+  "auth_integration": {
+    "passed": 67,
+    "engine": "real production HTTP handlers with simulated isolated PostgREST"
+  },
+  "contract_ui": {
+    "passed": 8,
+    "viewports": [
+      390,
+      1280
+    ],
+    "checks": [
+      "unsigned activation removed",
+      "actionable mail configuration error",
+      "keyboard retry preserves request UUID",
+      "provider acceptance distinguished from delivery",
+      "NL/FR preview and print unchanged"
+    ]
+  },
+  "production_build": "passed",
+  "typecheck": "passed",
+  "scoped_lint": {
+    "errors": 0,
+    "preexisting_hook_warnings": 1
+  },
+  "deployment_tests": 18,
+  "repository_safety": "passed",
+  "graphify": {
+    "source_files": 516,
+    "freshness": "passed"
+  },
+  "static_ui_audit": {
+    "errors": 2,
+    "note": "Pre-existing Link/Button wrapper and Radix DialogTrigger false positives; no strict audit pass claimed."
+  },
+  "real_email_delivery": "not tested; Brevo phone, sender and runtime credentials pending",
+  "production_deployment": "not started"
+}

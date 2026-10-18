@@ -1340,7 +1340,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `preflight.mjs` — [L1](../scripts/preflight.mjs#L1)
 - `errors` — [L2](../scripts/preflight.mjs#L2)
-- `mailKeys` — [L24](../scripts/preflight.mjs#L24)
+- `mailKeys` — [L32](../scripts/preflight.mjs#L32)
 
 ## [scripts/push-fcm.mjs](../scripts/push-fcm.mjs)
 
@@ -1982,8 +1982,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/contracts/send-signature-link/route.ts](../src/app/next_api/contracts/send-signature-link/route.ts)
 
 - `send-signature-link/route.ts` — [L1](../src/app/next_api/contracts/send-signature-link/route.ts#L1)
-- `POST` — [L8](../src/app/next_api/contracts/send-signature-link/route.ts#L8)
-- `sendContractEmail()` — [L258](../src/app/next_api/contracts/send-signature-link/route.ts#L258)
+- `command` — [L9](../src/app/next_api/contracts/send-signature-link/route.ts#L9)
+- `POST` — [L10](../src/app/next_api/contracts/send-signature-link/route.ts#L10)
 
 ## [src/app/next_api/contracts/sign/route.ts](../src/app/next_api/contracts/sign/route.ts)
 
@@ -2375,6 +2375,12 @@ Links target the working tree, so line positions can move after changes.
 - `POST` — [L83](../src/app/next_api/vehicles/route.ts#L83)
 - `PUT` — [L165](../src/app/next_api/vehicles/route.ts#L165)
 - `DELETE` — [L244](../src/app/next_api/vehicles/route.ts#L244)
+
+## [src/app/next_api/webhooks/brevo/route.ts](../src/app/next_api/webhooks/brevo/route.ts)
+
+- `brevo/route.ts` — [L1](../src/app/next_api/webhooks/brevo/route.ts#L1)
+- `runtime` — [L5](../src/app/next_api/webhooks/brevo/route.ts#L5)
+- `POST()` — [L6](../src/app/next_api/webhooks/brevo/route.ts#L6)
 
 ## [src/app/next_api/webhooks/resend/route.ts](../src/app/next_api/webhooks/resend/route.ts)
 
@@ -3739,6 +3745,13 @@ Links target the working tree, so line positions can move after changes.
 - `generateToken()` — [L103](../src/lib/auth.ts#L103)
 - `verifyToken()` — [L126](../src/lib/auth.ts#L126)
 
+## [src/lib/brevo-mail.ts](../src/lib/brevo-mail.ts)
+
+- `brevo-mail.ts` — [L1](../src/lib/brevo-mail.ts#L1)
+- `brevoProviderId()` — [L3](../src/lib/brevo-mail.ts#L3)
+- `brevoWebhookAuthorized()` — [L11](../src/lib/brevo-mail.ts#L11)
+- `brevoMailEvent()` — [L15](../src/lib/brevo-mail.ts#L15)
+
 ## [src/lib/chiron-protocol.ts](../src/lib/chiron-protocol.ts)
 
 - `chiron-protocol.ts` — [L1](../src/lib/chiron-protocol.ts#L1)
@@ -3866,6 +3879,11 @@ Links target the working tree, so line positions can move after changes.
 - `contract-document-style.ts` — [L1](../src/lib/contract-document-style.ts#L1)
 - `CONTRACT_DOCUMENT_CSS` — [L2](../src/lib/contract-document-style.ts#L2)
 
+## [src/lib/contract-invitation.ts](../src/lib/contract-invitation.ts)
+
+- `contract-invitation.ts` — [L1](../src/lib/contract-invitation.ts#L1)
+- `contractInvitation()` — [L2](../src/lib/contract-invitation.ts#L2)
+
 ## [src/lib/contract-template.ts](../src/lib/contract-template.ts)
 
 - `contract-template.ts` — [L1](../src/lib/contract-template.ts#L1)
@@ -3959,17 +3977,17 @@ Links target the working tree, so line positions can move after changes.
 - `MailStatus` — [L2](../src/lib/mail-policy.ts#L2)
 - `MAIL_FREE_LIMITS` — [L3](../src/lib/mail-policy.ts#L3)
 - `mailConfiguration()` — [L4](../src/lib/mail-policy.ts#L4)
-- `mailEventKey()` — [L19](../src/lib/mail-policy.ts#L19)
-- `events` — [L23](../src/lib/mail-policy.ts#L23)
-- `mailEvent()` — [L24](../src/lib/mail-policy.ts#L24)
-- `nextMailStatus()` — [L32](../src/lib/mail-policy.ts#L32)
+- `mailEventKey()` — [L31](../src/lib/mail-policy.ts#L31)
+- `events` — [L35](../src/lib/mail-policy.ts#L35)
+- `mailEvent()` — [L36](../src/lib/mail-policy.ts#L36)
+- `nextMailStatus()` — [L44](../src/lib/mail-policy.ts#L44)
 
 ## [src/lib/mail-service.ts](../src/lib/mail-service.ts)
 
 - `mail-service.ts` — [L1](../src/lib/mail-service.ts#L1)
-- `MailMessage` — [L4](../src/lib/mail-service.ts#L4)
-- `MailResult` — [L5](../src/lib/mail-service.ts#L5)
-- `sendTransactionalMail()` — [L6](../src/lib/mail-service.ts#L6)
+- `MailMessage` — [L5](../src/lib/mail-service.ts#L5)
+- `MailResult` — [L6](../src/lib/mail-service.ts#L6)
+- `sendTransactionalMail()` — [L7](../src/lib/mail-service.ts#L7)
 
 ## [src/lib/mapbox-route.ts](../src/lib/mapbox-route.ts)
 

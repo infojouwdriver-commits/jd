@@ -17,7 +17,7 @@ export function publicEndpoint(path: string, method: string): boolean {
     (method === 'GET' && ['/next_api/gdpr/privacy-policy', '/next_api/gdpr/cookie-categories'].includes(path));
 }
 export function disabledEndpoint(path: string): boolean {
-  return ['/next_api/ai-assistant', '/next_api/contracts/sign', '/next_api/contracts/verify-token', '/next_api/contracts/send-signature-link', '/next_api/invoices/view', '/next_api/invoices/share-link', '/next_api/auth/google-login', '/next_api/example', '/next_api/websocket', '/next_api/zoer_health', '/next_api/company-portal/register', '/next_api/company-portal/set-password'].some(prefix => path === prefix || path.startsWith(prefix + '/'));
+  return ['/next_api/ai-assistant', '/next_api/contracts/sign', '/next_api/contracts/verify-token', '/next_api/invoices/view', '/next_api/invoices/share-link', '/next_api/auth/google-login', '/next_api/example', '/next_api/websocket', '/next_api/zoer_health', '/next_api/company-portal/register', '/next_api/company-portal/set-password'].some(prefix => path === prefix || path.startsWith(prefix + '/'));
 }
 export function memberEndpoint(path: string, method: string, userType: string): boolean {
   if (['/next_api/auth/user', '/next_api/auth/account', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;

@@ -4,7 +4,7 @@
 import ContractDocument from '@/components/contracts/ContractDocument';
 import {todayInBrussels,contractIsImmutable} from '@/lib/contract-terms';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter, useParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -258,40 +258,22 @@ export default function CompanyContractsPage() {
     }
   };
 
+  const invitationRequests = useRef<Record<number,string>>({});
   const handleSendSignatureLink = async (contractId: number) => {
     setSendingSignatureLink(contractId);
     try {
       await api.post('/contracts/send-signature-link', {
-        contract_id: contractId
+        contract_id: contractId,
+        request_id: invitationRequests.current[contractId] ||= crypto.randomUUID()
       });
 
-      toast.success('تم إرسال رابط التوقيع بنجاح');
+      delete invitationRequests.current[contractId];
+      toast.success('قبل مزود البريد دعوة التوقيع؛ التسليم لم يتأكد بعد');
       fetchContracts();
     } catch (error: any) {
       toast.error(error.message || 'فشل إرسال رابط التوقيع');
     } finally {
       setSendingSignatureLink(null);
-    }
-  };
-
-  const handleActivateContract = async (contractId: number) => {
-    try {
-      await api.put('/contracts', {
-        id: contractId,
-        contract_status: 'active'
-      });
-
-      await api.put('/companies', {
-        id: parseInt(companyId),
-        subscription_status: 'active',
-        current_contract_id: contractId
-      });
-
-      toast.success('تم تفعيل العقد بنجاح');
-      fetchContracts();
-      fetchCompany();
-    } catch (error: any) {
-      toast.error(error.message || 'فشل تفعيل العقد');
     }
   };
 
@@ -661,15 +643,7 @@ export default function CompanyContractsPage() {
                         <Edit className="w-4 h-4 ml-2" />
                         تعديل
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleActivateContract(contract.id)}
-                        className="rounded-2xl"
-                      >
-                        <CheckCircle2 className="w-4 h-4 ml-2" />
-                        تفعيل يدوياً
-                      </Button>
+                      <p className="text-sm text-muted-foreground">يُفعّل العقد بعد مراجعة صاحب الشركة وتوقيعه من بوابته ← الاشتراك وكشف الحساب ← العقد والفوترة.</p>
                       <Button
                         variant="destructive"
                         size="sm"
