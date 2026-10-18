@@ -32,3 +32,22 @@ Arabic/French/Dutch use the existing language provider and semantic theme tokens
 ## Verification and static-audit limits
 
 premium-operations.json scopes the strict web audit to the new shared operations implementation. premium-ui.json continues to describe native screens. The generic HTML auditor misreads native Button/onPress components as HTML buttons without onClick; those false positives are recorded, not hidden by fake web event props. Native lint/typecheck/unit and rendered review remain the applicable runtime evidence. Do not claim the entire pre-existing application is free of UX debt from this scoped audit.
+
+## Web approvals and invoice organization
+
+FleetRecordsTab reuses OperationForm for company fleet proposals; CompanyChangesPanel
+owns safe request summaries and administrator review in the approval centre.
+The company sees pending/approved/rejected requests in its own company workspace.
+The company selector resets the view. The API excludes payload/password hashes
+and concurrency snapshots. StaffPanel shows when changes await review. UUIDs and
+content HMACs distinguish replay from a new proposal; ambiguous requests retain
+session-memory intent. Known rejection/conflict permits correction/resubmission.
+
+BillingPanel separates net, VAT, total, outstanding amount, document state and
+paid/partial/unpaid text. Receipt evidence shows date/reference/method/amount.
+Invoice settings expose the configurable VAT default (21% initially); changes
+apply to newly configured profiles, without rewriting earlier tax snapshots.
+Demo documents offer local test issuance instead of a fake exchange reference.
+Real issuance remains disabled until structured exchange is configured. Cash is
+the initial visible manual receipt method and can be changed explicitly to bank
+transfer. No electronic collection action or provider claims are introduced.

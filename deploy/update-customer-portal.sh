@@ -31,6 +31,10 @@ company_staff_migration="$source_dir/20261018_company_staff.sql"
 test -s "$company_staff_migration"
 operations_migration="$source_dir/20261018_operations_centre.sql"
 test -s "$operations_migration"
+web_approvals_migration="$source_dir/20261018_web_change_approvals.sql"
+test -s "$web_approvals_migration"
+web_billing_migration="$source_dir/20261018_web_billing.sql"
+test -s "$web_billing_migration"
 root=/srv/jouw-driver
 cd "$root/foundation"
 test ! -e "$root/.env"
@@ -39,7 +43,7 @@ test -s "$root/backups/foundation-$backup_tag.tar.age"
 test -s "$root/backups/foundation-$backup_tag.sha256"
 test "$(sha256sum "$root/backups/foundation-$backup_tag.tar.age" | awk '{print $1}')" = "$(cat "$root/backups/foundation-$backup_tag.sha256")"
 test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" = "$revision"
-export CUSTOMER_IMAGE="$image" CUSTOMER_REVISION="$revision" VERIFIED_BACKUP_TAG="$backup_tag" PORTAL_MIGRATION="$migration" PRICING_MIGRATION="$pricing_migration" MAIL_MIGRATION="$mail_migration" FLEET_MIGRATION="$fleet_migration" PUSH_MIGRATION="$push_migration" REGISTRATION_MIGRATION="$registration_migration" LIFECYCLE_MIGRATION="$lifecycle_migration" BILLING_MIGRATION="$billing_migration" BILLING_MAIL_MIGRATION="$billing_mail_migration" COMPANY_STAFF_MIGRATION="$company_staff_migration" OPERATIONS_MIGRATION="$operations_migration"
+export CUSTOMER_IMAGE="$image" CUSTOMER_REVISION="$revision" VERIFIED_BACKUP_TAG="$backup_tag" PORTAL_MIGRATION="$migration" PRICING_MIGRATION="$pricing_migration" MAIL_MIGRATION="$mail_migration" FLEET_MIGRATION="$fleet_migration" PUSH_MIGRATION="$push_migration" REGISTRATION_MIGRATION="$registration_migration" LIFECYCLE_MIGRATION="$lifecycle_migration" BILLING_MIGRATION="$billing_migration" BILLING_MAIL_MIGRATION="$billing_mail_migration" COMPANY_STAFF_MIGRATION="$company_staff_migration" OPERATIONS_MIGRATION="$operations_migration" WEB_APPROVALS_MIGRATION="$web_approvals_migration" WEB_BILLING_MIGRATION="$web_billing_migration"
 node --env-file=.app-staging.env --input-type=module <<'CHECK'
 import fs from 'node:fs';
 const state=JSON.parse(fs.readFileSync('runtime-mode.json'));
@@ -76,7 +80,7 @@ node --env-file=.database.env --input-type=module <<'MIGRATE'
 import fs from 'node:fs';import {spawnSync} from 'node:child_process';
 const e=process.env;
 if(e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||e.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
-let sql=[e.PORTAL_MIGRATION,e.PRICING_MIGRATION,e.MAIL_MIGRATION,e.FLEET_MIGRATION,e.PUSH_MIGRATION,e.REGISTRATION_MIGRATION,e.LIFECYCLE_MIGRATION,e.BILLING_MIGRATION,e.BILLING_MAIL_MIGRATION,e.COMPANY_STAFF_MIGRATION,e.OPERATIONS_MIGRATION].map(file=>fs.readFileSync(file,'utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"').replaceAll(':"user_role"','"jouw_app_user"')).join('\n');
+let sql=[e.PORTAL_MIGRATION,e.PRICING_MIGRATION,e.MAIL_MIGRATION,e.FLEET_MIGRATION,e.PUSH_MIGRATION,e.REGISTRATION_MIGRATION,e.LIFECYCLE_MIGRATION,e.BILLING_MIGRATION,e.BILLING_MAIL_MIGRATION,e.COMPANY_STAFF_MIGRATION,e.OPERATIONS_MIGRATION,e.WEB_APPROVALS_MIGRATION,e.WEB_BILLING_MIGRATION].map(file=>fs.readFileSync(file,'utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"').replaceAll(':"user_role"','"jouw_app_user"')).join('\n');
 const check="SELECT public.independent_schema_ready() AND NOT EXISTS(SELECT FROM unnest(ARRAY['jouw_app_user','jouw_service','jouw_gateway']) r(role) WHERE has_schema_privilege(role,'jouw_driver_archive_20261009','USAGE'));";
 const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
 const before=spawnSync('docker',args,{input:check,encoding:'utf8'});
@@ -137,7 +141,7 @@ ACCEPT
 node --input-type=module <<'STATE'
 import fs from 'node:fs';
 const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
-const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG,portalMigration:'20261012_accounts_messages',pricingMigration:'20261013_company_pricing',mailMigration:'20261013_mail_delivery',fleetMigration:'20261013_fleet_tracking',pushMigration:'20261016_native_push',registrationMigration:'20261017_company_registration',companyPlatformMigration:'20261018_operations_centre'};
+const state={...old,image:process.env.CUSTOMER_IMAGE,revision:process.env.CUSTOMER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.VERIFIED_BACKUP_TAG,portalMigration:'20261012_accounts_messages',pricingMigration:'20261013_company_pricing',mailMigration:'20261013_mail_delivery',fleetMigration:'20261013_fleet_tracking',pushMigration:'20261016_native_push',registrationMigration:'20261017_company_registration',companyPlatformMigration:'20261018_operations_centre',webApprovalsMigration:'20261018_web_change_approvals',webBillingMigration:'20261018_web_billing'};
 for(const file of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(file,JSON.stringify(state,null,2)+'\n',{mode:0o600});
 STATE
 updated=true

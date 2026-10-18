@@ -20,6 +20,7 @@ import DriversTab from "./DriversTab";
 import VehiclesTab from "./VehiclesTab";
 import FleetPanel from "@/components/fleet/FleetPanel";
 import BillingPanel from "@/components/operations/BillingPanel";
+import CompanyChangesPanel from "@/components/operations/CompanyChangesPanel";
 import StaffPanel from "@/components/operations/StaffPanel";
 import { operationsCopy } from "@/components/operations/operations-copy";
 import { useOperationData } from "@/components/operations/useOperationData";
@@ -195,6 +196,11 @@ export default function CompanyDashboard() {
                       {c.staff}
                     </TabsTrigger>
                   )}
+                  {data.can_manage_fleet && (
+                    <TabsTrigger className="min-h-11" value="changes">
+                      {c.changes}
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger className="min-h-11" value="account">
                     {c.profile}
                   </TabsTrigger>
@@ -335,6 +341,14 @@ export default function CompanyDashboard() {
               {data.can_manage_staff && (
                 <TabsContent value="staff">
                   <StaffPanel companyId={data.company.id} />
+                </TabsContent>
+              )}
+              {data.can_manage_fleet && (
+                <TabsContent value="changes">
+                  <CompanyChangesPanel
+                    key={data.company.id}
+                    companyId={data.company.id}
+                  />
                 </TabsContent>
               )}
               <TabsContent value="account">

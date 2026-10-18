@@ -21,7 +21,7 @@ export function disabledEndpoint(path: string): boolean {
 }
 export function memberEndpoint(path: string, method: string, userType: string): boolean {
   if (['/next_api/auth/user', '/next_api/auth/account', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;
-  if (['manager', 'company', 'owner'].includes(userType)) return ['/next_api/company-portal', '/next_api/company-portal/drivers', '/next_api/company-portal/vehicles', '/next_api/company-portal/directory', '/next_api/company-portal/billing', '/next_api/company-portal/staff'].includes(path) || (path === '/next_api/fleet' && method === 'GET');
+  if (['manager', 'company', 'owner'].includes(userType)) return ['/next_api/company-portal', '/next_api/company-portal/drivers', '/next_api/company-portal/vehicles', '/next_api/company-portal/directory', '/next_api/company-portal/billing', '/next_api/company-portal/staff', '/next_api/company-portal/changes'].includes(path) || (path === '/next_api/fleet' && method === 'GET');
   if (userType === 'distributor') return method === 'GET' && ['/next_api/distributors/my-companies','/next_api/invoices/my-invoices'].includes(path);
   if (userType !== 'driver') return false;
   if(path==='/next_api/drivers/billing-notice')return method==='GET';

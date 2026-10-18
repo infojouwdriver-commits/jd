@@ -104,21 +104,23 @@ Links target the working tree, so line positions can move after changes.
 
 - `update-customer-portal.sh` — [L1](../deploy/update-customer-portal.sh#L1)
 - `update-customer-portal.sh script` — [L1](../deploy/update-customer-portal.sh#L1)
-- `BILLING_MAIL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `BILLING_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `COMPANY_STAFF_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `CUSTOMER_IMAGE` — [L42](../deploy/update-customer-portal.sh#L42)
-- `CUSTOMER_REVISION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `FLEET_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `LIFECYCLE_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `MAIL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `OPERATIONS_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `PORTAL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `PRICING_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `PUSH_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `REGISTRATION_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
-- `VERIFIED_BACKUP_TAG` — [L42](../deploy/update-customer-portal.sh#L42)
-- `cleanup()` — [L55](../deploy/update-customer-portal.sh#L55)
+- `BILLING_MAIL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `BILLING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `COMPANY_STAFF_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `CUSTOMER_IMAGE` — [L46](../deploy/update-customer-portal.sh#L46)
+- `CUSTOMER_REVISION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `FLEET_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `LIFECYCLE_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `MAIL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `OPERATIONS_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `PORTAL_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `PRICING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `PUSH_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `REGISTRATION_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `VERIFIED_BACKUP_TAG` — [L46](../deploy/update-customer-portal.sh#L46)
+- `WEB_APPROVALS_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `WEB_BILLING_MIGRATION` — [L46](../deploy/update-customer-portal.sh#L46)
+- `cleanup()` — [L59](../deploy/update-customer-portal.sh#L59)
 
 ## [deploy/update-customer-ui.sh](../deploy/update-customer-ui.sh)
 
@@ -875,6 +877,20 @@ Links target the working tree, so line positions can move after changes.
 - `20261018_subscription_mail.sql` — [source](../migrations/20261018_subscription_mail.sql#)
 - `"schema".security_reserve_mail()` — [L4](../migrations/20261018_subscription_mail.sql#L4)
 
+## [migrations/20261018_web_billing.sql](../migrations/20261018_web_billing.sql)
+
+- `20261018_web_billing.sql` — [source](../migrations/20261018_web_billing.sql#)
+- `"schema".security_save_subscription_settings()` — [L7](../migrations/20261018_web_billing.sql#L7)
+- `"schema".security_issue_subscription_demo()` — [L22](../migrations/20261018_web_billing.sql#L22)
+
+## [migrations/20261018_web_change_approvals.sql](../migrations/20261018_web_change_approvals.sql)
+
+- `20261018_web_change_approvals.sql` — [source](../migrations/20261018_web_change_approvals.sql#)
+- `"schema".company_change_requests` — [L4](../migrations/20261018_web_change_approvals.sql#L4)
+- `company_changes_company_created` — [L14](../migrations/20261018_web_change_approvals.sql#L14)
+- `"schema".security_submit_company_change()` — [L21](../migrations/20261018_web_change_approvals.sql#L21)
+- `"schema".security_review_company_change()` — [L47](../migrations/20261018_web_change_approvals.sql#L47)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -1340,12 +1356,12 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/approval-requests/page.tsx](../src/app/admin/approval-requests/page.tsx)
 
 - `approval-requests/page.tsx` — [L1](../src/app/admin/approval-requests/page.tsx#L1)
-- `ApprovalRequest` — [L40](../src/app/admin/approval-requests/page.tsx#L40)
-- `DriverRegistrationRequest` — [L57](../src/app/admin/approval-requests/page.tsx#L57)
-- `ApprovalRequestsPage()` — [L83](../src/app/admin/approval-requests/page.tsx#L83)
-- `DriverRequestCard()` — [L469](../src/app/admin/approval-requests/page.tsx#L469)
-- `GeneralRequestCard()` — [L616](../src/app/admin/approval-requests/page.tsx#L616)
-- `EmptyState()` — [L698](../src/app/admin/approval-requests/page.tsx#L698)
+- `ApprovalRequest` — [L41](../src/app/admin/approval-requests/page.tsx#L41)
+- `DriverRegistrationRequest` — [L58](../src/app/admin/approval-requests/page.tsx#L58)
+- `ApprovalRequestsPage()` — [L84](../src/app/admin/approval-requests/page.tsx#L84)
+- `DriverRequestCard()` — [L472](../src/app/admin/approval-requests/page.tsx#L472)
+- `GeneralRequestCard()` — [L619](../src/app/admin/approval-requests/page.tsx#L619)
+- `EmptyState()` — [L701](../src/app/admin/approval-requests/page.tsx#L701)
 
 ## [src/app/admin/chiron-sync/page.tsx](../src/app/admin/chiron-sync/page.tsx)
 
@@ -1829,6 +1845,10 @@ Links target the working tree, so line positions can move after changes.
 - `PUT` — [L106](../src/app/next_api/companies/route.ts#L106)
 - `DELETE` — [L197](../src/app/next_api/companies/route.ts#L197)
 
+## [src/app/next_api/company-changes/route.ts](../src/app/next_api/company-changes/route.ts)
+
+- `company-changes/route.ts` — [L1](../src/app/next_api/company-changes/route.ts#L1)
+
 ## [src/app/next_api/company-classification/route.ts](../src/app/next_api/company-classification/route.ts)
 
 - `company-classification/route.ts` — [L1](../src/app/next_api/company-classification/route.ts#L1)
@@ -1851,6 +1871,10 @@ Links target the working tree, so line positions can move after changes.
 
 - `billing/route.ts` — [L1](../src/app/next_api/company-portal/billing/route.ts#L1)
 
+## [src/app/next_api/company-portal/changes/route.ts](../src/app/next_api/company-portal/changes/route.ts)
+
+- `changes/route.ts` — [L1](../src/app/next_api/company-portal/changes/route.ts#L1)
+
 ## [src/app/next_api/company-portal/directory/route.ts](../src/app/next_api/company-portal/directory/route.ts)
 
 - `directory/route.ts` — [L1](../src/app/next_api/company-portal/directory/route.ts#L1)
@@ -1858,10 +1882,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-portal/drivers/route.ts](../src/app/next_api/company-portal/drivers/route.ts)
 
 - `company-portal/drivers/route.ts` — [L1](../src/app/next_api/company-portal/drivers/route.ts#L1)
-- `getManagerCompanyId()` — [L10](../src/app/next_api/company-portal/drivers/route.ts#L10)
-- `POST` — [L15](../src/app/next_api/company-portal/drivers/route.ts#L15)
-- `PUT` — [L37](../src/app/next_api/company-portal/drivers/route.ts#L37)
-- `DELETE` — [L68](../src/app/next_api/company-portal/drivers/route.ts#L68)
+- `POST` — [L2](../src/app/next_api/company-portal/drivers/route.ts#L2)
+- `PUT` — [L3](../src/app/next_api/company-portal/drivers/route.ts#L3)
+- `DELETE` — [L4](../src/app/next_api/company-portal/drivers/route.ts#L4)
 
 ## [src/app/next_api/company-portal/login/route.ts](../src/app/next_api/company-portal/login/route.ts)
 
@@ -1898,10 +1921,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-portal/vehicles/route.ts](../src/app/next_api/company-portal/vehicles/route.ts)
 
 - `company-portal/vehicles/route.ts` — [L1](../src/app/next_api/company-portal/vehicles/route.ts#L1)
-- `getManagerCompanyId()` — [L9](../src/app/next_api/company-portal/vehicles/route.ts#L9)
-- `POST` — [L14](../src/app/next_api/company-portal/vehicles/route.ts#L14)
-- `PUT` — [L50](../src/app/next_api/company-portal/vehicles/route.ts#L50)
-- `DELETE` — [L80](../src/app/next_api/company-portal/vehicles/route.ts#L80)
+- `POST` — [L2](../src/app/next_api/company-portal/vehicles/route.ts#L2)
+- `PUT` — [L3](../src/app/next_api/company-portal/vehicles/route.ts#L3)
+- `DELETE` — [L4](../src/app/next_api/company-portal/vehicles/route.ts#L4)
 
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
@@ -2627,25 +2649,19 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/company/CompanyDashboard.tsx](../src/components/company/CompanyDashboard.tsx)
 
 - `CompanyDashboard.tsx` — [L1](../src/components/company/CompanyDashboard.tsx#L1)
-- `PortalData` — [L26](../src/components/company/CompanyDashboard.tsx#L26)
-- `CompanyDashboard()` — [L44](../src/components/company/CompanyDashboard.tsx#L44)
-- `move()` — [L65](../src/components/company/CompanyDashboard.tsx#L65)
+- `PortalData` — [L27](../src/components/company/CompanyDashboard.tsx#L27)
+- `CompanyDashboard()` — [L45](../src/components/company/CompanyDashboard.tsx#L45)
+- `move()` — [L66](../src/components/company/CompanyDashboard.tsx#L66)
 
 ## [src/components/company/DriversTab.tsx](../src/components/company/DriversTab.tsx)
 
 - `DriversTab.tsx` — [L1](../src/components/company/DriversTab.tsx#L1)
-- `Driver` — [L16](../src/components/company/DriversTab.tsx#L16)
-- `DriversTabProps` — [L25](../src/components/company/DriversTab.tsx#L25)
-- `emptyForm` — [L31](../src/components/company/DriversTab.tsx#L31)
-- `DriversTab()` — [L33](../src/components/company/DriversTab.tsx#L33)
+- `DriversTab()` — [L3](../src/components/company/DriversTab.tsx#L3)
 
 ## [src/components/company/VehiclesTab.tsx](../src/components/company/VehiclesTab.tsx)
 
 - `VehiclesTab.tsx` — [L1](../src/components/company/VehiclesTab.tsx#L1)
-- `Vehicle` — [L16](../src/components/company/VehiclesTab.tsx#L16)
-- `VehiclesTabProps` — [L25](../src/components/company/VehiclesTab.tsx#L25)
-- `emptyForm` — [L31](../src/components/company/VehiclesTab.tsx#L31)
-- `VehiclesTab()` — [L33](../src/components/company/VehiclesTab.tsx#L33)
+- `VehiclesTab()` — [L3](../src/components/company/VehiclesTab.tsx#L3)
 
 ## [src/components/contracts/ContractDocument.tsx](../src/components/contracts/ContractDocument.tsx)
 
@@ -2937,12 +2953,18 @@ Links target the working tree, so line positions can move after changes.
 
 - `BillingPanel.tsx` — [L1](../src/components/operations/BillingPanel.tsx#L1)
 - `Doc` — [L17](../src/components/operations/BillingPanel.tsx#L17)
-- `BillingData` — [L29](../src/components/operations/BillingPanel.tsx#L29)
-- `cents()` — [L58](../src/components/operations/BillingPanel.tsx#L58)
-- `BillingPanel()` — [L64](../src/components/operations/BillingPanel.tsx#L64)
-- `open()` — [L98](../src/components/operations/BillingPanel.tsx#L98)
-- `submit()` — [L203](../src/components/operations/BillingPanel.tsx#L203)
-- `download()` — [L267](../src/components/operations/BillingPanel.tsx#L267)
+- `BillingData` — [L31](../src/components/operations/BillingPanel.tsx#L31)
+- `cents()` — [L68](../src/components/operations/BillingPanel.tsx#L68)
+- `BillingPanel()` — [L74](../src/components/operations/BillingPanel.tsx#L74)
+- `open()` — [L108](../src/components/operations/BillingPanel.tsx#L108)
+- `submit()` — [L246](../src/components/operations/BillingPanel.tsx#L246)
+- `download()` — [L316](../src/components/operations/BillingPanel.tsx#L316)
+
+## [src/components/operations/CompanyChangesPanel.tsx](../src/components/operations/CompanyChangesPanel.tsx)
+
+- `CompanyChangesPanel.tsx` — [L1](../src/components/operations/CompanyChangesPanel.tsx#L1)
+- `Change` — [L10](../src/components/operations/CompanyChangesPanel.tsx#L10)
+- `CompanyChangesPanel()` — [L21](../src/components/operations/CompanyChangesPanel.tsx#L21)
 
 ## [src/components/operations/CompanyLifecycleAction.tsx](../src/components/operations/CompanyLifecycleAction.tsx)
 
@@ -2969,6 +2991,12 @@ Links target the working tree, so line positions can move after changes.
 - `CompanyPicker()` — [L31](../src/components/operations/DirectoryToolbar.tsx#L31)
 - `DirectoryToolbar()` — [L215](../src/components/operations/DirectoryToolbar.tsx#L215)
 
+## [src/components/operations/FleetRecordsTab.tsx](../src/components/operations/FleetRecordsTab.tsx)
+
+- `FleetRecordsTab.tsx` — [L1](../src/components/operations/FleetRecordsTab.tsx#L1)
+- `RecordRow` — [L10](../src/components/operations/FleetRecordsTab.tsx#L10)
+- `FleetRecordsTab()` — [L15](../src/components/operations/FleetRecordsTab.tsx#L15)
+
 ## [src/components/operations/OperationForm.tsx](../src/components/operations/OperationForm.tsx)
 
 - `OperationForm.tsx` — [L1](../src/components/operations/OperationForm.tsx#L1)
@@ -2988,8 +3016,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/operations/StaffPanel.tsx](../src/components/operations/StaffPanel.tsx)
 
 - `StaffPanel.tsx` — [L1](../src/components/operations/StaffPanel.tsx#L1)
-- `Staff` — [L10](../src/components/operations/StaffPanel.tsx#L10)
-- `StaffPanel()` — [L16](../src/components/operations/StaffPanel.tsx#L16)
+- `Staff` — [L11](../src/components/operations/StaffPanel.tsx#L11)
+- `StaffPanel()` — [L17](../src/components/operations/StaffPanel.tsx#L17)
 
 ## [src/components/operations/directory-copy.ts](../src/components/operations/directory-copy.ts)
 
@@ -3000,7 +3028,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `operations-copy.ts` — [L1](../src/components/operations/operations-copy.ts#L1)
 - `operationsCopy` — [L1](../src/components/operations/operations-copy.ts#L1)
-- `OperationsWords` — [L330](../src/components/operations/operations-copy.ts#L330)
+- `OperationsWords` — [L435](../src/components/operations/operations-copy.ts#L435)
 
 ## [src/components/operations/useCompanyDirectory.ts](../src/components/operations/useCompanyDirectory.ts)
 
@@ -3729,6 +3757,16 @@ Links target the working tree, so line positions can move after changes.
 - `credentials` — [L6](../src/lib/company-account.ts#L6)
 - `saveCompanyAccount()` — [L10](../src/lib/company-account.ts#L10)
 
+## [src/lib/company-changes.ts](../src/lib/company-changes.ts)
+
+- `company-changes.ts` — [L1](../src/lib/company-changes.ts#L1)
+- `vehicleFields` — [L15](../src/lib/company-changes.ts#L15)
+- `submitCompanyChange()` — [L25](../src/lib/company-changes.ts#L25)
+- `changeFingerprint()` — [L62](../src/lib/company-changes.ts#L62)
+- `fleetChange()` — [L76](../src/lib/company-changes.ts#L76)
+- `changesGET` — [L165](../src/lib/company-changes.ts#L165)
+- `changesPUT` — [L204](../src/lib/company-changes.ts#L204)
+
 ## [src/lib/company-lifecycle.ts](../src/lib/company-lifecycle.ts)
 
 - `company-lifecycle.ts` — [L1](../src/lib/company-lifecycle.ts#L1)
@@ -3767,9 +3805,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/company-staff.ts](../src/lib/company-staff.ts)
 
 - `company-staff.ts` — [L1](../src/lib/company-staff.ts#L1)
-- `command` — [L11](../src/lib/company-staff.ts#L11)
-- `staffGET` — [L26](../src/lib/company-staff.ts#L26)
-- `staffPOST` — [L64](../src/lib/company-staff.ts#L64)
+- `command` — [L12](../src/lib/company-staff.ts#L12)
+- `staffGET` — [L28](../src/lib/company-staff.ts#L28)
+- `staffPOST` — [L66](../src/lib/company-staff.ts#L66)
 
 ## [src/lib/company-workspace.ts](../src/lib/company-workspace.ts)
 
@@ -4048,8 +4086,8 @@ Links target the working tree, so line positions can move after changes.
 - `expected` — [L16](../src/lib/subscription-billing.ts#L16)
 - `profile` — [L17](../src/lib/subscription-billing.ts#L17)
 - `command` — [L32](../src/lib/subscription-billing.ts#L32)
-- `billingGET` — [L85](../src/lib/subscription-billing.ts#L85)
-- `billingPOST` — [L205](../src/lib/subscription-billing.ts#L205)
+- `billingGET` — [L88](../src/lib/subscription-billing.ts#L88)
+- `billingPOST` — [L224](../src/lib/subscription-billing.ts#L224)
 
 ## [src/lib/subscription-document.ts](../src/lib/subscription-document.ts)
 

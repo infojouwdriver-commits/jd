@@ -4,15 +4,18 @@ import http from 'node:http';
 import fs from 'node:fs';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
+import {randomBytes} from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import {SignJWT,jwtVerify} from 'jose';
 import {totpAt} from '../src/lib/totp.ts';
 import {createDriverApi} from '../driver-app/src/api.ts';
 
-const secret='integration-only-jwt-secret-01234567890123456789';
-const totpSecret='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
-const password='IntegrationPassword123!';
+const secret=randomBytes(48).toString('hex');
+const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const totpSecret=Array.from(randomBytes(32),n=>alphabet[n%32]).join('');
+const password=randomBytes(18).toString('base64url');
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
+const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
 const claims=new Set();let unavailable=false;const databaseTokens=[];
 rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
@@ -29,6 +32,8 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_submit_company_registration'){registrationCalls.push(body);data={request_id:body.p_request,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_registration'){assert.equal(body.p_reviewer,1);data={request_id:body.p_request,status:body.p_action==='approve'?'approved':'rejected'};}
    else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
+   else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
+   else if(url.pathname==='/rpc/security_review_company_change'){assert.equal(body.p_actor,1);data={id:body.p_id,status:body.p_decision};}
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
@@ -55,7 +60,7 @@ const mock=http.createServer(async(req,res)=>{
 });
 mock.listen(0,'127.0.0.1');await once(mock,'listening');
 const dbUrl=`http://127.0.0.1:${mock.address().port}`;const base='http://127.0.0.1:3003';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3003'],{env:{...process.env,NODE_ENV:'production',JWT_SECRET:secret,HASH_SALT_KEY:'integration-only-salt',DATA_ENCRYPTION_KEY:'a'.repeat(64),SCHEMA_USER:'test_user',SCHEMA_ADMIN_USER:'test_admin',POSTGREST_URL:dbUrl,POSTGREST_SCHEMA:'public',POSTGREST_API_KEY:'',PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':totpSecret}),RATE_LIMIT_SECRET:'integration-only-rate-limit-secret',APP_ORIGIN:base,TRUST_PROXY:'false',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3003'],{env:{...process.env,NODE_ENV:'production',JWT_SECRET:secret,HASH_SALT_KEY:randomBytes(32).toString('hex'),DATA_ENCRYPTION_KEY:randomBytes(32).toString('hex'),SCHEMA_USER:'test_user',SCHEMA_ADMIN_USER:'test_admin',POSTGREST_URL:dbUrl,POSTGREST_SCHEMA:'public',POSTGREST_API_KEY:'',PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':totpSecret}),RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),APP_ORIGIN:base,TRUST_PROXY:'false',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
 const checks=[];
 async function request(path,method='GET',body,token,cookie){return fetch(base+path,{method,headers:{...(method!=='GET'?{'Content-Type':'application/json',origin:base}:{}),...(token?{Authorization:`Bearer ${token}`} :{}),...(cookie?{cookie}: {})},body:body?JSON.stringify(body):undefined});}
 async function status(name,promise,expected){const response=await promise;assert.equal(response.status,expected,name);checks.push(name);return response;}
@@ -80,16 +85,16 @@ try {
  await status('Driver cannot review company registrations',request('/next_api/company-registrations','PUT',{},driverToken),403);
  await status('Public company registration validates required fields',request('/next_api/company-registrations','POST',{}),400);
  assert.equal(registrationCalls.length,0);
- const registration={request_id:'684778fa-9fd4-4a31-aa18-a44df9d97bd1',company_name:'Synthetic Transport',company_email:'register@example.invalid',company_password:'SyntheticPassword123!',company_phone:'+32470000001',company_address:'Synthetic street 123',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_test_client_id:'synthetic-test',chiron_test_client_secret:'synthetic-secret',chiron_prod_client_id:'synthetic-production',chiron_prod_client_secret:'synthetic-production-secret',vehicle_brand:'Demo',vehicle_model:'Car',plate_number:'DEMO-123',vin:'WVWZZZ1JZXW000001',chiron_vehicle_id:'',driver_name:'Synthetic Driver',driver_phone:'+32470000000',driver_password:'DriverPassword123!',driver_license:'SYN-LICENCE',bestuurderspas:'SYN-PASS',language:'fr'};
+ const registration={request_id:'684778fa-9fd4-4a31-aa18-a44df9d97bd1',company_name:'Synthetic Transport',company_email:'register@example.invalid',company_password:randomBytes(18).toString('base64url'),company_phone:'+32470000001',company_address:'Synthetic street 123',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_test_client_id:'synthetic-test',chiron_test_client_secret:randomBytes(24).toString('base64url'),chiron_prod_client_id:'synthetic-production',chiron_prod_client_secret:randomBytes(24).toString('base64url'),vehicle_brand:'Demo',vehicle_model:'Car',plate_number:'DEMO-123',vin:'WVWZZZ1JZXW000001',chiron_vehicle_id:'',driver_name:'Synthetic Driver',driver_phone:'+32470000000',driver_password:randomBytes(18).toString('base64url'),driver_license:'SYN-LICENCE',bestuurderspas:'SYN-PASS',language:'fr'};
  await status('Public onboarding rejects caller privilege fields',request('/next_api/company-registrations','POST',{...registration,is_active:true}),400);
  await status('Foreign origin cannot submit company onboarding',fetch(base+'/next_api/company-registrations',{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:JSON.stringify(registration)}),403);
  const registered=await status('Public complete registration returns pending receipt',request('/next_api/company-registrations','POST',registration),201);
  assert.deepEqual((await registered.json()).data,{request_id:registration.request_id,status:'pending'});
  const protectedData=registrationCalls[0].p_data;assert.match(protectedData.company.chiron_test_client_secret,/^enc:v1:/);assert.match(protectedData.company.chiron_prod_client_secret,/^enc:v1:/);assert.equal(await bcrypt.compare(registration.company_password,protectedData.manager_hash),true);assert.equal(await bcrypt.compare(registration.driver_password,protectedData.driver_hash),true);assert.equal(protectedData.user_role,'test_user');
- assert.equal(JSON.stringify(protectedData).includes('synthetic-production-secret'),false);
+ assert.equal(JSON.stringify(protectedData).includes(registration.chiron_prod_client_secret),false);
  await status('Identical request safely reuses its keyed fingerprint',request('/next_api/company-registrations','POST',registration),201);assert.equal(registrationCalls[0].p_fingerprint,registrationCalls[1].p_fingerprint);
  rows.company_registrations.push({...registration,status:'pending',submitted_at:new Date().toISOString(),fingerprint:'synthetic-private',manager_hash:'synthetic-private',test_configured:true,production_configured:true});
- const listing=await status('MFA administrator can review company registrations',request('/next_api/company-registrations','GET',null,refreshedToken),200);const safeListing=JSON.stringify(await listing.json());assert.equal(safeListing.includes('synthetic-private'),false);assert.equal(safeListing.includes('synthetic-production-secret'),false);
+ const listing=await status('MFA administrator can review company registrations',request('/next_api/company-registrations','GET',null,refreshedToken),200);const safeListing=JSON.stringify(await listing.json());assert.equal(safeListing.includes('synthetic-private'),false);assert.equal(safeListing.includes(registration.chiron_prod_client_secret),false);
  await status('Rejection needs an administrator reason',request('/next_api/company-registrations','PUT',{request_id:registration.request_id,action:'reject',notes:''},refreshedToken),400);
  await status('MFA administrator approval uses server reviewer identity',request('/next_api/company-registrations','PUT',{request_id:registration.request_id,action:'approve',notes:'Reviewed synthetic request'},refreshedToken),200);
 
@@ -136,6 +141,25 @@ try {
  const scopedFleet=await status('Fleet map excludes other shared memberships',request('/next_api/fleet?company_id=1','GET',null,fleetToken),200);assert.deepEqual((await scopedFleet.json()).data.map(x=>x.company_id),[1]);
  await status('Company owner cannot access admin workspace handler',request('/next_api/company-workspace?company_id=1','GET',null,ownerToken),403);
 
+ rows.company_change_requests=[];
+ const changeKey='c93956ef-35f1-4a55-9ad5-95d808f695b1';
+ const vehiclePath='/next_api/company-portal/vehicles?company_id=1&request_id='+changeKey;
+ const vehicleCount=rows.vehicles.length;
+ await status('Owner vehicle addition queues for approval',request(vehiclePath,'POST',{brand:'Demo',model:'Car',plate_number:'DEMO-NEW'},ownerToken),202);
+ assert.equal(rows.vehicles.length,vehicleCount);assert.equal(changeCalls.at(-1).p_company,1);assert.equal(changeCalls.at(-1).p_actor,3);
+ await status('Fleet manager queues vehicle edit without mutation',request(vehiclePath+'&id=21','PUT',{plate_number:'PENDING'},fleetToken),202);assert.equal(rows.vehicles.find(v=>v.id===21).plate_number,'CURRENT');
+ await status('Fleet manager cannot propose staff role change',request('/next_api/company-portal/staff?company_id=1','POST',{},fleetToken),403);
+ await status('Owner cannot submit a vehicle for another company',request(vehiclePath.replace('company_id=1','company_id=2'),'POST',{brand:'Demo',model:'Car',plate_number:'OTHER'},ownerToken),403);
+ await status('Portal mutation rejects privilege fields',request(vehiclePath,'POST',{brand:'Demo',model:'Car',plate_number:'INVALID',company_id:2},ownerToken),400);
+ const driverSecret=randomBytes(18).toString('base64url');
+ const queued=await status('Driver creation returns safe pending receipt',request('/next_api/company-portal/drivers?company_id=1&request_id='+changeKey,'POST',{full_name:'Pending Driver',phone:'+32470000009',password:driverSecret},ownerToken),202);
+ assert.deepEqual((await queued.json()).data,{id:1,status:'pending'});const call=changeCalls.at(-1);assert.equal(await bcrypt.compare(driverSecret,call.p_payload.account.password),true);assert.equal(JSON.stringify(call).includes(driverSecret),false);
+ await status('Accountant cannot read fleet approval requests',request('/next_api/company-portal/changes?company_id=1','GET',null,accountantToken),403);
+ await status('Company owner cannot approve via admin endpoint',request('/next_api/company-changes','PUT',{id:1,decision:'approved',notes:''},ownerToken),403);
+ await status('Password-only admin cannot approve company change',request('/next_api/company-changes','PUT',{id:1,decision:'approved',notes:''},await sign(1)),401);
+ await status('MFA admin approves via atomic review',request('/next_api/company-changes','PUT',{id:1,decision:'approved',notes:'Synthetic review'},refreshedToken),200);
+ rows.company_change_requests.push({id:1,company_id:1,entity_type:'driver',summary:{full_name:'Pending Driver'},payload:{password:'PRIVATE-HASH'},before_data:{private:'SNAPSHOT'},status:'pending'});
+ const list=await status('Owner can read own safe change summary',request('/next_api/company-portal/changes?company_id=1','GET',null,ownerToken),200);const safe=JSON.stringify(await list.json());assert.equal(safe.includes('PRIVATE-HASH'),false);assert.equal(safe.includes('SNAPSHOT'),false);
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);
  await status('Driver cannot edit another driver trip',request('/next_api/trips?id=102','PUT',{price:40},driverToken),404);assert.equal(rows.trips[1].price,20);

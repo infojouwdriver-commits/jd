@@ -30,6 +30,7 @@ const profile = z
   })
   .strict();
 const command = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("demo_issue"), document_id: id }).strict(),
   z
     .object({
       action: z.literal("void"),
@@ -44,7 +45,8 @@ const command = z.discriminatedUnion("action", [
       expected,
       data: z
         .object({
-          issuer_company_id: id,
+          issuer_company_id: id.nullable(),
+          default_vat_bps: z.number().int().min(0).max(10000),
           invoice_prefix: z.string().regex(/^[A-Z][A-Z0-9-]{1,9}$/),
           exchange_mode: z.enum(["unconfigured", "external_structured"]),
           exchange_provider: z.string().trim().max(120).nullable(),
@@ -70,6 +72,7 @@ const command = z.discriminatedUnion("action", [
       amount_cents: z.number().int().min(1).max(100000000),
       payment_date: date,
       reference: z.string().trim().min(1).max(140),
+      payment_method: z.enum(["cash", "bank_transfer"]),
     })
     .strict(),
   z
@@ -189,8 +192,24 @@ export const billingGET = requestMiddleware(async (request, context) => {
         delivered_at: proof?.delivered_at || null,
       };
     });
+    const ids = (statement.data?.documents || []).map(
+      (d: { id: number }) => d.id,
+    );
+    const payments = ids.length
+      ? await client
+          .from("subscription_payments")
+          .select(
+            "request_id,invoice_id,amount_cents,payment_date,reference,payment_method",
+          )
+          .eq("company_id", companyId)
+          .in("invoice_id", ids)
+          .order("created_at", { ascending: false })
+          .limit(250)
+      : { data: [], error: null };
+    if (payments.error) throw payments.error;
     return createSuccessResponse({
       ...statement.data,
+      payments: payments.data,
       profile: profile.data,
       settings: settings.data,
       scheduler: scheduler.data,
@@ -236,66 +255,72 @@ export const billingPOST = requestMiddleware(async (request, context) => {
         });
     }
     const rpc =
-      v.action === "void"
+      v.action === "demo_issue"
         ? [
-            "security_void_subscription_preparation",
-            { p_document: v.document_id, p_actor: actor, p_reason: v.reason },
+            "security_issue_subscription_demo",
+            { p_document: v.document_id, p_actor: actor },
           ]
-        : v.action === "profile"
+        : v.action === "void"
           ? [
-              "security_save_subscription_profile",
-              {
-                p_company: companyId,
-                p_actor: actor,
-                p_expected: v.expected,
-                p_data: v.data,
-              },
+              "security_void_subscription_preparation",
+              { p_document: v.document_id, p_actor: actor, p_reason: v.reason },
             ]
-          : v.action === "settings"
+          : v.action === "profile"
             ? [
-                "security_save_subscription_settings",
-                { p_actor: actor, p_expected: v.expected, p_data: v.data },
+                "security_save_subscription_profile",
+                {
+                  p_company: companyId,
+                  p_actor: actor,
+                  p_expected: v.expected,
+                  p_data: v.data,
+                },
               ]
-            : v.action === "prepare"
+            : v.action === "settings"
               ? [
-                  "security_prepare_subscription_invoice",
-                  {
-                    p_company: companyId,
-                    p_actor: actor,
-                    p_request: v.request_id,
-                  },
+                  "security_save_subscription_settings",
+                  { p_actor: actor, p_expected: v.expected, p_data: v.data },
                 ]
-              : v.action === "issue"
+              : v.action === "prepare"
                 ? [
-                    "security_issue_subscription_document",
+                    "security_prepare_subscription_invoice",
                     {
-                      p_document: v.document_id,
+                      p_company: companyId,
                       p_actor: actor,
-                      p_exchange_reference: v.exchange_reference,
+                      p_request: v.request_id,
                     },
                   ]
-                : v.action === "payment"
+                : v.action === "issue"
                   ? [
-                      "security_record_subscription_payment",
+                      "security_issue_subscription_document",
                       {
-                        p_request: v.request_id,
-                        p_invoice: v.document_id,
+                        p_document: v.document_id,
                         p_actor: actor,
-                        p_amount: v.amount_cents,
-                        p_date: v.payment_date,
-                        p_reference: v.reference,
+                        p_exchange_reference: v.exchange_reference,
                       },
                     ]
-                  : [
-                      "security_prepare_subscription_credit",
-                      {
-                        p_original: v.document_id,
-                        p_actor: actor,
-                        p_request: v.request_id,
-                        p_net: v.net_cents,
-                        p_reason: v.reason,
-                      },
-                    ];
+                  : v.action === "payment"
+                    ? [
+                        "security_record_subscription_payment_v2",
+                        {
+                          p_request: v.request_id,
+                          p_invoice: v.document_id,
+                          p_actor: actor,
+                          p_amount: v.amount_cents,
+                          p_date: v.payment_date,
+                          p_reference: v.reference,
+                          p_method: v.payment_method,
+                        },
+                      ]
+                    : [
+                        "security_prepare_subscription_credit",
+                        {
+                          p_original: v.document_id,
+                          p_actor: actor,
+                          p_request: v.request_id,
+                          p_net: v.net_cents,
+                          p_reason: v.reason,
+                        },
+                      ];
     const result = await client.rpc(
       rpc[0] as string,
       rpc[1] as Record<string, unknown>,

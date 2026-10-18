@@ -1,3 +1,4 @@
+import { submitCompanyChange, changeFingerprint } from "./company-changes";
 import { z } from "zod";
 import { requestMiddleware, validateRequestBody } from "./api-utils";
 import {
@@ -7,9 +8,10 @@ import {
 } from "./operations-access";
 import { createSuccessResponse, createErrorResponse } from "./create-response";
 import { hashString } from "./server-utils";
-import { getAuthRoles } from "./auth";
+import { generateAdminUserToken, getAuthRoles } from "./auth";
 const command = z
   .object({
+    request_id: z.string().uuid().optional(),
     membership_id: z.number().int().positive().nullable(),
     role: z.enum(["owner", "fleet_manager", "accountant"]),
     is_active: z.boolean(),
@@ -81,6 +83,30 @@ export const staffPOST = requestMiddleware(async (request, context) => {
         status: 400,
         errorMessage: "New account email and password required",
       });
+    if (!admin) {
+      if (!v.request_id)
+        return createErrorResponse({
+          status: 400,
+          errorMessage: "Request ID required",
+        });
+      const { password, request_id, ...summary } = v;
+      return await submitCompanyChange(
+        await generateAdminUserToken(),
+        actor,
+        companyId,
+        "staff",
+        v.membership_id === null ? "create" : "update",
+        v.membership_id,
+        {
+          ...summary,
+          hash: password ? await hashString(password) : null,
+          user_role: getAuthRoles().userRole,
+        },
+        summary,
+        changeFingerprint([actor, companyId, "staff", summary, password]),
+        request_id,
+      );
+    }
     const result = await client.rpc("security_change_company_staff", {
       p_company: companyId,
       p_actor: actor,

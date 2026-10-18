@@ -72,6 +72,7 @@ export function OperationForm({
     const bad = fields.find((f) => {
       const v = values[f.key];
       if (f.type === "checkbox") return false;
+      if (f.optional && !String(v || "").trim()) return false;
       if (!f.optional && !String(v || "").trim()) return true;
       if (f.type === "password" && String(v).length < 12) return true;
       if (f.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v)))
