@@ -149,11 +149,17 @@
         "desktop: payment exact cents and same UUID survive ambiguous failure plus closing/reopening",
         "desktop: staff dialog, password visibility, authored role dropdown and Escape work",
         "desktop: administration attention centre renders without document overflow",
+        "desktop: fr dark/reduced-motion billing and authored popup geometry work",
+        "desktop: nl dark/reduced-motion billing and authored popup geometry work",
+        "desktop: billing read failure/retry and explicit empty state work",
         "mobile: company deep link, remote search/clear and company picker work",
         "mobile: archive preview, failure and frozen idempotent retry work",
         "mobile: payment exact cents and same UUID survive ambiguous failure plus closing/reopening",
         "mobile: staff dialog, password visibility, authored role dropdown and Escape work",
-        "mobile: administration attention centre renders without document overflow"
+        "mobile: administration attention centre renders without document overflow",
+        "mobile: fr dark/reduced-motion billing and authored popup geometry work",
+        "mobile: nl dark/reduced-motion billing and authored popup geometry work",
+        "mobile: billing read failure/retry and explicit empty state work"
       ]
     },
     "pdf": "Synthetic bilingual invoice rendered and visually inspected; original Unicode font retained; preparatory/demo marking and exact EUR arithmetic verified."
