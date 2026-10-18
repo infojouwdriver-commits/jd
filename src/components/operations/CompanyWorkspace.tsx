@@ -1,27 +1,473 @@
-'use client';
-import {Suspense,useState} from 'react';import Link from 'next/link';import {useRouter,usePathname,useSearchParams} from 'next/navigation';import {useLanguage} from '@/contexts/LanguageContext';import {api} from '@/lib/api-client';import {Button} from '@/components/ui/button';import {Badge} from '@/components/ui/badge';import {Input} from '@/components/ui/input';import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';import {operationsCopy} from './operations-copy';import {useOperationData} from './useOperationData';import CompanyLifecycleAction from './CompanyLifecycleAction';import BillingPanel from './BillingPanel';import StaffPanel from './StaffPanel';import {OperationForm} from './OperationForm';
-interface Company{id:number;name:string;email:string;phone:string;address:string;vat_number:string;kbo_number:string;subscription_status:string;is_test:boolean;archived_at:string|null;}
-const tabKeys=['profile','drivers','vehicles','trips','billing','invoices','contracts','staff','audit'] as const;
-const columns:Record<string,string[]>={drivers:['full_name','phone','status','archived_at'],vehicles:['plate_number','brand','model','status','archived_at'],trips:['id','start_time','start_address','end_address','price','status','chiron_sync_state','is_test'],invoices:['invoice_number','invoice_date','total_tvac','payment_status','status'],contracts:['contract_number','contract_status','contract_start_date','contract_end_date','signed_at'],audit:['created_at','action','reason','actor_id']};
-const labels={ar:{full_name:'السائق',plate_number:'اللوحة',brand:'الماركة',model:'الطراز',archived_at:'تاريخ الأرشفة',id:'الرقم',start_time:'بداية الرحلة',start_address:'الانطلاق',end_address:'الوصول',price:'المبلغ (€)',chiron_sync_state:'مزامنة Chiron',is_test:'تجربة',invoice_number:'الفاتورة',invoice_date:'تاريخها',total_tvac:'المجموع (€)',payment_status:'الدفع',contract_number:'العقد',contract_status:'حالة العقد',contract_start_date:'بداية العقد',contract_end_date:'نهاية العقد',signed_at:'التوقيع',created_at:'التاريخ',action:'الإجراء',actor_id:'منفّذ الإجراء'},fr:{full_name:'Chauffeur',plate_number:'Plaque',brand:'Marque',model:'Modèle',archived_at:'Archivage',id:'ID',start_time:'Départ',start_address:'Origine',end_address:'Destination',price:'Montant (€)',chiron_sync_state:'Synchronisation Chiron',is_test:'Test',invoice_number:'Facture',invoice_date:'Date',total_tvac:'Total (€)',payment_status:'Paiement',contract_number:'Contrat',contract_status:'État du contrat',contract_start_date:'Début',contract_end_date:'Fin',signed_at:'Signature',created_at:'Date',action:'Action',actor_id:'Auteur'},nl:{full_name:'Chauffeur',plate_number:'Kenteken',brand:'Merk',model:'Model',archived_at:'Archivering',id:'ID',start_time:'Vertrek',start_address:'Herkomst',end_address:'Bestemming',price:'Bedrag (€)',chiron_sync_state:'Chiron-synchronisatie',is_test:'Test',invoice_number:'Factuur',invoice_date:'Datum',total_tvac:'Totaal (€)',payment_status:'Betaling',contract_number:'Contract',contract_status:'Contractstatus',contract_start_date:'Begin',contract_end_date:'Einde',signed_at:'Ondertekening',created_at:'Datum',action:'Actie',actor_id:'Auteur'}};
-function Workspace({id}:{id:number}){
- const {language}=useLanguage(),c=operationsCopy[language],router=useRouter(),pathname=usePathname(),search=useSearchParams();const selected=search.get('tab')||'profile',tab=tabKeys.includes(selected as typeof tabKeys[number])?selected:'profile';
- const {data,error,loading,reload}=useOperationData<{company:Company}>('/company-workspace?company_id='+id);const [classifying,setClassifying]=useState(false);
- const changeTab=(value:string)=>{const p=new URLSearchParams(search.toString());p.set('tab',value);p.delete('offset');router.replace(pathname+'?'+p.toString(),{scroll:false});};
- return <div className="mx-auto max-w-7xl space-y-6" dir={language==='ar'?'rtl':'ltr'}><Link className="text-sm text-muted-foreground hover:underline" href="/admin/companies">← {c.back}</Link>{loading&&<p role="status">{c.loading}</p>}{error&&<div role="alert"><p>{c.error}</p><Button onClick={reload}>{c.retry}</Button></div>}{data&&<>
- <header className="space-y-5 rounded-3xl border bg-card p-6 sm:p-8"><div className="flex flex-wrap items-start justify-between gap-5"><div><p className="text-xs tracking-widest text-muted-foreground">JOUW DRIVER / COMPANY</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">{data.company.name}</h1><div className="mt-3 flex flex-wrap gap-2"><Badge variant="outline">#{id}</Badge><Badge variant="outline">{data.company.subscription_status}</Badge>{data.company.is_test&&<Badge variant="outline">{c.test}</Badge>}{data.company.archived_at&&<Badge variant="outline">{c.archived}</Badge>}</div></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={reload}>{c.refresh}</Button><Button variant="outline" disabled={!!data.company.archived_at} onClick={()=>setClassifying(true)}>{c.classify}</Button><CompanyLifecycleAction company={data.company} onSuccess={reload}/></div></div><p className="text-sm text-muted-foreground">{data.company.is_test?c.trial:c.noSuspension}</p></header>
- <Tabs value={tab} onValueChange={changeTab} dir={language==='ar'?'rtl':'ltr'}><div className="overflow-x-auto pb-2"><TabsList className="h-auto min-w-max justify-start gap-1 p-1">{tabKeys.map(k=><TabsTrigger className="min-h-11" key={k} value={k}>{c[k]}</TabsTrigger>)}</TabsList></div>
- <TabsContent value="profile"><dl className="grid gap-5 rounded-2xl border bg-card p-6 sm:grid-cols-2">{(['name','email','phone','address','vat_number','kbo_number'] as const).map(k=><div key={k}><dt className="text-sm text-muted-foreground">{k==='vat_number'?'VAT':k==='kbo_number'?'KBO':c[k]}</dt><dd className="mt-1 break-words font-medium">{data.company[k]||'—'}</dd></div>)}</dl></TabsContent>
- {Object.keys(columns).map(k=><TabsContent key={k} value={k}><HistorySection id={id} section={k}/></TabsContent>)}
- <TabsContent value="billing"><BillingPanel companyId={id} admin isTest={data.company.is_test} archived={!!data.company.archived_at}/></TabsContent><TabsContent value="staff"><StaffPanel companyId={id} admin archived={!!data.company.archived_at}/></TabsContent></Tabs>
- {classifying&&<OperationForm title={c.classify} description={c.trial} c={c} fields={[{key:'is_test',label:c.test,type:'checkbox'},{key:'reason',label:c.classificationReason}]} initial={{is_test:data.company.is_test,reason:''}} onClose={()=>setClassifying(false)} onSubmit={async(v,request_id)=>{await api.post('/company-classification',{company_id:id,is_test:v.is_test,reason:v.reason,request_id});reload();}}/>}
- </>}</div>;
+"use client";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { operationsCopy } from "./operations-copy";
+import { useOperationData } from "./useOperationData";
+import CompanyLifecycleAction from "./CompanyLifecycleAction";
+import BillingPanel from "./BillingPanel";
+import StaffPanel from "./StaffPanel";
+import { OperationForm } from "./OperationForm";
+interface Company {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  vat_number: string;
+  kbo_number: string;
+  subscription_status: string;
+  is_test: boolean;
+  archived_at: string | null;
 }
-function HistorySection({id,section}:{id:number;section:string}){
- const {language}=useLanguage(),c=operationsCopy[language],search=useSearchParams(),router=useRouter(),pathname=usePathname();const offset=Math.max(0,Number(search.get('offset'))||0),[q,setQ]=useState(''),[committed,setCommitted]=useState('');
- const {data,error,loading,reload}=useOperationData<{rows:Record<string,unknown>[];total:number}>('/company-workspace?'+new URLSearchParams({company_id:String(id),section,offset:String(offset),q:committed}));
- const move=(n:number)=>{const p=new URLSearchParams(search.toString());p.set('offset',String(n));router.replace(pathname+'?'+p.toString(),{scroll:false});};
- const title=(key:string)=>(labels[language] as Record<string,string>)[key]||(c as Record<string,string>)[key]||key;
- return <section className="space-y-4" aria-label={(c as Record<string,string>)[section]}><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">{(c as Record<string,string>)[section]}</h2><Button variant="outline" disabled={loading} onClick={reload}>{c.refresh}</Button></div>{['drivers','vehicles'].includes(section)&&<form className="flex gap-2" onSubmit={e=>{e.preventDefault();setCommitted(q);move(0);}}><Input aria-label={c.search} placeholder={c.search} value={q} maxLength={100} onChange={e=>setQ(e.target.value)}/><Button variant="outline">{c.search}</Button></form>}{loading&&<p role="status">{c.loading}</p>}{error&&<div role="alert"><p>{c.error}</p><Button onClick={reload}>{c.retry}</Button></div>}{data&&<><div className="overflow-x-auto rounded-xl border"><table className="w-full text-sm"><thead className="bg-muted/40"><tr>{columns[section].map(k=><th key={k} className="whitespace-nowrap p-3 text-start">{title(k)}</th>)}</tr></thead><tbody>{data.rows.map(row=><tr key={String(row.id)} className="border-t">{columns[section].map(k=><td key={k} className="max-w-72 p-3 align-top">{row[k]===null||row[k]===undefined?'—':typeof row[k]==='boolean'?(row[k]?c.test:'—'):String(row[k])}</td>)}</tr>)}</tbody></table>{!data.rows.length&&<p className="p-8 text-muted-foreground">{c.empty}</p>}</div><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm">{c.total}: {data.total}</p><div className="flex gap-2"><Button variant="outline" disabled={offset===0} onClick={()=>move(Math.max(0,offset-25))}>{c.previous}</Button><Button variant="outline" disabled={offset+25>=data.total} onClick={()=>move(offset+25)}>{c.next}</Button></div></div></>}</section>;
+const tabKeys = [
+  "profile",
+  "drivers",
+  "vehicles",
+  "trips",
+  "billing",
+  "invoices",
+  "contracts",
+  "staff",
+  "audit",
+] as const;
+const columns: Record<string, string[]> = {
+  drivers: ["full_name", "phone", "status", "archived_at"],
+  vehicles: ["plate_number", "brand", "model", "status", "archived_at"],
+  trips: [
+    "id",
+    "start_time",
+    "start_address",
+    "end_address",
+    "price",
+    "status",
+    "chiron_sync_state",
+    "is_test",
+  ],
+  invoices: [
+    "invoice_number",
+    "invoice_date",
+    "total_tvac",
+    "payment_status",
+    "status",
+  ],
+  contracts: [
+    "contract_number",
+    "contract_status",
+    "contract_start_date",
+    "contract_end_date",
+    "signed_at",
+  ],
+  audit: ["created_at", "action", "reason", "actor_id"],
+};
+const labels = {
+  ar: {
+    full_name: "السائق",
+    plate_number: "اللوحة",
+    brand: "الماركة",
+    model: "الطراز",
+    archived_at: "تاريخ الأرشفة",
+    id: "الرقم",
+    start_time: "بداية الرحلة",
+    start_address: "الانطلاق",
+    end_address: "الوصول",
+    price: "المبلغ (€)",
+    chiron_sync_state: "مزامنة Chiron",
+    is_test: "تجربة",
+    invoice_number: "الفاتورة",
+    invoice_date: "تاريخها",
+    total_tvac: "المجموع (€)",
+    payment_status: "الدفع",
+    contract_number: "العقد",
+    contract_status: "حالة العقد",
+    contract_start_date: "بداية العقد",
+    contract_end_date: "نهاية العقد",
+    signed_at: "التوقيع",
+    created_at: "التاريخ",
+    action: "الإجراء",
+    actor_id: "منفّذ الإجراء",
+  },
+  fr: {
+    full_name: "Chauffeur",
+    plate_number: "Plaque",
+    brand: "Marque",
+    model: "Modèle",
+    archived_at: "Archivage",
+    id: "ID",
+    start_time: "Départ",
+    start_address: "Origine",
+    end_address: "Destination",
+    price: "Montant (€)",
+    chiron_sync_state: "Synchronisation Chiron",
+    is_test: "Test",
+    invoice_number: "Facture",
+    invoice_date: "Date",
+    total_tvac: "Total (€)",
+    payment_status: "Paiement",
+    contract_number: "Contrat",
+    contract_status: "État du contrat",
+    contract_start_date: "Début",
+    contract_end_date: "Fin",
+    signed_at: "Signature",
+    created_at: "Date",
+    action: "Action",
+    actor_id: "Auteur",
+  },
+  nl: {
+    full_name: "Chauffeur",
+    plate_number: "Kenteken",
+    brand: "Merk",
+    model: "Model",
+    archived_at: "Archivering",
+    id: "ID",
+    start_time: "Vertrek",
+    start_address: "Herkomst",
+    end_address: "Bestemming",
+    price: "Bedrag (€)",
+    chiron_sync_state: "Chiron-synchronisatie",
+    is_test: "Test",
+    invoice_number: "Factuur",
+    invoice_date: "Datum",
+    total_tvac: "Totaal (€)",
+    payment_status: "Betaling",
+    contract_number: "Contract",
+    contract_status: "Contractstatus",
+    contract_start_date: "Begin",
+    contract_end_date: "Einde",
+    signed_at: "Ondertekening",
+    created_at: "Datum",
+    action: "Actie",
+    actor_id: "Auteur",
+  },
+};
+function Workspace({ id }: { id: number }) {
+  const { language } = useLanguage(),
+    c = operationsCopy[language],
+    router = useRouter(),
+    pathname = usePathname(),
+    search = useSearchParams();
+  const selected = search.get("tab") || "profile",
+    tab = tabKeys.includes(selected as (typeof tabKeys)[number])
+      ? selected
+      : "profile";
+  const { data, error, loading, reload } = useOperationData<{
+    company: Company;
+  }>("/company-workspace?company_id=" + id);
+  const [classifying, setClassifying] = useState(false);
+  const changeTab = (value: string) => {
+    const p = new URLSearchParams(search.toString());
+    p.set("tab", value);
+    p.delete("offset");
+    router.replace(pathname + "?" + p.toString(), { scroll: false });
+  };
+  return (
+    <div
+      className="mx-auto max-w-7xl space-y-6"
+      dir={language === "ar" ? "rtl" : "ltr"}
+    >
+      <Link
+        className="text-sm text-muted-foreground hover:underline"
+        href="/admin/companies"
+      >
+        ← {c.back}
+      </Link>
+      {loading && <p role="status">{c.loading}</p>}
+      {error && (
+        <div role="alert">
+          <p>{c.error}</p>
+          <Button onClick={reload}>{c.retry}</Button>
+        </div>
+      )}
+      {data && (
+        <>
+          <header className="space-y-5 rounded-3xl border bg-card p-6 sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div>
+                <p className="text-xs tracking-widest text-muted-foreground">
+                  JOUW DRIVER / COMPANY
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+                  {data.company.name}
+                </h1>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge variant="outline">#{id}</Badge>
+                  <Badge variant="outline">
+                    {data.company.subscription_status}
+                  </Badge>
+                  {data.company.is_test && (
+                    <Badge variant="outline">{c.test}</Badge>
+                  )}
+                  {data.company.archived_at && (
+                    <Badge variant="outline">{c.archived}</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={reload}>
+                  {c.refresh}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!!data.company.archived_at}
+                  onClick={() => setClassifying(true)}
+                >
+                  {c.classify}
+                </Button>
+                <CompanyLifecycleAction
+                  company={data.company}
+                  onSuccess={reload}
+                />
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {data.company.is_test ? c.trial : c.noSuspension}
+            </p>
+          </header>
+          <Tabs
+            value={tab}
+            onValueChange={changeTab}
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            <div className="overflow-x-auto pb-2">
+              <TabsList className="h-auto min-w-max justify-start gap-1 p-1">
+                {tabKeys.map((k) => (
+                  <TabsTrigger className="min-h-11" key={k} value={k}>
+                    {c[k]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+            <TabsContent value="profile">
+              <dl className="grid gap-5 rounded-2xl border bg-card p-6 sm:grid-cols-2">
+                {(
+                  [
+                    "name",
+                    "email",
+                    "phone",
+                    "address",
+                    "vat_number",
+                    "kbo_number",
+                  ] as const
+                ).map((k) => (
+                  <div key={k}>
+                    <dt className="text-sm text-muted-foreground">
+                      {k === "vat_number"
+                        ? "VAT"
+                        : k === "kbo_number"
+                          ? "KBO"
+                          : c[k]}
+                    </dt>
+                    <dd className="mt-1 break-words font-medium">
+                      {data.company[k] || "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </TabsContent>
+            {Object.keys(columns).map((k) => (
+              <TabsContent key={k} value={k}>
+                <HistorySection id={id} section={k} />
+              </TabsContent>
+            ))}
+            <TabsContent value="billing">
+              <BillingPanel
+                companyId={id}
+                admin
+                isTest={data.company.is_test}
+                archived={!!data.company.archived_at}
+              />
+            </TabsContent>
+            <TabsContent value="staff">
+              <StaffPanel
+                companyId={id}
+                admin
+                archived={!!data.company.archived_at}
+              />
+            </TabsContent>
+          </Tabs>
+          {classifying && (
+            <OperationForm
+              title={c.classify}
+              description={c.trial}
+              c={c}
+              fields={[
+                { key: "is_test", label: c.test, type: "checkbox" },
+                { key: "reason", label: c.classificationReason },
+              ]}
+              initial={{ is_test: data.company.is_test, reason: "" }}
+              onClose={() => setClassifying(false)}
+              onSubmit={async (v, request_id) => {
+                await api.post("/company-classification", {
+                  company_id: id,
+                  is_test: v.is_test,
+                  reason: v.reason,
+                  request_id,
+                });
+                reload();
+              }}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
 }
-export default function CompanyWorkspace({id}:{id:number}){return <Suspense><Workspace id={id}/></Suspense>;}
+function HistorySection({ id, section }: { id: number; section: string }) {
+  const { language } = useLanguage(),
+    c = operationsCopy[language],
+    search = useSearchParams(),
+    router = useRouter(),
+    pathname = usePathname();
+  const offset = Math.max(0, Number(search.get("offset")) || 0),
+    [q, setQ] = useState(""),
+    [committed, setCommitted] = useState("");
+  const { data, error, loading, reload } = useOperationData<{
+    rows: Record<string, unknown>[];
+    total: number;
+  }>(
+    "/company-workspace?" +
+      new URLSearchParams({
+        company_id: String(id),
+        section,
+        offset: String(offset),
+        q: committed,
+      }),
+  );
+  const move = (n: number) => {
+    const p = new URLSearchParams(search.toString());
+    p.set("offset", String(n));
+    router.replace(pathname + "?" + p.toString(), { scroll: false });
+  };
+  const title = (key: string) =>
+    (labels[language] as Record<string, string>)[key] ||
+    (c as Record<string, string>)[key] ||
+    key;
+  return (
+    <section
+      className="space-y-4"
+      aria-label={(c as Record<string, string>)[section]}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold">
+          {(c as Record<string, string>)[section]}
+        </h2>
+        <Button variant="outline" disabled={loading} onClick={reload}>
+          {c.refresh}
+        </Button>
+      </div>
+      {["drivers", "vehicles"].includes(section) && (
+        <form
+          noValidate
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setCommitted(q);
+            move(0);
+          }}
+        >
+          <Input
+            aria-label={c.search}
+            placeholder={c.search}
+            value={q}
+            maxLength={100}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {q && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setQ("");
+                setCommitted("");
+                move(0);
+              }}
+            >
+              {c.all}
+            </Button>
+          )}
+          <Button type="submit" variant="outline">
+            {c.search}
+          </Button>
+        </form>
+      )}
+      {loading && <p role="status">{c.loading}</p>}
+      {error && (
+        <div role="alert">
+          <p>{c.error}</p>
+          <Button onClick={reload}>{c.retry}</Button>
+        </div>
+      )}
+      {data && (
+        <>
+          <div className="overflow-x-auto rounded-xl border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40">
+                <tr>
+                  {columns[section].map((k) => (
+                    <th key={k} className="whitespace-nowrap p-3 text-start">
+                      {title(k)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((row) => (
+                  <tr key={String(row.id)} className="border-t">
+                    {columns[section].map((k) => (
+                      <td key={k} className="max-w-72 p-3 align-top">
+                        {row[k] === null || row[k] === undefined
+                          ? "—"
+                          : typeof row[k] === "boolean"
+                            ? row[k]
+                              ? c.test
+                              : "—"
+                            : String(row[k])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!data.rows.length && (
+              <p className="p-8 text-muted-foreground">{c.empty}</p>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm">
+              {c.total}: {data.total}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={offset === 0}
+                onClick={() => move(Math.max(0, offset - 25))}
+              >
+                {c.previous}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={offset + 25 >= data.total}
+                onClick={() => move(offset + 25)}
+              >
+                {c.next}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+export default function CompanyWorkspace({ id }: { id: number }) {
+  return (
+    <Suspense>
+      <Workspace id={id} />
+    </Suspense>
+  );
+}

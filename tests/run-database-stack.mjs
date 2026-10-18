@@ -233,6 +233,26 @@ try {
  assert.equal((await appApi('/next_api/test-trips/acceptance-test','POST',{company_id:1,driver_id:1,vehicle_id:1},cookie)).status,403);
  const retryReady=await appApi('/next_api/trips/retry-sync','POST',{trip_id:finished.id},adminCookie);assert.equal(retryReady.status,409);assert.equal(retryReady.data.errorCode,'CHIRON_NOT_ENABLED');
  checks.push('Reviewed Chiron routes replace disabled stubs, accept UI trip identifiers, encrypt credentials, reject wrong environments and preserve driver authorization');
+ // Company archive and subscription acceptance runs only against synthetic records.
+ await success('/companies?id=eq.'+newCompanyId,service,'PATCH',{address:'Synthetic customer address',subscription_status:'active'});
+ const issuerCreated=await appApi('/next_api/companies','POST',{name:'Synthetic billing issuer',address:'Synthetic issuer address',vat_number:'BE0222222222',kbo_number:'0222222222',email:'issuer@example.invalid'},adminCookie);assert.equal(issuerCreated.status,201);const issuerId=issuerCreated.data.data.id;
+ const billingPath='/next_api/subscription-billing?company_id='+newCompanyId;
+ const initialBilling=await appApi(billingPath,'GET',undefined,adminCookie);assert.equal(initialBilling.status,200);assert.equal(initialBilling.data.data.profile,null);
+ const saveIssuer=await appApi(billingPath,'POST',{action:'settings',expected:initialBilling.data.data.settings.updated_at,data:{issuer_company_id:issuerId,invoice_prefix:'JDS',exchange_mode:'external_structured',exchange_provider:'Synthetic acceptance provider'}},adminCookie);assert.equal(saveIssuer.status,200);
+ const saveBilling=await appApi(billingPath,'POST',{action:'profile',expected:null,data:{enabled:true,net_cents:5000,vat_bps:2100,tax_category:'S',tax_reason:null,billing_day:31,next_invoice_date:'2026-01-31',due_days:14,reminder_days:7,billing_email:'billing@example.invalid',language:'fr'}},adminCookie);assert.equal(saveBilling.status,200);
+ const invoiceRequest={action:'prepare',request_id:randomUUID()};const preparedBilling=await appApi(billingPath,'POST',invoiceRequest,adminCookie);assert.equal(preparedBilling.status,200);const subscriptionDoc=preparedBilling.data.data;assert.equal(subscriptionDoc.gross_cents,6050);assert.equal(subscriptionDoc.state,'prepared');
+ assert.equal((await appApi(billingPath,'POST',invoiceRequest,adminCookie)).data.data.id,subscriptionDoc.id);
+ const issuedBilling=await appApi(billingPath,'POST',{action:'issue',document_id:subscriptionDoc.id,exchange_reference:'SYNTHETIC-STRUCTURED-ACCEPTANCE'},adminCookie);assert.equal(issuedBilling.status,200);
+ const paymentRequest={action:'payment',request_id:randomUUID(),document_id:subscriptionDoc.id,amount_cents:1000,payment_date:new Date().toISOString().slice(0,10),reference:'SYNTHETIC-BANK-REFERENCE'};
+ assert.equal((await appApi(billingPath,'POST',paymentRequest,adminCookie)).status,200);assert.equal((await appApi(billingPath,'POST',paymentRequest,adminCookie)).status,200);
+ const statement=await appApi(billingPath,'GET',undefined,adminCookie);assert.equal(statement.data.data.posted_balance_cents,5050);assert.equal(statement.data.data.entries.length,2);
+ assert.equal((await appApi('/next_api/company-portal/billing?company_id='+newCompanyId,'GET',undefined,companyCookie)).status,200);assert.equal((await appApi('/next_api/company-portal/billing?company_id='+newCompanyId,'POST',paymentRequest,companyCookie)).status,403);
+ await denied('/subscription_documents',browser);await denied('/rpc/security_subscription_tick',browser,'POST',{});
+ const pdfResponse=await fetch(appBase+billingPath+'&document_id='+subscriptionDoc.id,{headers:{Origin:appOrigin,Cookie:adminCookie},signal:AbortSignal.timeout(20000)});assert.equal(pdfResponse.status,200);assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),'%PDF-');
+ const archiveRequest={company_id:newCompanyId,action:'archive',request_id:randomUUID(),reason:'Synthetic archive acceptance'};assert.equal((await appApi('/next_api/company-lifecycle','POST',archiveRequest,adminCookie)).status,200);assert.ok((await success('/companies?id=eq.'+newCompanyId,service))[0].archived_at);assert.equal((await success('/subscription_billing_profiles?company_id=eq.'+newCompanyId,service))[0].enabled,false);assert.equal((await success('/subscription_documents?id=eq.'+subscriptionDoc.id,service)).length,1);
+ assert.equal((await appApi('/next_api/company-portal?company_id='+newCompanyId,'GET',undefined,companyCookie)).status,401);
+ assert.equal((await appApi('/next_api/company-lifecycle','POST',{company_id:newCompanyId,action:'restore',request_id:randomUUID(),reason:'Synthetic restoration'},adminCookie)).status,200);assert.equal((await success('/subscription_billing_profiles?company_id=eq.'+newCompanyId,service))[0].enabled,false);
+ checks.push('Actual PostgreSQL and HTTP billing use exact cents, immutable issuance, idempotent payment, owner read-only statements and PDF; archive preserves history and restore does not resume billing');
  const originalState=(await success('/trips?id=eq.'+finished.id,service))[0].chiron_sync_state;
  assert.ok(['CREATED','ERROR'].includes(originalState));
  const claimPath='/trips?id=eq.'+finished.id+'&chiron_sync_state=eq.'+originalState;

@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import {connectionFailure,connectionMessage} from '../src/lib/connection-state.ts';
 
 function client(pathname, fetch) {
   const source = readFileSync(new URL('../src/lib/api-client.ts', import.meta.url), 'utf8')
     .replace(/import \{ AUTH_ENABLED, authConfig \}[^;]+;/, 'const AUTH_ENABLED = true; const authConfig = {loginPath:"/login"};')
     .replace(/import \{ AUTH_CODE \}[^;]+;/, 'const AUTH_CODE = {TOKEN_MISSING:"TOKEN_MISSING", TOKEN_EXPIRED:"TOKEN_EXPIRED"};');
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const context = { exports: {}, fetch, window: { location: { pathname, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
+  const context = { exports: {}, require:name=>{if(name==='./connection-state')return {connectionFailure,connectionMessage};throw Error('Unexpected import');},AbortSignal, fetch, window: { location: { pathname, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
   vm.runInNewContext(output, context);
   return { api: context.exports.api, location: context.window.location };
 }

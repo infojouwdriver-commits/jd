@@ -26,6 +26,7 @@ export const POST = requestMiddleware(async (request, context) => {
     const created = await mutateDriverAccount(adminToken, 'create', {companyId:Number(company_id),fields});
     return createSuccessResponse(created.driver,201);
   } catch (error: any) {
+    if(error instanceof Response)return error;
     const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to add driver', status: 500 });
@@ -56,6 +57,7 @@ export const PUT = requestMiddleware(async (request, context) => {
     const updated = await mutateDriverAccount(adminToken, 'update', {id, fields});
     return createSuccessResponse(updated.driver);
   } catch (error: any) {
+    if(error instanceof Response)return error;
     const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to update driver', status: 500 });
@@ -84,6 +86,7 @@ export const DELETE = requestMiddleware(async (request, context) => {
     await mutateDriverAccount(adminToken, 'deactivate', {id});
     return createSuccessResponse({id,status:'inactive'});
   } catch (error: any) {
+    if(error instanceof Response)return error;
     const invalid = driverValidationError(error); if (invalid) return invalid;
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: error.message || 'Failed to delete driver', status: 500 });

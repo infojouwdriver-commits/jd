@@ -144,3 +144,7 @@ On success clear secrets, show request reference and actual decision status.
 Known errors preserve editable fields; uncertain responses preserve a frozen
 retry. Cancel confirms loss of unsent data. Reject requires an administrator
 reason. Approval leaves Chiron TEST pending separate production acceptance.
+
+## Company lifecycle and billing extension (2026-10-18)
+
+The approved company business scope is maintained in docs/COMPANY_PLATFORM_CONTRACT.md. Web operations behavior, canonical owners and verification are maintained in docs/OPERATIONS_UX.md. A billing reminder never blocks native or web trip work. Driver notices are generic and dismissible, suppressed during active trips; failures are isolated from authentication and trip synchronization. Home distinguishes durable local trip storage, pending server confirmation, and server receipt; Chiron delivery remains a separate state. Native API errors distinguish timeout, uncertain transport and server response rather than asserting an Internet outage.

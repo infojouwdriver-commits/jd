@@ -14,7 +14,7 @@ CREATE OR REPLACE FUNCTION :"schema".security_change_company_staff(p_company big
 RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path=:"schema",pg_catalog AS $$
 DECLARE link company_users;old_link company_users;uid bigint;c companies;
 BEGIN
- IF p_actor IS NULL OR NOT EXISTS(SELECT FROM users WHERE id=p_actor) OR p_role NOT IN('owner','fleet_manager','accountant') OR p_active IS NULL OR coalesce(length(trim(p_reason)),0) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'Invalid staff command' USING ERRCODE='22023';END IF;
+ IF p_actor IS NULL OR NOT EXISTS(SELECT FROM users WHERE id=p_actor) OR p_role IS NULL OR p_role NOT IN('owner','fleet_manager','accountant') OR p_active IS NULL OR coalesce(length(trim(p_reason)),0) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'Invalid staff command' USING ERRCODE='22023';END IF;
  SELECT * INTO c FROM companies WHERE id=p_company FOR UPDATE;
  IF NOT FOUND OR c.archived_at IS NOT NULL THEN RAISE EXCEPTION 'Company unavailable' USING ERRCODE='P0002';END IF;
  IF p_admin IS DISTINCT FROM true AND NOT EXISTS(SELECT FROM company_users WHERE company_id=p_company AND user_id=p_actor AND is_active AND role IN('owner','portal_owner')) THEN RAISE EXCEPTION 'Company owner required' USING ERRCODE='42501';END IF;

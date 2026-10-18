@@ -1,6 +1,7 @@
 
 "use client";
 
+import {AlertDialog,AlertDialogContent,AlertDialogHeader,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel} from '@/components/ui/alert-dialog';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,8 @@ export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesT
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteTarget,setDeleteTarget]=useState<number|null>(null);
+  const [deleteError,setDeleteError]=useState('');
 
   const openAdd = () => { setEditingVehicle(null); setForm(emptyForm); setShowDialog(true); };
   const openEdit = (v: Vehicle) => {
@@ -58,7 +61,7 @@ export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesT
         toast.success('Vehicle added successfully');
       }
       setShowDialog(false);
-      onRefresh();
+      setDeleteTarget(null);onRefresh();
     } catch (err: any) {
       toast.error(err.message || 'Operation failed');
     } finally {
@@ -67,13 +70,14 @@ export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesT
   };
 
   const handleDelete = async (id: number) => {
-    setDeletingId(id);
+    if(deletingId!==null)return;
+    setDeletingId(id);setDeleteError('');
     try {
       await api.delete(`/company-portal/vehicles?company_id=${companyId}&id=${id}`);
       toast.success('Vehicle removed');
-      onRefresh();
+      setDeleteTarget(null);onRefresh();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete vehicle');
+      setDeleteError(err.message || 'Operation failed');
     } finally {
       setDeletingId(null);
     }
@@ -86,6 +90,8 @@ export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesT
 
   return (
     <div className="space-y-4">
+      <AlertDialog open={deleteTarget!==null} onOpenChange={v=>{if(!v&&deletingId===null)setDeleteTarget(null);}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Deactivate # {deleteTarget}</AlertDialogTitle><AlertDialogDescription>The record leaves active operation. Historical trips remain available.</AlertDialogDescription></AlertDialogHeader>{deleteError&&<p role="alert" className="text-destructive">{deleteError}</p>}<AlertDialogFooter><AlertDialogCancel disabled={deletingId!==null}>Cancel</AlertDialogCancel><Button variant="destructive" disabled={deletingId!==null} onClick={()=>{if(deleteTarget!==null)void handleDelete(deleteTarget);}}>Deactivate</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
+
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">{vehicles.length} vehicle(s) registered</p>
         <Button onClick={openAdd} size="sm" className="gap-2">
@@ -120,7 +126,7 @@ export default function VehiclesTab({ vehicles, onRefresh,companyId }: VehiclesT
                     </Button>
                     <Button
                       variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(v.id)}
+                      onClick={() => {setDeleteError('');setDeleteTarget(v.id);}}
                       disabled={deletingId === v.id}
                     >
                       {deletingId === v.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

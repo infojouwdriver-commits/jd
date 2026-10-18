@@ -361,6 +361,7 @@ function VehiclesPageContent() {
 
                 <div className="flex gap-2">
                   <Button
+                    disabled={!!vehicle.archived_at}
                     onClick={() => {
                       setEditingVehicle(vehicle);
                       setShowEditDialog(true);

@@ -1,5 +1,80 @@
-'use client';
-import {useEffect,useState} from 'react';import {useLanguage} from '@/contexts/LanguageContext';import {api} from '@/lib/api-client';import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription,DialogFooter} from '@/components/ui/dialog';import {Button} from '@/components/ui/button';
-const words={ar:{title:'تذكير لاشتراك الشركة',body:'يوجد استحقاق اشتراك يحتاج متابعة من إدارة شركتك. تواصل مع مسؤول الشركة لترتيب الدفع. تبقى الخدمة والرحلات متاحة.',close:'فهمت، متابعة العمل'},fr:{title:'Rappel d’abonnement de l’entreprise',body:'Votre abonnement nécessite le suivi de votre entreprise. Contactez son responsable pour organiser le paiement. Le service et les trajets restent disponibles.',close:'Compris, continuer'},nl:{title:'Herinnering bedrijfsabonnement',body:'Uw bedrijfsabonnement vraagt opvolging. Neem contact op met de bedrijfsbeheerder om de betaling te regelen. De dienst en ritten blijven beschikbaar.',close:'Begrepen, doorgaan'}};
-const dismissed=new Set<string>();
-export default function BillingReminder(){const {language}=useLanguage(),c=words[language];const [key,setKey]=useState('');useEffect(()=>{let alive=true;const load=()=>api.get<{driver_id:number;notice:{notice_key:string}|null}>('/drivers/billing-notice').then(r=>{if(alive)setKey(r.notice?r.driver_id+':'+r.notice.notice_key:'');}).catch(()=>{});void load();const focus=()=>{void load();};window.addEventListener('focus',focus);return()=>{alive=false;window.removeEventListener('focus',focus);};},[]);function close(){dismissed.add(key);setKey('');}return <Dialog open={!!key&&!dismissed.has(key)} onOpenChange={v=>{if(!v)close();}}><DialogContent><DialogHeader><DialogTitle>{c.title}</DialogTitle><DialogDescription>{c.body}</DialogDescription></DialogHeader><DialogFooter><Button onClick={close}>{c.close}</Button></DialogFooter></DialogContent></Dialog>;}
+"use client";
+import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/lib/api-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+const words = {
+  ar: {
+    title: "تذكير لاشتراك الشركة",
+    body: "يوجد استحقاق اشتراك يحتاج متابعة من إدارة شركتك. تواصل مع مسؤول الشركة لترتيب الدفع. تبقى الخدمة والرحلات متاحة.",
+    close: "فهمت، متابعة العمل",
+  },
+  fr: {
+    title: "Rappel d’abonnement de l’entreprise",
+    body: "Votre abonnement nécessite le suivi de votre entreprise. Contactez son responsable pour organiser le paiement. Le service et les trajets restent disponibles.",
+    close: "Compris, continuer",
+  },
+  nl: {
+    title: "Herinnering bedrijfsabonnement",
+    body: "Uw bedrijfsabonnement vraagt opvolging. Neem contact op met de bedrijfsbeheerder om de betaling te regelen. De dienst en ritten blijven beschikbaar.",
+    close: "Begrepen, doorgaan",
+  },
+};
+const dismissed = new Set<string>();
+export default function BillingReminder() {
+  const { language } = useLanguage(),
+    c = words[language];
+  const [key, setKey] = useState("");
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      api
+        .get<{ driver_id: number; notice: { notice_key: string } | null }>(
+          "/drivers/billing-notice",
+        )
+        .then((r) => {
+          if (alive)
+            setKey(r.notice ? r.driver_id + ":" + r.notice.notice_key : "");
+        })
+        .catch(() => {});
+    void load();
+    const focus = () => {
+      void load();
+    };
+    window.addEventListener("focus", focus);
+    return () => {
+      alive = false;
+      window.removeEventListener("focus", focus);
+    };
+  }, []);
+  function close() {
+    dismissed.add(key);
+    setKey("");
+  }
+  return (
+    <Dialog
+      open={!!key && !dismissed.has(key)}
+      onOpenChange={(v) => {
+        if (!v) close();
+      }}
+    >
+      <DialogContent closeLabel={c.close}>
+        <DialogHeader>
+          <DialogTitle>{c.title}</DialogTitle>
+          <DialogDescription>{c.body}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={close}>{c.close}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

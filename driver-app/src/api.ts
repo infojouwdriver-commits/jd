@@ -3,7 +3,7 @@ export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
   native_trip_contract_version?: number;
   driver: {id: number; status?: string; full_name: string; company_id: number; current_vehicle_id: number | null};
-  company: {id: number; name: string; chiron_mode: string};
+  company: {id: number; name: string; chiron_mode: string;is_test?:boolean};
 }
 export interface DriverVehicle {id: number; company_id: number; plate_number: string; status: string; brand?: string; model?: string}
 export interface DriverTripSummary {id:number; driver_id:number; start_time:string|null; end_time:string|null; start_address:string|null; end_address:string|null; price:number; currency:string; distance:number|null; duration:number|null; chiron_environment:string|null; chiron_sync_state:string|null}
@@ -23,6 +23,7 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+export function apiConnectionKey(error:unknown){return error instanceof ApiError?(error.status===408?'requestTimeout':error.status===0?'requestTransport':error.status>=500?'requestServer':error.status===401?'signInAgain':'error'):'error';}
 // Uses the OS cookie store with the existing HttpOnly session contract.
 // Native cookie persistence/refresh must pass device acceptance before release.
 export function createDriverApi(transport: typeof fetch = fetch) {

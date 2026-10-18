@@ -46,6 +46,8 @@ BEGIN
  UPDATE drivers SET archived_at=stamp,archive_event_id=p_request,status='inactive',current_vehicle_id=NULL,updated_at=stamp WHERE company_id=c.id AND archived_at IS NULL;
  UPDATE vehicles SET archived_at=stamp,archive_event_id=p_request,status='inactive',updated_at=stamp WHERE company_id=c.id AND archived_at IS NULL;
  UPDATE company_users SET is_active=false,updated_at=stamp WHERE company_id=c.id;
+ -- Restoration never silently resumes paid billing or bills an archived period.
+ IF to_regclass('subscription_billing_profiles') IS NOT NULL THEN UPDATE subscription_billing_profiles SET enabled=false,updated_at=clock_timestamp() WHERE company_id=c.id;END IF;
  -- Do not disable identities shared with other active companies.
  UPDATE users u SET security_revoked_before=stamp,updated_at=stamp WHERE u.id IN(SELECT user_id FROM company_users WHERE company_id=c.id UNION SELECT user_id FROM drivers WHERE company_id=c.id)
  AND NOT EXISTS(SELECT FROM company_users cu JOIN companies other ON other.id=cu.company_id WHERE cu.user_id=u.id AND cu.is_active AND other.archived_at IS NULL)

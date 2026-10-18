@@ -117,3 +117,5 @@ test('temporary transport loss retries a safe read once, never mutations or HTTP
  for(const code of [403,429,503]){let calls=0;const bad=createDriverApi(async()=>{calls++;return Response.json({}, {status:code});});await assert.rejects(bad.profile(),e=>e.status===code);assert.equal(calls,1);}
  let writes=0;const bad=createDriverApi(async()=>{writes++;throw new TypeError('Network request failed');});await assert.rejects(bad.logout());assert.equal(writes,1);
 });
+
+test('billing reminder verifies current driver and company and never requests payment details',async()=>{let current={driver:{id:1,company_id:9},company:{id:9}};const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return Response.json({success:true,data:url.endsWith('/drivers/me')?current:{driver_id:1,notice:{notice_key:'billing:9:1',company_id:9}}});});assert.equal((await api.billingNotice(1)).company_id,9);await assert.rejects(api.billingNotice(2));assert.ok(calls.every(url=>!url.includes('subscription-billing')));});

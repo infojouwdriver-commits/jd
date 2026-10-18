@@ -101,7 +101,9 @@ async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> 
   }
 
   try {
-    return JSON.parse(rawText) as ApiResponse<T>;
+    const parsed=JSON.parse(rawText);
+    if(!parsed||typeof parsed!=='object'||typeof parsed.success!=='boolean')throw new Error('Invalid API envelope');
+    return parsed as ApiResponse<T>;
   } catch {
     return {
       success: false,
@@ -120,6 +122,7 @@ async function refreshToken(): Promise<boolean> {
       },
       credentials: "include",
       cache: "no-store",
+      signal:AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {

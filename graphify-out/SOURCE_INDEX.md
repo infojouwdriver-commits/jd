@@ -104,16 +104,21 @@ Links target the working tree, so line positions can move after changes.
 
 - `update-customer-portal.sh` — [L1](../deploy/update-customer-portal.sh#L1)
 - `update-customer-portal.sh script` — [L1](../deploy/update-customer-portal.sh#L1)
-- `CUSTOMER_IMAGE` — [L32](../deploy/update-customer-portal.sh#L32)
-- `CUSTOMER_REVISION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `FLEET_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `MAIL_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `PORTAL_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `PRICING_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `PUSH_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `REGISTRATION_MIGRATION` — [L32](../deploy/update-customer-portal.sh#L32)
-- `VERIFIED_BACKUP_TAG` — [L32](../deploy/update-customer-portal.sh#L32)
-- `cleanup()` — [L45](../deploy/update-customer-portal.sh#L45)
+- `BILLING_MAIL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `BILLING_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `COMPANY_STAFF_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `CUSTOMER_IMAGE` — [L42](../deploy/update-customer-portal.sh#L42)
+- `CUSTOMER_REVISION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `FLEET_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `LIFECYCLE_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `MAIL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `OPERATIONS_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `PORTAL_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `PRICING_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `PUSH_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `REGISTRATION_MIGRATION` — [L42](../deploy/update-customer-portal.sh#L42)
+- `VERIFIED_BACKUP_TAG` — [L42](../deploy/update-customer-portal.sh#L42)
+- `cleanup()` — [L55](../deploy/update-customer-portal.sh#L55)
 
 ## [deploy/update-customer-ui.sh](../deploy/update-customer-ui.sh)
 
@@ -299,14 +304,15 @@ Links target the working tree, so line positions can move after changes.
 - `RevenueSummary` — [L18](../driver-app/src/api.ts#L18)
 - `ApiError` — [L19](../driver-app/src/api.ts#L19)
 - `.constructor()` — [L21](../driver-app/src/api.ts#L21)
-- `createDriverApi()` — [L28](../driver-app/src/api.ts#L28)
-- `requestOnce()` — [L29](../driver-app/src/api.ts#L29)
-- `request()` — [L49](../driver-app/src/api.ts#L49)
-- `loadProfile()` — [L59](../driver-app/src/api.ts#L59)
-- `profile()` — [L70](../driver-app/src/api.ts#L70)
-- `ownerRead()` — [L73](../driver-app/src/api.ts#L73)
-- `vehicles()` — [L83](../driver-app/src/api.ts#L83)
-- `driverApi` — [L238](../driver-app/src/api.ts#L238)
+- `apiConnectionKey()` — [L26](../driver-app/src/api.ts#L26)
+- `createDriverApi()` — [L29](../driver-app/src/api.ts#L29)
+- `requestOnce()` — [L30](../driver-app/src/api.ts#L30)
+- `request()` — [L50](../driver-app/src/api.ts#L50)
+- `loadProfile()` — [L60](../driver-app/src/api.ts#L60)
+- `profile()` — [L71](../driver-app/src/api.ts#L71)
+- `ownerRead()` — [L74](../driver-app/src/api.ts#L74)
+- `vehicles()` — [L84](../driver-app/src/api.ts#L84)
+- `driverApi` — [L244](../driver-app/src/api.ts#L244)
 
 ## [driver-app/src/app/_layout.tsx](../driver-app/src/app/_layout.tsx)
 
@@ -383,10 +389,18 @@ Links target the working tree, so line positions can move after changes.
 - `AddressField()` — [L7](../driver-app/src/experience/AddressField.tsx#L7)
 - `search()` — [L13](../driver-app/src/experience/AddressField.tsx#L13)
 
+## [driver-app/src/experience/BillingReminder.tsx](../driver-app/src/experience/BillingReminder.tsx)
+
+- `experience/BillingReminder.tsx` — [L1](../driver-app/src/experience/BillingReminder.tsx#L1)
+- `dismissed` — [L7](../driver-app/src/experience/BillingReminder.tsx#L7)
+- `BillingReminder()` — [L8](../driver-app/src/experience/BillingReminder.tsx#L8)
+- `load()` — [L20](../driver-app/src/experience/BillingReminder.tsx#L20)
+- `close()` — [L39](../driver-app/src/experience/BillingReminder.tsx#L39)
+
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
-- `Home()` — [L9](../driver-app/src/experience/Home.tsx#L9)
+- `Home()` — [L10](../driver-app/src/experience/Home.tsx#L10)
 
 ## [driver-app/src/experience/JourneyLoading.tsx](../driver-app/src/experience/JourneyLoading.tsx)
 
@@ -448,12 +462,17 @@ Links target the working tree, so line positions can move after changes.
 - `RoadArt()` — [L6](../driver-app/src/experience/art.tsx#L6)
 - `VehicleArt()` — [L21](../driver-app/src/experience/art.tsx#L21)
 
+## [driver-app/src/experience/company-copy.ts](../driver-app/src/experience/company-copy.ts)
+
+- `company-copy.ts` — [L1](../driver-app/src/experience/company-copy.ts#L1)
+- `companyCopy` — [L1](../driver-app/src/experience/company-copy.ts#L1)
+
 ## [driver-app/src/experience/copy.ts](../driver-app/src/experience/copy.ts)
 
 - `experience/copy.ts` — [L1](../driver-app/src/experience/copy.ts#L1)
-- `copy` — [L3](../driver-app/src/experience/copy.ts#L3)
-- `Language` — [L9](../driver-app/src/experience/copy.ts#L9)
-- `CopyKey` — [L10](../driver-app/src/experience/copy.ts#L10)
+- `copy` — [L4](../driver-app/src/experience/copy.ts#L4)
+- `Language` — [L10](../driver-app/src/experience/copy.ts#L10)
+- `CopyKey` — [L11](../driver-app/src/experience/copy.ts#L11)
 
 ## [driver-app/src/experience/inbox.tsx](../driver-app/src/experience/inbox.tsx)
 
@@ -518,17 +537,17 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/session.tsx](../driver-app/src/experience/session.tsx)
 
 - `session.tsx` — [L1](../driver-app/src/experience/session.tsx#L1)
-- `Context` — [L17](../driver-app/src/experience/session.tsx#L17)
-- `useSessionState()` — [L18](../driver-app/src/experience/session.tsx#L18)
-- `login()` — [L23](../driver-app/src/experience/session.tsx#L23)
-- `logout()` — [L24](../driver-app/src/experience/session.tsx#L24)
-- `accountChanged()` — [L25](../driver-app/src/experience/session.tsx#L25)
-- `useSession()` — [L28](../driver-app/src/experience/session.tsx#L28)
-- `TripContext` — [L29](../driver-app/src/experience/session.tsx#L29)
-- `useTrip()` — [L30](../driver-app/src/experience/session.tsx#L30)
-- `TripRuntime()` — [L31](../driver-app/src/experience/session.tsx#L31)
-- `Login()` — [L32](../driver-app/src/experience/session.tsx#L32)
-- `SessionProvider()` — [L33](../driver-app/src/experience/session.tsx#L33)
+- `Context` — [L18](../driver-app/src/experience/session.tsx#L18)
+- `useSessionState()` — [L19](../driver-app/src/experience/session.tsx#L19)
+- `login()` — [L24](../driver-app/src/experience/session.tsx#L24)
+- `logout()` — [L25](../driver-app/src/experience/session.tsx#L25)
+- `accountChanged()` — [L26](../driver-app/src/experience/session.tsx#L26)
+- `useSession()` — [L29](../driver-app/src/experience/session.tsx#L29)
+- `TripContext` — [L30](../driver-app/src/experience/session.tsx#L30)
+- `useTrip()` — [L31](../driver-app/src/experience/session.tsx#L31)
+- `TripRuntime()` — [L32](../driver-app/src/experience/session.tsx#L32)
+- `Login()` — [L33](../driver-app/src/experience/session.tsx#L33)
+- `SessionProvider()` — [L34](../driver-app/src/experience/session.tsx#L34)
 
 ## [driver-app/src/experience/tokens.ts](../driver-app/src/experience/tokens.ts)
 
@@ -796,6 +815,65 @@ Links target the working tree, so line positions can move after changes.
 - `company_registrations_status_time` — [L9](../migrations/20261017_company_registration.sql#L9)
 - `"schema".security_submit_company_registration()` — [L15](../migrations/20261017_company_registration.sql#L15)
 - `"schema".security_review_company_registration()` — [L49](../migrations/20261017_company_registration.sql#L49)
+
+## [migrations/20261018_company_lifecycle.sql](../migrations/20261018_company_lifecycle.sql)
+
+- `20261018_company_lifecycle.sql` — [source](../migrations/20261018_company_lifecycle.sql#)
+- `"schema".company_lifecycle_events` — [L9](../migrations/20261018_company_lifecycle.sql#L9)
+- `company_lifecycle_events_company` — [L14](../migrations/20261018_company_lifecycle.sql#L14)
+- `companies_archive_name` — [L15](../migrations/20261018_company_lifecycle.sql#L15)
+- `drivers_company_archive` — [L16](../migrations/20261018_company_lifecycle.sql#L16)
+- `vehicles_company_archive` — [L17](../migrations/20261018_company_lifecycle.sql#L17)
+- `"schema".security_archive_company()` — [L23](../migrations/20261018_company_lifecycle.sql#L23)
+- `"schema".security_restore_company()` — [L58](../migrations/20261018_company_lifecycle.sql#L58)
+- `jd_company_trip_start_guard` — [L111](../migrations/20261018_company_lifecycle.sql#L111)
+- `jd_company_driver_guard` — [L113](../migrations/20261018_company_lifecycle.sql#L113)
+- `jd_company_vehicle_guard` — [L115](../migrations/20261018_company_lifecycle.sql#L115)
+- `"schema".security_company_preserve_history()` — [L116](../migrations/20261018_company_lifecycle.sql#L116)
+- `jd_company_preserve_history` — [L119](../migrations/20261018_company_lifecycle.sql#L119)
+
+## [migrations/20261018_company_staff.sql](../migrations/20261018_company_staff.sql)
+
+- `20261018_company_staff.sql` — [source](../migrations/20261018_company_staff.sql#)
+- `"schema".company_staff_events` — [L2](../migrations/20261018_company_staff.sql#L2)
+
+## [migrations/20261018_operations_centre.sql](../migrations/20261018_operations_centre.sql)
+
+- `20261018_operations_centre.sql` — [source](../migrations/20261018_operations_centre.sql#)
+- `"schema".security_operations_centre()` — [L2](../migrations/20261018_operations_centre.sql#L2)
+- `"schema".security_driver_billing_notice()` — [L26](../migrations/20261018_operations_centre.sql#L26)
+- `"schema".security_invoice_test_classification()` — [L37](../migrations/20261018_operations_centre.sql#L37)
+- `invoice_test_classification` — [L45](../migrations/20261018_operations_centre.sql#L45)
+- `"schema".security_live_statistics()` — [L48](../migrations/20261018_operations_centre.sql#L48)
+
+## [migrations/20261018_subscription_billing.sql](../migrations/20261018_subscription_billing.sql)
+
+- `20261018_subscription_billing.sql` — [source](../migrations/20261018_subscription_billing.sql#)
+- `"schema".subscription_billing_settings` — [L4](../migrations/20261018_subscription_billing.sql#L4)
+- `"schema".subscription_billing_profiles` — [L11](../migrations/20261018_subscription_billing.sql#L11)
+- `"schema".subscription_documents` — [L21](../migrations/20261018_subscription_billing.sql#L21)
+- `subscription_invoice_period` — [L34](../migrations/20261018_subscription_billing.sql#L34)
+- `subscription_documents_company` — [L35](../migrations/20261018_subscription_billing.sql#L35)
+- `"schema".subscription_payments` — [L36](../migrations/20261018_subscription_billing.sql#L36)
+- `"schema".subscription_billing_events` — [L41](../migrations/20261018_subscription_billing.sql#L41)
+- `"schema".subscription_mail_queue` — [L45](../migrations/20261018_subscription_billing.sql#L45)
+- `"schema".security_subscription_document_balance()` — [L82](../migrations/20261018_subscription_billing.sql#L82)
+- `"schema".security_subscription_immutable()` — [L87](../migrations/20261018_subscription_billing.sql#L87)
+- `subscription_document_immutable` — [L98](../migrations/20261018_subscription_billing.sql#L98)
+- `subscription_payment_immutable` — [L100](../migrations/20261018_subscription_billing.sql#L100)
+- `subscription_event_immutable` — [L102](../migrations/20261018_subscription_billing.sql#L102)
+- `"schema".security_prepare_subscription_invoice()` — [L105](../migrations/20261018_subscription_billing.sql#L105)
+- `"schema".security_issue_subscription_document()` — [L142](../migrations/20261018_subscription_billing.sql#L142)
+- `"schema".subscription_scheduler_state` — [L261](../migrations/20261018_subscription_billing.sql#L261)
+- `"schema".security_subscription_tick()` — [L268](../migrations/20261018_subscription_billing.sql#L268)
+- `"schema".security_finish_subscription_mail()` — [L307](../migrations/20261018_subscription_billing.sql#L307)
+- `"schema".security_company_platform_ready()` — [L315](../migrations/20261018_subscription_billing.sql#L315)
+- `"schema".security_void_subscription_preparation()` — [L323](../migrations/20261018_subscription_billing.sql#L323)
+
+## [migrations/20261018_subscription_mail.sql](../migrations/20261018_subscription_mail.sql)
+
+- `20261018_subscription_mail.sql` — [source](../migrations/20261018_subscription_mail.sql#)
+- `"schema".security_reserve_mail()` — [L4](../migrations/20261018_subscription_mail.sql#L4)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -1295,6 +1373,11 @@ Links target the working tree, so line positions can move after changes.
 - `Company` — [L22](../src/app/admin/companies/%5Bid%5D/edit/page.tsx#L22)
 - `EditCompanyPage()` — [L34](../src/app/admin/companies/%5Bid%5D/edit/page.tsx#L34)
 
+## [src/app/admin/companies/[id]/page.tsx](../src/app/admin/companies/%5Bid%5D/page.tsx)
+
+- `companies/[id]/page.tsx` — [L1](../src/app/admin/companies/%5Bid%5D/page.tsx#L1)
+- `Page()` — [L3](../src/app/admin/companies/%5Bid%5D/page.tsx#L3)
+
 ## [src/app/admin/companies/[id]/platform-contracts/page.tsx](../src/app/admin/companies/%5Bid%5D/platform-contracts/page.tsx)
 
 - `platform-contracts/page.tsx` — [L1](../src/app/admin/companies/%5Bid%5D/platform-contracts/page.tsx#L1)
@@ -1316,9 +1399,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/companies/page.tsx](../src/app/admin/companies/page.tsx)
 
 - `companies/page.tsx` — [L1](../src/app/admin/companies/page.tsx#L1)
-- `Company` — [L28](../src/app/admin/companies/page.tsx#L28)
-- `emptyNew` — [L44](../src/app/admin/companies/page.tsx#L44)
-- `CompaniesPage()` — [L46](../src/app/admin/companies/page.tsx#L46)
+- `Company` — [L32](../src/app/admin/companies/page.tsx#L32)
+- `emptyNew` — [L50](../src/app/admin/companies/page.tsx#L50)
+- `CompaniesPageContent()` — [L52](../src/app/admin/companies/page.tsx#L52)
+- `CompaniesPage()` — [L376](../src/app/admin/companies/page.tsx#L376)
 
 ## [src/app/admin/distributors/page.tsx](../src/app/admin/distributors/page.tsx)
 
@@ -1330,10 +1414,11 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/drivers/page.tsx](../src/app/admin/drivers/page.tsx)
 
 - `admin/drivers/page.tsx` — [L1](../src/app/admin/drivers/page.tsx#L1)
-- `Driver` — [L56](../src/app/admin/drivers/page.tsx#L56)
-- `Company` — [L69](../src/app/admin/drivers/page.tsx#L69)
-- `getErrorMessage()` — [L74](../src/app/admin/drivers/page.tsx#L74)
-- `AdminDriversPage()` — [L86](../src/app/admin/drivers/page.tsx#L86)
+- `Driver` — [L59](../src/app/admin/drivers/page.tsx#L59)
+- `Company` — [L75](../src/app/admin/drivers/page.tsx#L75)
+- `getErrorMessage()` — [L80](../src/app/admin/drivers/page.tsx#L80)
+- `AdminDriversPageContent()` — [L92](../src/app/admin/drivers/page.tsx#L92)
+- `AdminDriversPage()` — [L753](../src/app/admin/drivers/page.tsx#L753)
 
 ## [src/app/admin/fleet/page.tsx](../src/app/admin/fleet/page.tsx)
 
@@ -1369,6 +1454,11 @@ Links target the working tree, so line positions can move after changes.
 - `Company` — [L71](../src/app/admin/notifications/page.tsx#L71)
 - `AdminNotificationsPage()` — [L76](../src/app/admin/notifications/page.tsx#L76)
 
+## [src/app/admin/operations/page.tsx](../src/app/admin/operations/page.tsx)
+
+- `operations/page.tsx` — [L1](../src/app/admin/operations/page.tsx#L1)
+- `Page()` — [L2](../src/app/admin/operations/page.tsx#L2)
+
 ## [src/app/admin/test-trips/page.tsx](../src/app/admin/test-trips/page.tsx)
 
 - `test-trips/page.tsx` — [L1](../src/app/admin/test-trips/page.tsx#L1)
@@ -1380,8 +1470,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/trips/page.tsx](../src/app/admin/trips/page.tsx)
 
 - `admin/trips/page.tsx` — [L1](../src/app/admin/trips/page.tsx#L1)
-- `Trip` — [L36](../src/app/admin/trips/page.tsx#L36)
-- `AdminTripsPage()` — [L52](../src/app/admin/trips/page.tsx#L52)
+- `Trip` — [L37](../src/app/admin/trips/page.tsx#L37)
+- `AdminTripsPage()` — [L53](../src/app/admin/trips/page.tsx#L53)
 
 ## [src/app/admin/users/page.tsx](../src/app/admin/users/page.tsx)
 
@@ -1391,9 +1481,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/vehicles/page.tsx](../src/app/admin/vehicles/page.tsx)
 
 - `vehicles/page.tsx` — [L1](../src/app/admin/vehicles/page.tsx#L1)
-- `Company` — [L39](../src/app/admin/vehicles/page.tsx#L39)
-- `Vehicle` — [L44](../src/app/admin/vehicles/page.tsx#L44)
-- `VehiclesPage()` — [L55](../src/app/admin/vehicles/page.tsx#L55)
+- `Company` — [L43](../src/app/admin/vehicles/page.tsx#L43)
+- `Vehicle` — [L48](../src/app/admin/vehicles/page.tsx#L48)
+- `VehiclesPageContent()` — [L62](../src/app/admin/vehicles/page.tsx#L62)
+- `VehiclesPage()` — [L487](../src/app/admin/vehicles/page.tsx#L487)
 
 ## [src/app/company/dashboard/page.tsx](../src/app/company/dashboard/page.tsx)
 
@@ -1402,7 +1493,7 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/app/contract-print/[id]/page.tsx](../src/app/contract-print/%5Bid%5D/page.tsx)
 
-- `[id]/page.tsx` — [L1](../src/app/contract-print/%5Bid%5D/page.tsx#L1)
+- `contract-print/[id]/page.tsx` — [L1](../src/app/contract-print/%5Bid%5D/page.tsx#L1)
 - `PrintableContract` — [L10](../src/app/contract-print/%5Bid%5D/page.tsx#L10)
 - `ContractPrintPage()` — [L11](../src/app/contract-print/%5Bid%5D/page.tsx#L11)
 
@@ -1620,11 +1711,11 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/approval-requests/route.ts](../src/app/next_api/approval-requests/route.ts)
 
 - `approval-requests/route.ts` — [L1](../src/app/next_api/approval-requests/route.ts#L1)
-- `GET` — [L8](../src/app/next_api/approval-requests/route.ts#L8)
-- `POST` — [L60](../src/app/next_api/approval-requests/route.ts#L60)
-- `PUT` — [L127](../src/app/next_api/approval-requests/route.ts#L127)
-- `executeApprovedRequest()` — [L191](../src/app/next_api/approval-requests/route.ts#L191)
-- `getTableName()` — [L222](../src/app/next_api/approval-requests/route.ts#L222)
+- `GET` — [L9](../src/app/next_api/approval-requests/route.ts#L9)
+- `POST` — [L61](../src/app/next_api/approval-requests/route.ts#L61)
+- `PUT` — [L128](../src/app/next_api/approval-requests/route.ts#L128)
+- `executeApprovedRequest()` — [L199](../src/app/next_api/approval-requests/route.ts#L199)
+- `getTableName()` — [L230](../src/app/next_api/approval-requests/route.ts#L230)
 
 ## [src/app/next_api/auth/account/route.ts](../src/app/next_api/auth/account/route.ts)
 
@@ -1733,23 +1824,49 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/companies/route.ts](../src/app/next_api/companies/route.ts)
 
 - `companies/route.ts` — [L1](../src/app/next_api/companies/route.ts#L1)
-- `GET` — [L9](../src/app/next_api/companies/route.ts#L9)
-- `POST` — [L73](../src/app/next_api/companies/route.ts#L73)
-- `PUT` — [L104](../src/app/next_api/companies/route.ts#L104)
-- `DELETE` — [L194](../src/app/next_api/companies/route.ts#L194)
+- `GET` — [L11](../src/app/next_api/companies/route.ts#L11)
+- `POST` — [L75](../src/app/next_api/companies/route.ts#L75)
+- `PUT` — [L106](../src/app/next_api/companies/route.ts#L106)
+- `DELETE` — [L197](../src/app/next_api/companies/route.ts#L197)
+
+## [src/app/next_api/company-classification/route.ts](../src/app/next_api/company-classification/route.ts)
+
+- `company-classification/route.ts` — [L1](../src/app/next_api/company-classification/route.ts#L1)
+- `command` — [L6](../src/app/next_api/company-classification/route.ts#L6)
+- `POST` — [L7](../src/app/next_api/company-classification/route.ts#L7)
+
+## [src/app/next_api/company-directory/route.ts](../src/app/next_api/company-directory/route.ts)
+
+- `company-directory/route.ts` — [L1](../src/app/next_api/company-directory/route.ts#L1)
+- `filters` — [L6](../src/app/next_api/company-directory/route.ts#L6)
+- `GET` — [L7](../src/app/next_api/company-directory/route.ts#L7)
+
+## [src/app/next_api/company-lifecycle/route.ts](../src/app/next_api/company-lifecycle/route.ts)
+
+- `company-lifecycle/route.ts` — [L1](../src/app/next_api/company-lifecycle/route.ts#L1)
+- `POST` — [L6](../src/app/next_api/company-lifecycle/route.ts#L6)
+- `GET` — [L13](../src/app/next_api/company-lifecycle/route.ts#L13)
+
+## [src/app/next_api/company-portal/billing/route.ts](../src/app/next_api/company-portal/billing/route.ts)
+
+- `billing/route.ts` — [L1](../src/app/next_api/company-portal/billing/route.ts#L1)
+
+## [src/app/next_api/company-portal/directory/route.ts](../src/app/next_api/company-portal/directory/route.ts)
+
+- `directory/route.ts` — [L1](../src/app/next_api/company-portal/directory/route.ts#L1)
 
 ## [src/app/next_api/company-portal/drivers/route.ts](../src/app/next_api/company-portal/drivers/route.ts)
 
 - `company-portal/drivers/route.ts` — [L1](../src/app/next_api/company-portal/drivers/route.ts#L1)
-- `getManagerCompanyId()` — [L9](../src/app/next_api/company-portal/drivers/route.ts#L9)
-- `POST` — [L17](../src/app/next_api/company-portal/drivers/route.ts#L17)
-- `PUT` — [L38](../src/app/next_api/company-portal/drivers/route.ts#L38)
+- `getManagerCompanyId()` — [L10](../src/app/next_api/company-portal/drivers/route.ts#L10)
+- `POST` — [L15](../src/app/next_api/company-portal/drivers/route.ts#L15)
+- `PUT` — [L37](../src/app/next_api/company-portal/drivers/route.ts#L37)
 - `DELETE` — [L68](../src/app/next_api/company-portal/drivers/route.ts#L68)
 
 ## [src/app/next_api/company-portal/login/route.ts](../src/app/next_api/company-portal/login/route.ts)
 
 - `company-portal/login/route.ts` — [L1](../src/app/next_api/company-portal/login/route.ts#L1)
-- `POST` — [L13](../src/app/next_api/company-portal/login/route.ts#L13)
+- `POST` — [L14](../src/app/next_api/company-portal/login/route.ts#L14)
 
 ## [src/app/next_api/company-portal/password/route.ts](../src/app/next_api/company-portal/password/route.ts)
 
@@ -1766,7 +1883,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-portal/route.ts](../src/app/next_api/company-portal/route.ts)
 
 - `company-portal/route.ts` — [L1](../src/app/next_api/company-portal/route.ts#L1)
-- `GET` — [L8](../src/app/next_api/company-portal/route.ts#L8)
+- `GET` — [L10](../src/app/next_api/company-portal/route.ts#L10)
 
 ## [src/app/next_api/company-portal/set-password/route.ts](../src/app/next_api/company-portal/set-password/route.ts)
 
@@ -1774,13 +1891,17 @@ Links target the working tree, so line positions can move after changes.
 - `POST` — [L9](../src/app/next_api/company-portal/set-password/route.ts#L9)
 - `PUT` — [L45](../src/app/next_api/company-portal/set-password/route.ts#L45)
 
+## [src/app/next_api/company-portal/staff/route.ts](../src/app/next_api/company-portal/staff/route.ts)
+
+- `staff/route.ts` — [L1](../src/app/next_api/company-portal/staff/route.ts#L1)
+
 ## [src/app/next_api/company-portal/vehicles/route.ts](../src/app/next_api/company-portal/vehicles/route.ts)
 
 - `company-portal/vehicles/route.ts` — [L1](../src/app/next_api/company-portal/vehicles/route.ts#L1)
-- `getManagerCompanyId()` — [L7](../src/app/next_api/company-portal/vehicles/route.ts#L7)
-- `POST` — [L15](../src/app/next_api/company-portal/vehicles/route.ts#L15)
+- `getManagerCompanyId()` — [L9](../src/app/next_api/company-portal/vehicles/route.ts#L9)
+- `POST` — [L14](../src/app/next_api/company-portal/vehicles/route.ts#L14)
 - `PUT` — [L50](../src/app/next_api/company-portal/vehicles/route.ts#L50)
-- `DELETE` — [L79](../src/app/next_api/company-portal/vehicles/route.ts#L79)
+- `DELETE` — [L80](../src/app/next_api/company-portal/vehicles/route.ts#L80)
 
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
@@ -1789,6 +1910,14 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L25](../src/app/next_api/company-registrations/route.ts#L25)
 - `review` — [L31](../src/app/next_api/company-registrations/route.ts#L31)
 - `PUT` — [L32](../src/app/next_api/company-registrations/route.ts#L32)
+
+## [src/app/next_api/company-staff/route.ts](../src/app/next_api/company-staff/route.ts)
+
+- `company-staff/route.ts` — [L1](../src/app/next_api/company-staff/route.ts#L1)
+
+## [src/app/next_api/company-workspace/route.ts](../src/app/next_api/company-workspace/route.ts)
+
+- `company-workspace/route.ts` — [L1](../src/app/next_api/company-workspace/route.ts#L1)
 
 ## [src/app/next_api/contracts/route.ts](../src/app/next_api/contracts/route.ts)
 
@@ -1868,11 +1997,16 @@ Links target the working tree, so line positions can move after changes.
 - `activity/route.ts` — [L1](../src/app/next_api/drivers/activity/route.ts#L1)
 - `GET` — [L7](../src/app/next_api/drivers/activity/route.ts#L7)
 
+## [src/app/next_api/drivers/billing-notice/route.ts](../src/app/next_api/drivers/billing-notice/route.ts)
+
+- `billing-notice/route.ts` — [L1](../src/app/next_api/drivers/billing-notice/route.ts#L1)
+- `GET` — [L2](../src/app/next_api/drivers/billing-notice/route.ts#L2)
+
 ## [src/app/next_api/drivers/me/route.ts](../src/app/next_api/drivers/me/route.ts)
 
 - `me/route.ts` — [L1](../src/app/next_api/drivers/me/route.ts#L1)
 - `GET` — [L8](../src/app/next_api/drivers/me/route.ts#L8)
-- `PUT` — [L70](../src/app/next_api/drivers/me/route.ts#L70)
+- `PUT` — [L71](../src/app/next_api/drivers/me/route.ts#L71)
 
 ## [src/app/next_api/drivers/pricing/route.ts](../src/app/next_api/drivers/pricing/route.ts)
 
@@ -1930,7 +2064,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/fleet/route.ts](../src/app/next_api/fleet/route.ts)
 
 - `fleet/route.ts` — [L1](../src/app/next_api/fleet/route.ts#L1)
-- `GET` — [L6](../src/app/next_api/fleet/route.ts#L6)
+- `GET` — [L7](../src/app/next_api/fleet/route.ts#L7)
 
 ## [src/app/next_api/gdpr/admin/breach-incidents/route.ts](../src/app/next_api/gdpr/admin/breach-incidents/route.ts)
 
@@ -1997,7 +2131,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/invoices/generate-recurring/route.ts](../src/app/next_api/invoices/generate-recurring/route.ts)
 
 - `generate-recurring/route.ts` — [L1](../src/app/next_api/invoices/generate-recurring/route.ts#L1)
-- `POST` — [L7](../src/app/next_api/invoices/generate-recurring/route.ts#L7)
+- `POST` — [L4](../src/app/next_api/invoices/generate-recurring/route.ts#L4)
 
 ## [src/app/next_api/invoices/my-invoices/route.ts](../src/app/next_api/invoices/my-invoices/route.ts)
 
@@ -2079,6 +2213,11 @@ Links target the working tree, so line positions can move after changes.
 - `PUT` — [L64](../src/app/next_api/notifications/route.ts#L64)
 - `DELETE` — [L90](../src/app/next_api/notifications/route.ts#L90)
 
+## [src/app/next_api/operations-centre/route.ts](../src/app/next_api/operations-centre/route.ts)
+
+- `operations-centre/route.ts` — [L1](../src/app/next_api/operations-centre/route.ts#L1)
+- `GET` — [L2](../src/app/next_api/operations-centre/route.ts#L2)
+
 ## [src/app/next_api/platform-contracts/route.ts](../src/app/next_api/platform-contracts/route.ts)
 
 - `platform-contracts/route.ts` — [L1](../src/app/next_api/platform-contracts/route.ts#L1)
@@ -2090,7 +2229,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/public-stats/route.ts](../src/app/next_api/public-stats/route.ts)
 
 - `public-stats/route.ts` — [L1](../src/app/next_api/public-stats/route.ts#L1)
-- `GET` — [L7](../src/app/next_api/public-stats/route.ts#L7)
+- `GET` — [L2](../src/app/next_api/public-stats/route.ts#L2)
 
 ## [src/app/next_api/push/devices/route.ts](../src/app/next_api/push/devices/route.ts)
 
@@ -2111,7 +2250,11 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/stats/route.ts](../src/app/next_api/stats/route.ts)
 
 - `stats/route.ts` — [L1](../src/app/next_api/stats/route.ts#L1)
-- `GET` — [L7](../src/app/next_api/stats/route.ts#L7)
+- `GET` — [L2](../src/app/next_api/stats/route.ts#L2)
+
+## [src/app/next_api/subscription-billing/route.ts](../src/app/next_api/subscription-billing/route.ts)
+
+- `subscription-billing/route.ts` — [L1](../src/app/next_api/subscription-billing/route.ts#L1)
 
 ## [src/app/next_api/test-trips/acceptance-test/route.ts](../src/app/next_api/test-trips/acceptance-test/route.ts)
 
@@ -2161,7 +2304,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `next_api/trips/route.ts` — [L1](../src/app/next_api/trips/route.ts#L1)
 - `GET` — [L7](../src/app/next_api/trips/route.ts#L7)
-- `PUT` — [L84](../src/app/next_api/trips/route.ts#L84)
+- `PUT` — [L85](../src/app/next_api/trips/route.ts#L85)
 
 ## [src/app/next_api/trips/start/route.ts](../src/app/next_api/trips/start/route.ts)
 
@@ -2484,24 +2627,25 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/company/CompanyDashboard.tsx](../src/components/company/CompanyDashboard.tsx)
 
 - `CompanyDashboard.tsx` — [L1](../src/components/company/CompanyDashboard.tsx#L1)
-- `CompanyData` — [L19](../src/components/company/CompanyDashboard.tsx#L19)
-- `CompanyDashboard()` — [L31](../src/components/company/CompanyDashboard.tsx#L31)
+- `PortalData` — [L26](../src/components/company/CompanyDashboard.tsx#L26)
+- `CompanyDashboard()` — [L44](../src/components/company/CompanyDashboard.tsx#L44)
+- `move()` — [L65](../src/components/company/CompanyDashboard.tsx#L65)
 
 ## [src/components/company/DriversTab.tsx](../src/components/company/DriversTab.tsx)
 
 - `DriversTab.tsx` — [L1](../src/components/company/DriversTab.tsx#L1)
-- `Driver` — [L15](../src/components/company/DriversTab.tsx#L15)
-- `DriversTabProps` — [L24](../src/components/company/DriversTab.tsx#L24)
-- `emptyForm` — [L29](../src/components/company/DriversTab.tsx#L29)
-- `DriversTab()` — [L31](../src/components/company/DriversTab.tsx#L31)
+- `Driver` — [L16](../src/components/company/DriversTab.tsx#L16)
+- `DriversTabProps` — [L25](../src/components/company/DriversTab.tsx#L25)
+- `emptyForm` — [L31](../src/components/company/DriversTab.tsx#L31)
+- `DriversTab()` — [L33](../src/components/company/DriversTab.tsx#L33)
 
 ## [src/components/company/VehiclesTab.tsx](../src/components/company/VehiclesTab.tsx)
 
 - `VehiclesTab.tsx` — [L1](../src/components/company/VehiclesTab.tsx#L1)
-- `Vehicle` — [L15](../src/components/company/VehiclesTab.tsx#L15)
-- `VehiclesTabProps` — [L24](../src/components/company/VehiclesTab.tsx#L24)
-- `emptyForm` — [L29](../src/components/company/VehiclesTab.tsx#L29)
-- `VehiclesTab()` — [L31](../src/components/company/VehiclesTab.tsx#L31)
+- `Vehicle` — [L16](../src/components/company/VehiclesTab.tsx#L16)
+- `VehiclesTabProps` — [L25](../src/components/company/VehiclesTab.tsx#L25)
+- `emptyForm` — [L31](../src/components/company/VehiclesTab.tsx#L31)
+- `VehiclesTab()` — [L33](../src/components/company/VehiclesTab.tsx#L33)
 
 ## [src/components/contracts/ContractDocument.tsx](../src/components/contracts/ContractDocument.tsx)
 
@@ -2516,17 +2660,25 @@ Links target the working tree, so line positions can move after changes.
 - `AdminDashboard()` — [L114](../src/components/dashboard/DashboardClient.tsx#L114)
 - `DashboardClient()` — [L152](../src/components/dashboard/DashboardClient.tsx#L152)
 
+## [src/components/driver/BillingReminder.tsx](../src/components/driver/BillingReminder.tsx)
+
+- `driver/BillingReminder.tsx` — [L1](../src/components/driver/BillingReminder.tsx#L1)
+- `words` — [L14](../src/components/driver/BillingReminder.tsx#L14)
+- `dismissed` — [L31](../src/components/driver/BillingReminder.tsx#L31)
+- `BillingReminder()` — [L32](../src/components/driver/BillingReminder.tsx#L32)
+- `close()` — [L58](../src/components/driver/BillingReminder.tsx#L58)
+
 ## [src/components/driver/DriverDashboard.tsx](../src/components/driver/DriverDashboard.tsx)
 
 - `DriverDashboard.tsx` — [L1](../src/components/driver/DriverDashboard.tsx#L1)
-- `DriverProfile` — [L41](../src/components/driver/DriverDashboard.tsx#L41)
-- `RegistrationStatusBadge()` — [L88](../src/components/driver/DriverDashboard.tsx#L88)
-- `InfoRow()` — [L105](../src/components/driver/DriverDashboard.tsx#L105)
-- `SectionCard()` — [L115](../src/components/driver/DriverDashboard.tsx#L115)
-- `LoadingSkeleton()` — [L139](../src/components/driver/DriverDashboard.tsx#L139)
-- `AddVehicleDialog()` — [L156](../src/components/driver/DriverDashboard.tsx#L156)
-- `AccountTab()` — [L253](../src/components/driver/DriverDashboard.tsx#L253)
-- `DriverDashboard()` — [L257](../src/components/driver/DriverDashboard.tsx#L257)
+- `DriverProfile` — [L42](../src/components/driver/DriverDashboard.tsx#L42)
+- `RegistrationStatusBadge()` — [L89](../src/components/driver/DriverDashboard.tsx#L89)
+- `InfoRow()` — [L106](../src/components/driver/DriverDashboard.tsx#L106)
+- `SectionCard()` — [L116](../src/components/driver/DriverDashboard.tsx#L116)
+- `LoadingSkeleton()` — [L140](../src/components/driver/DriverDashboard.tsx#L140)
+- `AddVehicleDialog()` — [L157](../src/components/driver/DriverDashboard.tsx#L157)
+- `AccountTab()` — [L254](../src/components/driver/DriverDashboard.tsx#L254)
+- `DriverDashboard()` — [L258](../src/components/driver/DriverDashboard.tsx#L258)
 
 ## [src/components/driver/DriverFleetShift.tsx](../src/components/driver/DriverFleetShift.tsx)
 
@@ -2780,6 +2932,87 @@ Links target the working tree, so line positions can move after changes.
 
 - `management-menu.ts` — [L1](../src/components/navigation/management-menu.ts#L1)
 - `managementMenu` — [L4](../src/components/navigation/management-menu.ts#L4)
+
+## [src/components/operations/BillingPanel.tsx](../src/components/operations/BillingPanel.tsx)
+
+- `BillingPanel.tsx` — [L1](../src/components/operations/BillingPanel.tsx#L1)
+- `Doc` — [L17](../src/components/operations/BillingPanel.tsx#L17)
+- `BillingData` — [L29](../src/components/operations/BillingPanel.tsx#L29)
+- `cents()` — [L58](../src/components/operations/BillingPanel.tsx#L58)
+- `BillingPanel()` — [L64](../src/components/operations/BillingPanel.tsx#L64)
+- `open()` — [L98](../src/components/operations/BillingPanel.tsx#L98)
+- `submit()` — [L203](../src/components/operations/BillingPanel.tsx#L203)
+- `download()` — [L267](../src/components/operations/BillingPanel.tsx#L267)
+
+## [src/components/operations/CompanyLifecycleAction.tsx](../src/components/operations/CompanyLifecycleAction.tsx)
+
+- `CompanyLifecycleAction.tsx` — [L1](../src/components/operations/CompanyLifecycleAction.tsx#L1)
+- `words` — [L18](../src/components/operations/CompanyLifecycleAction.tsx#L18)
+- `CompanyLifecycleAction()` — [L68](../src/components/operations/CompanyLifecycleAction.tsx#L68)
+- `submit()` — [L114](../src/components/operations/CompanyLifecycleAction.tsx#L114)
+
+## [src/components/operations/CompanyWorkspace.tsx](../src/components/operations/CompanyWorkspace.tsx)
+
+- `CompanyWorkspace.tsx` — [L1](../src/components/operations/CompanyWorkspace.tsx#L1)
+- `Company` — [L17](../src/components/operations/CompanyWorkspace.tsx#L17)
+- `tabKeys` — [L29](../src/components/operations/CompanyWorkspace.tsx#L29)
+- `columns` — [L40](../src/components/operations/CompanyWorkspace.tsx#L40)
+- `labels` — [L69](../src/components/operations/CompanyWorkspace.tsx#L69)
+- `Workspace()` — [L149](../src/components/operations/CompanyWorkspace.tsx#L149)
+- `HistorySection()` — [L321](../src/components/operations/CompanyWorkspace.tsx#L321)
+- `CompanyWorkspace()` — [L467](../src/components/operations/CompanyWorkspace.tsx#L467)
+
+## [src/components/operations/DirectoryToolbar.tsx](../src/components/operations/DirectoryToolbar.tsx)
+
+- `DirectoryToolbar.tsx` — [L1](../src/components/operations/DirectoryToolbar.tsx#L1)
+- `CompanyOption` — [L30](../src/components/operations/DirectoryToolbar.tsx#L30)
+- `CompanyPicker()` — [L31](../src/components/operations/DirectoryToolbar.tsx#L31)
+- `DirectoryToolbar()` — [L215](../src/components/operations/DirectoryToolbar.tsx#L215)
+
+## [src/components/operations/OperationForm.tsx](../src/components/operations/OperationForm.tsx)
+
+- `OperationForm.tsx` — [L1](../src/components/operations/OperationForm.tsx#L1)
+- `OperationField` — [L24](../src/components/operations/OperationForm.tsx#L24)
+- `uncertain` — [L34](../src/components/operations/OperationForm.tsx#L34)
+- `OperationForm()` — [L38](../src/components/operations/OperationForm.tsx#L38)
+- `submit()` — [L69](../src/components/operations/OperationForm.tsx#L69)
+
+## [src/components/operations/OperationsCentre.tsx](../src/components/operations/OperationsCentre.tsx)
+
+- `OperationsCentre.tsx` — [L1](../src/components/operations/OperationsCentre.tsx#L1)
+- `words` — [L16](../src/components/operations/OperationsCentre.tsx#L16)
+- `Item` — [L48](../src/components/operations/OperationsCentre.tsx#L48)
+- `Centre()` — [L58](../src/components/operations/OperationsCentre.tsx#L58)
+- `OperationsCentre()` — [L194](../src/components/operations/OperationsCentre.tsx#L194)
+
+## [src/components/operations/StaffPanel.tsx](../src/components/operations/StaffPanel.tsx)
+
+- `StaffPanel.tsx` — [L1](../src/components/operations/StaffPanel.tsx#L1)
+- `Staff` — [L10](../src/components/operations/StaffPanel.tsx#L10)
+- `StaffPanel()` — [L16](../src/components/operations/StaffPanel.tsx#L16)
+
+## [src/components/operations/directory-copy.ts](../src/components/operations/directory-copy.ts)
+
+- `directory-copy.ts` — [L1](../src/components/operations/directory-copy.ts#L1)
+- `directoryCopy` — [L1](../src/components/operations/directory-copy.ts#L1)
+
+## [src/components/operations/operations-copy.ts](../src/components/operations/operations-copy.ts)
+
+- `operations-copy.ts` — [L1](../src/components/operations/operations-copy.ts#L1)
+- `operationsCopy` — [L1](../src/components/operations/operations-copy.ts#L1)
+- `OperationsWords` — [L330](../src/components/operations/operations-copy.ts#L330)
+
+## [src/components/operations/useCompanyDirectory.ts](../src/components/operations/useCompanyDirectory.ts)
+
+- `useCompanyDirectory.ts` — [L1](../src/components/operations/useCompanyDirectory.ts#L1)
+- `DirectoryKind` — [L5](../src/components/operations/useCompanyDirectory.ts#L5)
+- `DirectoryResult` — [L6](../src/components/operations/useCompanyDirectory.ts#L6)
+- `useCompanyDirectory()` — [L14](../src/components/operations/useCompanyDirectory.ts#L14)
+
+## [src/components/operations/useOperationData.ts](../src/components/operations/useOperationData.ts)
+
+- `useOperationData.ts` — [L1](../src/components/operations/useOperationData.ts#L1)
+- `useOperationData()` — [L4](../src/components/operations/useOperationData.ts#L4)
 
 ## [src/components/registration/CompanyRegistrationApprovals.tsx](../src/components/registration/CompanyRegistrationApprovals.tsx)
 
@@ -3323,6 +3556,11 @@ Links target the working tree, so line positions can move after changes.
 - `useZoerIframe.ts` — [L1](../src/hooks/useZoerIframe.ts#L1)
 - `useZoerIframe()` — [L6](../src/hooks/useZoerIframe.ts#L6)
 
+## [src/instrumentation.ts](../src/instrumentation.ts)
+
+- `instrumentation.ts` — [L1](../src/instrumentation.ts#L1)
+- `register()` — [L1](../src/instrumentation.ts#L1)
+
 ## [src/legal/pdf-fonts.ts](../src/legal/pdf-fonts.ts)
 
 - `pdf-fonts.ts` — [L1](../src/legal/pdf-fonts.ts#L1)
@@ -3373,20 +3611,20 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/api-client.ts](../src/lib/api-client.ts)
 
 - `api-client.ts` — [L1](../src/lib/api-client.ts#L1)
-- `ApiResponse` — [L5](../src/lib/api-client.ts#L5)
-- `ApiError` — [L13](../src/lib/api-client.ts#L13)
-- `.constructor()` — [L14](../src/lib/api-client.ts#L14)
-- `trimValue()` — [L27](../src/lib/api-client.ts#L27)
-- `normalizeBaseUrl()` — [L31](../src/lib/api-client.ts#L31)
-- `getBrowserOrigin()` — [L54](../src/lib/api-client.ts#L54)
-- `getServerApiBaseUrl()` — [L62](../src/lib/api-client.ts#L62)
-- `buildApiUrl()` — [L76](../src/lib/api-client.ts#L76)
-- `parseApiResponse()` — [L81](../src/lib/api-client.ts#L81)
-- `refreshToken()` — [L111](../src/lib/api-client.ts#L111)
-- `getLoginPath()` — [L133](../src/lib/api-client.ts#L133)
-- `redirectToLogin()` — [L147](../src/lib/api-client.ts#L147)
-- `apiRequest()` — [L163](../src/lib/api-client.ts#L163)
-- `api` — [L257](../src/lib/api-client.ts#L257)
+- `ApiResponse` — [L6](../src/lib/api-client.ts#L6)
+- `ApiError` — [L14](../src/lib/api-client.ts#L14)
+- `.constructor()` — [L15](../src/lib/api-client.ts#L15)
+- `trimValue()` — [L28](../src/lib/api-client.ts#L28)
+- `normalizeBaseUrl()` — [L32](../src/lib/api-client.ts#L32)
+- `getBrowserOrigin()` — [L55](../src/lib/api-client.ts#L55)
+- `getServerApiBaseUrl()` — [L63](../src/lib/api-client.ts#L63)
+- `buildApiUrl()` — [L77](../src/lib/api-client.ts#L77)
+- `parseApiResponse()` — [L82](../src/lib/api-client.ts#L82)
+- `refreshToken()` — [L116](../src/lib/api-client.ts#L116)
+- `getLoginPath()` — [L139](../src/lib/api-client.ts#L139)
+- `redirectToLogin()` — [L153](../src/lib/api-client.ts#L153)
+- `apiRequest()` — [L169](../src/lib/api-client.ts#L169)
+- `api` — [L265](../src/lib/api-client.ts#L265)
 
 ## [src/lib/api-utils.ts](../src/lib/api-utils.ts)
 
@@ -3491,6 +3729,19 @@ Links target the working tree, so line positions can move after changes.
 - `credentials` — [L6](../src/lib/company-account.ts#L6)
 - `saveCompanyAccount()` — [L10](../src/lib/company-account.ts#L10)
 
+## [src/lib/company-lifecycle.ts](../src/lib/company-lifecycle.ts)
+
+- `company-lifecycle.ts` — [L1](../src/lib/company-lifecycle.ts#L1)
+- `companyLifecycleCommand` — [L3](../src/lib/company-lifecycle.ts#L3)
+- `changeCompanyLifecycle()` — [L11](../src/lib/company-lifecycle.ts#L11)
+
+## [src/lib/company-membership.ts](../src/lib/company-membership.ts)
+
+- `company-membership.ts` — [L1](../src/lib/company-membership.ts#L1)
+- `companyRoleCapabilities` — [L3](../src/lib/company-membership.ts#L3)
+- `companyCapability` — [L13](../src/lib/company-membership.ts#L13)
+- `companyMembership()` — [L16](../src/lib/company-membership.ts#L16)
+
 ## [src/lib/company-pricing.ts](../src/lib/company-pricing.ts)
 
 - `CompanyPricing` — [L1](../src/lib/company-pricing.ts#L1)
@@ -3512,6 +3763,25 @@ Links target the working tree, so line positions can move after changes.
 - `companyRegistrationSchema` — [L5](../src/lib/company-registration.ts#L5)
 - `CompanyRegistration` — [L12](../src/lib/company-registration.ts#L12)
 - `chironPortals` — [L13](../src/lib/company-registration.ts#L13)
+
+## [src/lib/company-staff.ts](../src/lib/company-staff.ts)
+
+- `company-staff.ts` — [L1](../src/lib/company-staff.ts#L1)
+- `command` — [L11](../src/lib/company-staff.ts#L11)
+- `staffGET` — [L26](../src/lib/company-staff.ts#L26)
+- `staffPOST` — [L64](../src/lib/company-staff.ts#L64)
+
+## [src/lib/company-workspace.ts](../src/lib/company-workspace.ts)
+
+- `company-workspace.ts` — [L1](../src/lib/company-workspace.ts#L1)
+- `sections` — [L8](../src/lib/company-workspace.ts#L8)
+- `workspaceGET` — [L37](../src/lib/company-workspace.ts#L37)
+
+## [src/lib/connection-state.ts](../src/lib/connection-state.ts)
+
+- `connection-state.ts` — [L1](../src/lib/connection-state.ts#L1)
+- `connectionFailure` — [L2](../src/lib/connection-state.ts#L2)
+- `connectionMessage()` — [L7](../src/lib/connection-state.ts#L7)
 
 ## [src/lib/contract-document-style.ts](../src/lib/contract-document-style.ts)
 
@@ -3559,16 +3829,16 @@ Links target the working tree, so line positions can move after changes.
 - `crud-operations.ts` — [L1](../src/lib/crud-operations.ts#L1)
 - `QueryFilters` — [L7](../src/lib/crud-operations.ts#L7)
 - `FindManyParams` — [L9](../src/lib/crud-operations.ts#L9)
-- `CrudOperations` — [L18](../src/lib/crud-operations.ts#L18)
-- `.constructor()` — [L19](../src/lib/crud-operations.ts#L19)
-- `.getClient()` — [L21](../src/lib/crud-operations.ts#L21)
-- `.formatErrorMessage()` — [L26](../src/lib/crud-operations.ts#L26)
-- `.prepareCreateData()` — [L32](../src/lib/crud-operations.ts#L32)
-- `.findMany()` — [L49](../src/lib/crud-operations.ts#L49)
-- `.findById()` — [L86](../src/lib/crud-operations.ts#L86)
-- `.create()` — [L109](../src/lib/crud-operations.ts#L109)
-- `.update()` — [L131](../src/lib/crud-operations.ts#L131)
-- `.delete()` — [L151](../src/lib/crud-operations.ts#L151)
+- `CrudOperations` — [L19](../src/lib/crud-operations.ts#L19)
+- `.constructor()` — [L20](../src/lib/crud-operations.ts#L20)
+- `.getClient()` — [L22](../src/lib/crud-operations.ts#L22)
+- `.formatErrorMessage()` — [L27](../src/lib/crud-operations.ts#L27)
+- `.prepareCreateData()` — [L33](../src/lib/crud-operations.ts#L33)
+- `.findMany()` — [L50](../src/lib/crud-operations.ts#L50)
+- `.findById()` — [L89](../src/lib/crud-operations.ts#L89)
+- `.create()` — [L112](../src/lib/crud-operations.ts#L112)
+- `.update()` — [L134](../src/lib/crud-operations.ts#L134)
+- `.delete()` — [L154](../src/lib/crud-operations.ts#L154)
 
 ## [src/lib/driver-account.ts](../src/lib/driver-account.ts)
 
@@ -3674,6 +3944,13 @@ Links target the working tree, so line positions can move after changes.
 - `hasNativeTripExpectation()` — [L2](../src/lib/native-trip-contract.ts#L2)
 - `assertNativeTripExpectation()` — [L5](../src/lib/native-trip-contract.ts#L5)
 
+## [src/lib/operations-access.ts](../src/lib/operations-access.ts)
+
+- `operations-access.ts` — [L1](../src/lib/operations-access.ts#L1)
+- `operationsAccess()` — [L10](../src/lib/operations-access.ts#L10)
+- `operationFailure()` — [L27](../src/lib/operations-access.ts#L27)
+- `pageRange()` — [L52](../src/lib/operations-access.ts#L52)
+
 ## [src/lib/payment-reference.ts](../src/lib/payment-reference.ts)
 
 - `payment-reference.ts` — [L1](../src/lib/payment-reference.ts#L1)
@@ -3730,7 +4007,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/security-guard.ts](../src/lib/security-guard.ts)
 
 - `security-guard.ts` — [L1](../src/lib/security-guard.ts#L1)
-- `authorizeEndpoint()` — [L7](../src/lib/security-guard.ts#L7)
+- `authorizeEndpoint()` — [L8](../src/lib/security-guard.ts#L8)
 
 ## [src/lib/security-policy.ts](../src/lib/security-policy.ts)
 
@@ -3741,10 +4018,10 @@ Links target the working tree, so line positions can move after changes.
 - `publicEndpoint()` — [L15](../src/lib/security-policy.ts#L15)
 - `disabledEndpoint()` — [L19](../src/lib/security-policy.ts#L19)
 - `memberEndpoint()` — [L22](../src/lib/security-policy.ts#L22)
-- `ownsRecord()` — [L33](../src/lib/security-policy.ts#L33)
-- `calendarMonthDeadline()` — [L36](../src/lib/security-policy.ts#L36)
-- `safeChironUrl()` — [L45](../src/lib/security-policy.ts#L45)
-- `stripSecrets()` — [L51](../src/lib/security-policy.ts#L51)
+- `ownsRecord()` — [L34](../src/lib/security-policy.ts#L34)
+- `calendarMonthDeadline()` — [L37](../src/lib/security-policy.ts#L37)
+- `safeChironUrl()` — [L46](../src/lib/security-policy.ts#L46)
+- `stripSecrets()` — [L52](../src/lib/security-policy.ts#L52)
 
 ## [src/lib/security-session.ts](../src/lib/security-session.ts)
 
@@ -3762,6 +4039,31 @@ Links target the working tree, so line positions can move after changes.
 - `pbkdf2Verify()` — [L27](../src/lib/server-utils.ts#L27)
 - `generateVerificationCode()` — [L35](../src/lib/server-utils.ts#L35)
 - `hashVerificationCode()` — [L39](../src/lib/server-utils.ts#L39)
+
+## [src/lib/subscription-billing.ts](../src/lib/subscription-billing.ts)
+
+- `subscription-billing.ts` — [L1](../src/lib/subscription-billing.ts#L1)
+- `id` — [L14](../src/lib/subscription-billing.ts#L14)
+- `date` — [L15](../src/lib/subscription-billing.ts#L15)
+- `expected` — [L16](../src/lib/subscription-billing.ts#L16)
+- `profile` — [L17](../src/lib/subscription-billing.ts#L17)
+- `command` — [L32](../src/lib/subscription-billing.ts#L32)
+- `billingGET` — [L85](../src/lib/subscription-billing.ts#L85)
+- `billingPOST` — [L205](../src/lib/subscription-billing.ts#L205)
+
+## [src/lib/subscription-document.ts](../src/lib/subscription-document.ts)
+
+- `subscription-document.ts` — [L1](../src/lib/subscription-document.ts#L1)
+- `SubscriptionDocument` — [L3](../src/lib/subscription-document.ts#L3)
+- `euro()` — [L29](../src/lib/subscription-document.ts#L29)
+- `subscriptionPdf()` — [L33](../src/lib/subscription-document.ts#L33)
+
+## [src/lib/subscription-scheduler.ts](../src/lib/subscription-scheduler.ts)
+
+- `subscription-scheduler.ts` — [L1](../src/lib/subscription-scheduler.ts#L1)
+- `escape()` — [L10](../src/lib/subscription-scheduler.ts#L10)
+- `subscriptionTick()` — [L18](../src/lib/subscription-scheduler.ts#L18)
+- `startSubscriptionScheduler()` — [L96](../src/lib/subscription-scheduler.ts#L96)
 
 ## [src/lib/totp.ts](../src/lib/totp.ts)
 

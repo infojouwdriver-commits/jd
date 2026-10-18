@@ -1,15 +1,221 @@
-'use client';
-import {useEffect,useRef,useState} from 'react';
-import {useLanguage} from '@/contexts/LanguageContext';
-import {api} from '@/lib/api-client';
-import {Button} from '@/components/ui/button';
-import {Label} from '@/components/ui/label';
-import {Textarea} from '@/components/ui/textarea';
-import {AlertDialog,AlertDialogTrigger,AlertDialogContent,AlertDialogHeader,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel} from '@/components/ui/alert-dialog';
-const words={ar:{archive:'أرشفة',restore:'استعادة',cancel:'إلغاء',reason:'سبب الإجراء',loading:'جارٍ التحقق…',failed:'تعذر إكمال العملية. راجع الرحلات الجارية وإرسال شيرون، ثم حدّث البيانات وحاول مجددًا.',required:'اكتب سببًا لهذا الإجراء.',desc:'ستُوقف الشركة وسائقوها ومركباتها عن التشغيل. تبقى الرحلات والفواتير والعقود محفوظة للإدارة.',restored:'ستُستعاد الحالات السابقة؛ الحسابات الموقوفة لا تُفعّل تلقائيًا. يلزم تسجيل الدخول مجددًا واختيار المركبة.',drivers:'سائقون سيتأثرون',vehicles:'مركبات ستتأثر',retry:'تحديث التفاصيل'},fr:{archive:'Archiver',restore:'Restaurer',cancel:'Annuler',reason:'Motif',loading:'Vérification…',failed:'Opération indisponible. Vérifiez les trajets actifs et les envois Chiron, puis actualisez et réessayez.',required:'Indiquez un motif.',desc:'L’entreprise, ses chauffeurs et ses véhicules quitteront les listes actives. Les trajets, factures et contrats sont conservés.',restored:'Les états précédents seront restaurés sans réactiver les comptes suspendus. Une nouvelle connexion et un choix de véhicule sont nécessaires.',drivers:'Chauffeurs concernés',vehicles:'Véhicules concernés',retry:'Actualiser les détails'},nl:{archive:'Archiveren',restore:'Herstellen',cancel:'Annuleren',reason:'Reden',loading:'Controleren…',failed:'Niet beschikbaar. Controleer actieve ritten en Chiron-berichten. Vernieuw en probeer opnieuw.',required:'Geef een reden op.',desc:'Het bedrijf, de chauffeurs en voertuigen verdwijnen uit de actieve lijsten. Ritten, facturen en contracten blijven bewaard.',restored:'Vorige statussen worden hersteld zonder geschorste accounts te activeren. Opnieuw aanmelden en een voertuig kiezen is nodig.',drivers:'Betrokken chauffeurs',vehicles:'Betrokken voertuigen',retry:'Details vernieuwen'}};
-export default function CompanyLifecycleAction({company,onSuccess}:{company:{id:number;name:string;archived_at?:string|null};onSuccess:()=>void}){
- const {language}=useLanguage(),c=words[language],restore=!!company.archived_at;const [open,setOpen]=useState(false),[reason,setReason]=useState(''),[preview,setPreview]=useState<{drivers:number;vehicles:number}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[version,setVersion]=useState(0);const flight=useRef(false),request=useRef(''),frozen=useRef<{company_id:number;action:'archive'|'restore';reason:string;request_id:string}|null>(null),reasonRef=useRef<HTMLTextAreaElement>(null);
- useEffect(()=>{if(!open)return;let alive=true;setPreview(null);api.get<{drivers:number;vehicles:number}>('/company-lifecycle',{company_id:String(company.id)}).then(r=>{if(alive)setPreview(r);}).catch(()=>{if(alive)setError(c.failed);});return()=>{alive=false;};},[open,company.id,version,c.failed]);
- async function submit(){if(flight.current||!preview)return;if(!reason.trim()&&!frozen.current){setError(c.required);reasonRef.current?.focus();return;}flight.current=true;setBusy(true);setError('');frozen.current??={company_id:company.id,action:restore?'restore':'archive',reason:reason.trim(),request_id:request.current};try{await api.post('/company-lifecycle',frozen.current);setOpen(false);onSuccess();}catch{setError(c.failed);}finally{setBusy(false);flight.current=false;}}
- return <AlertDialog open={open} onOpenChange={v=>{if(flight.current)return;setOpen(v);if(v){setReason('');setError('');request.current=crypto.randomUUID();frozen.current=null;}}}><AlertDialogTrigger asChild><Button variant="outline" className={restore?'':'text-destructive'}>{restore?c.restore:c.archive}</Button></AlertDialogTrigger><AlertDialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto"><AlertDialogHeader><AlertDialogTitle>{restore?c.restore:c.archive} — {company.name}</AlertDialogTitle><AlertDialogDescription>{restore?c.restored:c.desc}</AlertDialogDescription></AlertDialogHeader>{preview?<p className="text-sm">{c.drivers}: {preview.drivers} · {c.vehicles}: {preview.vehicles}</p>:<p role="status">{c.loading}</p>}<Label htmlFor={`archive-reason-${company.id}`}>{c.reason}</Label><Textarea id={`archive-reason-${company.id}`} ref={reasonRef} value={reason} maxLength={1000} disabled={busy||!!frozen.current} onChange={e=>setReason(e.target.value)} aria-invalid={!!error} aria-describedby={error?`archive-error-${company.id}`:undefined}/>{error&&<div id={`archive-error-${company.id}`} role="alert" className="text-sm text-destructive">{error}<Button variant="outline" onClick={()=>{setError('');setVersion(v=>v+1);}} disabled={busy}>{c.retry}</Button></div>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>{c.cancel}</AlertDialogCancel><Button disabled={busy||!preview} aria-busy={busy} variant={restore?'default':'destructive'} onClick={submit}>{busy?c.loading:restore?c.restore:c.archive}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+const words = {
+  ar: {
+    archive: "أرشفة",
+    restore: "استعادة",
+    cancel: "إلغاء",
+    reason: "سبب الإجراء",
+    loading: "جارٍ التحقق…",
+    failed:
+      "تعذر إكمال العملية. راجع الرحلات الجارية وإرسال شيرون، ثم حدّث البيانات وحاول مجددًا.",
+    required: "اكتب سببًا لهذا الإجراء.",
+    desc: "ستُوقف الشركة وسائقوها ومركباتها عن التشغيل. تبقى الرحلات والفواتير والعقود محفوظة للإدارة.",
+    restored:
+      "ستُستعاد الحالات السابقة؛ الحسابات الموقوفة لا تُفعّل تلقائيًا. يلزم تسجيل الدخول مجددًا واختيار المركبة.",
+    drivers: "سائقون سيتأثرون",
+    vehicles: "مركبات ستتأثر",
+    retry: "تحديث التفاصيل",
+  },
+  fr: {
+    archive: "Archiver",
+    restore: "Restaurer",
+    cancel: "Annuler",
+    reason: "Motif",
+    loading: "Vérification…",
+    failed:
+      "Opération indisponible. Vérifiez les trajets actifs et les envois Chiron, puis actualisez et réessayez.",
+    required: "Indiquez un motif.",
+    desc: "L’entreprise, ses chauffeurs et ses véhicules quitteront les listes actives. Les trajets, factures et contrats sont conservés.",
+    restored:
+      "Les états précédents seront restaurés sans réactiver les comptes suspendus. Une nouvelle connexion et un choix de véhicule sont nécessaires.",
+    drivers: "Chauffeurs concernés",
+    vehicles: "Véhicules concernés",
+    retry: "Actualiser les détails",
+  },
+  nl: {
+    archive: "Archiveren",
+    restore: "Herstellen",
+    cancel: "Annuleren",
+    reason: "Reden",
+    loading: "Controleren…",
+    failed:
+      "Niet beschikbaar. Controleer actieve ritten en Chiron-berichten. Vernieuw en probeer opnieuw.",
+    required: "Geef een reden op.",
+    desc: "Het bedrijf, de chauffeurs en voertuigen verdwijnen uit de actieve lijsten. Ritten, facturen en contracten blijven bewaard.",
+    restored:
+      "Vorige statussen worden hersteld zonder geschorste accounts te activeren. Opnieuw aanmelden en een voertuig kiezen is nodig.",
+    drivers: "Betrokken chauffeurs",
+    vehicles: "Betrokken voertuigen",
+    retry: "Details vernieuwen",
+  },
+};
+export default function CompanyLifecycleAction({
+  company,
+  onSuccess,
+}: {
+  company: { id: number; name: string; archived_at?: string | null };
+  onSuccess: () => void;
+}) {
+  const { language } = useLanguage(),
+    c = words[language],
+    restore = !!company.archived_at;
+  const [open, setOpen] = useState(false),
+    [reason, setReason] = useState(""),
+    [preview, setPreview] = useState<{
+      drivers: number;
+      vehicles: number;
+    } | null>(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [version, setVersion] = useState(0);
+  const flight = useRef(false),
+    request = useRef(""),
+    frozen = useRef<{
+      company_id: number;
+      action: "archive" | "restore";
+      reason: string;
+      request_id: string;
+    } | null>(null),
+    reasonRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    setPreview(null);
+    api
+      .get<{ drivers: number; vehicles: number }>("/company-lifecycle", {
+        company_id: String(company.id),
+      })
+      .then((r) => {
+        if (alive) setPreview(r);
+      })
+      .catch(() => {
+        if (alive) setError(c.failed);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [open, company.id, version, c.failed]);
+  async function submit() {
+    if (flight.current || !preview) return;
+    if (!reason.trim() && !frozen.current) {
+      setError(c.required);
+      reasonRef.current?.focus();
+      return;
+    }
+    flight.current = true;
+    setBusy(true);
+    setError("");
+    frozen.current ??= {
+      company_id: company.id,
+      action: restore ? "restore" : "archive",
+      reason: reason.trim(),
+      request_id: request.current,
+    };
+    try {
+      await api.post("/company-lifecycle", frozen.current);
+      setOpen(false);
+      onSuccess();
+    } catch {
+      setError(c.failed);
+    } finally {
+      setBusy(false);
+      flight.current = false;
+    }
+  }
+  return (
+    <AlertDialog
+      open={open}
+      onOpenChange={(v) => {
+        if (flight.current) return;
+        setOpen(v);
+        if (v) {
+          setReason("");
+          setError("");
+          request.current = crypto.randomUUID();
+          frozen.current = null;
+        }
+      }}
+    >
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" className={restore ? "" : "text-destructive"}>
+          {restore ? c.restore : c.archive}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {restore ? c.restore : c.archive} — {company.name}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {restore ? c.restored : c.desc}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {preview ? (
+          <p className="text-sm">
+            {c.drivers}: {preview.drivers} · {c.vehicles}: {preview.vehicles}
+          </p>
+        ) : (
+          <p role="status">{c.loading}</p>
+        )}
+        <Label htmlFor={`archive-reason-${company.id}`}>{c.reason}</Label>
+        <Textarea
+          className="min-h-28 resize-none"
+          id={`archive-reason-${company.id}`}
+          ref={reasonRef}
+          value={reason}
+          maxLength={1000}
+          disabled={busy || !!frozen.current}
+          onChange={(e) => setReason(e.target.value)}
+          aria-invalid={!!error}
+          aria-describedby={error ? `archive-error-${company.id}` : undefined}
+        />
+        {error && (
+          <div
+            id={`archive-error-${company.id}`}
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {error}
+            <Button
+              variant="outline"
+              onClick={() => {
+                setError("");
+                setVersion((v) => v + 1);
+              }}
+              disabled={busy}
+            >
+              {c.retry}
+            </Button>
+          </div>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={busy}>{c.cancel}</AlertDialogCancel>
+          <Button
+            disabled={busy || !preview}
+            aria-busy={busy}
+            variant={restore ? "default" : "destructive"}
+            onClick={submit}
+          >
+            {busy ? c.loading : restore ? c.restore : c.archive}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }

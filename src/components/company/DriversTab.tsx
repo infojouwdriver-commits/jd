@@ -1,6 +1,7 @@
 
 "use client";
 
+import {AlertDialog,AlertDialogContent,AlertDialogHeader,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel} from '@/components/ui/alert-dialog';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,8 @@ export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabP
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteTarget,setDeleteTarget]=useState<number|null>(null);
+  const [deleteError,setDeleteError]=useState('');
 
   const openAdd = () => { setEditingDriver(null); setForm(emptyForm); setShowDialog(true); };
   const openEdit = (d: Driver) => {
@@ -67,7 +70,7 @@ export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabP
         toast.success('Driver added successfully');
       }
       setShowDialog(false);
-      onRefresh();
+      setDeleteTarget(null);onRefresh();
     } catch (err: any) {
       toast.error(err.message || 'Operation failed');
     } finally {
@@ -76,14 +79,15 @@ export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabP
   };
 
   const handleDelete = async (id: number) => {
-    if (deletingId !== null || !window.confirm('Deactivate this driver? Their trip history will be retained.')) return;
-    setDeletingId(id);
+    if(deletingId!==null)return;
+    if(deletingId!==null)return;
+    setDeletingId(id);setDeleteError('');
     try {
       await api.delete(`/company-portal/drivers?company_id=${companyId}&id=${id}`);
       toast.success('Driver deactivated; trip history retained');
-      onRefresh();
+      setDeleteTarget(null);onRefresh();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete driver');
+      setDeleteError(err.message || 'Operation failed');
     } finally {
       setDeletingId(null);
     }
@@ -96,6 +100,8 @@ export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabP
 
   return (
     <div className="space-y-4">
+      <AlertDialog open={deleteTarget!==null} onOpenChange={v=>{if(!v&&deletingId===null)setDeleteTarget(null);}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Deactivate # {deleteTarget}</AlertDialogTitle><AlertDialogDescription>The record leaves active operation. Historical trips remain available.</AlertDialogDescription></AlertDialogHeader>{deleteError&&<p role="alert" className="text-destructive">{deleteError}</p>}<AlertDialogFooter><AlertDialogCancel disabled={deletingId!==null}>Cancel</AlertDialogCancel><Button variant="destructive" disabled={deletingId!==null} onClick={()=>{if(deleteTarget!==null)void handleDelete(deleteTarget);}}>Deactivate</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
+
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">{drivers.length} driver(s) registered</p>
         <Button onClick={openAdd} size="sm" className="gap-2">
@@ -133,7 +139,7 @@ export default function DriversTab({ drivers, onRefresh,companyId }: DriversTabP
                     </Button>
                     <Button
                       variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(d.id)}
+                      onClick={() => {setDeleteError('');setDeleteTarget(d.id);}}
                       disabled={deletingId === d.id}
                     >
                       {deletingId === d.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

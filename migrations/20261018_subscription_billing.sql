@@ -114,6 +114,7 @@ BEGIN
   IF doc.company_id<>c.id OR doc.kind<>'invoice' THEN RAISE EXCEPTION 'Invoice request conflict' USING ERRCODE='40001';END IF;
   RETURN to_jsonb(doc);
  END IF;
+ IF c.subscription_status IS DISTINCT FROM 'active' THEN RAISE EXCEPTION 'Subscription not approved for billing' USING ERRCODE='23514';END IF;
  SELECT * INTO profile FROM subscription_billing_profiles WHERE company_id=c.id FOR UPDATE;
  IF NOT FOUND OR NOT profile.enabled THEN RAISE EXCEPTION 'Billing profile not enabled' USING ERRCODE='23514';END IF;
  IF profile.next_invoice_date>today THEN RAISE EXCEPTION 'Billing period is not due' USING ERRCODE='23514';END IF;
@@ -130,7 +131,7 @@ BEGIN
  tax=round(profile.net_cents::numeric*profile.vat_bps/10000)::bigint;
  new_id=nextval('subscription_documents_id_seq');
  INSERT INTO subscription_documents(id,request_id,company_id,document_number,kind,is_test,period_start,period_end,prepared_date,net_cents,vat_cents,gross_cents,vat_bps,tax_category,tax_reason,issuer,recipient,description,due_days,reminder_days,created_by)
- VALUES(new_id,p_request,c.id,CASE WHEN c.is_test THEN 'DEMO-' ELSE '' END||settings.invoice_prefix||'-'||extract(year FROM today)::text||'-'||lpad(new_id::text,8,'0'),'invoice',c.is_test,profile.next_invoice_date,next_date-1,today,profile.net_cents,tax,profile.net_cents+tax,profile.vat_bps,profile.tax_category,profile.tax_reason,
+ VALUES(new_id,p_request,c.id,CASE WHEN c.is_test THEN 'DEMO-' ELSE '' END||settings.invoice_prefix||'-'||extract(year FROM today)::text||'-'||lpad(new_id::text,greatest(8,length(new_id::text)),'0'),'invoice',c.is_test,profile.next_invoice_date,next_date-1,today,profile.net_cents,tax,profile.net_cents+tax,profile.vat_bps,profile.tax_category,profile.tax_reason,
  jsonb_build_object('id',issuer_company.id,'name',issuer_company.name,'address',issuer_company.address,'vat_number',issuer_company.vat_number,'kbo_number',issuer_company.kbo_number,'email',issuer_company.email),
  jsonb_build_object('name',c.name,'address',c.address,'vat_number',c.vat_number,'kbo_number',c.kbo_number,'email',profile.billing_email,'language',profile.language),
  'JOUW DRIVER monthly platform subscription',profile.due_days,profile.reminder_days,p_actor) RETURNING * INTO doc;
@@ -228,7 +229,7 @@ BEGIN
  tax=CASE WHEN p_net=net_left THEN tax_left ELSE least(tax_left,round(p_net::numeric*original.vat_bps/10000)::bigint) END;
  new_id=nextval('subscription_documents_id_seq');
  INSERT INTO subscription_documents(id,request_id,company_id,document_number,kind,original_id,is_test,period_start,period_end,prepared_date,net_cents,vat_cents,gross_cents,vat_bps,tax_category,tax_reason,issuer,recipient,description,due_days,reminder_days,reason,created_by)
- VALUES(new_id,p_request,original.company_id,CASE WHEN original.is_test THEN 'DEMO-' ELSE '' END||'JDC-'||extract(year FROM today)::text||'-'||lpad(new_id::text,8,'0'),'credit',original.id,original.is_test,original.period_start,original.period_end,today,p_net,tax,p_net+tax,original.vat_bps,original.tax_category,original.tax_reason,original.issuer,original.recipient,'Credit for '||original.document_number,0,original.reminder_days,trim(p_reason),p_actor) RETURNING * INTO doc;
+ VALUES(new_id,p_request,original.company_id,CASE WHEN original.is_test THEN 'DEMO-' ELSE '' END||'JDC-'||extract(year FROM today)::text||'-'||lpad(new_id::text,greatest(8,length(new_id::text)),'0'),'credit',original.id,original.is_test,original.period_start,original.period_end,today,p_net,tax,p_net+tax,original.vat_bps,original.tax_category,original.tax_reason,original.issuer,original.recipient,'Credit for '||original.document_number,0,original.reminder_days,trim(p_reason),p_actor) RETURNING * INTO doc;
  INSERT INTO subscription_billing_events(company_id,document_id,actor_id,action,metadata) VALUES(doc.company_id,doc.id,p_actor,'credit_prepared',jsonb_build_object('original_id',original.id));
  RETURN to_jsonb(doc);
 END $$;
@@ -256,7 +257,7 @@ BEGIN
  'prepared_count',(SELECT count(*) FROM docs WHERE state='prepared'),'offset',p_offset,'limit',p_limit) INTO result;
  RETURN result;
 END $$;
-ALTER TABLE :"schema".subscription_mail_queue ADD COLUMN IF NOT EXISTS lease_id uuid;
+ALTER TABLE :"schema".subscription_mail_queue ADD COLUMN IF NOT EXISTS lease_id uuid,ADD COLUMN IF NOT EXISTS mail_delivery_id bigint;
 CREATE TABLE IF NOT EXISTS :"schema".subscription_scheduler_state(id integer PRIMARY KEY CHECK(id=1),last_run_at timestamptz,prepared_count integer NOT NULL DEFAULT 0,failed_count integer NOT NULL DEFAULT 0);
 INSERT INTO :"schema".subscription_scheduler_state(id) VALUES(1) ON CONFLICT DO NOTHING;
 ALTER TABLE :"schema".subscription_scheduler_state ENABLE ROW LEVEL SECURITY;
@@ -303,20 +304,36 @@ BEGIN
  SELECT * INTO doc FROM subscription_documents WHERE id=job.document_id;
  RETURN jsonb_build_object('id',job.id,'event_key',job.event_key,'purpose',job.purpose,'document',to_jsonb(doc),'balance_cents',security_subscription_document_balance(doc.id));
 END $$;
-CREATE OR REPLACE FUNCTION :"schema".security_finish_subscription_mail(p_id bigint,p_lease uuid,p_status text)
+CREATE OR REPLACE FUNCTION :"schema".security_finish_subscription_mail(p_id bigint,p_lease uuid,p_status text,p_delivery bigint DEFAULT NULL)
 RETURNS boolean LANGUAGE plpgsql SECURITY INVOKER SET search_path=:"schema",pg_catalog AS $$
 DECLARE mapped text;
 BEGIN
  IF p_status NOT IN('accepted','delivered','delayed','uncertain','failed','sending','suppressed','quota_exceeded','not_configured','record_unavailable','invalid_message','bounced','complained') THEN RAISE EXCEPTION 'Invalid mail result' USING ERRCODE='22023';END IF;
  mapped=CASE WHEN p_status IN('not_configured','record_unavailable','quota_exceeded') THEN 'not_configured' WHEN p_status IN('sending','uncertain') THEN 'uncertain' WHEN p_status='delayed' THEN 'accepted' WHEN p_status IN('failed','invalid_message','bounced','complained','suppressed') THEN 'failed' ELSE p_status END;
- UPDATE subscription_mail_queue SET status=mapped,last_result=p_status,completed_at=clock_timestamp() WHERE id=p_id AND lease_id=p_lease AND status='sending';RETURN FOUND;
+ UPDATE subscription_mail_queue SET status=mapped,last_result=p_status,mail_delivery_id=p_delivery,completed_at=clock_timestamp() WHERE id=p_id AND lease_id=p_lease AND status='sending';RETURN FOUND;
 END $$;
 CREATE OR REPLACE FUNCTION :"schema".security_company_platform_ready()
 RETURNS boolean LANGUAGE sql STABLE SECURITY INVOKER SET search_path=:"schema",pg_catalog AS $$
  SELECT EXISTS(SELECT FROM subscription_billing_settings WHERE id=1) AND EXISTS(SELECT FROM subscription_scheduler_state WHERE id=1)
  AND EXISTS(SELECT FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='companies' AND column_name='archived_at')
 $$;
-REVOKE ALL ON FUNCTION :"schema".security_subscription_statement(bigint,text,integer,integer),:"schema".security_subscription_tick(),:"schema".security_claim_subscription_mail(uuid),:"schema".security_finish_subscription_mail(bigint,uuid,text),:"schema".security_company_platform_ready() FROM PUBLIC,:"user_role";
-GRANT EXECUTE ON FUNCTION :"schema".security_subscription_statement(bigint,text,integer,integer),:"schema".security_subscription_tick(),:"schema".security_claim_subscription_mail(uuid),:"schema".security_finish_subscription_mail(bigint,uuid,text),:"schema".security_company_platform_ready() TO :"admin_role";
+REVOKE ALL ON FUNCTION :"schema".security_subscription_statement(bigint,text,integer,integer),:"schema".security_subscription_tick(),:"schema".security_claim_subscription_mail(uuid),:"schema".security_finish_subscription_mail(bigint,uuid,text,bigint),:"schema".security_company_platform_ready() FROM PUBLIC,:"user_role";
+GRANT EXECUTE ON FUNCTION :"schema".security_subscription_statement(bigint,text,integer,integer),:"schema".security_subscription_tick(),:"schema".security_claim_subscription_mail(uuid),:"schema".security_finish_subscription_mail(bigint,uuid,text,bigint),:"schema".security_company_platform_ready() TO :"admin_role";
+
+CREATE OR REPLACE FUNCTION :"schema".security_void_subscription_preparation(p_document bigint,p_actor bigint,p_reason text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path=:"schema",pg_catalog AS $$
+DECLARE d subscription_documents;
+BEGIN
+ IF p_actor IS NULL OR NOT EXISTS(SELECT FROM users WHERE id=p_actor) OR coalesce(length(trim(p_reason)),0) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'Cancellation reason required' USING ERRCODE='22023';END IF;
+ SELECT * INTO d FROM subscription_documents WHERE id=p_document FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Document missing' USING ERRCODE='P0002';END IF;
+ IF d.state='void' THEN RETURN to_jsonb(d);END IF;
+ IF d.state<>'prepared' THEN RAISE EXCEPTION 'Issued documents require a credit note' USING ERRCODE='23514';END IF;
+ UPDATE subscription_documents SET state='void' WHERE id=d.id RETURNING * INTO d;
+ INSERT INTO subscription_billing_events(company_id,document_id,actor_id,action,metadata) VALUES(d.company_id,d.id,p_actor,'preparation_voided',jsonb_build_object('reason',trim(p_reason)));
+ RETURN to_jsonb(d);
+END $$;
+REVOKE ALL ON FUNCTION :"schema".security_void_subscription_preparation(bigint,bigint,text) FROM PUBLIC,:"user_role";
+GRANT EXECUTE ON FUNCTION :"schema".security_void_subscription_preparation(bigint,bigint,text) TO :"admin_role";
 
 COMMIT;

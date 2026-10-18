@@ -2,7 +2,7 @@ import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {mailConfiguration,mailEventKey} from './mail-policy';
 export interface MailMessage {to:string;subject:string;html:string;text:string;purpose:'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder';event:string;attachments?:{filename:string;content:Buffer}[];}
-export interface MailResult {accepted:boolean;status:string;}
+export interface MailResult {accepted:boolean;status:string;delivery_id?:number;}
 export async function sendTransactionalMail(message:MailMessage):Promise<MailResult> {
  const config=mailConfiguration(process.env);
  if(!config.ready)return {accepted:false,status:'not_configured'};
@@ -15,7 +15,7 @@ export async function sendTransactionalMail(message:MailMessage):Promise<MailRes
  const reserved=await client.rpc('security_reserve_mail',{p_event_key:eventKey,p_recipient_key:recipientKey,p_purpose:message.purpose});
  if(reserved.error || !reserved.data)return {accepted:false,status:'record_unavailable'};
  const reservation=reserved.data as {reserved:boolean;id:number;status:string};
- if(!reservation.reserved)return {accepted:['accepted','delivered','delayed'].includes(reservation.status),status:reservation.status};
+ if(!reservation.reserved)return {accepted:['accepted','delivered','delayed'].includes(reservation.status),status:reservation.status,delivery_id:reservation.id};
  let status:'accepted'|'uncertain'|'failed'='uncertain';let providerId:string|null=null;
  try {
   const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+config.key,'Content-Type':'application/json','Idempotency-Key':eventKey},body:JSON.stringify({from:config.sender,to:[message.to],subject:message.subject,html:message.html,text:message.text,...(message.attachments?{attachments:message.attachments.map(a=>({filename:a.filename,content:a.content.toString('base64')}))}:{})}),signal:AbortSignal.timeout(10000)});
@@ -23,7 +23,7 @@ export async function sendTransactionalMail(message:MailMessage):Promise<MailRes
   else if(response.status>=400 && response.status<500)status='failed';
  } catch { /* Connection failure cannot establish whether the provider accepted the message. */ }
  const completed=await client.rpc('security_complete_mail',{p_id:reservation.id,p_status:status,p_provider_id:providerId});
- if(completed.error)return {accepted:false,status:'uncertain'};
+ if(completed.error)return {accepted:false,status:'uncertain',delivery_id:reservation.id};
  const final=(completed.data as {status?:string})?.status || status;
- return {accepted:['accepted','delivered','delayed'].includes(final),status:final};
+ return {accepted:['accepted','delivered','delayed'].includes(final),status:final,delivery_id:reservation.id};
 }

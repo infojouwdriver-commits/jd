@@ -1,26 +1,26 @@
 {
-  "node_count": 2558,
+  "node_count": 2766,
   "unverified_node_count": 0,
-  "raw_edge_count": 9100,
+  "raw_edge_count": 9990,
   "non_object_edges": 0,
   "missing_endpoint_edges": 0,
-  "dangling_endpoint_edges": 144,
-  "external_reference_edges": 218,
-  "self_loop_edges": 17,
-  "valid_candidate_edges": 8738,
+  "dangling_endpoint_edges": 166,
+  "external_reference_edges": 231,
+  "self_loop_edges": 18,
+  "valid_candidate_edges": 9593,
   "exact_duplicate_edges": 2,
-  "directed_unique_endpoint_pairs": 8601,
-  "directed_same_endpoint_collapsed_edges": 137,
-  "undirected_unique_endpoint_pairs": 8597,
-  "undirected_same_endpoint_collapsed_edges": 141,
-  "same_endpoint_group_count": 126,
-  "relation_variant_groups": 68,
+  "directed_unique_endpoint_pairs": 9409,
+  "directed_same_endpoint_collapsed_edges": 184,
+  "undirected_unique_endpoint_pairs": 9405,
+  "undirected_same_endpoint_collapsed_edges": 188,
+  "same_endpoint_group_count": 158,
+  "relation_variant_groups": 78,
   "source_file_variant_groups": 0,
-  "source_location_variant_groups": 57,
+  "source_location_variant_groups": 79,
   "context_variant_groups": 2,
   "post_build_graph_type": "DiGraph",
-  "post_build_node_count": 2627,
-  "post_build_edge_count": 8960,
+  "post_build_node_count": 2838,
+  "post_build_edge_count": 9803,
   "post_build_error": "",
   "producer_suppression": {
     "path": "graphify/extract.py",
@@ -103,6 +103,27 @@
   },
   "examples": [
     {
+      "source": "migrations_20261018_subscription_billing_schema_security_issue_subscription_document",
+      "target": "migrations_20261018_subscription_billing_schema_subscription_documents",
+      "edge_count": 5,
+      "relations": [
+        "reads_from"
+      ],
+      "source_files": [
+        "migrations/20261018_subscription_billing.sql"
+      ],
+      "source_locations": [
+        "L149",
+        "L157",
+        "L158",
+        "L170",
+        "L245"
+      ],
+      "contexts": [
+        ""
+      ]
+    },
+    {
       "source": "migrations_20261012_accounts_messages_schema_security_save_company_account",
       "target": "migrations_20261012_accounts_messages_sql_drivers",
       "edge_count": 4,
@@ -123,40 +144,39 @@
       ]
     },
     {
-      "source": "src_hooks_useaddresssearch",
-      "target": "src_lib_address_search",
+      "source": "migrations_20261018_company_lifecycle_schema_security_archive_company",
+      "target": "migrations_20261018_company_lifecycle_sql_drivers",
       "edge_count": 4,
-      "relations": [
-        "imports_from",
-        "re_exports"
-      ],
-      "source_files": [
-        "src/hooks/useAddressSearch.ts"
-      ],
-      "source_locations": [
-        "L4",
-        "L5",
-        "L6"
-      ],
-      "contexts": [
-        "export",
-        "import",
-        "re-export"
-      ]
-    },
-    {
-      "source": "migrations_20261012_accounts_messages_schema_security_save_company_account",
-      "target": "migrations_20261012_accounts_messages_sql_users",
-      "edge_count": 3,
       "relations": [
         "reads_from"
       ],
       "source_files": [
-        "migrations/20261012_accounts_messages.sql"
+        "migrations/20261018_company_lifecycle.sql"
       ],
       "source_locations": [
-        "L107",
-        "L38",
+        "L39",
+        "L42",
+        "L45",
+        "L52"
+      ],
+      "contexts": [
+        ""
+      ]
+    },
+    {
+      "source": "migrations_20261018_operations_centre_schema_security_live_statistics",
+      "target": "invoices",
+      "edge_count": 4,
+      "relations": [
+        "reads_from"
+      ],
+      "source_files": [
+        "migrations/20261018_operations_centre.sql"
+      ],
+      "source_locations": [
+        "L54",
+        "L55",
+        "L56",
         "L57"
       ],
       "contexts": [
@@ -164,36 +184,20 @@
       ]
     },
     {
-      "source": "migrations_20261013_mail_delivery_schema_security_reserve_mail",
-      "target": "migrations_20261013_mail_delivery_schema_mail_deliveries",
-      "edge_count": 3,
+      "source": "migrations_20261018_operations_centre_schema_security_live_statistics",
+      "target": "subscription_documents",
+      "edge_count": 4,
       "relations": [
         "reads_from"
       ],
       "source_files": [
-        "migrations/20261013_mail_delivery.sql"
+        "migrations/20261018_operations_centre.sql"
       ],
       "source_locations": [
-        "L33",
-        "L39",
-        "L40"
-      ],
-      "contexts": [
-        ""
-      ]
-    },
-    {
-      "source": "migrations_20261017_company_registration_schema_company_registrations",
-      "target": "migrations_20261017_company_registration_sql_schema_users",
-      "edge_count": 3,
-      "relations": [
-        "references"
-      ],
-      "source_files": [
-        "migrations/20261017_company_registration.sql"
-      ],
-      "source_locations": [
-        "L4"
+        "L54",
+        "L55",
+        "L56",
+        "L57"
       ],
       "contexts": [
         ""
