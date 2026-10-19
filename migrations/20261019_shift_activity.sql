@@ -1,5 +1,20 @@
 -- Additive shift activity. Readings remain explicit; trip distances never change counters.
 BEGIN;
+ALTER TABLE :"schema".driver_shifts ADD COLUMN IF NOT EXISTS document_summary jsonb;
+ALTER TABLE :"schema".driver_shifts ADD COLUMN IF NOT EXISTS document_profile jsonb NOT NULL DEFAULT '{}'::jsonb;
+CREATE OR REPLACE FUNCTION :"schema".security_shift_document_profile()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = :"schema",pg_catalog AS $$
+DECLARE c jsonb; d jsonb; v jsonb;
+BEGIN
+ SELECT to_jsonb(x) INTO c FROM companies x WHERE id=NEW.company_id;
+ SELECT to_jsonb(x) INTO d FROM drivers x WHERE id=NEW.driver_id AND user_id=NEW.user_id;
+ SELECT to_jsonb(x) INTO v FROM vehicles x WHERE id=NEW.vehicle_id AND company_id=NEW.company_id;
+ NEW.document_profile=jsonb_build_object('company_address',c->>'address','company_phone',c->>'phone','company_email',c->>'email','company_vat',c->>'vat_number','company_kbo',c->>'kbo_number','driver_card',coalesce(nullif(d->>'bestuurderspas_number',''),d->>'capacity_certificate_number'),'vehicle_code',v->>'chiron_vehicle_id');
+ RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS shift_document_profile ON :"schema".driver_shifts;
+CREATE TRIGGER shift_document_profile BEFORE INSERT ON :"schema".driver_shifts FOR EACH ROW EXECUTE FUNCTION :"schema".security_shift_document_profile();
+REVOKE ALL ON FUNCTION :"schema".security_shift_document_profile() FROM PUBLIC, :"user_role";
 ALTER TABLE :"schema".trips ADD COLUMN IF NOT EXISTS shift_id uuid REFERENCES :"schema".driver_shifts(id);
 CREATE INDEX IF NOT EXISTS trips_shift_idx ON :"schema".trips(shift_id);
 CREATE TABLE IF NOT EXISTS :"schema".driver_shift_activity (
@@ -112,6 +127,24 @@ CREATE TRIGGER record_trip_shift AFTER INSERT OR UPDATE ON :"schema".trips
 REVOKE ALL ON FUNCTION :"schema".security_record_trip_shift(), :"schema".security_shift_declaration_activity(), :"schema".security_link_trip_shift(), :"schema".security_shift_status(bigint,uuid,uuid,integer,text) FROM PUBLIC, :"user_role";
 GRANT EXECUTE ON FUNCTION :"schema".security_shift_status(bigint,uuid,uuid,integer,text) TO :"admin_role";
 
+CREATE OR REPLACE FUNCTION :"schema".security_shift_summary(p_shift_id uuid)
+RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path = :"schema",pg_catalog AS $$
+ SELECT jsonb_build_object(
+    'trip_count',(SELECT count(*) FROM trips t WHERE t.shift_id=p_shift_id AND t.status='completed'),
+    'activity_count',(SELECT count(*) FROM driver_shift_events e WHERE e.shift_id=p_shift_id)+(SELECT count(*) FROM driver_shift_activity a WHERE a.shift_id=p_shift_id AND a.kind<>'declaration'),
+    'payments',coalesce((SELECT jsonb_agg(to_jsonb(p) ORDER BY p.currency) FROM (
+     SELECT coalesce(nullif(upper(t.currency),''),'Onbekend') currency,
+      sum(CASE WHEN lower(t.payment_method) IN ('cash','contant') THEN coalesce(t.price,0) ELSE 0 END) cash,
+      sum(CASE WHEN lower(t.payment_method) IN ('card','bancontact') THEN coalesce(t.price,0) ELSE 0 END) card,
+      sum(CASE WHEN lower(t.payment_method) NOT IN ('cash','contant','card','bancontact') AND nullif(t.payment_method,'') IS NOT NULL THEN coalesce(t.price,0) ELSE 0 END) other,
+      sum(CASE WHEN nullif(t.payment_method,'') IS NULL THEN coalesce(t.price,0) ELSE 0 END) unknown,
+      sum(coalesce(t.price,0)) total, count(*) FILTER(WHERE t.price IS NULL) missing_amounts
+     FROM trips t WHERE t.shift_id=p_shift_id AND t.status='completed' GROUP BY coalesce(nullif(upper(t.currency),''),'Onbekend')
+    ) p),'[]'::jsonb));
+$$;
+REVOKE ALL ON FUNCTION :"schema".security_shift_summary(uuid) FROM PUBLIC, :"user_role";
+GRANT EXECUTE ON FUNCTION :"schema".security_shift_summary(uuid) TO :"admin_role";
+
 CREATE OR REPLACE FUNCTION :"schema".security_driver_shifts(p_user_id bigint,p_shift_id uuid DEFAULT NULL,p_offset integer DEFAULT 0)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path = :"schema",pg_catalog AS $$
 DECLARE s driver_shifts;
@@ -122,37 +155,10 @@ BEGIN
  IF p_shift_id IS NOT NULL THEN
   SELECT * INTO s FROM driver_shifts WHERE id=p_shift_id AND user_id=p_user_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Shift unavailable' USING ERRCODE='42501'; END IF;
-  RETURN jsonb_build_object('shift',to_jsonb(s),'activity',coalesce((SELECT jsonb_agg(to_jsonb(a) ORDER BY a.recorded_at,a.id) FROM driver_shift_activity a WHERE a.shift_id=s.id),'[]'::jsonb),'events',coalesce((SELECT jsonb_agg(to_jsonb(e) ORDER BY e.version) FROM driver_shift_events e WHERE e.shift_id=s.id),'[]'::jsonb));
+  RETURN jsonb_build_object( 'shift',to_jsonb(s),'summary',coalesce(s.document_summary,security_shift_summary(s.id)), 'activity' ,coalesce((SELECT jsonb_agg(to_jsonb(a) ORDER BY a.recorded_at,a.id) FROM driver_shift_activity a WHERE a.shift_id=s.id),'[]'::jsonb),'events',coalesce((SELECT jsonb_agg(to_jsonb(e) ORDER BY e.version) FROM driver_shift_events e WHERE e.shift_id=s.id),'[]'::jsonb));
  END IF;
  RETURN jsonb_build_object('active',(SELECT to_jsonb(a) FROM driver_shifts a WHERE a.user_id=p_user_id AND a.ended_at IS NULL),
  'shifts',coalesce((SELECT jsonb_agg(to_jsonb(h) ORDER BY h.started_at DESC,h.id) FROM (SELECT * FROM driver_shifts WHERE user_id=p_user_id ORDER BY started_at DESC,id LIMIT 25 OFFSET p_offset) h),'[]'::jsonb));
-END $$;
-
-CREATE OR REPLACE FUNCTION :"schema".security_create_trip_invoice(p_trip_id bigint,p_user_id bigint,p_invoice jsonb,p_receipt jsonb)
-RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path = :"schema",pg_catalog AS $$
-DECLARE t trips; i invoices; n bigint; digits text; checkdigits text;
-BEGIN
- SELECT * INTO t FROM trips WHERE id=p_trip_id FOR UPDATE;
- IF NOT FOUND THEN RAISE EXCEPTION 'Trip not found' USING ERRCODE='P0002'; END IF;
- IF t.user_id IS DISTINCT FROM p_user_id THEN RAISE EXCEPTION 'Trip ownership mismatch' USING ERRCODE='42501'; END IF;
- IF t.status IS DISTINCT FROM 'completed' OR t.end_time IS NULL THEN RAISE EXCEPTION 'Trip must be completed' USING ERRCODE='22023'; END IF;
- IF NOT EXISTS(SELECT FROM drivers WHERE id=t.driver_id AND user_id=t.user_id AND company_id=t.company_id)
- OR NOT EXISTS(SELECT FROM companies WHERE id=t.company_id)
- OR (t.vehicle_id IS NOT NULL AND NOT EXISTS(SELECT FROM vehicles WHERE id=t.vehicle_id AND company_id=t.company_id))
- THEN RAISE EXCEPTION 'Trip records mismatch' USING ERRCODE='22023'; END IF;
- p_receipt=jsonb_set(p_receipt,'{trip,shift_id}',coalesce(to_jsonb(t.shift_id::text),'null'::jsonb),true);
- SELECT * INTO i FROM invoices WHERE trip_id=t.id ORDER BY id LIMIT 1;
- IF FOUND THEN RETURN to_jsonb(i); END IF;
- IF jsonb_typeof(p_invoice) IS DISTINCT FROM 'object' OR jsonb_typeof(p_receipt) IS DISTINCT FROM 'object'
- OR EXISTS(SELECT FROM jsonb_object_keys(p_invoice) k WHERE k NOT IN ('client_name','client_address','items','bank_account','bic_code','trip_datetime','trip_time','vehicle_plate_number','dienstnummer','identificatiecode','toegepast_tarief','meterbedrag','ritnummer'))
- OR t.price IS NULL OR t.price<0 THEN RAISE EXCEPTION 'Invalid receipt payload' USING ERRCODE='22023'; END IF;
- n=nextval(pg_get_serial_sequence('invoices','id'));
- IF n>9999999999 THEN RAISE EXCEPTION 'Structured reference sequence exhausted' USING ERRCODE='22023'; END IF;
- digits=lpad(n::text,10,'0');checkdigits=lpad((CASE WHEN n%97=0 THEN 97 ELSE n%97 END)::text,2,'0');
- i=jsonb_populate_record(NULL::invoices,p_invoice);
- INSERT INTO invoices(id,user_id,company_id,issuer_company_id,trip_id,invoice_number,client_name,client_address,total_htva,vat_rate,total_tvac,invoice_date,status,payment_status,invoice_type,invoice_category,invoice_language,items,structured_reference,bank_account,bic_code,trip_datetime,trip_time,vehicle_plate_number,dienstnummer,identificatiecode,toegepast_tarief,meterbedrag,ritnummer,receipt_snapshot)
- VALUES(n,t.user_id,t.company_id,t.company_id,t.id,'TRIP-'||t.id,i.client_name,i.client_address,round(t.price/1.06,2),6,round(t.price,2),t.end_time::date,'issued','pending','one_time','trip','nl',i.items,'+++'||substr(digits,1,3)||'/'||substr(digits,4,4)||'/'||substr(digits,8,3)||checkdigits||'+++',i.bank_account,i.bic_code,i.trip_datetime,i.trip_time,i.vehicle_plate_number,i.dienstnummer,i.identificatiecode,i.toegepast_tarief,i.meterbedrag,i.ritnummer,p_receipt||jsonb_build_object('document_number','TRIP-'||t.id)) RETURNING * INTO i;
- RETURN to_jsonb(i);
 END $$;
 
 CREATE OR REPLACE FUNCTION :"schema".security_guard_shift_work()
@@ -160,6 +166,11 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = :"schema",pg
 BEGIN
  IF (TG_OP='UPDATE' AND OLD.work_status='with_passenger' AND (NEW.work_status='break' OR NEW.ended_at IS NOT NULL)) OR ((TG_OP='INSERT' OR NEW.work_status='break') AND EXISTS(SELECT FROM trips WHERE driver_id=NEW.driver_id AND status='in_progress')) THEN
   RAISE EXCEPTION 'Complete active trip before shift start or break' USING ERRCODE='40001';
+ END IF;
+ IF TG_OP='UPDATE' AND NEW.ended_at IS NOT NULL AND OLD.ended_at IS NULL THEN
+  NEW.document_summary=security_shift_summary(NEW.id);
+  -- The closing declaration is inserted immediately after this shift update.
+  NEW.document_summary=jsonb_set(NEW.document_summary,'{activity_count}',to_jsonb((NEW.document_summary->>'activity_count')::bigint+1));
  END IF;
  RETURN NEW;
 END $$;

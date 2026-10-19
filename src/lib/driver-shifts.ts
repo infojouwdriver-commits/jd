@@ -54,6 +54,18 @@ export interface DriverShift {
   vehicle_id: number;
   driver_name: string;
   company_name: string;
+  document_profile?: Partial<
+    Record<
+      | "company_address"
+      | "company_phone"
+      | "company_email"
+      | "company_vat"
+      | "company_kbo"
+      | "driver_card"
+      | "vehicle_code",
+      string | null
+    >
+  >;
   plate_number: string;
   started_at: string;
   ended_at: string | null;
@@ -71,7 +83,21 @@ export interface ShiftEvent {
   passenger_km: number;
   work_status: ShiftStatus;
 }
+export interface ShiftPaymentSummary {
+  currency: string;
+  cash: number;
+  card: number;
+  other: number;
+  unknown: number;
+  total: number;
+  missing_amounts: number;
+}
 export interface ShiftDetail {
+  summary?: {
+    trip_count: number;
+    activity_count: number;
+    payments: ShiftPaymentSummary[];
+  };
   activity?: ShiftActivity[];
   shift: DriverShift;
   events: ShiftEvent[];

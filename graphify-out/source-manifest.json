@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "ce5fa79b346e3515858c13e722d858de97163533",
+  "source_commit_context": "01b785cb28359b1695b2413ed0e9539eab868914",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -113,7 +113,7 @@
     "migrations/20261018_web_change_approvals.sql": "840c988cea43d64e7134867843100125839ab339c9738eda34ef44f1cc1b019d",
     "migrations/20261019_driver_shifts.sql": "aed67e69c13b235a28dc1b8fd8de1b56e8b80fc55c6da977167d94df47940b19",
     "migrations/20261019_email_identity.sql": "3bfbf759c1fb7cc77d793387202c114ba66b16094bdf1eac37b1b9b3cdf88829",
-    "migrations/20261019_shift_activity.sql": "aabac515c2fd5df3b4efb5f2e328ae0e136ac208eb4d78ac7ff0025ba9ee3a53",
+    "migrations/20261019_shift_activity.sql": "cf38754f6554f79ad5d504bb1af0e553b23ab06ba218893ff2dfbd3e10a3f266",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
     "mobile/package.json": "40aee03ff72ed5bafad1a679e6a019b22989dae4f215042703e794b2c7aa50d5",
     "mobile/plugins/background-geolocation/Package.swift": "856e9b12db8d9499d30a655955838104ec135fc809c772a31dd6d75b07923ec4",
@@ -134,7 +134,7 @@
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
     "scripts/code-map.py": "a4d5f75b9f7a0b2c7e9ea064a10d9664d5d976fee9fac63a1ecbab9aeb046837",
     "scripts/convert-database.mjs": "3e5a46b4690231100db6d318a1ba53d1c3daff8a96e00808ab47db64c697a4ca",
-    "scripts/database-readiness.mjs": "7e10c9324a5ddb070e835ccecba4cd0a68fee158f499fedb876cd1b0fcf54841",
+    "scripts/database-readiness.mjs": "e214c0c49448f8492972da96c5c34c6005530e2c59fbd2324846bbe56b38d9b0",
     "scripts/enroll-admin-mfa.mjs": "715f6bc7f7ddd4f42e4b155a3af2ba938a774d8610b8a75699469b9c9e4e7496",
     "scripts/export-schema.mjs": "2d665d8b124a79a4e3cf5d477160be89184c51d33c41b97be3397b48a365f27c",
     "scripts/import-staging.mjs": "d1cc517c3ba4c032a628430b6a94efb3f7ded98cb04ec29aa2820d4adb766422",
@@ -300,7 +300,7 @@
     "src/app/next_api/test-trips/send/route.ts": "1688ab70c62db7c80e361f4807329f12f87a722949aa4eb028eb5cfa4e001496",
     "src/app/next_api/trips/end/route.ts": "df93fafb8f4f85a28175894c93a414d6991cae6720867d54e3375441ba23c4ca",
     "src/app/next_api/trips/export-pdf/route.ts": "f60e0e762cef4dd8373b960d176f012f996b0d6049b5b90b994840cadc6c355e",
-    "src/app/next_api/trips/generate-invoice/route.ts": "9b847d5ab3dd778bb4ec8d0c34f2d78fe05ff49a7d7b1baa7516f3f73a614ab2",
+    "src/app/next_api/trips/generate-invoice/route.ts": "9c491320626d472623b9c610efdb0679790a125271665c07358ac3650c91c36f",
     "src/app/next_api/trips/retry-sync/route.ts": "0d08826738b4f55baa569cd91cc61a85456fd4fed1b953abd3683bd54761a69c",
     "src/app/next_api/trips/route.ts": "ba942987edea07f3f73ab8c096ffe6347f4811f25b1b9306775a979be71eff4d",
     "src/app/next_api/trips/start/route.ts": "cc96a779f25b63fb5077882c230958e36278acc19706a8804fee37a4b9f7d6be",
@@ -466,7 +466,7 @@
     "src/hooks/useZoerIframe.ts": "ab6811bc69861cfc74f80863824b9b2511232b059b46cb2b5c83858d56965d1c",
     "src/instrumentation.ts": "8181a2dcf55e63ab65cedc2bb09a6d4e4ff7a62bae81833b54c66cf4de6b5c3a",
     "src/legal/pdf-fonts.ts": "95ae6c30c3d945b6d8646416ea72563c599550ae9ecfe047cc2fda40e1aaa1f8",
-    "src/legal/vervoerbewijs.ts": "a709481c56fb75c9fcbe86582bec01cf099cb24c8586bbe3e90f1c016831663a",
+    "src/legal/vervoerbewijs.ts": "fa7f42a40ba7a0c49864053bff03d185fd9f364d24688438ac380d3dadecc1b2",
     "src/lib/acceptance-report-pdf.ts": "155e083baf8aa10703bcfbaec4e62521f1f75c6462d36b4ae7df94c8738b7f3a",
     "src/lib/address-search.ts": "e1c3034b7de8cdf73a58e65e545f746211a1ecf1909eb4a9173e62424f924d54",
     "src/lib/admin-mfa.ts": "02724538b9ec5d5aed7eb65f9ce5259533a116597b90fd4d0b8fe93a8c2eceee",
@@ -497,8 +497,8 @@
     "src/lib/crud-operations.ts": "6c1f5a592f10bafbf8095f58bc8d95d4d1c2f23f2135839bcb0cd73977b8eb3c",
     "src/lib/driver-account.ts": "85b31add871a523b98cb131e9c1921c145cc4ab6ee780b80b8e1ae5ac0397afc",
     "src/lib/driver-activity.ts": "833d88efee22b947d45e0bc72bdcd4f06f023830954326b367ff324eabb0c3e0",
-    "src/lib/driver-shift-pdf.ts": "7b9ec8d5552222e63d77294873418a79588d01f1e4e407b64d738940cf43fa2b",
-    "src/lib/driver-shifts.ts": "abd3f8b167b6f80b92e135ab0997758a957c79dfe115b5d160f9ae26818be8c7",
+    "src/lib/driver-shift-pdf.ts": "f1858677e1cbf8966fa7520ad578b15bdfd54596161eba0f93feeeb0e931119e",
+    "src/lib/driver-shifts.ts": "55b0fadc14cc664a14e7095be9136c95b5d054c4328bb5d1db72da36fb01f8e3",
     "src/lib/email-verification.ts": "6b7276ad33fec841a1abfc6192daf0ae034f395e3565063a64672bd944a6d571",
     "src/lib/fleet-sharing-runtime.ts": "e8ada1b7640377fe7299c86799215690256b5b9a30caf255ea51a2f563e443de",
     "src/lib/fleet-tracking.ts": "88ab8497ba28f5952a29abc78dd49ba6483638da35be94d724d40d2473c9f5e4",
@@ -536,18 +536,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "SOURCE_INDEX.md": "c4eb645e0cd417324b7e72188e55d316b0bcfbea20a0dd936789a6373ab63122",
-    "health.json": "75339cdfceb91af0784933c927cd5c1833d6d5be5078de832dbab1255e33e039",
-    "GRAPH_TREE.html": "2e0ce95a34908a0730375a7f195bfe24b7222d5532f038ca2f166f197a3b3fe0",
-    "graph.json": "8799f033795d92beff13f4eebee55257b44e7cde6ff087f984b111605895e8b2",
-    "GRAPH_REPORT.md": "ab25f60b443404e93a7ec2b7680ed19fbd87f280dedce8bb5c5fed00d975c407"
+    "SOURCE_INDEX.md": "bb4656fb95aba377c59dc3ce5c55adf71e48bb9a7c40dfed0fc2321562ee1655",
+    "health.json": "a409abc0c1dbd1d9c32bb5e4e787443cbd0dbce0ec21056373c4602e6dfefcfd",
+    "GRAPH_TREE.html": "53801f8b1a97ab7d676da646a2b59f6e523db95d52d64648a495922d95be2821",
+    "graph.json": "8db482f24ad2090d207d9700e417e5c58224f1ead4a9d5d9ad39e1a0c7c979a0",
+    "GRAPH_REPORT.md": "36bbaf3441e42e3d41898188fae698cba3f424afa77b7f3fae2de504faac084a"
   },
-  "nodes": 3001,
-  "edges": 10155,
-  "raw_edges": 10364,
-  "communities": 159,
+  "nodes": 3012,
+  "edges": 10177,
+  "raw_edges": 10393,
+  "communities": 161,
   "confidence_counts": {
-    "EXTRACTED": 10117,
-    "INFERRED": 247
+    "EXTRACTED": 10145,
+    "INFERRED": 248
   }
 }

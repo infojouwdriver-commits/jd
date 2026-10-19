@@ -39,11 +39,21 @@ async function open(db) {
 }
 const read = async (db, id) =>
   (await db.query("SELECT security_driver_shifts(10,$1) s", [id])).rows[0].s;
-test("pause/resume, all submitted trip sources, receipt identity and immutable activity preserve explicit readings", async () => {
+test("pause/resume, all submitted trip sources, shift summaries and immutable activity preserve explicit readings", async () => {
   const db = await setup();
   try {
+    await db.exec(
+      "UPDATE companies SET address='Synthetic street',vat_number='BE0000000000',phone='+32000000000',email='synthetic@example.invalid' WHERE id=1;UPDATE drivers SET bestuurderspas_number='CARD-TEST' WHERE id=1;",
+    );
     const s = await open(db),
       pause = randomUUID();
+    assert.equal(s.document_profile.company_address, "Synthetic street");
+    assert.equal(s.document_profile.driver_card, "CARD-TEST");
+    await db.exec("UPDATE companies SET address='Changed later' WHERE id=1");
+    assert.equal(
+      (await read(db, s.id)).shift.document_profile.company_address,
+      "Synthetic street",
+    );
     const change = (request, version, status, user = 10) =>
       db.query("SELECT security_shift_status($1,$2,$3,$4,$5) s", [
         user,
@@ -107,28 +117,37 @@ test("pause/resume, all submitted trip sources, receipt identity and immutable a
     assert.equal(links[2].shift_id, null);
     assert.equal(links[3].shift_id, null);
     assert.equal(links[4].shift_id, s.id);
-    const receipt = { trip: { shift_id: randomUUID(), ritnummer: "TEST" } };
+    detail = await read(db, s.id);
+    assert.equal(detail.summary.trip_count, 3);
+    assert.equal(detail.summary.payments[0].total, 55);
+    assert.equal(detail.summary.payments[0].unknown, 55);
+    await db.exec(
+      "INSERT INTO trips(id,user_id,driver_id,company_id,vehicle_id,status,start_time,end_time,price,currency,payment_method) VALUES(7,10,1,1,1,'completed',clock_timestamp(),clock_timestamp(),12.50,'EUR','cash'),(8,10,1,1,1,'completed',clock_timestamp(),clock_timestamp(),8.25,'EUR','card'),(9,10,1,1,1,'completed',clock_timestamp(),clock_timestamp(),4.50,'USD','app');",
+    );
+    const payments = (await read(db, s.id)).summary.payments;
+    assert.equal(payments.find((p) => p.currency === "EUR").total, 20.75);
+    assert.equal(payments.find((p) => p.currency === "EUR").cash, 12.5);
+    assert.equal(payments.find((p) => p.currency === "EUR").card, 8.25);
+    assert.equal(payments.find((p) => p.currency === "USD").other, 4.5);
+    // The shift migration must not change customer invoice snapshots.
+    const receipt = { trip: { ritnummer: "TEST" } };
     const invoice = (
       await db.query("SELECT security_create_trip_invoice(1,10,$1,$2) i", [
         { client_name: "Synthetic" },
         receipt,
       ])
     ).rows[0].i;
-    assert.equal(invoice.receipt_snapshot.trip.shift_id, s.id);
-    const replay = (
-      await db.query("SELECT security_create_trip_invoice(1,10,$1,$2) i", [
-        {},
-        {},
-      ])
-    ).rows[0].i;
-    assert.equal(replay.id, invoice.id);
-    assert.equal(replay.receipt_snapshot.trip.shift_id, s.id);
+    assert.deepEqual(invoice.receipt_snapshot.trip, receipt.trip);
     detail = await read(db, s.id);
     await db.query(
       "SELECT security_record_driver_shift(10,$1,'end',$2,$3,120,10,'available')",
       [randomUUID(), s.id, detail.shift.version],
     );
+    const closedSummary=(await read(db,s.id)).summary;
+    await db.exec("UPDATE trips SET price=999 WHERE id=7");
+    assert.deepEqual((await read(db,s.id)).summary,closedSummary);
     const count = (await read(db, s.id)).activity.length;
+    assert.equal(closedSummary.activity_count,count);
     await db.exec(
       "INSERT INTO trips(id,user_id,driver_id,company_id,vehicle_id,status,start_time) VALUES(6,10,1,1,1,'in_progress',clock_timestamp());",
     );

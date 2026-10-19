@@ -193,5 +193,6 @@ The service shift is the primary work entry. Use one prominent dp card below the
 shared header, with the vehicle and a text status, a single odometer start field,
 and a pause/resume action. Keep the shift open through breaks. Retain navigation
 to profile and history; do not mix GPS sharing with declaration status. Use the
-same card, OperationForm and Arabic/French/Dutch copy in both themes. Trip links
-and the Dutch receipt reference are records, never guessed odometer values.
+same card, OperationForm and Arabic/French/Dutch copy in both themes. Trip links belong to the separate Dutch service sheet; customer receipts stay unchanged.
+Use a structured A4 report with company identity, shift metadata, time and kilometre
+summaries, actual payments and a paginated audit ledger. Never guess odometer values.

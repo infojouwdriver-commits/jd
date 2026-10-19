@@ -223,15 +223,16 @@ source, separately from the explicit counter ledger. PDF and screen include both
 state minutes use recorded status changes through the last recorded event.
 Trip kilometres never alter declared odometer/passenger totals.
 
-New customer trip receipts include the authoritative full Dutch Dienstreferentie
-and persist it in the immutable receipt snapshot. An unlinked new trip says Niet
-geregistreerd; old snapshots keep their original layout and are not rewritten.
-This field implements the requested shift reference without asserting that an
-unspecified municipality has certified the whole receipt.
+The shift PDF remains separate from customer receipts. Customer invoice generation,
+PDF layout and receipt snapshots are unchanged. New shifts snapshot company contact
+and tax identifiers, driver card and vehicle identifier for the service document.
+Existing shifts keep their original snapshots; missing fields display a dash.
+The report includes actual linked completed-trip counts and payment totals grouped
+by original currency; unknown payment methods and missing prices are explicit.
 
 Acceptance: `tests/shift-activity.test.mjs` covers owner isolation, idempotency,
 real trip source linking, unchanged counters, pause conflicts, historical and
-vehicle mismatch exclusions, immutable receipt reference and immutable activity.
+vehicle mismatch exclusions, separate unchanged customer receipts and immutable activity.
 The six-locale/theme UI regression starts from home, pauses/resumes across reload,
 and downloads the Dutch service sheet. Auth integration exercises the real
 status endpoint and rejects counter injection.
@@ -242,3 +243,17 @@ locally saved trip when publication fails. The matching completed-trip insert
 clears that state atomically. A replayed start cannot reopen passenger status
 after completion. Pausing/closing while that state is active is rejected. A
 legacy local trip beginning before the selected shift is not relabelled.
+
+
+## Standalone Dutch service PDF — reference fields, original design
+
+The service PDF uses an A4 navy/gold header, compact identity fields, kilometre
+cards, recorded driving/available/break/total times, completed-trip/activity counts,
+and payment totals separated by currency and known payment method. The next pages
+contain repeat-header tables of explicit readings and recorded trip/status activity.
+The reference photo informs fields only; its company values and thermal layout
+are not copied. Missing historic identity snapshots are not filled from current
+profiles. Customer invoice source, snapshot RPC and PDF remain unchanged.
+
+Closing a shift freezes its count and currency-separated payment summary. Later
+changes to trip metadata cannot rewrite a previously closed service report.

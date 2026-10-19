@@ -33,12 +33,11 @@ test('receipt dates and trip times use Brussels summer/winter time regardless of
         ['2026-07-14T22:19:13Z', '2026-07-14T22:22:15Z', '15/07/2026', '00:19', '00:22'],
       ]) {
         rendered = [];
-        const fixture = {company: {name: 'Synthetic'}, driver: {full_name: 'Synthetic'}, vehicle: {brand: 'Test', model: 'Vehicle', plate_number: 'TEST'}, trip: {shift_id:'11111111-1111-4111-8111-111111111111',ritnummer: 'SYNTHETIC', trip_uuid: 'synthetic', start_time: start, end_time: end, start_address: 'Synthetic departure', end_address: 'Synthetic arrival', distance_km: 0.72, duration_minutes: 3, price: 2}, chiron: {sync_state: 'completed'}, document_number: 'TEST', document_date: start, vat_rate: 6};
+        const fixture = {company: {name: 'Synthetic'}, driver: {full_name: 'Synthetic'}, vehicle: {brand: 'Test', model: 'Vehicle', plate_number: 'TEST'}, trip: {ritnummer: 'SYNTHETIC', trip_uuid: 'synthetic', start_time: start, end_time: end, start_address: 'Synthetic departure', end_address: 'Synthetic arrival', distance_km: 0.72, duration_minutes: 3, price: 2}, chiron: {sync_state: 'completed'}, document_number: 'TEST', document_date: start, vat_rate: 6};
         const before = JSON.stringify(fixture);
         const doc = exports.generateVervoerbewijs(fixture);
         assert.ok(doc.output('arraybuffer').byteLength > 0);
         assert.ok(rendered.includes(`${date} ${time}`));
-        assert.ok(rendered.join(' ').includes('Dienstreferentie: 11111111-1111-4111-8111-111111111111'));
         assert.equal(rendered[rendered.indexOf('Vertrektijd:') + 1], time);
         assert.equal(rendered[rendered.indexOf('Aankomsttijd:') + 1], arrival);
         assert.equal(JSON.stringify(fixture), before, 'stored timestamps and receipt snapshot stay unchanged');
