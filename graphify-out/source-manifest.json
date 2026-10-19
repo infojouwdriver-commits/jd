@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "ba72676e51e8b73dad40c12bbdaed74cb3dc071b",
+  "source_commit_context": "3085a80f6adfcfbeb1df26b2c58390bdbe9ff629",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -12,7 +12,7 @@
     "deploy/backup-table-counts.sql": "b98cc23fb0ef69bdcaade1c02b6a1d4be593dfd564b14359a0f741c0a39d707e",
     "deploy/backup.sh": "8612e9200191fb04d237ee9c2ea5290c95b2be2258479f99cde3fac9f8735fba",
     "deploy/chiron-production-probe.mjs": "a66296e9854305970dab8d7c139c5897776a819ef482e509c9dfffc6b2fe2997",
-    "deploy/configure-mail.mjs": "5984c33397a4b540b3bf38b92d70edbbe07085641d0af6f54a2b9c5733f31e15",
+    "deploy/configure-mail.mjs": "834b2c3431b014a9b958993ea65751d506b678d6e72fa38cc07c555f85337793",
     "deploy/configure-native-push.mjs": "da395d57869ce4e2c175ea5fffb778fb6aa18907f2af64a73d313abd015c15a6",
     "deploy/enroll-initial-owner.sql": "495e88b648cff179583c462f785538365a98c0cecb17989caaec69c1ecda673b",
     "deploy/import-private-archive.sh": "6d72bc403df2a7c5cec58c316ff4a440265ab36fbc8d5e81d8b39bb8bf7ee956",
@@ -524,18 +524,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "GRAPH_REPORT.md": "be8cae69c8f31343a2e5de1aa5f4921320f69afd99c99d51f39515652e98da8f",
-    "graph.json": "13b4ff462d0a74cbdd9b5f92b695f7f1f1652f64e98ee20e49983ab160c76d30",
-    "GRAPH_TREE.html": "8611bcc4296009595105748a0abeba09ad60664179225a6236a2cc0e2816742a",
-    "SOURCE_INDEX.md": "2c91ccebc7f7bec9c2d4571c7534b2060319fd159c188238fa53f0c7be9d6f01",
-    "health.json": "354f681a1c3431c3777a7bb11e99db14f5769051a1f672425d3579189076f4f0"
+    "graph.json": "295c950abedcd9b61f6e900be95da438c4202d9f1fac183ae723a74fdb5b625b",
+    "GRAPH_TREE.html": "626e3826fcd7ef59f5f8c5dcd93e3adbcba0a8b68b9b6ca621f0b495357301d0",
+    "SOURCE_INDEX.md": "114ce1d5972d950df2b1389b739858b717a2de4175bd8db3a0156f80c95582f8",
+    "GRAPH_REPORT.md": "a1dcfd3d0ba4054e0875b239281e867fc1012f275a40a7fc68fda622c8d0a360",
+    "health.json": "1a14c00ced6826dd812e8fcbbfb006c12b47ece359d32441764501b0ea71ddd0"
   },
-  "nodes": 2914,
-  "edges": 9911,
-  "raw_edges": 10107,
-  "communities": 150,
+  "nodes": 2916,
+  "edges": 9914,
+  "raw_edges": 10110,
+  "communities": 161,
   "confidence_counts": {
-    "EXTRACTED": 9860,
+    "EXTRACTED": 9863,
     "INFERRED": 247
   }
 }

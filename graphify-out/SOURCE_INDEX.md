@@ -50,10 +50,11 @@ Links target the working tree, so line positions can move after changes.
 ## [deploy/configure-mail.mjs](../deploy/configure-mail.mjs)
 
 - `configure-mail.mjs` — [L1](../deploy/configure-mail.mjs#L1)
-- `mailRuntimeKeys` — [L3](../deploy/configure-mail.mjs#L3)
-- `mailRuntimeFiles()` — [L4](../deploy/configure-mail.mjs#L4)
-- `checkedBrevoSetup()` — [L18](../deploy/configure-mail.mjs#L18)
-- `main()` — [L29](../deploy/configure-mail.mjs#L29)
+- `readMailRuntimeEnv()` — [L5](../deploy/configure-mail.mjs#L5)
+- `mailRuntimeKeys` — [L6](../deploy/configure-mail.mjs#L6)
+- `mailRuntimeFiles()` — [L7](../deploy/configure-mail.mjs#L7)
+- `checkedBrevoSetup()` — [L21](../deploy/configure-mail.mjs#L21)
+- `main()` — [L32](../deploy/configure-mail.mjs#L32)
 
 ## [deploy/configure-native-push.mjs](../deploy/configure-native-push.mjs)
 

@@ -1,5 +1,8 @@
 // Reviewed, purpose-limited installation. Never prints a credential or provider response.
 import fs from 'node:fs';import path from 'node:path';import {randomBytes} from 'node:crypto';import {execFileSync} from 'node:child_process';import {pathToFileURL} from 'node:url';
+import {parseEnv} from 'node:util';
+let setupStage='runtime';
+export const readMailRuntimeEnv=text=>parseEnv(text);
 export const mailRuntimeKeys=['MAIL_PROVIDER','BREVO_API_KEY','BREVO_FROM_EMAIL','BREVO_SENDER_VERIFIED','BREVO_FREE_PLAN_CONFIRMED','BREVO_WEBHOOK_TOKEN'];
 export function mailRuntimeFiles(envText,compose,key,sender,token){
  if(typeof key!=='string'||key.length<32||key.length>512||/[\r\n\0]/.test(key)||sender!=='jouw2023@gmail.com'||!/^[a-f0-9]{64}$/.test(token))throw Error('Invalid mail configuration');
@@ -31,20 +34,27 @@ async function main(){
  const revision=process.argv[2],sender=process.argv[3];if(!/^[a-f0-9]{40}$/.test(revision||'')||sender!=='jouw2023@gmail.com')throw Error('Reviewed release and sender required');
  const state=JSON.parse(fs.readFileSync('runtime-mode.json')),release=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
  if(state.mode!=='public'||state.revision!==revision||release.revision!==revision||state.image!==release.image)throw Error('Tested mail release must be live');
+ setupStage='credential_read';
  const chunks=[];for await(const chunk of process.stdin){chunks.push(chunk);if(chunks.reduce((n,c)=>n+c.length,0)>1024)throw Error('Invalid credential size');}
+ setupStage='runtime_files';
  const key=Buffer.concat(chunks).toString('utf8').trim();const oldEnv=fs.readFileSync('.app-staging.env','utf8'),oldCompose=fs.readFileSync('private-app.yaml','utf8');
- const existing=Object.fromEntries(oldEnv.split('\n').filter(l=>l.includes('=')).map(l=>[l.slice(0,l.indexOf('=')),l.slice(l.indexOf('=')+1)]));
+ const existing=readMailRuntimeEnv(oldEnv);setupStage='runtime_environment';
  if(existing.APP_ORIGIN!=='https://jouw-driver.duckdns.org'||existing.DEPLOYMENT_MODE!=='production')throw Error('Reviewed runtime required');
  if(existing.BREVO_API_KEY&&existing.BREVO_API_KEY!==key)throw Error('Credential rotation requires separate review');
+ setupStage='compose_configuration';
  const token=existing.BREVO_WEBHOOK_TOKEN||randomBytes(32).toString('hex');const next=mailRuntimeFiles(oldEnv,oldCompose,key,sender,token);
+ setupStage='deployment_lock';
  fs.mkdirSync('/srv/jouw-driver/.deployment-lock');let written=false;
  const compose=(...args)=>execFileSync('docker',['compose','--env-file','.app-staging.env','--project-name','jouw-driver','--file','private-app.yaml',...args],{stdio:['ignore','pipe','pipe'],timeout:210000}).toString().trim();
  try{
-  const api=async(endpoint,method='GET',body)=>{const response=await fetch('https://api.brevo.com/v3'+endpoint,{method,headers:{'api-key':key,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('Provider configuration rejected');return response.status===204?{}:response.json();};
+  const api=async(endpoint,method='GET',body)=>{setupStage=endpoint==='/account'?'provider_account':endpoint==='/senders'?'provider_sender':method==='GET'?'provider_webhook_read':'provider_webhook_write';const response=await fetch('https://api.brevo.com/v3'+endpoint,{method,headers:{'api-key':key,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});if(!response.ok){console.error('Mail setup '+setupStage+' HTTP '+response.status);throw Error('Provider configuration rejected');}return response.status===204?{}:response.json();};
   await checkedBrevoSetup(api,token);
+  setupStage='runtime_write';
   fs.writeFileSync('.app-staging.env.mail-next',next.env,{mode:0o600,flag:'wx'});fs.renameSync('.app-staging.env.mail-next','.app-staging.env');written=true;
   fs.writeFileSync('private-app.yaml',next.compose,{mode:0o600});
+  setupStage='application_restart';
   compose('up','-d','--wait','--wait-timeout','180','app');const app=compose('ps','-q','app');
+  setupStage='application_preflight';
   execFileSync('docker',['exec',app,'node','scripts/preflight.mjs'],{stdio:['ignore','pipe','pipe'],timeout:30000});
   console.log('Verified free plan and sender; mail credentials installed privately; authenticated delivery callback configured. No test email sent.');
  }catch{
@@ -52,4 +62,4 @@ async function main(){
   throw Error('Mail configuration failed; credentials and provider responses withheld.');
  }finally{fs.rmdirSync('/srv/jouw-driver/.deployment-lock');}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)main().catch(()=>{console.error('Mail setup did not complete; inspect configuration privately.');process.exitCode=1;});
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)main().catch(()=>{console.error('Mail setup did not complete at '+setupStage+'; credentials and provider responses withheld.');process.exitCode=1;});
