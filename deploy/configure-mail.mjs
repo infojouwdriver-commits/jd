@@ -3,6 +3,14 @@ import fs from 'node:fs';import path from 'node:path';import {randomBytes} from 
 import {parseEnv} from 'node:util';
 let setupStage='runtime';
 export const readMailRuntimeEnv=text=>parseEnv(text);
+export async function readBrevoSetupResponse(response,endpoint,method){
+ if(response.ok)return response.status===204?{}:response.json();
+ const error=await response.json().catch(()=>null);
+ // An account without legacy webhook records can return document_not_found as HTTP 400.
+ // Treat only this exact collection-read result as empty, never authentication or parameter failures.
+ if(endpoint==='/webhooks?type=transactional'&&method==='GET'&&[400,404].includes(response.status)&&error?.code==='document_not_found')return {webhooks:[]};
+ const rejected=Error('Provider configuration rejected');rejected.setupReason=['document_not_found','invalid_parameter','unauthorized','permission_denied'].includes(error?.code)?error.code:'provider_rejected';throw rejected;
+}
 export const mailRuntimeKeys=['MAIL_PROVIDER','BREVO_API_KEY','BREVO_FROM_EMAIL','BREVO_SENDER_VERIFIED','BREVO_FREE_PLAN_CONFIRMED','BREVO_WEBHOOK_TOKEN'];
 export function mailRuntimeFiles(envText,compose,key,sender,token){
  if(typeof key!=='string'||key.length<32||key.length>512||/[\r\n\0]/.test(key)||sender!=='jouw2023@gmail.com'||!/^[a-f0-9]{64}$/.test(token))throw Error('Invalid mail configuration');
@@ -26,7 +34,7 @@ export async function checkedBrevoSetup(api,token){
  const url='https://jouw-driver.duckdns.org/next_api/webhooks/brevo',description='JOUW DRIVER delivery status';
  const hooks=await api('/webhooks?type=transactional');const found=hooks.webhooks?.filter(w=>w.url===url)||[];
  if(found.length>1||found.some(w=>w.description!==description))throw Error('Existing webhook requires review');
- const body={url,description,type:'transactional',events:['request','delivered','hardBounce','softBounce','blocked','spam','invalid','deferred'],auth:{type:'bearer',token}};
+ const body={url,description,type:'transactional',batched:false,events:['request','delivered','hardBounce','softBounce','blocked','spam','invalid','deferred'],auth:{type:'bearer',token}};
  await api(found.length?'/webhooks/'+found[0].id:'/webhooks',found.length?'PUT':'POST',body);
 }
 async function main(){
@@ -47,7 +55,7 @@ async function main(){
  fs.mkdirSync('/srv/jouw-driver/.deployment-lock');let written=false;
  const compose=(...args)=>execFileSync('docker',['compose','--env-file','.app-staging.env','--project-name','jouw-driver','--file','private-app.yaml',...args],{stdio:['ignore','pipe','pipe'],timeout:210000}).toString().trim();
  try{
-  const api=async(endpoint,method='GET',body)=>{setupStage=endpoint==='/account'?'provider_account':endpoint==='/senders'?'provider_sender':method==='GET'?'provider_webhook_read':'provider_webhook_write';const response=await fetch('https://api.brevo.com/v3'+endpoint,{method,headers:{'api-key':key,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});if(!response.ok){console.error('Mail setup '+setupStage+' HTTP '+response.status);throw Error('Provider configuration rejected');}return response.status===204?{}:response.json();};
+  const api=async(endpoint,method='GET',body)=>{setupStage=endpoint==='/account'?'provider_account':endpoint==='/senders'?'provider_sender':method==='GET'?'provider_webhook_read':'provider_webhook_write';const response=await fetch('https://api.brevo.com/v3'+endpoint,{method,headers:{'api-key':key,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});try{return await readBrevoSetupResponse(response,endpoint,method);}catch(error){console.error('Mail setup '+setupStage+' HTTP '+response.status+' '+(error.setupReason||'invalid_response'));throw Error('Provider configuration rejected');}};
   await checkedBrevoSetup(api,token);
   setupStage='runtime_write';
   fs.writeFileSync('.app-staging.env.mail-next',next.env,{mode:0o600,flag:'wx'});fs.renameSync('.app-staging.env.mail-next','.app-staging.env');written=true;
