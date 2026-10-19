@@ -105,6 +105,27 @@ BEGIN
  RETURN jsonb_build_object('active',(SELECT to_jsonb(a) FROM driver_shifts a WHERE a.user_id=p_user_id AND a.ended_at IS NULL),
  'shifts',coalesce((SELECT jsonb_agg(to_jsonb(h) ORDER BY h.started_at DESC,h.id) FROM (SELECT * FROM driver_shifts WHERE user_id=p_user_id ORDER BY started_at DESC,id LIMIT 25 OFFSET p_offset) h),'[]'::jsonb));
 END $$;
+-- Global release setup grants table DML to the service role. Enforce historical
+-- immutability with triggers as well as grants, including after future redeploys.
+CREATE OR REPLACE FUNCTION :"schema".security_immutable_shift_event()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = :"schema",pg_catalog AS $$
+BEGIN
+ RAISE EXCEPTION 'Shift events are immutable' USING ERRCODE='55000';
+END $$;
+DROP TRIGGER IF EXISTS immutable_shift_event ON :"schema".driver_shift_events;
+CREATE TRIGGER immutable_shift_event BEFORE UPDATE OR DELETE ON :"schema".driver_shift_events
+ FOR EACH ROW EXECUTE FUNCTION :"schema".security_immutable_shift_event();
+CREATE OR REPLACE FUNCTION :"schema".security_preserve_driver_shift()
+RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path = :"schema",pg_catalog AS $$
+BEGIN
+ IF TG_OP='DELETE' THEN RAISE EXCEPTION 'Shift history cannot be deleted' USING ERRCODE='55000'; END IF;
+ IF OLD.ended_at IS NOT NULL THEN RAISE EXCEPTION 'Closed shifts are immutable' USING ERRCODE='55000'; END IF;
+ RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS preserve_driver_shift ON :"schema".driver_shifts;
+CREATE TRIGGER preserve_driver_shift BEFORE UPDATE OR DELETE ON :"schema".driver_shifts
+ FOR EACH ROW EXECUTE FUNCTION :"schema".security_preserve_driver_shift();
+REVOKE ALL ON FUNCTION :"schema".security_immutable_shift_event(), :"schema".security_preserve_driver_shift() FROM PUBLIC, :"user_role";
 REVOKE ALL ON FUNCTION :"schema".security_record_driver_shift(bigint,uuid,text,uuid,integer,numeric,numeric,text), :"schema".security_driver_shifts(bigint,uuid,integer) FROM PUBLIC, :"user_role";
 GRANT EXECUTE ON FUNCTION :"schema".security_record_driver_shift(bigint,uuid,text,uuid,integer,numeric,numeric,text), :"schema".security_driver_shifts(bigint,uuid,integer) TO :"admin_role";
 COMMIT;

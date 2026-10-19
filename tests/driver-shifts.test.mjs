@@ -200,6 +200,22 @@ test("service stores explicit readings and timestamps; idempotency, ownership, c
     await bad(read(db, 10, id), "42501");
     await db.exec("RESET ROLE;SET ROLE service");
     await bad(db.query("DELETE FROM driver_shift_events"), "42501");
+    await db.exec(
+      "RESET ROLE; GRANT UPDATE,DELETE ON driver_shifts,driver_shift_events TO service; SET ROLE service",
+    );
+    await bad(db.query("DELETE FROM driver_shift_events"), "55000");
+    await bad(
+      db.query("UPDATE driver_shift_events SET odometer=odometer+1"),
+      "55000",
+    );
+    await bad(db.query("DELETE FROM driver_shifts"), "55000");
+    await bad(
+      db.query(
+        "UPDATE driver_shifts SET odometer=odometer+1 WHERE ended_at IS NOT NULL",
+      ),
+      "55000",
+    );
+
     await db.exec("RESET ROLE");
   } finally {
     await db.close();

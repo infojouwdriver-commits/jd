@@ -931,6 +931,10 @@ Links target the working tree, so line positions can move after changes.
 - `driver_shifts_history` — [L25](../migrations/20261019_driver_shifts.sql#L25)
 - `"schema".driver_shift_events` — [L26](../migrations/20261019_driver_shifts.sql#L26)
 - `"schema".security_record_driver_shift()` — [L43](../migrations/20261019_driver_shifts.sql#L43)
+- `"schema".security_immutable_shift_event()` — [L110](../migrations/20261019_driver_shifts.sql#L110)
+- `immutable_shift_event` — [L116](../migrations/20261019_driver_shifts.sql#L116)
+- `"schema".security_preserve_driver_shift()` — [L118](../migrations/20261019_driver_shifts.sql#L118)
+- `preserve_driver_shift` — [L126](../migrations/20261019_driver_shifts.sql#L126)
 
 ## [migrations/20261019_email_identity.sql](../migrations/20261019_email_identity.sql)
 
