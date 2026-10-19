@@ -1,6 +1,9 @@
 
+import {mailConfiguration} from "@/lib/mail-policy";
+export const dynamic = "force-dynamic";
+
 import { LoginPageClient } from "@/components/auth/LoginPageClient";
 
 export default function LoginPage() {
-  return <LoginPageClient emailEnabled={Boolean(process.env.RESEND_KEY && process.env.RESEND_FROM_EMAIL)} />;
+  return <LoginPageClient emailEnabled={mailConfiguration(process.env).ready} />;
 }

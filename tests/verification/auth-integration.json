@@ -1,5 +1,5 @@
 {
-  "passed": 67,
+  "passed": 71,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -16,6 +16,7 @@
     "Public company registration validates required fields",
     "Public onboarding rejects caller privilege fields",
     "Foreign origin cannot submit company onboarding",
+    "Company registration requires an email code",
     "Public complete registration returns pending receipt",
     "Identical request safely reuses its keyed fingerprint",
     "MFA administrator can review company registrations",
@@ -67,7 +68,10 @@
     "Admin receives actionable configuration conflict without mutating contract",
     "Signed contract cannot receive a new signature invitation",
     "Forged Brevo delivery callback is refused",
-    "Database receives server service tokens, never browser roles"
+    "Database receives server service tokens, never browser roles",
+    "Reset rejects a wrong code without changing password",
+    "Reset consumes code with normalized email",
+    "Reset proof cannot be replayed"
   ],
   "database": "Simulated PostgREST; real production Next HTTP handlers"
 }

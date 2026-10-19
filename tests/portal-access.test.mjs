@@ -66,6 +66,7 @@ test('administrator company reset preserves a self-updated login email separatel
 test('self password changes require current credentials and ignore caller user IDs',async()=>{
  const calls=[];
  const route=load('../src/app/next_api/auth/account/route.ts',{
+ '@/lib/mail-policy':{mailConfiguration:()=>({ready:false})},
  '@/lib/api-utils':{requestMiddleware:handler=>handler,validateRequestBody:async request=>request.body},
  '@/lib/auth':{authCrudOperations:async()=>({usersCrud:{findById:async id=>({id,password:'existing-hash',email:'owner@example.invalid'})}}),generateAdminUserToken:async()=>''},
  '@/lib/create-response':jsonResponse,

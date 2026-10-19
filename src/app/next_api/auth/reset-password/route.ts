@@ -1,86 +1,22 @@
-import {claimOnce, revokeAllSessions} from "@/lib/security-session";
-import { NextRequest } from 'next/server';
-import { requestMiddleware, validateRequestBody } from '@/lib/api-utils';
-import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
-import { hashString, verifyHashString } from '@/lib/server-utils';
-import { authCrudOperations } from '@/lib/auth';
-import { z } from 'zod';
-
-const resetPasswordSchema = z.object({
-  email: z.string().email('Please provide a valid email address'),
-  passcode: z.string().min(6, 'Please provide a 6-digit verification code').max(6, 'Verification code must be 6 digits'),
-  password: z.string().min(12, 'Password must be at least 12 characters').max(72),
-});
-
-export const POST = requestMiddleware(async (request: NextRequest) => {
-  try {
-    const body = await validateRequestBody(request);
-    const validatedData = resetPasswordSchema.parse(body);
-
-    const { usersCrud, userPasscodeCrud } = await authCrudOperations();
-
-    const passObjectResult = await userPasscodeCrud.findMany({
-      pass_object: validatedData.email
-    }, {
-      orderBy: {
-        column: 'id',
-        direction: 'desc'
-      }
-    });
-    
-    const passcodeData = passObjectResult?.[0];
-
-    if (!passcodeData || passcodeData.security_purpose !== "reset-password" || !passcodeData.passcode || passcodeData.revoked || !(new Date(passcodeData.valid_until).getTime() > new Date().getTime())) {
-      return createErrorResponse({
-        errorMessage: 'Invalid verification code',
-        status: 401,
-      });
-    }
-
-    const isCodeValid = await verifyHashString(validatedData.passcode, passcodeData.passcode);
-
-    if (!isCodeValid) {
-      return createErrorResponse({
-        errorMessage: 'Invalid verification code',
-        status: 401,
-      });
-    }
-
-    const users = await usersCrud.findMany({ email: validatedData.email });
-    const user = users?.[0];
-
-    if (!user) {
-      return createErrorResponse({
-        errorMessage: 'User does not exist',
-        status: 401,
-      });
-    }
-
-    if (!await claimOnce('passcode', passcodeData.id)) return createErrorResponse({errorMessage:'Verification code already used', status:401});
-    const hashedPassword = await hashString(validatedData.password);
-
-    await usersCrud.update(user.id, { password: hashedPassword });
-    await revokeAllSessions(user.id);
-
-    await userPasscodeCrud.update(passcodeData.id, {
-      revoked: true,
-    });
-
-    return createSuccessResponse({
-      data: true
-    });
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return createErrorResponse({
-        errorMessage: error.errors[0].message,
-        status: 401,
-      });
-    }
-
-    return createErrorResponse({
-      errorMessage: 'Server error, please try again later',
-      status: 500,
-    });
-  }
-}, false);
+import {requestMiddleware,validateRequestBody} from '@/lib/api-utils';
+import {createSuccessResponse,createErrorResponse} from '@/lib/create-response';
+import {hashString} from '@/lib/server-utils';
+import {generateAdminUserToken} from '@/lib/auth';
+import {createPostgrestClient} from '@/lib/postgrest';
+import {verifyEmailCode} from '@/lib/email-verification';
+import {consumeRateLimit} from '@/lib/rate-limit';
+import {z} from 'zod';
+const schema=z.object({email:z.string().trim().toLowerCase().email().max(254),passcode:z.string().regex(/^\d{6}$/),password:z.string().min(12).refine(v=>Buffer.byteLength(v,'utf8')<=72)}).strict();
+export const POST=requestMiddleware(async request=>{
+ const parsed=schema.safeParse(await validateRequestBody(request));
+ if(!parsed.success)return createErrorResponse({status:400,errorMessage:'Check the code and password (12 characters, maximum 72 bytes)'});
+ const v=parsed.data;const limited=await consumeRateLimit('email-code-check:'+v.email,5);if(limited)return limited;
+ try{
+  const code=await verifyEmailCode(v.email,'reset-password',v.passcode);
+  if(!code)return createErrorResponse({status:401,errorMessage:'Invalid or expired verification code'});
+  const r=await createPostgrestClient(await generateAdminUserToken()).rpc('security_reset_email_password',{p_email:v.email,p_code_id:code.id,p_code_hash:code.passcode,p_password:await hashString(v.password)});
+  if(r.error)throw r.error;
+  if(r.data!==true)return createErrorResponse({status:401,errorMessage:'Invalid or expired verification code'});
+  return createSuccessResponse({data:true});
+ }catch{return createErrorResponse({status:503,errorMessage:'Password recovery temporarily unavailable'});}
+},false);

@@ -1,0 +1,67 @@
+name: Verify website email delivery without password change
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Expected deployed website source revision
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Request one owner recovery email and observe authenticated delivery metadata
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REVISION: ${{ inputs.revision }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "node -e \"if(JSON.parse(require('fs').readFileSync('/srv/jouw-driver/release.json','utf8')).revision!=='$REVISION')process.exit(1)\"" </dev/null
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'cd /srv/jouw-driver/foundation && docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml exec -T app node --input-type=module' <<'VERIFY'
+          import {createHmac} from 'node:crypto';
+          const e=process.env;
+          try{
+            if(e.MAIL_PROVIDER!=='brevo'||e.BREVO_FROM_EMAIL!=='jouw2023@gmail.com'||!e.BREVO_API_KEY||e.BREVO_SENDER_VERIFIED!=='true'||e.BREVO_FREE_PLAN_CONFIRMED!=='true'||!e.BREVO_WEBHOOK_TOKEN||e.APP_ORIGIN!=='https://jouw-driver.duckdns.org'||e.POSTGREST_URL!=='http://postgrest:3000'||e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||!e.JWT_SECRET)throw Error();
+            const enc=x=>Buffer.from(JSON.stringify(x)).toString('base64url'),now=Math.floor(Date.now()/1000);
+            const unsigned=enc({alg:'HS256'})+'.'+enc({sub:'0',role:e.SCHEMA_ADMIN_USER,iss:'jouw-driver',aud:'jouw-driver',iat:now,exp:now+120});
+            const token=unsigned+'.'+createHmac('sha256',e.JWT_SECRET).update(unsigned).digest('base64url');
+            const read=async path=>{const r=await fetch(e.POSTGREST_URL+path,{headers:{Authorization:'Bearer '+token,'Accept-Profile':'public'},redirect:'error',signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error();return r.json();};
+            const financialPath='/subscription_mail_queue?document_id=in.(2,3)&select=id,document_id,purpose,status,last_result,attempted_at,completed_at,mail_delivery_id&order=id.asc&limit=10';
+            const before=JSON.stringify(await read(financialPath));
+            const last=await read('/mail_deliveries?select=id&order=id.desc&limit=1'),min=Number(last[0]?.id||0);
+            const response=await fetch(e.APP_ORIGIN+'/next_api/auth/send-verification',{method:'POST',headers:{Origin:e.APP_ORIGIN,'Content-Type':'application/json'},body:JSON.stringify({email:'jouw2023@gmail.com',type:'reset-password'}),redirect:'error',signal:AbortSignal.timeout(20000)});
+            if(response.status!==200)throw Error();
+            const recipient='jd-'+createHmac('sha256',e.MAIL_METADATA_KEY||e.DATA_ENCRYPTION_KEY).update('recipient:jouw2023@gmail.com').digest('hex');
+            let state='missing';
+            for(let n=0;n<10;n++){
+              const rows=await read('/mail_deliveries?id=gt.'+min+'&purpose=eq.verification&recipient_key=eq.'+recipient+'&select=status&order=id.desc&limit=1');
+              state=rows[0]?.status||'missing';if(state==='delivered'||['failed','bounced','complained','uncertain'].includes(state))break;
+              await new Promise(r=>setTimeout(r,4000));
+            }
+            if(JSON.stringify(await read(financialPath))!==before)throw Error();
+            console.log(JSON.stringify({channel:'deployed website mail-service',purpose:'owner recovery code only',status:state,passwordChanged:false,financialQueueUnchanged:true,brevoConfigurationPreserved:true}));
+            if(state!=='delivered')process.exitCode=1;
+          }catch{console.error('Website email delivery not verified; no password reset or financial send was attempted.');process.exitCode=1;}
+          VERIFY

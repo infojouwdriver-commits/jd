@@ -77,6 +77,8 @@ jobs:
         run: MARKETING_QA_DIR="$RUNNER_TEMP/marketing-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-marketing-ui.mjs
       - name: Company registration wizard, localization and safe retry
         run: REGISTRATION_QA_DIR="$RUNNER_TEMP/registration-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-company-registration-ui.mjs
+      - name: Website email confirmation and password recovery UI
+        run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-email-auth-ui.mjs
       - name: Save synthetic marketing previews
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

@@ -5,7 +5,8 @@ import { hashString, verifyHashString, generateVerificationCode, hashVerificatio
 import { createPostgrestClient } from '@/lib/postgrest';
 import { consumeRateLimit } from '@/lib/rate-limit';
 import { z } from 'zod';
-const available = () => Boolean(process.env.RESEND_KEY && process.env.RESEND_FROM_EMAIL);
+import {mailConfiguration} from '@/lib/mail-policy';
+const available = () => mailConfiguration(process.env).ready;
 const schema = z.object({
  action:z.enum(['request_email_code','update_email','update_password']),
  current_password:z.string().min(1).refine(value => Buffer.byteLength(value,'utf8') <= 72),
@@ -36,7 +37,7 @@ export const POST = requestMiddleware(async (request, context) => {
    const code = generateVerificationCode();
    const row = await userPasscodeCrud.create({pass_object:body.email,security_purpose:'account-email:'+userId,passcode:await hashVerificationCode(code),valid_until:new Date(Date.now()+3*60000).toISOString(),revoked:false});
    let sent = false;
-   try { sent = await sendVerificationEmail(body.email, code); } catch { /* Do not expose provider diagnostics or codes. */ }
+   try { sent = await sendVerificationEmail(body.email, code, 'account-email'); } catch { /* Do not expose provider diagnostics or codes. */ }
    if (!sent) { await userPasscodeCrud.update(row.id,{revoked:true}); return createErrorResponse({errorMessage:'تعذر إرسال رمز التحقق',status:503}); }
    return createSuccessResponse({sent:true});
   }
