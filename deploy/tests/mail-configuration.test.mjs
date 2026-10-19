@@ -1,5 +1,21 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {mailRuntimeFiles,checkedBrevoSetup,mailRuntimeKeys} from '../configure-mail.mjs';
+import {readFileSync} from 'node:fs';
+import {mailRuntimeFiles,checkedBrevoSetup,mailRuntimeKeys,readMailRuntimeEnv} from '../configure-mail.mjs';
+test('runtime guards use dotenv semantics for quoted and exported settings',()=>{
+ const parsed=readMailRuntimeEnv('APP_ORIGIN="https://jouw-driver.duckdns.org"\nexport DEPLOYMENT_MODE=production\nBREVO_API_KEY="synthetic=value"\n');
+ assert.equal(parsed.APP_ORIGIN,'https://jouw-driver.duckdns.org');assert.equal(parsed.DEPLOYMENT_MODE,'production');assert.equal(parsed.BREVO_API_KEY,'synthetic=value');
+});
+test('mail workflow permits only reviewed main installer and validates live revision ancestry',async()=>{
+ const workflow=readFileSync(new URL('../../.github/workflows/configure-mail.yml',import.meta.url),'utf8');
+ const gate=workflow.match(/<<'GATE'\n([\s\S]*?)\n\s+GATE/)[1];
+ const run=new (Object.getPrototypeOf(async function(){}).constructor)('process','fetch',gate);
+ const env={GITHUB_REF:'refs/heads/main',REVISION:'a'.repeat(40),GITHUB_REPOSITORY:'owner/repo'};let calls=0;
+ const fetch=async()=>{calls++;return {ok:true,json:async()=>({status:'ahead'})};};
+ await assert.rejects(run({env:{...env,GITHUB_REF:'refs/heads/unreviewed'}},fetch),/reviewed main/);assert.equal(calls,0);
+ await assert.rejects(run({env:{...env,REVISION:'invalid'}},fetch),/Full tested/);assert.equal(calls,0);
+ await assert.rejects(run({env},async()=>({ok:true,json:async()=>({status:'diverged'})})),/ancestry/);
+ await run({env},fetch);assert.equal(calls,1);assert.ok(workflow.includes('ref: ${{ github.sha }}'));
+});
 const key='synthetic-'+ 'k'.repeat(48),token='a'.repeat(64),sender='jouw2023@gmail.com';
 test('mail installation preserves unrelated credentials and scopes variables to the application',()=>{
  const env='JWT_SECRET=preserve-synthetic\nCHIRON_PRODUCTION_ENABLED=true\n';

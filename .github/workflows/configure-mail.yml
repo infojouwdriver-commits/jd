@@ -27,13 +27,14 @@ jobs:
           REVISION: ${{ inputs.revision }}
         run: |
           node --input-type=module <<'GATE'
+          if(process.env.GITHUB_REF!=='refs/heads/main')throw Error('Mail installer must use reviewed main');
           if(!/^[a-f0-9]{40}$/.test(process.env.REVISION||''))throw Error('Full tested revision required');
           const response=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+process.env.REVISION+'...main',{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});
           if(!response.ok||!['identical','ahead'].includes((await response.json()).status))throw Error('Reviewed main ancestry required');
           GATE
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
-          ref: ${{ inputs.revision }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - name: Configure free sender without exposing runtime credentials
         env:
