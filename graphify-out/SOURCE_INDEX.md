@@ -943,6 +943,24 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_submit_verified_company_subscription()` — [L15](../migrations/20261019_email_identity.sql#L15)
 - `"schema".security_reset_email_password()` — [L35](../migrations/20261019_email_identity.sql#L35)
 
+## [migrations/20261019_shift_activity.sql](../migrations/20261019_shift_activity.sql)
+
+- `20261019_shift_activity.sql` — [source](../migrations/20261019_shift_activity.sql#)
+- `"schema".security_shift_document_profile()` — [L5](../migrations/20261019_shift_activity.sql#L5)
+- `shift_document_profile` — [L16](../migrations/20261019_shift_activity.sql#L16)
+- `trips_shift_idx` — [L19](../migrations/20261019_shift_activity.sql#L19)
+- `"schema".driver_shift_activity` — [L20](../migrations/20261019_shift_activity.sql#L20)
+- `immutable_shift_activity` — [L36](../migrations/20261019_shift_activity.sql#L36)
+- `"schema".security_shift_declaration_activity()` — [L39](../migrations/20261019_shift_activity.sql#L39)
+- `shift_declaration_activity` — [L47](../migrations/20261019_shift_activity.sql#L47)
+- `"schema".security_shift_status()` — [L50](../migrations/20261019_shift_activity.sql#L50)
+- `"schema".security_link_trip_shift()` — [L72](../migrations/20261019_shift_activity.sql#L72)
+- `"schema".security_record_trip_shift()` — [L85](../migrations/20261019_shift_activity.sql#L85)
+- `link_trip_shift` — [L122](../migrations/20261019_shift_activity.sql#L122)
+- `"schema".security_driver_shifts()` — [L148](../migrations/20261019_shift_activity.sql#L148)
+- `"schema".security_guard_shift_work()` — [L164](../migrations/20261019_shift_activity.sql#L164)
+- `guard_shift_work` — [L178](../migrations/20261019_shift_activity.sql#L178)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -2789,11 +2807,11 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/driver/DriverLayoutShell.tsx](../src/components/driver/DriverLayoutShell.tsx)
 
 - `DriverLayoutShell.tsx` — [L1](../src/components/driver/DriverLayoutShell.tsx#L1)
-- `DriverInfo` — [L32](../src/components/driver/DriverLayoutShell.tsx#L32)
-- `VehicleData` — [L47](../src/components/driver/DriverLayoutShell.tsx#L47)
-- `TabItem()` — [L58](../src/components/driver/DriverLayoutShell.tsx#L58)
-- `DriverLayoutContent()` — [L93](../src/components/driver/DriverLayoutShell.tsx#L93)
-- `DriverLayoutShell()` — [L393](../src/components/driver/DriverLayoutShell.tsx#L393)
+- `DriverInfo` — [L33](../src/components/driver/DriverLayoutShell.tsx#L33)
+- `VehicleData` — [L48](../src/components/driver/DriverLayoutShell.tsx#L48)
+- `TabItem()` — [L59](../src/components/driver/DriverLayoutShell.tsx#L59)
+- `DriverLayoutContent()` — [L94](../src/components/driver/DriverLayoutShell.tsx#L94)
+- `DriverLayoutShell()` — [L394](../src/components/driver/DriverLayoutShell.tsx#L394)
 
 ## [src/components/driver/DriverLoginClient.tsx](../src/components/driver/DriverLoginClient.tsx)
 
@@ -2815,13 +2833,19 @@ Links target the working tree, so line positions can move after changes.
 - `VehicleCard()` — [L130](../src/components/driver/DriverProfilePage.tsx#L130)
 - `DriverProfilePage()` — [L202](../src/components/driver/DriverProfilePage.tsx#L202)
 
+## [src/components/driver/DriverShiftWorkspace.tsx](../src/components/driver/DriverShiftWorkspace.tsx)
+
+- `DriverShiftWorkspace.tsx` — [L1](../src/components/driver/DriverShiftWorkspace.tsx#L1)
+- `DriverShiftWorkspace()` — [L15](../src/components/driver/DriverShiftWorkspace.tsx#L15)
+- `toggle()` — [L70](../src/components/driver/DriverShiftWorkspace.tsx#L70)
+
 ## [src/components/driver/DriverShifts.tsx](../src/components/driver/DriverShifts.tsx)
 
 - `DriverShifts.tsx` — [L1](../src/components/driver/DriverShifts.tsx#L1)
-- `statuses` — [L17](../src/components/driver/DriverShifts.tsx#L17)
-- `DriverShifts()` — [L23](../src/components/driver/DriverShifts.tsx#L23)
-- `downloadPdf()` — [L86](../src/components/driver/DriverShifts.tsx#L86)
-- `begin()` — [L110](../src/components/driver/DriverShifts.tsx#L110)
+- `statuses` — [L21](../src/components/driver/DriverShifts.tsx#L21)
+- `DriverShifts()` — [L27](../src/components/driver/DriverShifts.tsx#L27)
+- `downloadPdf()` — [L82](../src/components/driver/DriverShifts.tsx#L82)
+- `begin()` — [L106](../src/components/driver/DriverShifts.tsx#L106)
 
 ## [src/components/driver/shift-copy.ts](../src/components/driver/shift-copy.ts)
 
@@ -4024,20 +4048,30 @@ Links target the working tree, so line positions can move after changes.
 
 - `driver-shift-pdf.ts` — [L1](../src/lib/driver-shift-pdf.ts#L1)
 - `driverShiftPdf()` — [L7](../src/lib/driver-shift-pdf.ts#L7)
-- `line()` — [L23](../src/lib/driver-shift-pdf.ts#L23)
+- `page()` — [L52](../src/lib/driver-shift-pdf.ts#L52)
+- `ensure()` — [L61](../src/lib/driver-shift-pdf.ts#L61)
+- `block()` — [L64](../src/lib/driver-shift-pdf.ts#L64)
+- `paragraph()` — [L77](../src/lib/driver-shift-pdf.ts#L77)
+- `section()` — [L87](../src/lib/driver-shift-pdf.ts#L87)
+- `pairs()` — [L97](../src/lib/driver-shift-pdf.ts#L97)
+- `table()` — [L115](../src/lib/driver-shift-pdf.ts#L115)
 
 ## [src/lib/driver-shifts.ts](../src/lib/driver-shifts.ts)
 
 - `driver-shifts.ts` — [L1](../src/lib/driver-shifts.ts#L1)
 - `km` — [L2](../src/lib/driver-shifts.ts#L2)
 - `shiftDeclaration` — [L8](../src/lib/driver-shifts.ts#L8)
-- `ShiftStatus` — [L31](../src/lib/driver-shifts.ts#L31)
-- `DriverShift` — [L32](../src/lib/driver-shifts.ts#L32)
-- `ShiftEvent` — [L48](../src/lib/driver-shifts.ts#L48)
-- `ShiftDetail` — [L56](../src/lib/driver-shifts.ts#L56)
-- `ShiftList` — [L60](../src/lib/driver-shifts.ts#L60)
-- `shiftKilometres()` — [L64](../src/lib/driver-shifts.ts#L64)
-- `shiftTime()` — [L73](../src/lib/driver-shifts.ts#L73)
+- `shiftStatusChange` — [L31](../src/lib/driver-shifts.ts#L31)
+- `ShiftActivity` — [L40](../src/lib/driver-shifts.ts#L40)
+- `ShiftStatus` — [L49](../src/lib/driver-shifts.ts#L49)
+- `DriverShift` — [L50](../src/lib/driver-shifts.ts#L50)
+- `ShiftEvent` — [L78](../src/lib/driver-shifts.ts#L78)
+- `ShiftPaymentSummary` — [L86](../src/lib/driver-shifts.ts#L86)
+- `ShiftDetail` — [L95](../src/lib/driver-shifts.ts#L95)
+- `ShiftList` — [L105](../src/lib/driver-shifts.ts#L105)
+- `shiftKilometres()` — [L109](../src/lib/driver-shifts.ts#L109)
+- `shiftTime()` — [L118](../src/lib/driver-shifts.ts#L118)
+- `shiftDurations()` — [L127](../src/lib/driver-shifts.ts#L127)
 
 ## [src/lib/email-verification.ts](../src/lib/email-verification.ts)
 

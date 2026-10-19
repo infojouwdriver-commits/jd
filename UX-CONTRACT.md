@@ -199,3 +199,61 @@ Verification: `tests/driver-shifts.test.mjs` (PostgreSQL WASM),
 uncertain-response retry, reload, actual PDF downloads and printing), and the actual authenticated
 handlers in `tests/run-auth-integration.mjs`. Native PostgreSQL migration is also
 part of the existing release stack gate.
+
+
+## Shift-first portal and activity — 19 October 2026
+
+`DriverShiftWorkspace` uses the existing dp tokens and OperationForm. The portal
+home starts with one odometer field; taximeter content waits for an active shift.
+Profile, history and messages remain accessible. A persistent work-status card
+provides one-click pause/resume, a busy lock, localized failures, an idempotent
+retry, focus refresh and a 20-second status refresh. A pause keeps the same shift
+and never submits or changes a reading. An active trip blocks pause and closure.
+
+The database owns `trips.shift_id`. New trips submitted to this system (meter or
+external source) are attached only to an open matching driver/company/vehicle
+shift whose start precedes the trip. Existing rows, historical periods and closed
+shifts are not backfilled. Real-time starts/completions change work status;
+offline completed submissions add trip activity without overwriting the driver's
+current break. Replayed saves do not duplicate activity. Platforms which submit
+no trip to this system cannot be detected by browser/GPS speculation.
+
+Immutable activity records contain timestamps, state, trip ID and submitted
+source, separately from the explicit counter ledger. PDF and screen include both;
+state minutes use recorded status changes through the last recorded event.
+Trip kilometres never alter declared odometer/passenger totals.
+
+The shift PDF remains separate from customer receipts. Customer invoice generation,
+PDF layout and receipt snapshots are unchanged. New shifts snapshot company contact
+and tax identifiers, driver card and vehicle identifier for the service document.
+Existing shifts keep their original snapshots; missing fields display a dash.
+The report includes actual linked completed-trip counts and payment totals grouped
+by original currency; unknown payment methods and missing prices are explicit.
+
+Acceptance: `tests/shift-activity.test.mjs` covers owner isolation, idempotency,
+real trip source linking, unchanged counters, pause conflicts, historical and
+vehicle mismatch exclusions, separate unchanged customer receipts and immutable activity.
+The six-locale/theme UI regression starts from home, pauses/resumes across reload,
+and downloads the Dutch service sheet. Auth integration exercises the real
+status endpoint and rejects counter injection.
+
+The portal's durable local trip journal publishes passenger status with the
+completion UUID, retries after reload/online and does not block or discard a
+locally saved trip when publication fails. The matching completed-trip insert
+clears that state atomically. A replayed start cannot reopen passenger status
+after completion. Pausing/closing while that state is active is rejected. A
+legacy local trip beginning before the selected shift is not relabelled.
+
+
+## Standalone Dutch service PDF — reference fields, original design
+
+The service PDF uses an A4 navy/gold header, compact identity fields, kilometre
+cards, recorded driving/available/break/total times, completed-trip/activity counts,
+and payment totals separated by currency and known payment method. The next pages
+contain repeat-header tables of explicit readings and recorded trip/status activity.
+The reference photo informs fields only; its company values and thermal layout
+are not copied. Missing historic identity snapshots are not filled from current
+profiles. Customer invoice source, snapshot RPC and PDF remain unchanged.
+
+Closing a shift freezes its count and currency-separated payment summary. Later
+changes to trip metadata cannot rewrite a previously closed service report.

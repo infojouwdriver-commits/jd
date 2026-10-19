@@ -24,6 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import DriverShiftWorkspace from "@/components/driver/DriverShiftWorkspace";
 import DriverFleetShift from "@/components/driver/DriverFleetShift";
 
 const LOGO_URL =
@@ -367,7 +368,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
         <DriverFleetShift language={language} />
       </header>
 
-      <main className="dp-content-with-tabbar dp-fade-in">{children}</main>
+      <main className="dp-content-with-tabbar dp-fade-in"><DriverShiftWorkspace>{children}</DriverShiftWorkspace></main>
 
       <nav
         className="dp-tab-bar flex items-stretch"

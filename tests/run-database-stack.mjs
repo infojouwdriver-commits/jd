@@ -23,16 +23,16 @@ let schemaExportWork;
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function docker(args,{input,env,timeout=180000}={}) {
  return new Promise((resolve,reject)=>{
-  const process=spawn('docker',args,{env:{...globalThis.process.env,...env},stdio:['pipe','pipe','pipe']});let stdout='';
+  const process=spawn('docker',args,{env:{...globalThis.process.env,...env},stdio:['pipe','pipe','pipe']});let stdout='',sqlstate;
   const timer=setTimeout(()=>{process.kill('SIGKILL');reject(Error(`Docker ${args[0]} timed out`));},timeout);
   process.stdout.on('data',chunk=>{stdout+=chunk;if(stdout.length>3000000){process.kill('SIGKILL');reject(Error('Docker output limit'));}});
   // Deliberately never echo stderr, command arguments, SQL or generated credentials.
-  process.stderr.resume();process.once('error',()=>{clearTimeout(timer);reject(Error('Docker is unavailable; native stack test has not run'));});
-  process.once('close',code=>{clearTimeout(timer);code===0?resolve(stdout.trim()):reject(Error(`Docker ${args[0]} failed; inspect the isolated runner privately`));});
+  process.stderr.on('data',chunk=>{const match=String(chunk).match(/(?:ERROR|FATAL|PANIC):\s+([0-9A-Z]{5})\b/);if(match)sqlstate=match[1];});process.once('error',()=>{clearTimeout(timer);reject(Error('Docker is unavailable; native stack test has not run'));});
+  process.once('close',code=>{clearTimeout(timer);code===0?resolve(stdout.trim()):reject(Error(`Docker ${args[0]} failed${sqlstate?`; SQLSTATE ${sqlstate}`:''}; inspect the isolated runner privately`));});
   process.stdin.on('error',()=>{});process.stdin.end(input);
  });
 }
-async function psql(sql){return docker(['exec','-i',database,'psql','-U','postgres','-d','jd_test','-v','ON_ERROR_STOP=1','-At'],{input:sql,timeout:45000});}
+async function psql(sql){try{return await docker(['exec','-i',database,'psql','-U','postgres','-d','jd_test','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-At'],{input:sql,timeout:45000});}catch(error){throw Error(`${error.message}; last completed check: ${checks.at(-1)??'database initialization'}`);}}
 function deploymentSql(file) {
  let sql=fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
  for(const [key,value]of Object.entries(config))sql=sql.replaceAll(`:'${key}'`,"'"+value.replaceAll("'","''")+"'").replaceAll(`:\"${key}\"`,'"'+value.replaceAll('"','""')+'"');
@@ -60,7 +60,7 @@ try {
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await psql(`CREATE FUNCTION public.stack_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
- for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql'])await psql(deploymentSql(file));
+ for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));

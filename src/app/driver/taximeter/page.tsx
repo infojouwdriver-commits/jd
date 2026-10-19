@@ -691,6 +691,36 @@ export default function TaximeterPage() {
     finally { setLoading(false); }
   };
 
+  // The durable local trip is authoritative for whether the portal meter is running.
+  // Publishing its status must never discard or block the locally saved trip.
+  useEffect(() => {
+    const key = tripData?.completionRequestKey;
+    if (!tripActive || !key || !user) return;
+    let cancelled = false, sending = false, warned = false;
+    const publish = async () => {
+      if (sending || cancelled) return;
+      sending = true;
+      try {
+        const data = await api.get<import("@/lib/driver-shifts").ShiftList>("/drivers/shifts");
+        if (cancelled) return;
+        if (!data.active) throw new Error("Shift unavailable");
+        if (Date.parse(tripData.startTime) < Date.parse(data.active.started_at)) return;
+        await api.post("/drivers/shifts", {action:"status",request_id:key,shift_id:data.active.id,expected_version:data.active.version,work_status:"with_passenger"});
+        if (!cancelled) window.dispatchEvent(new Event("driver-shift-updated"));
+      } catch {
+        if (!cancelled && !warned) {
+          warned = true;
+          toast.warning(language === "ar" ? "الرحلة محفوظة على الجهاز؛ ستُعاد محاولة مزامنة حالة الوردية عند الاتصال." : language === "fr" ? "Trajet conservé sur cet appareil ; la synchronisation du service sera réessayée." : "Rit op dit apparaat bewaard; dienststatus wordt opnieuw gesynchroniseerd.");
+        }
+      } finally { sending = false; }
+    };
+    void publish();
+    const timer = window.setInterval(()=>void publish(),20000);
+    const online = () => void publish();
+    window.addEventListener("online",online);
+    return () => {cancelled=true; window.clearInterval(timer); window.removeEventListener("online",online);};
+  }, [tripActive,tripData?.completionRequestKey,user?.sub,language]);
+
   const startTrip = async () => {
     if (!user || !storageReady || storageError || activeTripRef.current || startingRef.current) return;
     startingRef.current = true;
@@ -793,6 +823,7 @@ export default function TaximeterPage() {
       setPendingTrips((await tripJournal().list(user.sub, 'completed')).length);
       toast.success(language === 'ar' ? 'انتهت الرحلة وحُفظت بأمان على هذا الجهاز' : language === 'fr' ? 'Trajet terminé et enregistré sur cet appareil' : 'Rit beëindigd en op dit apparaat opgeslagen');
       setTripActive(false); setTripData(null); setStartAddress(''); setEndAddress('');
+      window.dispatchEvent(new Event('driver-shift-updated'));
       setPassengerName(''); setProposedPrice(''); setFinalPrice(''); setPaymentMethod('');
       setExternalRideNumber(''); setShowEndTripDialog(false); setEstimatedDistance(0);
       setEstimatedDuration(0); setLocationHistory([]); setActualTripDistance(0);

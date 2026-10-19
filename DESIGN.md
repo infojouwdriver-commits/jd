@@ -185,3 +185,14 @@ content and a visible footer preserve submission on short mobile viewports.
 The approved company workspaces extend the existing web management shell and its semantic CSS/Tailwind tokens. They do not change the native palette or rebrand the marketing site. The visual aim is a calm operational ledger: a clear company identity header, compact status badges, scannable monetary totals, natural-height tab panels, and consistent shared Radix dialogs/selects. Financial state is expressed in text, never only in colour. Tables scroll horizontally when comparison requires it; cards retain every available action at narrow widths.
 
 Behavior and business references are maintained in docs/OPERATIONS_UX.md and docs/COMPANY_PLATFORM_CONTRACT.md. Runtime owners are src/components/operations, src/components/ui and the existing globals.css theme. No new parallel colour token system is introduced.
+
+
+### Driver portal shift entry
+
+The service shift is the primary work entry. Use one prominent dp card below the
+shared header, with the vehicle and a text status, a single odometer start field,
+and a pause/resume action. Keep the shift open through breaks. Retain navigation
+to profile and history; do not mix GPS sharing with declaration status. Use the
+same card, OperationForm and Arabic/French/Dutch copy in both themes. Trip links belong to the separate Dutch service sheet; customer receipts stay unchanged.
+Use a structured A4 report with company identity, shift metadata, time and kilometre
+summaries, actual payments and a paginated audit ledger. Never guess odometer values.

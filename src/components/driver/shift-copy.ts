@@ -1,5 +1,17 @@
 export const shiftCopy = {
   ar: {
+    pause: "استراحة",
+    resume: "استئناف العمل",
+    keepOpen: "الاستراحة لا تُغلق الوردية.",
+    firstStep:
+      "ابدأ ورديتك بإدخال قراءة عداد المركبة، ثم استخدم البوابة كالمعتاد.",
+    activity: "نشاط الوردية والرحلات",
+    declaration: "قراءة السائق",
+    trip_start: "بدء رحلة",
+    trip_end: "نهاية رحلة",
+    trip_cancel: "إلغاء رحلة",
+    stateChange: "تغيير الحالة",
+    trip: "الرحلة",
     invalid:
       "تحقق من المركبة المختارة والقراءات: لا يجوز أن تتناقص، أو أن تتجاوز زيادة مسافة الركاب زيادة العداد.",
     conflict:
@@ -49,6 +61,18 @@ export const shiftCopy = {
     select: "اختر وردية لعرض سجلها.",
   },
   fr: {
+    pause: "Pause",
+    resume: "Reprendre le travail",
+    keepOpen: "La pause garde le service ouvert.",
+    firstStep:
+      "Commencez votre service avec le compteur du véhicule, puis utilisez le portail normalement.",
+    activity: "Activité du service et courses",
+    declaration: "Compteur déclaré",
+    trip_start: "Début de course",
+    trip_end: "Fin de course",
+    trip_cancel: "Course annulée",
+    stateChange: "Changement d’état",
+    trip: "Course",
     invalid:
       "Vérifiez le véhicule et les compteurs : aucune diminution ; la hausse des kilomètres avec passagers ne peut pas dépasser celle du compteur.",
     conflict:
@@ -99,6 +123,18 @@ export const shiftCopy = {
     select: "Choisissez un service pour consulter son historique.",
   },
   nl: {
+    pause: "Pauze",
+    resume: "Werk hervatten",
+    keepOpen: "De dienst blijft open tijdens een pauze.",
+    firstStep:
+      "Begin uw dienst met de kilometerstand en gebruik daarna het portaal zoals gewoonlijk.",
+    activity: "Dienstactiviteit en ritten",
+    declaration: "Opgegeven tellerstand",
+    trip_start: "Ritbegin",
+    trip_end: "Riteinde",
+    trip_cancel: "Rit geannuleerd",
+    stateChange: "Statuswijziging",
+    trip: "Rit",
     invalid:
       "Controleer voertuig en tellerstanden: geen daling; de toename met passagiers mag niet groter zijn dan de tellertoename.",
     conflict:

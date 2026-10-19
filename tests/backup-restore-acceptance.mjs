@@ -53,8 +53,11 @@ export async function backupRestoreAcceptance({docker,source,image,prefix}) {
   fs.writeFileSync(wrapper,'#!/bin/sh\nprintf partial\nexit 1\n',{mode:0o700});
   await assert.rejects(command('sh',[backupScript],{cwd:work,env}));assert.deepEqual(fs.readdirSync(backups),files);
   checks.push('Failed pg_dump leaves no published backup or temporary plaintext file');
-  await docker(['run','--detach','--name',target,'--network','none','--env','POSTGRES_DB','--env','POSTGRES_PASSWORD',image],{env:{POSTGRES_DB:database,POSTGRES_PASSWORD:randomBytes(32).toString('hex')}});
-  let ready=false;for(let i=0;i<60;i++){try{await docker(['exec',target,'pg_isready','-U','postgres','-d',database],{timeout:5000});ready=true;break;}catch{await new Promise(r=>setTimeout(r,1000));}}assert.ok(ready);
+  const restorePassword=randomBytes(32).toString('hex');
+  await docker(['run','--detach','--name',target,'--network','none','--env','POSTGRES_DB','--env','POSTGRES_PASSWORD',image],{env:{POSTGRES_DB:database,POSTGRES_PASSWORD:restorePassword}});
+  // pg_isready also accepts the temporary Unix-socket bootstrap server. Wait
+  // for the final TCP server so role creation cannot race its shutdown.
+  let ready=false;for(let i=0;i<60;i++){try{const probe=await docker(['exec','--env','PGPASSWORD',target,'psql','-h','127.0.0.1','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-Atc','SELECT 1'],{env:{PGPASSWORD:restorePassword},timeout:5000});if(probe==='1'){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,1000));}assert.ok(ready,'Final isolated restore PostgreSQL server did not become ready');
   // Database archives exclude global roles/passwords; provision fresh roles separately.
   await sql(target,database,'CREATE ROLE jd_browser; CREATE ROLE jd_service; CREATE ROLE jd_gateway;');
   await restore(archive,key,target,database);

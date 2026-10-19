@@ -39,6 +39,7 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_change'){assert.equal(body.p_actor,1);data={id:body.p_id,status:body.p_decision};}
    else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);data={active:null,shifts:[]};}
+   else if(url.pathname==='/rpc/security_shift_status'){shiftCalls.push(body);data={id:body.p_shift_id,version:2,work_status:body.p_status};}
    else if(url.pathname==='/rpc/security_record_driver_shift'){shiftCalls.push(body);data={id:body.p_shift_id,version:1};}
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
@@ -126,6 +127,8 @@ try {
  const shiftDeclaration={request_id:'11111111-1111-4111-8111-111111111111',shift_id:'11111111-1111-4111-8111-111111111111',action:'start',expected_version:0,odometer:217000.35,passenger_km:0,work_status:'available'};
  await status('Driver explicit decimal declaration reaches service RPC with session owner',request('/next_api/drivers/shifts','POST',shiftDeclaration,driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_odometer,217000.35);
  const shiftCount=shiftCalls.length;await status('Driver cannot submit another user identifier',request('/next_api/drivers/shifts','POST',{...shiftDeclaration,user_id:999},driverToken),400);assert.equal(shiftCalls.length,shiftCount);
+ await status('One-click break self-scopes and never accepts counters',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break'},driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_status,'break');
+ await status('Status rejects explicit counter injection',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break',odometer:0},driverToken),400);
  await status('Shift endpoint rejects malformed report identity',request('/next_api/drivers/shifts?id=not-a-uuid','GET',null,driverToken),400);
  await status('Shift endpoint rejects deletion',request('/next_api/drivers/shifts','DELETE',null,driverToken),405);
 
