@@ -114,6 +114,7 @@ export const POST = requestMiddleware(async (request, context) => {
         chiron_vehicle_id: vehicle?.chiron_vehicle_id || '',
       },
       trip: {
+        shift_id: trip.shift_id || null,
         ritnummer,
         trip_uuid: trip.trip_uuid || '',
         start_time: trip.start_time || new Date().toISOString(),

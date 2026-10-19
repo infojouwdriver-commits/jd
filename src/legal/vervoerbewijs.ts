@@ -28,6 +28,7 @@ export interface VervoerbewijsVehicle {
 }
 
 export interface VervoerbewijsTrip {
+  shift_id?: string | null;
   ritnummer: string;
   trip_uuid: string;
   start_time: string;
@@ -205,6 +206,7 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   // ── Ritregistratie ─────────────────────────────────────────────────────────
   section('RITREGISTRATIE');
   kv('Ritnummer:', data.trip.ritnummer);
+  if ('shift_id' in data.trip) ml(`Dienstreferentie: ${data.trip.shift_id || 'Niet geregistreerd'}`);
   const shortUuid = data.trip.trip_uuid.length > 28
     ? data.trip.trip_uuid.substring(0, 26) + '..'
     : data.trip.trip_uuid;

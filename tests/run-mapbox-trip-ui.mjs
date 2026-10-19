@@ -50,6 +50,7 @@ try {
         data={sub:'9002',email:'driver@example.invalid',isAdmin:false,userType:'driver'};
       }
       else if(url.pathname==='/next_api/auth/logout'){loggedIn=false;data=true;}
+      else if(url.pathname==='/next_api/drivers/shifts')data={active:{id:'00000000-0000-4000-8000-000000000001',plate_number:'TEST-1',work_status:'available',version:1},shifts:[]};
       else if(url.pathname==='/next_api/drivers/pricing')data={company_id:1,company_name:'Synthetic company',pricing:{base_fee:3,km_rate:2,minute_rate:0.3,minimum_fare:10},chiron_mode:'TEST'};
       else if(url.pathname==='/next_api/drivers/me')data={id:9002,name:'Synthetic Driver',company_id:1};
       else if(url.pathname==='/next_api/fleet/location'){

@@ -28,6 +28,24 @@ export const shiftDeclaration = z
     )
       ctx.addIssue({ code: "custom", message: "Invalid start" });
   });
+export const shiftStatusChange = z
+  .object({
+    action: z.literal("status"),
+    request_id: z.string().uuid(),
+    shift_id: z.string().uuid(),
+    expected_version: z.number().int().min(1),
+    work_status: z.enum(["available", "break", "with_passenger"]),
+  })
+  .strict();
+export interface ShiftActivity {
+  id: string;
+  kind: "declaration" | "status" | "trip_start" | "trip_end" | "trip_cancel";
+  recorded_at: string;
+  occurred_at: string;
+  work_status: ShiftStatus | null;
+  trip_id: number | null;
+  source: string | null;
+}
 export type ShiftStatus = z.infer<typeof shiftDeclaration>["work_status"];
 export interface DriverShift {
   id: string;
@@ -54,6 +72,7 @@ export interface ShiftEvent {
   work_status: ShiftStatus;
 }
 export interface ShiftDetail {
+  activity?: ShiftActivity[];
   shift: DriverShift;
   events: ShiftEvent[];
 }
@@ -77,4 +96,32 @@ export function shiftTime(value: string) {
     timeStyle: "medium",
     hour12: false,
   }).format(new Date(value));
+}
+
+export function shiftDurations(
+  detail: ShiftDetail,
+): Record<ShiftStatus, number> {
+  const result: Record<ShiftStatus, number> = {
+    available: 0,
+    driving_empty: 0,
+    with_passenger: 0,
+    break: 0,
+  };
+  const timeline = [
+    ...detail.events,
+    ...(detail.activity || []).filter(
+      (a) => a.kind !== "declaration" && a.work_status,
+    ),
+  ].sort((a, b) => Date.parse(a.recorded_at) - Date.parse(b.recorded_at));
+  for (let i = 0; i < timeline.length - 1; i++) {
+    const status = timeline[i].work_status;
+    if (status)
+      result[status] +=
+        Math.max(
+          0,
+          Date.parse(timeline[i + 1].recorded_at) -
+            Date.parse(timeline[i].recorded_at),
+        ) / 60000;
+  }
+  return result;
 }

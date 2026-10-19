@@ -1,10 +1,11 @@
 import { jsPDF } from "jspdf";
 import { configurePdfFonts } from "@/legal/pdf-fonts";
-import { shiftKilometres, shiftTime } from "./driver-shifts";
+import { shiftDurations, shiftKilometres, shiftTime } from "./driver-shifts";
 import type { ShiftDetail, ShiftStatus } from "./driver-shifts";
 
 // The exported service sheet is always Dutch, independently of the portal locale.
-export function driverShiftPdf({ shift: s, events }: ShiftDetail) {
+export function driverShiftPdf(detail: ShiftDetail) {
+  const { shift: s, events, activity } = detail;
   const doc = new jsPDF({ compress: true, putOnlyUsedFonts: true });
   configurePdfFonts(doc);
   doc.setProperties({
@@ -64,18 +65,7 @@ export function driverShiftPdf({ shift: s, events }: ShiftDetail) {
   );
   y += 3;
   line("Geregistreerde minuten per status", true);
-  const durations: Record<ShiftStatus, number> = {
-    available: 0,
-    driving_empty: 0,
-    with_passenger: 0,
-    break: 0,
-  };
-  for (let i = 0; i < events.length - 1; i++) {
-    durations[events[i].work_status] +=
-      (Date.parse(events[i + 1].recorded_at) -
-        Date.parse(events[i].recorded_at)) /
-      60000;
-  }
+  const durations = shiftDurations(detail);
   for (const key of Object.keys(status) as ShiftStatus[])
     line(`${status[key]}: ${km(durations[key])} min`);
   y += 3;
@@ -100,6 +90,21 @@ export function driverShiftPdf({ shift: s, events }: ShiftDetail) {
       `Teller: ${km(e.odometer)} km · Cumulatief met passagiers: ${km(e.passenger_km)} km`,
     );
     line(`Status na registratie: ${status[e.work_status]}`);
+  }
+  if (activity?.length) {
+    line("Dienstactiviteit en ritten", true);
+    const labels = {
+      status: "Statuswijziging",
+      trip_start: "Ritbegin",
+      trip_end: "Riteinde",
+      trip_cancel: "Rit geannuleerd",
+      declaration: "Tellerstand",
+    };
+    for (const a of activity.filter((a) => a.kind !== "declaration")) {
+      line(
+        `${shiftTime(a.occurred_at)} · ${labels[a.kind]}${a.trip_id ? ` · Rit #${a.trip_id} · ${a.source || ""}` : ""}${a.work_status ? ` · ${status[a.work_status]}` : ""}`,
+      );
+    }
   }
   y += 3;
   line(

@@ -5,7 +5,7 @@ import {
 } from "@/lib/create-response";
 import { generateAdminUserToken } from "@/lib/auth";
 import { createPostgrestClient } from "@/lib/postgrest";
-import { shiftDeclaration } from "@/lib/driver-shifts";
+import { shiftStatusChange, shiftDeclaration } from "@/lib/driver-shifts";
 function failure(code?: string) {
   const status =
     code === "42501"
@@ -61,7 +61,23 @@ export const GET = requestMiddleware(async (request, context) => {
 export const POST = requestMiddleware(async (request, context) => {
   const userId = Number(context.payload?.sub);
   if (!Number.isSafeInteger(userId) || userId < 1) return failure("42501");
-  const parsed = shiftDeclaration.safeParse(await validateRequestBody(request));
+  const body = await validateRequestBody(request);
+  if (body?.action === "status") {
+    const status = shiftStatusChange.safeParse(body);
+    if (!status.success) return failure("22023");
+    const b = status.data;
+    const { data, error } = await createPostgrestClient(
+      await generateAdminUserToken(),
+    ).rpc("security_shift_status", {
+      p_user_id: userId,
+      p_request_id: b.request_id,
+      p_shift_id: b.shift_id,
+      p_expected_version: b.expected_version,
+      p_status: b.work_status,
+    });
+    return error ? failure(error.code) : createSuccessResponse(data);
+  }
+  const parsed = shiftDeclaration.safeParse(body);
   if (!parsed.success) return failure("22023");
   const b = parsed.data;
   const { data, error } = await createPostgrestClient(

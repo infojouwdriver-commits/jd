@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { OperationForm } from "@/components/operations/OperationForm";
 import { operationsCopy } from "@/components/operations/operations-copy";
 import { shiftCopy } from "./shift-copy";
-import { shiftKilometres, shiftTime } from "@/lib/driver-shifts";
+import {
+  shiftDurations,
+  shiftKilometres,
+  shiftTime,
+} from "@/lib/driver-shifts";
 import type {
   DriverShift,
   ShiftList,
@@ -72,17 +76,9 @@ export default function DriverShifts() {
   }, [load]);
   const active = list?.active;
   const metrics = detail ? shiftKilometres(detail.shift) : null;
-  const durations = Object.fromEntries(statuses.map((s) => [s, 0])) as Record<
-    ShiftStatus,
-    number
-  >;
-  if (detail)
-    for (let i = 0; i < detail.events.length - 1; i++) {
-      const a = detail.events[i],
-        b = detail.events[i + 1];
-      durations[a.work_status] +=
-        (Date.parse(b.recorded_at) - Date.parse(a.recorded_at)) / 60000;
-    }
+  const durations = detail
+    ? shiftDurations(detail)
+    : { available: 0, driving_empty: 0, with_passenger: 0, break: 0 };
   async function downloadPdf() {
     if (!detail || downloadFlight.current) return;
     downloadFlight.current = true;
@@ -285,6 +281,29 @@ export default function DriverShifts() {
               </tbody>
             </table>
           </div>
+          {!!detail.activity?.length && (
+            <section className="space-y-2">
+              <h3 className="font-bold">{c.activity}</h3>
+              <ol className="space-y-2">
+                {detail.activity
+                  .filter((a) => a.kind !== "declaration")
+                  .map((a) => (
+                    <li key={a.id} className="border-b py-2 text-sm">
+                      <p>
+                        {shiftTime(a.occurred_at)} ·{" "}
+                        {a.kind === "status" ? c.stateChange : c[a.kind]}
+                      </p>
+                      <p>
+                        {a.work_status ? c[a.work_status] : ""}
+                        {a.trip_id
+                          ? ` · ${c.trip} #${a.trip_id} · ${a.source || ""}`
+                          : ""}
+                      </p>
+                    </li>
+                  ))}
+              </ol>
+            </section>
+          )}
           <p className="text-sm">{c.notice}</p>
           <Button
             className="shift-controls"
@@ -358,11 +377,13 @@ export default function DriverShifts() {
                 shift_id:
                   form.action === "start" ? requestId : values._shift_id,
                 action: form.action,
-                expected_version: Number(values._version),
+                expected_version:
+                  form.action === "start" ? 0 : Number(values._version),
                 odometer: Number(values.odometer),
                 passenger_km: Number(values.passenger_km),
-                work_status: values.work_status,
+                work_status: values.work_status || "available",
               });
+              window.dispatchEvent(new Event("driver-shift-updated"));
               setSaved(true);
               await load(0, s.id);
             } finally {

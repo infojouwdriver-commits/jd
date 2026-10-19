@@ -92,17 +92,25 @@ try {
     for (const theme of ["light", "dark"]) {
       const db = new PGlite();
       await db.waitReady;
-      const migration = fs
-        .readFileSync(
-          new URL("../migrations/20261019_driver_shifts.sql", import.meta.url),
-          "utf8",
-        )
-        .replaceAll(':"schema"', "public")
-        .replaceAll(':"user_role"', "browser")
-        .replaceAll(':"admin_role"', "service");
+      const sql = (file) =>
+        fs
+          .readFileSync(new URL("../" + file, import.meta.url), "utf8")
+          .replaceAll(':"schema"', "public")
+          .replaceAll(':"user_role"', "browser")
+          .replaceAll(':"admin_role"', "service");
       await db.exec(
-        `CREATE ROLE browser;CREATE ROLE service;CREATE TABLE companies(id bigint primary key,name text);CREATE TABLE vehicles(id bigint primary key,company_id bigint,plate_number text,status text);CREATE TABLE drivers(id bigint primary key,user_id bigint,company_id bigint,current_vehicle_id bigint,assigned_vehicle_id bigint,full_name text,status text);CREATE TABLE trips(driver_id bigint,status text);INSERT INTO companies VALUES(1,'Synthetic company');INSERT INTO vehicles VALUES(1,1,'TEST-1','active');INSERT INTO drivers VALUES(1,2,1,1,NULL,'Synthetic Driver','active');` +
-          migration,
+        "CREATE ROLE browser;CREATE ROLE service;" +
+          sql("schema/reconstructed-staging.sql"),
+      );
+      for (const file of [
+        "migrations/20261010_release.sql",
+        "migrations/20261010_trip_invoice.sql",
+        "migrations/20261019_driver_shifts.sql",
+        "migrations/20261019_shift_activity.sql",
+      ])
+        await db.exec(sql(file));
+      await db.exec(
+        "INSERT INTO companies(id,name) VALUES(1,'Synthetic company');INSERT INTO vehicles(id,company_id,plate_number,status) VALUES(1,1,'TEST-1','active');INSERT INTO drivers(id,user_id,company_id,current_vehicle_id,full_name,status) VALUES(1,2,1,1,'Synthetic Driver','active');",
       );
       const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
@@ -148,6 +156,18 @@ try {
             driver: { id: 1, full_name: "Synthetic Driver" },
             company: { id: 1, name: "Synthetic company" },
           };
+        else if (u.pathname === "/next_api/drivers/pricing")
+          data = {
+            company_id: 1,
+            company_name: "Synthetic company",
+            pricing: {
+              base_fee: 3,
+              km_rate: 2,
+              minute_rate: 0.3,
+              minimum_fare: 10,
+            },
+            chiron_mode: "TEST",
+          };
         else if (u.pathname === "/next_api/drivers/vehicles")
           data = {
             vehicles: [{ id: 1, plate_number: "TEST-1" }],
@@ -159,21 +179,35 @@ try {
             const b = r.postDataJSON();
             writes.push(b);
             try {
-              data = (
-                await db.query(
-                  "SELECT security_record_driver_shift($1,$2,$3,$4,$5,$6,$7,$8) v",
-                  [
-                    2,
-                    b.request_id,
-                    b.action,
-                    b.shift_id,
-                    b.expected_version,
-                    b.odometer,
-                    b.passenger_km,
-                    b.work_status,
-                  ],
-                )
-              ).rows[0].v;
+              if (b.action === "status")
+                data = (
+                  await db.query(
+                    "SELECT security_shift_status($1,$2,$3,$4,$5) v",
+                    [
+                      2,
+                      b.request_id,
+                      b.shift_id,
+                      b.expected_version,
+                      b.work_status,
+                    ],
+                  )
+                ).rows[0].v;
+              else
+                data = (
+                  await db.query(
+                    "SELECT security_record_driver_shift($1,$2,$3,$4,$5,$6,$7,$8) v",
+                    [
+                      2,
+                      b.request_id,
+                      b.action,
+                      b.shift_id,
+                      b.expected_version,
+                      b.odometer,
+                      b.passenger_km,
+                      b.work_status,
+                    ],
+                  )
+                ).rows[0].v;
             } catch (e) {
               return route.fulfill({
                 status: e.code === "40001" ? 409 : 400,
@@ -215,8 +249,13 @@ try {
         errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
       const c = copy[lang];
-      await page.goto(base + "/driver/shifts");
-      await page.getByRole("heading", { name: c.title, exact: true }).waitFor();
+      await page.goto(base + "/driver/taximeter");
+      await page.getByRole("heading", { name: c.start, exact: true }).waitFor();
+      if (lang === "ar" && theme === "light")
+        await page.screenshot({
+          path: path.join(qa, "shift-first-start-ar.png"),
+          fullPage: true,
+        });
       await page.getByRole("button", { name: c.start, exact: true }).click();
       await page.locator("#operation-odometer").fill("100.10");
       await page
@@ -243,6 +282,36 @@ try {
           .n,
         1,
       );
+      await page.goto(base + "/driver/trips");
+      const pause = { ar: "استراحة", fr: "Pause", nl: "Pauze" }[lang];
+      const resume = {
+        ar: "استئناف العمل",
+        fr: "Reprendre le travail",
+        nl: "Werk hervatten",
+      }[lang];
+      await page.getByRole("button", { name: pause, exact: true }).click();
+      await page.getByRole("button", { name: resume, exact: true }).waitFor();
+      await page.reload();
+      await page.getByRole("button", { name: resume, exact: true }).waitFor();
+      if (lang === "ar" && theme === "dark")
+        await page.screenshot({
+          path: path.join(qa, "shift-first-break-ar.png"),
+          fullPage: true,
+        });
+      await page.getByRole("button", { name: resume, exact: true }).click();
+      await page.getByRole("button", { name: pause, exact: true }).waitFor();
+      assert.equal(
+        (await db.query("SELECT count(*) n FROM driver_shifts")).rows[0].n,
+        1,
+      );
+      assert.equal(
+        Number(
+          (await db.query("SELECT odometer FROM driver_shifts")).rows[0]
+            .odometer,
+        ),
+        100.1,
+      );
+      await page.goto(base + "/driver/shifts");
       await page.getByRole("button", { name: c.record, exact: true }).click();
       await page.locator("#operation-odometer").fill("110.50");
       await page.locator("#operation-passenger_km").fill("5.25");

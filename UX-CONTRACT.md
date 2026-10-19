@@ -199,3 +199,46 @@ Verification: `tests/driver-shifts.test.mjs` (PostgreSQL WASM),
 uncertain-response retry, reload, actual PDF downloads and printing), and the actual authenticated
 handlers in `tests/run-auth-integration.mjs`. Native PostgreSQL migration is also
 part of the existing release stack gate.
+
+
+## Shift-first portal and activity — 19 October 2026
+
+`DriverShiftWorkspace` uses the existing dp tokens and OperationForm. The portal
+home starts with one odometer field; taximeter content waits for an active shift.
+Profile, history and messages remain accessible. A persistent work-status card
+provides one-click pause/resume, a busy lock, localized failures, an idempotent
+retry, focus refresh and a 20-second status refresh. A pause keeps the same shift
+and never submits or changes a reading. An active trip blocks pause and closure.
+
+The database owns `trips.shift_id`. New trips submitted to this system (meter or
+external source) are attached only to an open matching driver/company/vehicle
+shift whose start precedes the trip. Existing rows, historical periods and closed
+shifts are not backfilled. Real-time starts/completions change work status;
+offline completed submissions add trip activity without overwriting the driver's
+current break. Replayed saves do not duplicate activity. Platforms which submit
+no trip to this system cannot be detected by browser/GPS speculation.
+
+Immutable activity records contain timestamps, state, trip ID and submitted
+source, separately from the explicit counter ledger. PDF and screen include both;
+state minutes use recorded status changes through the last recorded event.
+Trip kilometres never alter declared odometer/passenger totals.
+
+New customer trip receipts include the authoritative full Dutch Dienstreferentie
+and persist it in the immutable receipt snapshot. An unlinked new trip says Niet
+geregistreerd; old snapshots keep their original layout and are not rewritten.
+This field implements the requested shift reference without asserting that an
+unspecified municipality has certified the whole receipt.
+
+Acceptance: `tests/shift-activity.test.mjs` covers owner isolation, idempotency,
+real trip source linking, unchanged counters, pause conflicts, historical and
+vehicle mismatch exclusions, immutable receipt reference and immutable activity.
+The six-locale/theme UI regression starts from home, pauses/resumes across reload,
+and downloads the Dutch service sheet. Auth integration exercises the real
+status endpoint and rejects counter injection.
+
+The portal's durable local trip journal publishes passenger status with the
+completion UUID, retries after reload/online and does not block or discard a
+locally saved trip when publication fails. The matching completed-trip insert
+clears that state atomically. A replayed start cannot reopen passenger status
+after completion. Pausing/closing while that state is active is rejected. A
+legacy local trip beginning before the selected shift is not relabelled.
