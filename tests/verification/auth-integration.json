@@ -1,5 +1,5 @@
 {
-  "passed": 71,
+  "passed": 76,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -27,6 +27,11 @@
     "Legacy native invoice without JSON type is rejected",
     "Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice",
     "Native PDF still denies another driver trip",
+    "Driver shift history self-scopes through actual middleware",
+    "Driver explicit decimal declaration reaches service RPC with session owner",
+    "Driver cannot submit another user identifier",
+    "Shift endpoint rejects malformed report identity",
+    "Shift endpoint rejects deletion",
     "Native activity paginates all own matching records and summary covers the entire period",
     "Activity ignores hostile owner filters even for administrator",
     "Invalid activity date rejected",

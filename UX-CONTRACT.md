@@ -159,3 +159,41 @@ slot and explicit signing label. No second form/retry/modal system is introduced
 Server-side company membership and SQL locks authorize signing; frontend controls
 only present that authority. Signing never sends mail, charges a payment method,
 or claims real invoice delivery. Signed records and financial evidence are immutable.
+
+## Explicit web driver shifts — 19 October 2026
+
+The web portal now has `/driver/shifts`, linked from the shared driver header.
+The authenticated driver, selected active company vehicle, and server clock own
+the declaration. No GPS points, inferred kilometres, retrospective shifts,
+financial writes, or native application changes are introduced. The existing
+latest-position fleet sharing remains separate from the service ledger.
+
+The canonical form is `OperationForm`, using shared Input, Label, Button, Select
+and Dialog. Its optional numeric step supports two decimal kilometre inputs;
+existing integer forms keep their validation. LanguageContext owns Arabic RTL,
+French and Dutch; existing `dp-*` tokens own both themes. The report signature
+is the actual chronological declaration ledger. Browser printing preserves
+locale-capable system fonts and offers Save as PDF; no download is claimed
+before the browser completes it. This is an explicit driver declaration, not a
+claim of municipal certification or a reconstruction of earlier vehicle motion.
+
+| Operation | Pending and success | Recovery |
+| --- | --- | --- |
+| Start | Explicit odometer; passenger total starts at zero; selected vehicle and identity snapshots stored | Same request UUID replays; another open driver/vehicle shift conflicts |
+| Record | Odometer, cumulative passenger km and next state saved together with server time/version | No decreases; passenger increment cannot exceed odometer increment; conflict requires refresh |
+| End | Explicit final readings; blocks while a trip is in progress; closes immutable event history | Same uncertain request can replay; no automatic end on logout or GPS loss |
+| View | Driver's own history, 25 shifts per page, full selected ledger | Stale requests cannot replace newer state; retain inputs and expose refresh errors |
+| Print | Declared start/end counters, distances, state intervals and open/closed label | Open reports are provisional; state durations stop at last recorded event |
+
+The optional business error formatter on OperationForm explains invalid readings
+and stale-shift conflicts. Uncertain outcomes keep the exact UUID, values, shift
+identity and expected version in session memory, scoped by authenticated user;
+closing and reopening the form retries the same declaration. The database
+serializes driver requests and vehicle allocation and is authoritative over UI
+state. Closed events cannot be updated/deleted by the browser or service role.
+
+Verification: `tests/driver-shifts.test.mjs` (PostgreSQL WASM),
+`tests/run-driver-shifts-ui.mjs` (three locales, two themes, narrow layout,
+uncertain-response retry, reload and printing), and the actual authenticated
+handlers in `tests/run-auth-integration.mjs`. Native PostgreSQL migration is also
+part of the existing release stack gate.
