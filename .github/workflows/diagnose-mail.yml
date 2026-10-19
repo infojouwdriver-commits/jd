@@ -1,0 +1,61 @@
+name: Diagnose website mail without delivery
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read delivery metadata and validate a synthetic sandbox request
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'cd /srv/jouw-driver/foundation && docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml exec -T app node --input-type=module' <<'DIAGNOSE'
+          import {createHmac,randomUUID} from 'node:crypto';
+          const e=process.env;
+          try {
+            if(e.MAIL_PROVIDER!=='brevo'||e.BREVO_FROM_EMAIL!=='jouw2023@gmail.com'||!e.BREVO_API_KEY||e.POSTGREST_URL!=='http://postgrest:3000'||e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||!e.JWT_SECRET)throw Error('RUNTIME_CONFIGURATION');
+            const enc=x=>Buffer.from(JSON.stringify(x)).toString('base64url'),now=Math.floor(Date.now()/1000);
+            const unsigned=enc({alg:'HS256'})+'.'+enc({sub:'0',role:e.SCHEMA_ADMIN_USER,iss:'jouw-driver',aud:'jouw-driver',iat:now,exp:now+60});
+            const token=unsigned+'.'+createHmac('sha256',e.JWT_SECRET).update(unsigned).digest('base64url');
+            const read=async path=>{const r=await fetch(e.POSTGREST_URL+path,{headers:{Authorization:'Bearer '+token,'Accept-Profile':'public'},redirect:'error',signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('METADATA_UNAVAILABLE');return r.json();};
+            const queue=await read('/subscription_mail_queue?document_id=in.(2,3)&select=id,document_id,purpose,status,last_result,attempted_at,completed_at,mail_delivery_id&order=id.asc&limit=10');
+            const deliveries=await read('/mail_deliveries?purpose=in.(subscription_invoice,subscription_credit)&select=id,purpose,status,created_at,updated_at&order=id.desc&limit=10');
+            // Database selection excludes recipients, amounts, contracts, keys and message bodies.
+            console.log(JSON.stringify({queue,deliveries}));
+            const body={sender:{name:'JOUW DRIVER',email:e.BREVO_FROM_EMAIL},replyTo:{name:'JOUW DRIVER',email:e.BREVO_FROM_EMAIL},to:[{email:'jouw2023@gmail.com'}],subject:'JOUW DRIVER sandbox validation',htmlContent:'<p>Synthetic validation only.</p>',textContent:'Synthetic validation only.',headers:{'X-Sib-Sandbox':'drop',idempotencyKey:'jd-'+createHmac('sha256','synthetic-diagnostic-only').update(randomUUID()).digest('hex')}};
+            const response=await fetch('https://api.brevo.com/v3/smtp/email',{method:'POST',redirect:'error',headers:{'api-key':e.BREVO_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+            let data=await response.json().catch(()=>null);
+            const allowed=['invalid_parameter','missing_parameter','unauthorized','permission_denied','not_enough_credits','duplicate_parameter','method_not_allowed'];
+            const classify=d=>/idempoten/i.test(d?.message||'')?'idempotency':/sender/i.test(d?.message||'')?'sender':/smtp|activat/i.test(d?.message||'')?'smtp_activation':'unspecified';
+            console.log(JSON.stringify({sandbox:true,key_format:'current_application',http_status:response.status,accepted:response.ok,code:allowed.includes(data?.code)?data.code:response.ok?'accepted':'provider_rejected',category:response.ok?'none':classify(data)}));
+            if(!response.ok){
+              body.headers.idempotencyKey=randomUUID();
+              const retry=await fetch('https://api.brevo.com/v3/smtp/email',{method:'POST',redirect:'error',headers:{'api-key':e.BREVO_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+              data=await retry.json().catch(()=>null);
+              console.log(JSON.stringify({sandbox:true,key_format:'uuid',http_status:retry.status,accepted:retry.ok,code:allowed.includes(data?.code)?data.code:retry.ok?'accepted':'provider_rejected',category:retry.ok?'none':classify(data)}));
+            }
+            // Never print raw provider messages, recipient details or credentials.
+          }catch(error){console.error(['RUNTIME_CONFIGURATION','METADATA_UNAVAILABLE'].includes(error?.message)?error.message:'MAIL_DIAGNOSTIC_UNAVAILABLE');process.exitCode=1;}
+          DIAGNOSE
