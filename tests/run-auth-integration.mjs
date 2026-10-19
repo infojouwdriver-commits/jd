@@ -16,6 +16,7 @@ const totpSecret=Array.from(randomBytes(32),n=>alphabet[n%32]).join('');
 const password=randomBytes(18).toString('base64url');
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
 rows.user_passcode=[];
+const shiftCalls=[];
 const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
 const claims=new Set();let unavailable=false;const databaseTokens=[];
@@ -37,6 +38,8 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
    else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_change'){assert.equal(body.p_actor,1);data={id:body.p_id,status:body.p_decision};}
+   else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);data={active:null,shifts:[]};}
+   else if(url.pathname==='/rpc/security_record_driver_shift'){shiftCalls.push(body);data={id:body.p_shift_id,version:1};}
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
@@ -118,6 +121,13 @@ try {
  }
  assert.equal(rows.invoices.filter(row=>row.trip_id===103).length,1);checks.push('Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice');
  await assert.rejects(native.invoice(1,104),error=>error.status===404);checks.push('Native PDF still denies another driver trip');
+
+ await status('Driver shift history self-scopes through actual middleware',request('/next_api/drivers/shifts?user_id=999','GET',null,driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);
+ const shiftDeclaration={request_id:'11111111-1111-4111-8111-111111111111',shift_id:'11111111-1111-4111-8111-111111111111',action:'start',expected_version:0,odometer:217000.35,passenger_km:0,work_status:'available'};
+ await status('Driver explicit decimal declaration reaches service RPC with session owner',request('/next_api/drivers/shifts','POST',shiftDeclaration,driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_odometer,217000.35);
+ const shiftCount=shiftCalls.length;await status('Driver cannot submit another user identifier',request('/next_api/drivers/shifts','POST',{...shiftDeclaration,user_id:999},driverToken),400);assert.equal(shiftCalls.length,shiftCount);
+ await status('Shift endpoint rejects malformed report identity',request('/next_api/drivers/shifts?id=not-a-uuid','GET',null,driverToken),400);
+ await status('Shift endpoint rejects deletion',request('/next_api/drivers/shifts','DELETE',null,driverToken),405);
 
  const activityQuery={from:'2026-10-14',to:'2026-10-15',platform:'all',status:'all'};
  for(let n=0;n<1030;n++)rows.trips.push({...completed(200+n,2,1),price:'2.00',ride_type:'INTERNAL',payment_method:'cash'});

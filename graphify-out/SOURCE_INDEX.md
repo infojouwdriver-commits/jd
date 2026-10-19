@@ -114,25 +114,26 @@ Links target the working tree, so line positions can move after changes.
 
 - `update-customer-portal.sh` — [L1](../deploy/update-customer-portal.sh#L1)
 - `update-customer-portal.sh script` — [L1](../deploy/update-customer-portal.sh#L1)
-- `BILLING_MAIL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `COMPANY_STAFF_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `CONTRACT_BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `CUSTOMER_IMAGE` — [L50](../deploy/update-customer-portal.sh#L50)
-- `CUSTOMER_REVISION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `EMAIL_IDENTITY_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `FLEET_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `LIFECYCLE_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `MAIL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `OPERATIONS_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `PORTAL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `PRICING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `PUSH_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `REGISTRATION_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `VERIFIED_BACKUP_TAG` — [L50](../deploy/update-customer-portal.sh#L50)
-- `WEB_APPROVALS_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `WEB_BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
-- `cleanup()` — [L63](../deploy/update-customer-portal.sh#L63)
+- `BILLING_MAIL_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `BILLING_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `COMPANY_STAFF_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `CONTRACT_BILLING_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `CUSTOMER_IMAGE` — [L52](../deploy/update-customer-portal.sh#L52)
+- `CUSTOMER_REVISION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `EMAIL_IDENTITY_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `FLEET_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `LIFECYCLE_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `MAIL_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `OPERATIONS_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `PORTAL_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `PRICING_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `PUSH_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `REGISTRATION_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `SHIFT_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `VERIFIED_BACKUP_TAG` — [L52](../deploy/update-customer-portal.sh#L52)
+- `WEB_APPROVALS_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `WEB_BILLING_MIGRATION` — [L52](../deploy/update-customer-portal.sh#L52)
+- `cleanup()` — [L65](../deploy/update-customer-portal.sh#L65)
 
 ## [deploy/update-customer-ui.sh](../deploy/update-customer-ui.sh)
 
@@ -921,6 +922,20 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_submit_company_change()` — [L21](../migrations/20261018_web_change_approvals.sql#L21)
 - `"schema".security_review_company_change()` — [L47](../migrations/20261018_web_change_approvals.sql#L47)
 
+## [migrations/20261019_driver_shifts.sql](../migrations/20261019_driver_shifts.sql)
+
+- `20261019_driver_shifts.sql` — [source](../migrations/20261019_driver_shifts.sql#)
+- `"schema".driver_shifts` — [L3](../migrations/20261019_driver_shifts.sql#L3)
+- `driver_shifts_one_driver` — [L23](../migrations/20261019_driver_shifts.sql#L23)
+- `driver_shifts_one_vehicle` — [L24](../migrations/20261019_driver_shifts.sql#L24)
+- `driver_shifts_history` — [L25](../migrations/20261019_driver_shifts.sql#L25)
+- `"schema".driver_shift_events` — [L26](../migrations/20261019_driver_shifts.sql#L26)
+- `"schema".security_record_driver_shift()` — [L43](../migrations/20261019_driver_shifts.sql#L43)
+- `"schema".security_immutable_shift_event()` — [L110](../migrations/20261019_driver_shifts.sql#L110)
+- `immutable_shift_event` — [L116](../migrations/20261019_driver_shifts.sql#L116)
+- `"schema".security_preserve_driver_shift()` — [L118](../migrations/20261019_driver_shifts.sql#L118)
+- `preserve_driver_shift` — [L126](../migrations/20261019_driver_shifts.sql#L126)
+
 ## [migrations/20261019_email_identity.sql](../migrations/20261019_email_identity.sql)
 
 - `20261019_email_identity.sql` — [source](../migrations/20261019_email_identity.sql#)
@@ -1597,6 +1612,11 @@ Links target the working tree, so line positions can move after changes.
 - `profile/page.tsx` — [L1](../src/app/driver/profile/page.tsx#L1)
 - `DriverProfileRoute()` — [L5](../src/app/driver/profile/page.tsx#L5)
 
+## [src/app/driver/shifts/page.tsx](../src/app/driver/shifts/page.tsx)
+
+- `shifts/page.tsx` — [L1](../src/app/driver/shifts/page.tsx#L1)
+- `ShiftPage()` — [L2](../src/app/driver/shifts/page.tsx#L2)
+
 ## [src/app/driver/summary/page.tsx](../src/app/driver/summary/page.tsx)
 
 - `summary/page.tsx` — [L1](../src/app/driver/summary/page.tsx#L1)
@@ -2094,6 +2114,13 @@ Links target the working tree, so line positions can move after changes.
 - `POST` — [L87](../src/app/next_api/drivers/route.ts#L87)
 - `PUT` — [L162](../src/app/next_api/drivers/route.ts#L162)
 - `DELETE` — [L245](../src/app/next_api/drivers/route.ts#L245)
+
+## [src/app/next_api/drivers/shifts/route.ts](../src/app/next_api/drivers/shifts/route.ts)
+
+- `shifts/route.ts` — [L1](../src/app/next_api/drivers/shifts/route.ts#L1)
+- `failure()` — [L9](../src/app/next_api/drivers/shifts/route.ts#L9)
+- `GET` — [L36](../src/app/next_api/drivers/shifts/route.ts#L36)
+- `POST` — [L61](../src/app/next_api/drivers/shifts/route.ts#L61)
 
 ## [src/app/next_api/drivers/trips/route.ts](../src/app/next_api/drivers/trips/route.ts)
 
@@ -2766,7 +2793,7 @@ Links target the working tree, so line positions can move after changes.
 - `VehicleData` — [L47](../src/components/driver/DriverLayoutShell.tsx#L47)
 - `TabItem()` — [L58](../src/components/driver/DriverLayoutShell.tsx#L58)
 - `DriverLayoutContent()` — [L93](../src/components/driver/DriverLayoutShell.tsx#L93)
-- `DriverLayoutShell()` — [L392](../src/components/driver/DriverLayoutShell.tsx#L392)
+- `DriverLayoutShell()` — [L393](../src/components/driver/DriverLayoutShell.tsx#L393)
 
 ## [src/components/driver/DriverLoginClient.tsx](../src/components/driver/DriverLoginClient.tsx)
 
@@ -2787,6 +2814,18 @@ Links target the working tree, so line positions can move after changes.
 - `StatusBadge()` — [L109](../src/components/driver/DriverProfilePage.tsx#L109)
 - `VehicleCard()` — [L130](../src/components/driver/DriverProfilePage.tsx#L130)
 - `DriverProfilePage()` — [L202](../src/components/driver/DriverProfilePage.tsx#L202)
+
+## [src/components/driver/DriverShifts.tsx](../src/components/driver/DriverShifts.tsx)
+
+- `DriverShifts.tsx` — [L1](../src/components/driver/DriverShifts.tsx#L1)
+- `statuses` — [L17](../src/components/driver/DriverShifts.tsx#L17)
+- `DriverShifts()` — [L23](../src/components/driver/DriverShifts.tsx#L23)
+- `begin()` — [L84](../src/components/driver/DriverShifts.tsx#L84)
+
+## [src/components/driver/shift-copy.ts](../src/components/driver/shift-copy.ts)
+
+- `shift-copy.ts` — [L1](../src/components/driver/shift-copy.ts#L1)
+- `shiftCopy` — [L1](../src/components/driver/shift-copy.ts#L1)
 
 ## [src/components/example/ExampleList.tsx](../src/components/example/ExampleList.tsx)
 
@@ -3064,9 +3103,9 @@ Links target the working tree, so line positions can move after changes.
 
 - `OperationForm.tsx` — [L1](../src/components/operations/OperationForm.tsx#L1)
 - `OperationField` — [L24](../src/components/operations/OperationForm.tsx#L24)
-- `uncertain` — [L35](../src/components/operations/OperationForm.tsx#L35)
-- `OperationForm()` — [L39](../src/components/operations/OperationForm.tsx#L39)
-- `submit()` — [L74](../src/components/operations/OperationForm.tsx#L74)
+- `uncertain` — [L36](../src/components/operations/OperationForm.tsx#L36)
+- `OperationForm()` — [L40](../src/components/operations/OperationForm.tsx#L40)
+- `submit()` — [L77](../src/components/operations/OperationForm.tsx#L77)
 
 ## [src/components/operations/OperationsCentre.tsx](../src/components/operations/OperationsCentre.tsx)
 
@@ -3980,6 +4019,19 @@ Links target the working tree, so line positions can move after changes.
 - `activityFilters()` — [L9](../src/lib/driver-activity.ts#L9)
 - `summarizeActivity()` — [L18](../src/lib/driver-activity.ts#L18)
 
+## [src/lib/driver-shifts.ts](../src/lib/driver-shifts.ts)
+
+- `driver-shifts.ts` — [L1](../src/lib/driver-shifts.ts#L1)
+- `km` — [L2](../src/lib/driver-shifts.ts#L2)
+- `shiftDeclaration` — [L8](../src/lib/driver-shifts.ts#L8)
+- `ShiftStatus` — [L31](../src/lib/driver-shifts.ts#L31)
+- `DriverShift` — [L32](../src/lib/driver-shifts.ts#L32)
+- `ShiftEvent` — [L48](../src/lib/driver-shifts.ts#L48)
+- `ShiftDetail` — [L56](../src/lib/driver-shifts.ts#L56)
+- `ShiftList` — [L60](../src/lib/driver-shifts.ts#L60)
+- `shiftKilometres()` — [L64](../src/lib/driver-shifts.ts#L64)
+- `shiftTime()` — [L73](../src/lib/driver-shifts.ts#L73)
+
 ## [src/lib/email-verification.ts](../src/lib/email-verification.ts)
 
 - `email-verification.ts` — [L1](../src/lib/email-verification.ts#L1)
@@ -4145,10 +4197,10 @@ Links target the working tree, so line positions can move after changes.
 - `publicEndpoint()` — [L15](../src/lib/security-policy.ts#L15)
 - `disabledEndpoint()` — [L19](../src/lib/security-policy.ts#L19)
 - `memberEndpoint()` — [L22](../src/lib/security-policy.ts#L22)
-- `ownsRecord()` — [L34](../src/lib/security-policy.ts#L34)
-- `calendarMonthDeadline()` — [L37](../src/lib/security-policy.ts#L37)
-- `safeChironUrl()` — [L46](../src/lib/security-policy.ts#L46)
-- `stripSecrets()` — [L52](../src/lib/security-policy.ts#L52)
+- `ownsRecord()` — [L35](../src/lib/security-policy.ts#L35)
+- `calendarMonthDeadline()` — [L38](../src/lib/security-policy.ts#L38)
+- `safeChironUrl()` — [L47](../src/lib/security-policy.ts#L47)
+- `stripSecrets()` — [L53](../src/lib/security-policy.ts#L53)
 
 ## [src/lib/security-session.ts](../src/lib/security-session.ts)
 

@@ -899,3 +899,18 @@ html { scrollbar-gutter: stable; scrollbar-color: #718199 #edf1f6; scrollbar-wid
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 
 :root { --z-popover: 650; }
+
+/* The browser supplies locale-capable fonts and Save as PDF for declared shifts. */
+@media print {
+  body:has(.shift-print-sheet) .dp-app-header,
+  body:has(.shift-print-sheet) .dp-tab-bar,
+  body:has(.shift-print-sheet) .shift-controls { display: none !important; }
+  body:has(.shift-print-sheet), body:has(.shift-print-sheet) .dp-root,
+  body:has(.shift-print-sheet) .shift-print-sheet { background: white !important; color: black !important; }
+  body:has(.shift-print-sheet) .dp-content-with-tabbar { padding: 0 !important; }
+  .shift-print-sheet .dp-text-soft { color: #333 !important; }
+  .shift-print-sheet { border: none !important; box-shadow: none !important; }
+  .shift-print-sheet tr { break-inside: avoid; }
+  .shift-print-sheet th, .shift-print-sheet td { overflow-wrap: anywhere; }
+  .shift-print-sheet .overflow-x-auto { overflow: visible; }
+}

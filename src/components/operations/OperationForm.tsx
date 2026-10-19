@@ -25,6 +25,7 @@ export interface OperationField {
   key: string;
   label: string;
   type?: "text" | "password" | "email" | "number" | "checkbox";
+  step?: number;
   min?: number;
   max?: number;
   maxLength?: number;
@@ -47,6 +48,7 @@ export function OperationForm({
   intentKey,
   children,
   submitLabel,
+  errorMessage,
 }: {
   title: string;
   description?: string;
@@ -61,6 +63,7 @@ export function OperationForm({
   intentKey?: string;
   children?: React.ReactNode;
   submitLabel?: string;
+  errorMessage?: (error: unknown) => string;
 }) {
   const pending = intentKey ? uncertain.get(intentKey) : undefined;
   const [values, setValues] = useState(pending?.values || initial),
@@ -86,7 +89,9 @@ export function OperationForm({
         const n = Number(v);
         return (
           !Number.isFinite(n) ||
-          !Number.isInteger(n) ||
+          (f.step === undefined && !Number.isInteger(n)) ||
+          (f.step !== undefined &&
+            Math.abs(n / f.step - Math.round(n / f.step)) > 0.000001) ||
           (f.min !== undefined && n < f.min) ||
           (f.max !== undefined && n > f.max)
         );
@@ -121,7 +126,10 @@ export function OperationForm({
         frozen.current = null;
         if (intentKey) uncertain.delete(intentKey);
       }
-      setError(c.failure + (ambiguous ? " " + c.pending : ""));
+      setError(
+        (errorMessage?.(error) || c.failure) +
+          (ambiguous ? " " + c.pending : ""),
+      );
     } finally {
       flight.current = false;
       setBusy(false);
@@ -156,7 +164,9 @@ export function OperationForm({
                       id={`operation-${f.key}`}
                       checked={values[f.key] === true}
                       aria-invalid={invalid === f.key}
-                      aria-describedby={invalid === f.key ? "operation-error" : undefined}
+                      aria-describedby={
+                        invalid === f.key ? "operation-error" : undefined
+                      }
                       onCheckedChange={(v) =>
                         setValues({ ...values, [f.key]: v === true })
                       }
@@ -194,10 +204,17 @@ export function OperationForm({
                       setValues({ ...values, [f.key]: e.target.value })
                     }
                     required={!f.optional}
+                    step={f.step}
                     min={f.min}
                     max={f.max}
                     maxLength={f.maxLength ?? 1000}
-                    inputMode={f.type === "number" ? "numeric" : undefined}
+                    inputMode={
+                      f.type === "number"
+                        ? f.step && f.step < 1
+                          ? "decimal"
+                          : "numeric"
+                        : undefined
+                    }
                     autoComplete={
                       f.type === "password"
                         ? "new-password"
@@ -244,7 +261,11 @@ export function OperationForm({
               {c.cancel}
             </Button>
             <Button type="submit" disabled={busy} aria-busy={busy}>
-              {busy ? c.loading : frozen.current ? c.retry : submitLabel || c.save}
+              {busy
+                ? c.loading
+                : frozen.current
+                  ? c.retry
+                  : submitLabel || c.save}
             </Button>
           </DialogFooter>
         </form>
