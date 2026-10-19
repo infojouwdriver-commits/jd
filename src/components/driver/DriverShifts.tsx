@@ -35,6 +35,8 @@ export default function DriverShifts() {
     shift: DriverShift | null;
     id: string;
   } | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const downloadFlight = useRef(false);
   const generation = useRef(0),
     flight = useRef(false);
   const load = useCallback(
@@ -81,6 +83,30 @@ export default function DriverShifts() {
       durations[a.work_status] +=
         (Date.parse(b.recorded_at) - Date.parse(a.recorded_at)) / 60000;
     }
+  async function downloadPdf() {
+    if (!detail || downloadFlight.current) return;
+    downloadFlight.current = true;
+    setDownloading(true);
+    setError("");
+    try {
+      const { driverShiftPdf } = await import("@/lib/driver-shift-pdf");
+      const pdf = driverShiftPdf(detail);
+      const url = URL.createObjectURL(pdf.output("blob"));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Dienststaat-${detail.shift.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      // Safari needs the object URL to remain alive while starting the download.
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch {
+      setError(c.downloadFailed);
+    } finally {
+      downloadFlight.current = false;
+      setDownloading(false);
+    }
+  }
   function begin(action: "start" | "record" | "end") {
     setSaved(false);
     setForm({
@@ -260,8 +286,13 @@ export default function DriverShifts() {
             </table>
           </div>
           <p className="text-sm">{c.notice}</p>
-          <Button className="shift-controls" onClick={() => window.print()}>
-            {c.print}
+          <Button
+            className="shift-controls"
+            disabled={downloading || busy}
+            aria-busy={downloading}
+            onClick={() => void downloadPdf()}
+          >
+            {downloading ? c.downloading : c.print}
           </Button>
         </article>
       )}

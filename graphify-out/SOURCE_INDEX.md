@@ -2820,7 +2820,8 @@ Links target the working tree, so line positions can move after changes.
 - `DriverShifts.tsx` — [L1](../src/components/driver/DriverShifts.tsx#L1)
 - `statuses` — [L17](../src/components/driver/DriverShifts.tsx#L17)
 - `DriverShifts()` — [L23](../src/components/driver/DriverShifts.tsx#L23)
-- `begin()` — [L84](../src/components/driver/DriverShifts.tsx#L84)
+- `downloadPdf()` — [L86](../src/components/driver/DriverShifts.tsx#L86)
+- `begin()` — [L110](../src/components/driver/DriverShifts.tsx#L110)
 
 ## [src/components/driver/shift-copy.ts](../src/components/driver/shift-copy.ts)
 
@@ -4018,6 +4019,12 @@ Links target the working tree, so line positions can move after changes.
 - `brusselsDay()` — [L4](../src/lib/driver-activity.ts#L4)
 - `activityFilters()` — [L9](../src/lib/driver-activity.ts#L9)
 - `summarizeActivity()` — [L18](../src/lib/driver-activity.ts#L18)
+
+## [src/lib/driver-shift-pdf.ts](../src/lib/driver-shift-pdf.ts)
+
+- `driver-shift-pdf.ts` — [L1](../src/lib/driver-shift-pdf.ts#L1)
+- `driverShiftPdf()` — [L7](../src/lib/driver-shift-pdf.ts#L7)
+- `line()` — [L23](../src/lib/driver-shift-pdf.ts#L23)
 
 ## [src/lib/driver-shifts.ts](../src/lib/driver-shifts.ts)
 

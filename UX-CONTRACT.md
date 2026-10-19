@@ -172,9 +172,11 @@ The canonical form is `OperationForm`, using shared Input, Label, Button, Select
 and Dialog. Its optional numeric step supports two decimal kilometre inputs;
 existing integer forms keep their validation. LanguageContext owns Arabic RTL,
 French and Dutch; existing `dp-*` tokens own both themes. The report signature
-is the actual chronological declaration ledger. Browser printing preserves
-locale-capable system fonts and offers Save as PDF; no download is claimed
-before the browser completes it. This is an explicit driver declaration, not a
+is the actual chronological declaration ledger. The PDF button generates a real downloadable PDF from the selected declaration
+snapshot. Its document labels and Belgian dates are always Dutch, independently
+of portal language. Unicode fonts, all event pages, provisional status and
+last-recorded state durations are preserved. Download is disabled while preparing;
+failures show a localized retry message. No browser print dialog is required. This is an explicit driver declaration, not a
 claim of municipal certification or a reconstruction of earlier vehicle motion.
 
 | Operation | Pending and success | Recovery |
@@ -183,7 +185,7 @@ claim of municipal certification or a reconstruction of earlier vehicle motion.
 | Record | Odometer, cumulative passenger km and next state saved together with server time/version | No decreases; passenger increment cannot exceed odometer increment; conflict requires refresh |
 | End | Explicit final readings; blocks while a trip is in progress; closes immutable event history | Same uncertain request can replay; no automatic end on logout or GPS loss |
 | View | Driver's own history, 25 shifts per page, full selected ledger | Stale requests cannot replace newer state; retain inputs and expose refresh errors |
-| Print | Declared start/end counters, distances, state intervals and open/closed label | Open reports are provisional; state durations stop at last recorded event |
+| Download Dutch PDF | Declared start/end counters, distances, state intervals and open/closed label | Open reports are provisional; state durations stop at last recorded event |
 
 The optional business error formatter on OperationForm explains invalid readings
 and stale-shift conflicts. Uncertain outcomes keep the exact UUID, values, shift
@@ -194,6 +196,6 @@ state. Closed events cannot be updated/deleted by the browser or service role.
 
 Verification: `tests/driver-shifts.test.mjs` (PostgreSQL WASM),
 `tests/run-driver-shifts-ui.mjs` (three locales, two themes, narrow layout,
-uncertain-response retry, reload and printing), and the actual authenticated
+uncertain-response retry, reload, actual PDF downloads and printing), and the actual authenticated
 handlers in `tests/run-auth-integration.mjs`. Native PostgreSQL migration is also
 part of the existing release stack gate.
