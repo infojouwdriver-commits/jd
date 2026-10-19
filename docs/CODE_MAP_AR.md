@@ -42,6 +42,7 @@
 | الحسابات والصلاحيات | [api-utils](../src/lib/api-utils.ts)، [auth](../src/lib/auth.ts)، [security-session](../src/lib/security-session.ts)، [admin-mfa](../src/lib/admin-mfa.ts) | المصادقة قبل بيانات الشركة، وسياسة المتصفح وPostgREST |
 | عقود الاشتراك والتوقيع | [ContractDocument](../src/components/contracts/ContractDocument.tsx)، [قالب العقد](../src/lib/contract-template.ts)، [واجهات contracts](../src/app/next_api/contracts) | العقود الموقعة والتوكنات والطباعة؛ لا تغيّر الوثائق السابقة ضمن تعديل تصميم |
 | دعوة توقيع العقد | `src/lib/contract-invitation.ts`، `src/app/next_api/contracts/send-signature-link/route.ts` | حساب صاحب الشركة النشط، UUID لمنع التكرار، بوابة محمية دون رموز توقيع عامة |
+| إعداد مزود البريد على الخادم | `deploy/configure-mail.mjs`، `.github/workflows/configure-mail.yml` | نسخة مختبرة منشورة، خطة مجانية، مرسل نشط، أسرار عبر SSH دون سجل، استرجاع إعدادات التطبيق عند الفشل |
 | بريد Brevo المجاني | `src/lib/brevo-mail.ts`، `src/app/next_api/webhooks/brevo/route.ts` | مرسل متحقق منه، خطة مجانية، webhook محمي، القبول ليس التسليم |
 | البريد | [mail-service](../src/lib/mail-service.ts)، [mail-policy](../src/lib/mail-policy.ts) | سجل التسليم؛ نجاح الطلب لا يثبت وصول البريد |
 | الإشعارات | [push-pause](../driver-app/src/push-pause.ts)، [push-lifecycle](../driver-app/src/push-lifecycle.ts)، [push-worker](../scripts/push-worker.mjs) | وجود الكود لا يعني تفعيل الإشعارات؛ لا تغيّر حالة التشغيل ضمن تحديث المرجع |

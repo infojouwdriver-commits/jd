@@ -32,16 +32,16 @@
     "errors": 0,
     "preexisting_hook_warnings": 1
   },
-  "deployment_tests": 18,
+  "deployment_tests": 21,
   "repository_safety": "passed",
   "graphify": {
-    "source_files": 516,
+    "source_files": 517,
     "freshness": "passed"
   },
   "static_ui_audit": {
     "errors": 2,
     "note": "Pre-existing Link/Button wrapper and Radix DialogTrigger false positives; no strict audit pass claimed."
   },
-  "real_email_delivery": "not tested; Brevo phone, sender and runtime credentials pending",
+  "real_email_delivery": "not tested; phone verified, sender verification code and runtime credentials pending",
   "production_deployment": "not started"
 }

@@ -47,6 +47,14 @@ Links target the working tree, so line positions can move after changes.
 - `chiron-production-probe.mjs` — [L1](../deploy/chiron-production-probe.mjs#L1)
 - `probeProduction()` — [L4](../deploy/chiron-production-probe.mjs#L4)
 
+## [deploy/configure-mail.mjs](../deploy/configure-mail.mjs)
+
+- `configure-mail.mjs` — [L1](../deploy/configure-mail.mjs#L1)
+- `mailRuntimeKeys` — [L3](../deploy/configure-mail.mjs#L3)
+- `mailRuntimeFiles()` — [L4](../deploy/configure-mail.mjs#L4)
+- `checkedBrevoSetup()` — [L18](../deploy/configure-mail.mjs#L18)
+- `main()` — [L29](../deploy/configure-mail.mjs#L29)
+
 ## [deploy/configure-native-push.mjs](../deploy/configure-native-push.mjs)
 
 - `configure-native-push.mjs` — [L1](../deploy/configure-native-push.mjs#L1)
