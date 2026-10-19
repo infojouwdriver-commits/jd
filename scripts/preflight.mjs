@@ -21,13 +21,21 @@ try {
  const secrets=JSON.parse(env.ADMIN_TOTP_SECRETS_JSON||'{}');
  for(const id of (env.PLATFORM_ADMIN_IDS||'').split(',').filter(Boolean)) if(typeof secrets[id]!=='string'||!/^[A-Z2-7]{32,128}$/.test(secrets[id]))errors.push(`Enroll administrator MFA for user ${id}`);
 } catch {errors.push('ADMIN_TOTP_SECRETS_JSON invalid');}
-const mailKeys=['RESEND_KEY','RESEND_FROM_EMAIL','RESEND_VERIFIED_DOMAIN','RESEND_WEBHOOK_SECRET','MAIL_METADATA_KEY'];
+const mailProvider=env.MAIL_PROVIDER||'resend';
+if(!['resend','brevo'].includes(mailProvider))errors.push('Unsupported MAIL_PROVIDER');
+if(mailProvider==='brevo'){
+ if(!(env.BREVO_API_KEY||'').trim())errors.push('BREVO_API_KEY required');
+ if(!/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(env.BREVO_FROM_EMAIL||'')||env.BREVO_SENDER_VERIFIED!=='true')errors.push('Verified Brevo sender required');
+ if(env.BREVO_FREE_PLAN_CONFIRMED!=='true')errors.push('Confirmed Brevo free plan required');
+ if((env.BREVO_WEBHOOK_TOKEN||'').trim().length<32)errors.push('Brevo delivery webhook token required');
+}
+const mailKeys=['RESEND_KEY','RESEND_API_KEY','RESEND_FROM_EMAIL','RESEND_VERIFIED_DOMAIN','RESEND_WEBHOOK_SECRET','MAIL_METADATA_KEY'];
 const mailConfigured=mailKeys.some(key=>(env[key]||'').trim()) || env.RESEND_FREE_PLAN_CONFIRMED==='true';
-if(mailConfigured){
+if(mailConfigured&&mailProvider==='resend'){
  const domain=(env.RESEND_VERIFIED_DOMAIN||'').trim().toLowerCase();
  const sender=(env.RESEND_FROM_EMAIL||'').trim();
  const address=sender.match(/^(?:[^<>\r\n]+<)?([^<>\s]+@[^<>\s]+)>?$/)?.[1]?.toLowerCase();
- if(!(env.RESEND_KEY||'').trim())errors.push('RESEND_KEY required when transactional mail is configured');
+ if(!(env.RESEND_API_KEY||env.RESEND_KEY||'').trim())errors.push('RESEND_KEY required when transactional mail is configured');
  if(!/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(domain)||domain==='resend.dev'||!address||address.split('@')[1]!==domain||/[\r\n]/.test(sender))errors.push('Transactional mail requires a sender on RESEND_VERIFIED_DOMAIN');
  if(env.RESEND_FREE_PLAN_CONFIRMED!=='true')errors.push('Set RESEND_FREE_PLAN_CONFIRMED=true only after confirming the provider plan');
  if(!(env.RESEND_WEBHOOK_SECRET||'').trim())errors.push('RESEND_WEBHOOK_SECRET required to verify delivery events');

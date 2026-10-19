@@ -167,6 +167,19 @@ try {
  rows.users[1].is_active=false;await status('Disabled user cannot obtain login cookies',request('/next_api/auth/login','POST',{email:rows.users[1].email,password}),401);await status('Disabled driver cannot use existing access token',request('/next_api/trips','GET',null,driverToken),401);rows.users[1].is_active=true;
  rows.users[1].security_revoked_before=new Date(Date.now()+1000).toISOString();await status('Account-wide revocation blocks old access token',request('/next_api/trips','GET',null,driverToken),401);delete rows.users[1].security_revoked_before;
  unavailable=true;await status('Production rate storage failure closes access',request('/next_api/trips','GET',null,driverToken),503);
+
+ unavailable=false;
+ rows.company_contracts=[{id:91,company_id:1,contract_number:'SYN-MAIL',contract_language:'fr',monthly_fee:'50.00',annual_fee:'600.00',contract_status:'pending_signature',signed_at:null}];
+ rows.companies[0].subscription_status='active';rows.companies[0].email=rows.users.find(u=>u.id===3).email;
+ const invite={contract_id:91,request_id:'d93956ef-35f1-4a55-9ad5-95d808f695b1'};
+ await status('Company owner cannot call administrative invitation endpoint',request('/next_api/contracts/send-signature-link','POST',invite,ownerToken),403);
+ await status('Driver cannot call administrative invitation endpoint',request('/next_api/contracts/send-signature-link','POST',invite,driverToken),403);
+ await status('Anonymous invitation is rejected',request('/next_api/contracts/send-signature-link','POST',invite),401);
+ const mailMissing=await status('Admin receives actionable configuration conflict without mutating contract',request('/next_api/contracts/send-signature-link','POST',invite,refreshedToken),409);
+ assert.match((await mailMissing.json()).errorMessage,/البريد غير مفعّل/);assert.equal(rows.company_contracts[0].contract_status,'pending_signature');assert.equal(rows.company_contracts[0].signature_token,undefined);
+ rows.company_contracts[0].signed_at='2026-01-01T00:00:00Z';
+ await status('Signed contract cannot receive a new signature invitation',request('/next_api/contracts/send-signature-link','POST',invite,refreshedToken),409);
+ await status('Forged Brevo delivery callback is refused',request('/next_api/webhooks/brevo','POST',{event:'delivered'}),401);
  assert.ok(databaseTokens.length>0);checks.push('Database receives server service tokens, never browser roles');
  const result={passed:checks.length,checks,database:'Simulated PostgREST; real production Next HTTP handlers'};
  fs.mkdirSync(new URL('./verification/',import.meta.url),{recursive:true});

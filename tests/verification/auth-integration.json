@@ -1,5 +1,5 @@
 {
-  "passed": 61,
+  "passed": 67,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -61,6 +61,12 @@
     "Disabled driver cannot use existing access token",
     "Account-wide revocation blocks old access token",
     "Production rate storage failure closes access",
+    "Company owner cannot call administrative invitation endpoint",
+    "Driver cannot call administrative invitation endpoint",
+    "Anonymous invitation is rejected",
+    "Admin receives actionable configuration conflict without mutating contract",
+    "Signed contract cannot receive a new signature invitation",
+    "Forged Brevo delivery callback is refused",
     "Database receives server service tokens, never browser roles"
   ],
   "database": "Simulated PostgREST; real production Next HTTP handlers"

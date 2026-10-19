@@ -69,3 +69,17 @@ Accountants see documents without signing; fleet users have no billing access.
 Profile controls explain that contract-linked price/schedule is read-only.
 PDF and invoice rows show contract number and installment. Existing settings,
 manual receipts, issuance gates and ledger states remain canonical.
+
+
+## Contract invitation repair — 2026-10-19
+
+The admin contracts screen never offers activation for an unsigned contract.
+The shared owner signature workflow remains the only activation path.
+`contracts/send-signature-link` now sends a localized invitation to an active
+company owner, with an explicit idempotent request UUID retained on failure.
+The destination is `/company/dashboard`; the owner opens subscription and
+contract billing after login. No bearer signing tokens are issued or rotated.
+Provider acceptance is announced separately from confirmed delivery. Missing
+mail configuration leaves the contract untouched and gives a recoverable
+configuration message. Existing shared Button, Sonner and document primitives
+remain canonical; no native app or signed document changes apply.

@@ -1,3 +1,4 @@
+import {brevoProviderId} from './brevo-mail';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {mailConfiguration,mailEventKey} from './mail-policy';
@@ -18,8 +19,15 @@ export async function sendTransactionalMail(message:MailMessage):Promise<MailRes
  if(!reservation.reserved)return {accepted:['accepted','delivered','delayed'].includes(reservation.status),status:reservation.status,delivery_id:reservation.id};
  let status:'accepted'|'uncertain'|'failed'='uncertain';let providerId:string|null=null;
  try {
-  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+config.key,'Content-Type':'application/json','Idempotency-Key':eventKey},body:JSON.stringify({from:config.sender,to:[message.to],subject:message.subject,html:message.html,text:message.text,...(message.attachments?{attachments:message.attachments.map(a=>({filename:a.filename,content:a.content.toString('base64')}))}:{})}),signal:AbortSignal.timeout(10000)});
-  if(response.ok){const data=await response.json();if(typeof data.id==='string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(data.id)){providerId=data.id;status='accepted';}}
+  const brevo=config.provider==='brevo';
+  const response=await fetch(brevo?'https://api.brevo.com/v3/smtp/email':'https://api.resend.com/emails',{
+   method:'POST',headers:brevo?{'api-key':config.key,'Content-Type':'application/json'}:{Authorization:'Bearer '+config.key,'Content-Type':'application/json','Idempotency-Key':eventKey},
+   body:JSON.stringify(brevo?{sender:{name:'JOUW DRIVER',email:config.sender},replyTo:{name:'JOUW DRIVER',email:config.sender},to:[{email:message.to}],subject:message.subject,htmlContent:message.html,textContent:message.text,headers:{idempotencyKey:eventKey},...(message.attachments?{attachment:message.attachments.map(a=>({name:a.filename,content:a.content.toString('base64')}))}:{})}:{from:config.sender,to:[message.to],subject:message.subject,html:message.html,text:message.text,...(message.attachments?{attachments:message.attachments.map(a=>({filename:a.filename,content:a.content.toString('base64')}))}:{})}),signal:AbortSignal.timeout(10000)});
+  if(response.ok){
+   const data=await response.json();
+   if(brevo){providerId=brevoProviderId(data.messageId);status='accepted';}
+   else if(typeof data.id==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(data.id)){providerId=data.id;status='accepted';}
+  }
   else if(response.status>=400 && response.status<500)status='failed';
  } catch { /* Connection failure cannot establish whether the provider accepted the message. */ }
  const completed=await client.rpc('security_complete_mail',{p_id:reservation.id,p_status:status,p_provider_id:providerId});

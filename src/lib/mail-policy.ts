@@ -2,6 +2,17 @@ import {createHmac} from 'node:crypto';
 export type MailStatus = 'sending' | 'accepted' | 'uncertain' | 'delivered' | 'delayed' | 'failed' | 'bounced' | 'complained';
 export const MAIL_FREE_LIMITS = {daily:90,monthly:2700} as const;
 export function mailConfiguration(env:Record<string,string|undefined>) {
+ const provider=env.MAIL_PROVIDER||'resend';
+ if(provider==='brevo'){
+  const key=(env.BREVO_API_KEY||'').trim(),sender=(env.BREVO_FROM_EMAIL||'').trim(),metadataKey=(env.MAIL_METADATA_KEY||env.DATA_ENCRYPTION_KEY||'').trim();
+  const reasons=[];
+  if(!key)reasons.push('provider_not_configured');
+  if(!/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(sender)||env.BREVO_SENDER_VERIFIED!=='true')reasons.push('verified_sender_required');
+  if(!/^[a-f0-9]{64}$/i.test(metadataKey))reasons.push('metadata_key_required');
+  if(env.BREVO_FREE_PLAN_CONFIRMED!=='true')reasons.push('free_plan_confirmation_required');
+  if((env.BREVO_WEBHOOK_TOKEN||'').trim().length<32)reasons.push('delivery_webhook_required');
+  return {provider,ready:reasons.length===0,reasons,key,sender,domain:sender.split('@')[1]||'',metadataKey};
+ }
  const key=(env.RESEND_API_KEY || env.RESEND_KEY || '').trim();
  const sender=(env.RESEND_FROM_EMAIL || '').trim();
  const metadataKey=(env.MAIL_METADATA_KEY || env.DATA_ENCRYPTION_KEY || '').trim();
@@ -10,11 +21,12 @@ export function mailConfiguration(env:Record<string,string|undefined>) {
  const validDomain=/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/.test(domain);
  const senderValid=!!address && !/[\r\n]/.test(sender) && address.split('@')[1]===domain && domain!=='resend.dev';
  const reasons=[];
+ if(provider!=='resend')reasons.push('unsupported_provider');
  if(!key)reasons.push('provider_not_configured');
  if(!/^[a-f0-9]{64}$/i.test(metadataKey))reasons.push('metadata_key_required');
  if(!validDomain || !senderValid)reasons.push('verified_sender_required');
  if(env.RESEND_FREE_PLAN_CONFIRMED!=='true')reasons.push('free_plan_confirmation_required');
- return {ready:reasons.length===0,reasons,key,sender,domain,metadataKey};
+ return {provider,ready:reasons.length===0,reasons,key,sender,domain,metadataKey};
 }
 export function mailEventKey(event:string,secret:string) {
  if(!event || event.length>2048 || secret.length<32)throw new Error('Invalid mail event configuration');

@@ -54,3 +54,12 @@ test('complete synthetic transactional mail configuration passes syntax checks',
  });
  assert.equal(result.status,0,result.stdout+result.stderr);
 });
+
+test('Brevo cannot start with an unverified sender or unauthenticated delivery events',()=>{
+ const result=preflight({MAIL_PROVIDER:'brevo',BREVO_API_KEY:'synthetic-key',BREVO_FROM_EMAIL:'sender@example.invalid'});
+ assert.equal(result.status,1);assert.match(result.stdout,/Verified Brevo sender required/);assert.match(result.stdout,/Confirmed Brevo free plan required/);assert.match(result.stdout,/Brevo delivery webhook token required/);
+});
+test('complete synthetic Brevo free plan configuration preserves the existing runtime',()=>{
+ const result=preflight({MAIL_PROVIDER:'brevo',BREVO_API_KEY:'synthetic-key',BREVO_FROM_EMAIL:'sender@example.invalid',BREVO_SENDER_VERIFIED:'true',BREVO_FREE_PLAN_CONFIRMED:'true',BREVO_WEBHOOK_TOKEN:'w'.repeat(48)});
+ assert.equal(result.status,0,result.stdout+result.stderr);
+});

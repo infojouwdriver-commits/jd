@@ -19,9 +19,11 @@ try{
  for(const [name,viewport] of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
   const context=await browser.newContext({viewport,serviceWorkers:'block'});
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
+  const invitationCalls=[];
   const foreign=[];await context.route('**/*',route=>{if(new URL(route.request().url()).origin===base)return route.continue();foreign.push(route.request().url());return route.abort();});
   await context.route(base+'/next_api/**',async route=>{
    const url=new URL(route.request().url());let data=[];
+   if(url.pathname==='/next_api/contracts/send-signature-link'){invitationCalls.push(route.request().postDataJSON());await route.fulfill({status:invitationCalls.length===1?409:200,contentType:'application/json',body:JSON.stringify(invitationCalls.length===1?{success:false,errorMessage:'البريد غير مفعّل بعد؛ يستطيع صاحب الشركة التوقيع من بوابته.'}:{success:true,data:{accepted:true,status:'accepted'}})});return;}
    if(url.pathname==='/next_api/auth/user')data={sub:'9001',email:'synthetic@example.invalid',isAdmin:true,userType:'admin',role:'browser'};
    if(url.pathname==='/next_api/companies')data=[{id:1,name:'SYNTHETIC & Co'}];
    if(url.pathname==='/next_api/contracts')data=contracts.filter(c=>!url.searchParams.has('id')||String(c.id)===url.searchParams.get('id'));
@@ -29,6 +31,12 @@ try{
   });
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base+'/admin/companies/1/contracts');
+  await page.getByRole('button',{name:'إرسال رابط التوقيع',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'تفعيل يدوياً',exact:true}).count(),0);
+  await page.getByRole('button',{name:'إرسال رابط التوقيع',exact:true}).click();await page.getByText(/البريد غير مفعّل بعد/).waitFor();
+  await page.getByRole('button',{name:'إرسال رابط التوقيع',exact:true}).press('Enter');await page.getByText('قبل مزود البريد دعوة التوقيع؛ التسليم لم يتأكد بعد').waitFor();
+  assert.equal(invitationCalls.length,2);assert.equal(invitationCalls[0].request_id,invitationCalls[1].request_id);assert.equal(invitationCalls[0].contract_id,1);
+  checks.push(name+': no unsigned activation, actionable mail failure, keyboard retry keeps one request and acceptance is not delivery');
   await page.getByRole('button',{name:'معاينة العقد',exact:true}).first().click();
   await page.locator('[data-contract-document] .page').waitFor();
   assert.equal(await page.getByRole('link',{name:/طباعة/}).getAttribute('href'),'/contract-print/1');
