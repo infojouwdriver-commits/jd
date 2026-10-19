@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "9dc26dc13cbd6421e8477cc6bd7a4aac680001ad",
+  "source_commit_context": "122f69b4f637d249ed60beb46ae076ce14693b53",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -464,7 +464,7 @@
     "src/lib/api-client.ts": "ca01ebd0138dd0b7b14bb732a8047f481e88b13d09616e2c2f338de9696189a1",
     "src/lib/api-utils.ts": "c466169f29d5a0acab6027cbf856617c2a917ffb5b76da8723432e3f34b3c3be",
     "src/lib/auth.ts": "f7ec20261dbe0760a80f6f4622921260c7c174f411342bf88f6d72000f442ccb",
-    "src/lib/brevo-mail.ts": "203d2632de5e87b8d9b0fe108c96d2058f349382d1d8176e1cacac9ddb3e5b9c",
+    "src/lib/brevo-mail.ts": "c75d775c0df6c07ff909bfaa1a2339421344fb7dd91d27f89f9ee66e320aa220",
     "src/lib/chiron-protocol.ts": "1da29db31cad8267fb2bef0d800a41b753648fe319c6aed4cf77a15bff7f4f27",
     "src/lib/chiron-retry.ts": "72679b12e47ea8608fe5d7453617fb1bcf170474fcfb38f1a6fd7dbf9ab4b787",
     "src/lib/chiron-service.ts": "40c399d171ec208ae0ea6ea05d3f28bb05b4724a60e7cbfffd11ffdec7f9a85d",
@@ -491,7 +491,7 @@
     "src/lib/fleet-sharing-runtime.ts": "e8ada1b7640377fe7299c86799215690256b5b9a30caf255ea51a2f563e443de",
     "src/lib/fleet-tracking.ts": "88ab8497ba28f5952a29abc78dd49ba6483638da35be94d724d40d2473c9f5e4",
     "src/lib/mail-policy.ts": "4320c2d6a4c6d0e5d810faa8a8ff29fe1c7149a8db19e2eb05731919c9c0b3ff",
-    "src/lib/mail-service.ts": "ba332e13b81ab2e07007449cf174c6cca18fb85cb223fa6b91589042fc8e9320",
+    "src/lib/mail-service.ts": "f22c848942f8315e29734803ed8465a31c97493c69501b15924424c7eceb6039",
     "src/lib/mapbox-route.ts": "e1768fa53b11011929cc6df919e7daf00c3f903eb5e78a2501e129be53e83430",
     "src/lib/message-access.ts": "dad76d5db7679c669083d61fd18c3de794887bf147ca39b977d79bb1a0f37f94",
     "src/lib/mobile-location.ts": "e5b9af735a504401839958c2721d46ce13a1b5ccebe88b51a534142b191129b5",
@@ -524,18 +524,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "graph.json": "9fb4ffa56bf5ca31224acc281baf1f01c547acca52f5f1a7f54bab51580f4b85",
-    "GRAPH_TREE.html": "12d70c1262bdb7780cf587e813203d374f16c1182c046ae10c856d1f8c4b739c",
-    "SOURCE_INDEX.md": "545abe6e636f77ae95e7c09ced08a1e3e1dc41748fd982111b11cc9b0dd70d6e",
-    "GRAPH_REPORT.md": "cae04c6079f75efe2e3df0df5219239df1c1f178d12fb2d37847c7610b3899dd",
-    "health.json": "2f9f17c5dbaa5249cbe6552fcf5ef430f6109c9975460648a56191d196be5a3c"
+    "GRAPH_REPORT.md": "83518c550f062d9b5388f9b90be7d047d45f96cd682f0e5855fc4135e0d275ab",
+    "GRAPH_TREE.html": "bf151cc99ed1e5c4d2400ddb9e326a27284cb6bf85e2c2504d8b2331227a63a1",
+    "health.json": "46775f14c4d858a1cfd589b1b916fa4a2a4464afef8508b549a6bd70939516df",
+    "SOURCE_INDEX.md": "56a39f9acfc6945eaf7a6f90beb7b590d7c47dba86edaca7fa7cffe3821d5f45",
+    "graph.json": "3fb46d6a5c7305d9da51bf6ca78fe0d8908b3b5b48fe625cd3e23fce5a86e351"
   },
-  "nodes": 2917,
-  "edges": 9916,
-  "raw_edges": 10112,
-  "communities": 147,
+  "nodes": 2918,
+  "edges": 9919,
+  "raw_edges": 10115,
+  "communities": 155,
   "confidence_counts": {
-    "EXTRACTED": 9865,
+    "EXTRACTED": 9868,
     "INFERRED": 247
   }
 }

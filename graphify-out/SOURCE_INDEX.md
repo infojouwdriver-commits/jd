@@ -3758,9 +3758,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/brevo-mail.ts](../src/lib/brevo-mail.ts)
 
 - `brevo-mail.ts` — [L1](../src/lib/brevo-mail.ts#L1)
-- `brevoProviderId()` — [L3](../src/lib/brevo-mail.ts#L3)
-- `brevoWebhookAuthorized()` — [L11](../src/lib/brevo-mail.ts#L11)
-- `brevoMailEvent()` — [L15](../src/lib/brevo-mail.ts#L15)
+- `brevoIdempotencyKey()` — [L3](../src/lib/brevo-mail.ts#L3)
+- `brevoProviderId()` — [L10](../src/lib/brevo-mail.ts#L10)
+- `brevoWebhookAuthorized()` — [L18](../src/lib/brevo-mail.ts#L18)
+- `brevoMailEvent()` — [L22](../src/lib/brevo-mail.ts#L22)
 
 ## [src/lib/chiron-protocol.ts](../src/lib/chiron-protocol.ts)
 
