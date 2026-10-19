@@ -49,7 +49,7 @@ const copy = {
     open: "عرض الكشف",
     closed: "وردية مغلقة",
     status: "استراحة",
-    print: "طباعة / حفظ PDF",
+    print: "تنزيل PDF بالهولندية",
   },
   fr: {
     title: "Feuille de service",
@@ -59,7 +59,7 @@ const copy = {
     open: "Voir la feuille",
     closed: "Service terminé",
     status: "Pause",
-    print: "Imprimer / enregistrer en PDF",
+    print: "Télécharger le PDF en néerlandais",
   },
   nl: {
     title: "Dienststaat",
@@ -69,7 +69,7 @@ const copy = {
     open: "Dienststaat bekijken",
     closed: "Afgesloten dienst",
     status: "Pauze",
-    print: "Afdrukken / opslaan als PDF",
+    print: "PDF downloaden (Nederlands)",
   },
 };
 const checks = [];
@@ -296,13 +296,21 @@ try {
           fullPage: true,
         });
       }
+      const [download] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("button", { name: c.print, exact: true }).click(),
+      ]);
+      assert.match(download.suggestedFilename(), /^Dienststaat-.*\.pdf$/);
+      const pdfPath = path.join(qa, `dienststaat-${lang}-${theme}.pdf`);
+      await download.saveAs(pdfPath);
+      assert.equal(fs.readFileSync(pdfPath).subarray(0, 5).toString(), "%PDF-");
       await page.emulateMedia({ media: "print" });
       assert.equal(await page.locator(".dp-app-header").isVisible(), false);
       assert.equal(await page.locator(".dp-tab-bar").isVisible(), false);
       assert.equal(await page.locator(".shift-print-sheet").isVisible(), true);
       assert.deepEqual(errors, []);
       checks.push(
-        `${lang}/${theme}: explicit decimal readings, state change, durable reload, closed report, printable sheet, narrow layout`,
+        `${lang}/${theme}: explicit decimal readings, state change, durable reload, closed report, real Dutch PDF download, printable sheet, narrow layout`,
       );
       await context.close();
       await db.close();

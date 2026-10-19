@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "b863a459c740a06b2c11da19feb3ebd2694baf3b",
+  "source_commit_context": "c0e7a398c677c32fe2956ec4041e01ceb442a362",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -353,8 +353,8 @@
     "src/components/driver/DriverLayoutShell.tsx": "7dd6748b8faf51185291827c00f7e53b04e622e22439c1edb2fc75fd2ec12613",
     "src/components/driver/DriverLoginClient.tsx": "002afac4ab7675aa7321ecb50abb68e3279d361e5c69ee216dce3a9f9a07399f",
     "src/components/driver/DriverProfilePage.tsx": "7ffdb1757098947a1f86774f333a92cb43a4bb1abc67d0ddd6b9dbcb8739f28e",
-    "src/components/driver/DriverShifts.tsx": "af452f5c7d15bb394fc627895a4521f4543718cb721b4fcfbe9dd4390fbe595c",
-    "src/components/driver/shift-copy.ts": "556a82fc825829748db79b180883549aef35e084a9a3996ae33eb4770c23a8fc",
+    "src/components/driver/DriverShifts.tsx": "856cc6da1817269b775e062ece6571607c670e3ad5f430a60046db24aa636a62",
+    "src/components/driver/shift-copy.ts": "79179d90d927ce6ae934f234bf89247ec881837cf7a2dfb711634d02bfb8ac24",
     "src/components/example/ExampleList.tsx": "c88c6809bb6eb2311541fe65b3f02f5cbd27b614aed3852bb2eca1fddbb68825",
     "src/components/fleet/FleetPanel.tsx": "f1ee8045eb02c311b3c3dc11227ef4ef5d0996150fcd946f4e925d88bcc488b6",
     "src/components/gdpr/CookieBanner.tsx": "465934b9d7791b767a6a490ce1955abc5dcccf8b35aafb8f36756fc60727da08",
@@ -495,6 +495,7 @@
     "src/lib/crud-operations.ts": "6c1f5a592f10bafbf8095f58bc8d95d4d1c2f23f2135839bcb0cd73977b8eb3c",
     "src/lib/driver-account.ts": "85b31add871a523b98cb131e9c1921c145cc4ab6ee780b80b8e1ae5ac0397afc",
     "src/lib/driver-activity.ts": "833d88efee22b947d45e0bc72bdcd4f06f023830954326b367ff324eabb0c3e0",
+    "src/lib/driver-shift-pdf.ts": "2a0bf0a48ea49e355fa9ea8cf35835e462165d8b9a0b9046d82f4d497b1a872a",
     "src/lib/driver-shifts.ts": "f49ad36eb8627da2dcc14a1983f1676d25f07928f4dde87e40c816cb44ee9c88",
     "src/lib/email-verification.ts": "6b7276ad33fec841a1abfc6192daf0ae034f395e3565063a64672bd944a6d571",
     "src/lib/fleet-sharing-runtime.ts": "e8ada1b7640377fe7299c86799215690256b5b9a30caf255ea51a2f563e443de",
@@ -533,18 +534,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "health.json": "d3647b1b949c2014cb44210d1d3fc4e6dcb99a23c243905ea84645284aaf2a64",
-    "SOURCE_INDEX.md": "9a32baaadfd49c1f005ab33a25746b7e97bec411c100dbebdaca2cb1d2112b4a",
-    "GRAPH_TREE.html": "77f26488c7012e32ed5d1358b6caef0de4429da83965ae76fc54cc820f221b6d",
-    "GRAPH_REPORT.md": "6c98f628b3fe9eccf66fa4eac636180bed9bec7b61b555f10378d64e42cec67a",
-    "graph.json": "c8eff7448f99ed9e0aeeb7928db0f77d88c0dc049155b81ac7af5b5cadc025cb"
+    "SOURCE_INDEX.md": "22a4e854dc0ed58109f61b90df81a82fdf96b94f8bd126c1e0b7122e543a041f",
+    "health.json": "01d4306e47381ca3f4cb24c1407aa16547694a3601607fad1ecb46c5c48a291c",
+    "GRAPH_TREE.html": "ab4dd66036b9190e3b71f910737307ae52270b2b67736069cf03a192fff6467f",
+    "graph.json": "82d8721f35582c8791383e4b84ea977f223b982142dc82f164b9f365ec35efc9",
+    "GRAPH_REPORT.md": "7a04f2f05333447c52b4adedaf3475d496a50addb821cd8de8e02d3c7937e89c"
   },
-  "nodes": 2971,
-  "edges": 10070,
-  "raw_edges": 10272,
+  "nodes": 2975,
+  "edges": 10087,
+  "raw_edges": 10292,
   "communities": 154,
   "confidence_counts": {
-    "EXTRACTED": 10025,
+    "EXTRACTED": 10045,
     "INFERRED": 247
   }
 }
