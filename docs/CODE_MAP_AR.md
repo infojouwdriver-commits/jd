@@ -45,6 +45,7 @@
 | إعداد مزود البريد على الخادم | `deploy/configure-mail.mjs`، `.github/workflows/configure-mail.yml` | نسخة مختبرة منشورة، خطة مجانية، مرسل نشط، أسرار عبر SSH دون سجل، استرجاع إعدادات التطبيق عند الفشل |
 | تشخيص فشل البريد دون تسليم | `.github/workflows/diagnose-mail.yml` | قراءة بيانات حالة المستندين 2 و3 فقط، واختبار بيانات مصطنعة بوضع Brevo sandbox؛ لا تغيير للسجلات أو إعادة إرسال |
 | بريد Brevo المجاني | `src/lib/brevo-mail.ts`، `src/app/next_api/webhooks/brevo/route.ts` | مرسل متحقق منه، خطة مجانية، webhook محمي، القبول ليس التسليم |
+| تأكيد بريد الشركة والاستعادة | `src/lib/email-verification.ts`، `src/app/next_api/auth/send-verification/route.ts`، `src/app/next_api/auth/reset-password/route.ts`، `migrations/20261019_email_identity.sql` | إثبات مرتبط بطلب الشركة، خمس محاولات، استهلاك ذري مع التسجيل/تغيير كلمة المرور، إلغاء الجلسات دون تفعيل حساب موقوف |
 | البريد | [mail-service](../src/lib/mail-service.ts)، [mail-policy](../src/lib/mail-policy.ts) | سجل التسليم؛ نجاح الطلب لا يثبت وصول البريد |
 | الإشعارات | [push-pause](../driver-app/src/push-pause.ts)، [push-lifecycle](../driver-app/src/push-lifecycle.ts)، [push-worker](../scripts/push-worker.mjs) | وجود الكود لا يعني تفعيل الإشعارات؛ لا تغيّر حالة التشغيل ضمن تحديث المرجع |
 | قاعدة البيانات والنشر | [migrations](../migrations)، [apply-release](../scripts/apply-release.mjs)، [readiness](../scripts/database-readiness.mjs)، [deploy](../deploy) | ترتيب الترحيلات، النسخ الاحتياطي وفحوص القبول؛ لا تصل إلى بيانات الإنتاج لبناء الخريطة |

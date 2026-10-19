@@ -15,6 +15,7 @@ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const totpSecret=Array.from(randomBytes(32),n=>alphabet[n%32]).join('');
 const password=randomBytes(18).toString('base64url');
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
+rows.user_passcode=[];
 const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
 const claims=new Set();let unavailable=false;const databaseTokens=[];
@@ -29,7 +30,9 @@ const mock=http.createServer(async(req,res)=>{
   let data;
   if(url.pathname.startsWith('/rpc/')) {
    if(url.pathname==='/rpc/security_rate_limit'){if(unavailable){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}data=true;}
-   else if(url.pathname==='/rpc/security_submit_company_subscription'){registrationCalls.push(body);data={request_id:body.p_request,status:'pending'};}
+   else if(url.pathname==='/rpc/security_attempt_email_code'){const c=rows.user_passcode.filter(c=>c.pass_object===body.p_object&&c.security_purpose===body.p_purpose).at(-1);data=c&&!c.revoked&&Date.parse(c.valid_until)>Date.now()&&c.retry_count<5?{id:c.id,passcode:c.passcode}:null;if(data)c.retry_count++;}
+   else if(url.pathname==='/rpc/security_reset_email_password'){const c=rows.user_passcode.find(c=>c.id===body.p_code_id),u=rows.users.find(u=>u.email===body.p_email);data=!!(c&&u&&u.is_active&&!c.revoked&&c.passcode===body.p_code_hash&&c.pass_object===body.p_email&&c.security_purpose==='reset-password');if(data){c.revoked=true;u.password=body.p_password;u.security_revoked_before=new Date().toISOString();rows.refresh_tokens.filter(t=>t.user_id===u.id).forEach(t=>t.revoked=true);}}
+   else if(url.pathname==='/rpc/security_submit_verified_company_subscription'){registrationCalls.push(body);data={request_id:body.p_request,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_subscription'){assert.equal(body.p_reviewer,1);data={request_id:body.p_request,status:body.p_action==='approve'?'approved':'rejected'};}
    else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
    else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
@@ -88,6 +91,8 @@ try {
  const registration={request_id:'684778fa-9fd4-4a31-aa18-a44df9d97bd1',subscription_offer:'annual-50-v1',subscription_acknowledged:true,company_name:'Synthetic Transport',company_email:'register@example.invalid',company_password:randomBytes(18).toString('base64url'),company_phone:'+32470000001',company_address:'Synthetic street 123',vat_number:'BE0123456789',kbo_number:'0123456789',chiron_test_client_id:'synthetic-test',chiron_test_client_secret:randomBytes(24).toString('base64url'),chiron_prod_client_id:'synthetic-production',chiron_prod_client_secret:randomBytes(24).toString('base64url'),vehicle_brand:'Demo',vehicle_model:'Car',plate_number:'DEMO-123',vin:'WVWZZZ1JZXW000001',chiron_vehicle_id:'',driver_name:'Synthetic Driver',driver_phone:'+32470000000',driver_password:randomBytes(18).toString('base64url'),driver_license:'SYN-LICENCE',bestuurderspas:'SYN-PASS',language:'fr'};
  await status('Public onboarding rejects caller privilege fields',request('/next_api/company-registrations','POST',{...registration,is_active:true}),400);
  await status('Foreign origin cannot submit company onboarding',fetch(base+'/next_api/company-registrations',{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:JSON.stringify(registration)}),403);
+ await status('Company registration requires an email code',request('/next_api/company-registrations','POST',registration),400);
+ registration.email_code='123456';rows.user_passcode.push({id:1,pass_object:registration.company_email,security_purpose:'company-registration:'+registration.request_id,passcode:await bcrypt.hash('123456',4),valid_until:new Date(Date.now()+180000).toISOString(),revoked:false,retry_count:0});
  const registered=await status('Public complete registration returns pending receipt',request('/next_api/company-registrations','POST',registration),201);
  assert.deepEqual((await registered.json()).data,{request_id:registration.request_id,status:'pending'});
  const protectedData=registrationCalls[0].p_data;assert.match(protectedData.company.chiron_test_client_secret,/^enc:v1:/);assert.match(protectedData.company.chiron_prod_client_secret,/^enc:v1:/);assert.equal(await bcrypt.compare(registration.company_password,protectedData.manager_hash),true);assert.equal(await bcrypt.compare(registration.driver_password,protectedData.driver_hash),true);assert.equal(protectedData.user_role,'test_user');
@@ -181,6 +186,10 @@ try {
  await status('Signed contract cannot receive a new signature invitation',request('/next_api/contracts/send-signature-link','POST',invite,refreshedToken),409);
  await status('Forged Brevo delivery callback is refused',request('/next_api/webhooks/brevo','POST',{event:'delivered'}),401);
  assert.ok(databaseTokens.length>0);checks.push('Database receives server service tokens, never browser roles');
+ rows.users.push({id:99,email:'reset@example.invalid',password:await bcrypt.hash(password,4),is_active:true});rows.user_passcode.push({id:99,pass_object:'reset@example.invalid',security_purpose:'reset-password',passcode:await bcrypt.hash('123456',4),valid_until:new Date(Date.now()+180000).toISOString(),revoked:false,retry_count:0});
+ await status('Reset rejects a wrong code without changing password',request('/next_api/auth/reset-password','POST',{email:'reset@example.invalid',passcode:'000000',password}),401);
+ const resetPassword=randomBytes(18).toString('base64url');await status('Reset consumes code with normalized email',request('/next_api/auth/reset-password','POST',{email:' RESET@example.invalid ',passcode:'123456',password:resetPassword}),200);assert.equal(await bcrypt.compare(resetPassword,rows.users.find(u=>u.id===99).password),true);
+ await status('Reset proof cannot be replayed',request('/next_api/auth/reset-password','POST',{email:'reset@example.invalid',passcode:'123456',password}),401);
  const result={passed:checks.length,checks,database:'Simulated PostgREST; real production Next HTTP handlers'};
  fs.mkdirSync(new URL('./verification/',import.meta.url),{recursive:true});
  fs.writeFileSync(new URL('./verification/auth-integration.json',import.meta.url),JSON.stringify(result,null,2));

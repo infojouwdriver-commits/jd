@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {PasswordInput} from "./PasswordInput";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Building2 } from "lucide-react";
@@ -23,9 +24,10 @@ type CompanyLoginFormData = z.infer<typeof companyLoginSchema>;
 
 interface CompanyLoginFormProps {
   onSuccess?: () => void;
+  onForgotPassword?: () => void;
 }
 
-export function CompanyLoginForm({ onSuccess }: CompanyLoginFormProps) {
+export function CompanyLoginForm({ onSuccess, onForgotPassword }: CompanyLoginFormProps) {
   const router = useRouter();
   const { refreshUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +78,7 @@ export function CompanyLoginForm({ onSuccess }: CompanyLoginFormProps) {
         </p>
       </div>
       <div className="p-6 pt-0">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -84,7 +86,7 @@ export function CompanyLoginForm({ onSuccess }: CompanyLoginFormProps) {
           )}
 
           <div className="space-y-2">
-            <div className="mb-[4px] h-[22px] text-sm font-medium">Email</div>
+            <label htmlFor="company-email" className="mb-1 block text-sm font-medium">Email</label>
             <Input
               id="company-email"
               type="email"
@@ -99,8 +101,8 @@ export function CompanyLoginForm({ onSuccess }: CompanyLoginFormProps) {
           </div>
 
           <div className="space-y-2">
-            <div className="mb-[4px] h-[22px] text-sm font-medium">Password</div>
-            <Input
+            <label htmlFor="company-password" className="mb-1 block text-sm font-medium">Password</label>
+            <PasswordInput
               id="company-password"
               type="password"
               placeholder="password"
@@ -121,6 +123,7 @@ export function CompanyLoginForm({ onSuccess }: CompanyLoginFormProps) {
           <p className="text-xs text-center text-muted-foreground mt-2">
             Use the manager email registered with your company.
           </p>
+          {onForgotPassword&&<Button type="button" variant="link" onClick={onForgotPassword} disabled={isLoading}>Mot de passe oublié ? · نسيت كلمة المرور؟</Button>}
         </form>
       </div>
     </div>

@@ -114,24 +114,25 @@ Links target the working tree, so line positions can move after changes.
 
 - `update-customer-portal.sh` — [L1](../deploy/update-customer-portal.sh#L1)
 - `update-customer-portal.sh script` — [L1](../deploy/update-customer-portal.sh#L1)
-- `BILLING_MAIL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `COMPANY_STAFF_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `CONTRACT_BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `CUSTOMER_IMAGE` — [L48](../deploy/update-customer-portal.sh#L48)
-- `CUSTOMER_REVISION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `FLEET_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `LIFECYCLE_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `MAIL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `OPERATIONS_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `PORTAL_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `PRICING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `PUSH_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `REGISTRATION_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `VERIFIED_BACKUP_TAG` — [L48](../deploy/update-customer-portal.sh#L48)
-- `WEB_APPROVALS_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `WEB_BILLING_MIGRATION` — [L48](../deploy/update-customer-portal.sh#L48)
-- `cleanup()` — [L61](../deploy/update-customer-portal.sh#L61)
+- `BILLING_MAIL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `COMPANY_STAFF_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `CONTRACT_BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `CUSTOMER_IMAGE` — [L50](../deploy/update-customer-portal.sh#L50)
+- `CUSTOMER_REVISION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `EMAIL_IDENTITY_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `FLEET_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `LIFECYCLE_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `MAIL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `OPERATIONS_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `PORTAL_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `PRICING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `PUSH_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `REGISTRATION_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `VERIFIED_BACKUP_TAG` — [L50](../deploy/update-customer-portal.sh#L50)
+- `WEB_APPROVALS_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `WEB_BILLING_MIGRATION` — [L50](../deploy/update-customer-portal.sh#L50)
+- `cleanup()` — [L63](../deploy/update-customer-portal.sh#L63)
 
 ## [deploy/update-customer-ui.sh](../deploy/update-customer-ui.sh)
 
@@ -919,6 +920,13 @@ Links target the working tree, so line positions can move after changes.
 - `company_changes_company_created` — [L14](../migrations/20261018_web_change_approvals.sql#L14)
 - `"schema".security_submit_company_change()` — [L21](../migrations/20261018_web_change_approvals.sql#L21)
 - `"schema".security_review_company_change()` — [L47](../migrations/20261018_web_change_approvals.sql#L47)
+
+## [migrations/20261019_email_identity.sql](../migrations/20261019_email_identity.sql)
+
+- `20261019_email_identity.sql` — [source](../migrations/20261019_email_identity.sql#)
+- `"schema".security_attempt_email_code()` — [L5](../migrations/20261019_email_identity.sql#L5)
+- `"schema".security_submit_verified_company_subscription()` — [L15](../migrations/20261019_email_identity.sql#L15)
+- `"schema".security_reset_email_password()` — [L35](../migrations/20261019_email_identity.sql#L35)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -1727,7 +1735,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/login/page.tsx](../src/app/login/page.tsx)
 
 - `login/page.tsx` — [L1](../src/app/login/page.tsx#L1)
-- `LoginPage()` — [L4](../src/app/login/page.tsx#L4)
+- `dynamic` — [L3](../src/app/login/page.tsx#L3)
+- `LoginPage()` — [L7](../src/app/login/page.tsx#L7)
 
 ## [src/app/next_api/admin/users/route.ts](../src/app/next_api/admin/users/route.ts)
 
@@ -1765,10 +1774,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/auth/account/route.ts](../src/app/next_api/auth/account/route.ts)
 
 - `account/route.ts` — [L1](../src/app/next_api/auth/account/route.ts#L1)
-- `available()` — [L8](../src/app/next_api/auth/account/route.ts#L8)
-- `schema` — [L9](../src/app/next_api/auth/account/route.ts#L9)
-- `GET` — [L15](../src/app/next_api/auth/account/route.ts#L15)
-- `POST` — [L20](../src/app/next_api/auth/account/route.ts#L20)
+- `available()` — [L9](../src/app/next_api/auth/account/route.ts#L9)
+- `schema` — [L10](../src/app/next_api/auth/account/route.ts#L10)
+- `GET` — [L16](../src/app/next_api/auth/account/route.ts#L16)
+- `POST` — [L21](../src/app/next_api/auth/account/route.ts#L21)
 
 ## [src/app/next_api/auth/driver-login/route.ts](../src/app/next_api/auth/driver-login/route.ts)
 
@@ -1819,14 +1828,14 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/auth/reset-password/route.ts](../src/app/next_api/auth/reset-password/route.ts)
 
 - `reset-password/route.ts` — [L1](../src/app/next_api/auth/reset-password/route.ts#L1)
-- `resetPasswordSchema` — [L9](../src/app/next_api/auth/reset-password/route.ts#L9)
-- `POST` — [L15](../src/app/next_api/auth/reset-password/route.ts#L15)
+- `schema` — [L9](../src/app/next_api/auth/reset-password/route.ts#L9)
+- `POST` — [L10](../src/app/next_api/auth/reset-password/route.ts#L10)
 
 ## [src/app/next_api/auth/send-verification/route.ts](../src/app/next_api/auth/send-verification/route.ts)
 
 - `send-verification/route.ts` — [L1](../src/app/next_api/auth/send-verification/route.ts#L1)
-- `sendVerificationSchema` — [L8](../src/app/next_api/auth/send-verification/route.ts#L8)
-- `POST` — [L13](../src/app/next_api/auth/send-verification/route.ts#L13)
+- `schema` — [L8](../src/app/next_api/auth/send-verification/route.ts#L8)
+- `POST` — [L9](../src/app/next_api/auth/send-verification/route.ts#L9)
 
 ## [src/app/next_api/auth/user/route.ts](../src/app/next_api/auth/user/route.ts)
 
@@ -1961,10 +1970,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
-- `POST` — [L13](../src/app/next_api/company-registrations/route.ts#L13)
-- `GET` — [L27](../src/app/next_api/company-registrations/route.ts#L27)
-- `review` — [L33](../src/app/next_api/company-registrations/route.ts#L33)
-- `PUT` — [L34](../src/app/next_api/company-registrations/route.ts#L34)
+- `POST` — [L14](../src/app/next_api/company-registrations/route.ts#L14)
+- `GET` — [L29](../src/app/next_api/company-registrations/route.ts#L29)
+- `review` — [L35](../src/app/next_api/company-registrations/route.ts#L35)
+- `PUT` — [L36](../src/app/next_api/company-registrations/route.ts#L36)
 
 ## [src/app/next_api/company-staff/route.ts](../src/app/next_api/company-staff/route.ts)
 
@@ -2613,10 +2622,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/auth/CompanyLoginForm.tsx](../src/components/auth/CompanyLoginForm.tsx)
 
 - `CompanyLoginForm.tsx` — [L1](../src/components/auth/CompanyLoginForm.tsx#L1)
-- `companyLoginSchema` — [L17](../src/components/auth/CompanyLoginForm.tsx#L17)
-- `CompanyLoginFormData` — [L22](../src/components/auth/CompanyLoginForm.tsx#L22)
-- `CompanyLoginFormProps` — [L24](../src/components/auth/CompanyLoginForm.tsx#L24)
-- `CompanyLoginForm()` — [L28](../src/components/auth/CompanyLoginForm.tsx#L28)
+- `companyLoginSchema` — [L18](../src/components/auth/CompanyLoginForm.tsx#L18)
+- `CompanyLoginFormData` — [L23](../src/components/auth/CompanyLoginForm.tsx#L23)
+- `CompanyLoginFormProps` — [L25](../src/components/auth/CompanyLoginForm.tsx#L25)
+- `CompanyLoginForm()` — [L30](../src/components/auth/CompanyLoginForm.tsx#L30)
 
 ## [src/components/auth/DriverRegisterForm.tsx](../src/components/auth/DriverRegisterForm.tsx)
 
@@ -2667,7 +2676,12 @@ Links target the working tree, so line positions can move after changes.
 - `ADMIN` — [L21](../src/components/auth/LoginPageClient.tsx#L21)
 - `COMPANY` — [L22](../src/components/auth/LoginPageClient.tsx#L22)
 - `LoginPageContent()` — [L25](../src/components/auth/LoginPageClient.tsx#L25)
-- `LoginPageClient()` — [L162](../src/components/auth/LoginPageClient.tsx#L162)
+- `LoginPageClient()` — [L160](../src/components/auth/LoginPageClient.tsx#L160)
+
+## [src/components/auth/PasswordInput.tsx](../src/components/auth/PasswordInput.tsx)
+
+- `PasswordInput.tsx` — [L1](../src/components/auth/PasswordInput.tsx#L1)
+- `PasswordInput` — [L7](../src/components/auth/PasswordInput.tsx#L7)
 
 ## [src/components/auth/RegisterForm.tsx](../src/components/auth/RegisterForm.tsx)
 
@@ -2682,12 +2696,12 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/auth/ResetPasswordForm.tsx](../src/components/auth/ResetPasswordForm.tsx)
 
 - `ResetPasswordForm.tsx` — [L1](../src/components/auth/ResetPasswordForm.tsx#L1)
-- `emailSchema` — [L18](../src/components/auth/ResetPasswordForm.tsx#L18)
-- `resetPasswordSchema` — [L22](../src/components/auth/ResetPasswordForm.tsx#L22)
-- `EmailFormData` — [L38](../src/components/auth/ResetPasswordForm.tsx#L38)
-- `ResetPasswordFormData` — [L39](../src/components/auth/ResetPasswordForm.tsx#L39)
-- `ResetPasswordFormProps` — [L41](../src/components/auth/ResetPasswordForm.tsx#L41)
-- `ResetPasswordForm()` — [L46](../src/components/auth/ResetPasswordForm.tsx#L46)
+- `emailSchema` — [L19](../src/components/auth/ResetPasswordForm.tsx#L19)
+- `resetPasswordSchema` — [L23](../src/components/auth/ResetPasswordForm.tsx#L23)
+- `EmailFormData` — [L39](../src/components/auth/ResetPasswordForm.tsx#L39)
+- `ResetPasswordFormData` — [L40](../src/components/auth/ResetPasswordForm.tsx#L40)
+- `ResetPasswordFormProps` — [L42](../src/components/auth/ResetPasswordForm.tsx#L42)
+- `ResetPasswordForm()` — [L47](../src/components/auth/ResetPasswordForm.tsx#L47)
 
 ## [src/components/company/CompanyDashboard.tsx](../src/components/company/CompanyDashboard.tsx)
 
@@ -3107,9 +3121,10 @@ Links target the working tree, so line positions can move after changes.
 - `blank()` — [L18](../src/components/registration/CompanyRegistrationDialog.tsx#L18)
 - `RegistrationField()` — [L19](../src/components/registration/CompanyRegistrationDialog.tsx#L19)
 - `CompanyRegistrationDialog()` — [L23](../src/components/registration/CompanyRegistrationDialog.tsx#L23)
-- `close()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
-- `validate()` — [L31](../src/components/registration/CompanyRegistrationDialog.tsx#L31)
-- `submit()` — [L32](../src/components/registration/CompanyRegistrationDialog.tsx#L32)
+- `sendEmailCode()` — [L27](../src/components/registration/CompanyRegistrationDialog.tsx#L27)
+- `close()` — [L33](../src/components/registration/CompanyRegistrationDialog.tsx#L33)
+- `validate()` — [L34](../src/components/registration/CompanyRegistrationDialog.tsx#L34)
+- `submit()` — [L35](../src/components/registration/CompanyRegistrationDialog.tsx#L35)
 
 ## [src/components/registration/copy.ts](../src/components/registration/copy.ts)
 
@@ -3736,11 +3751,11 @@ Links target the working tree, so line positions can move after changes.
 - `responseRedirect()` — [L458](../src/lib/api-utils.ts#L458)
 - `getRequestIp()` — [L468](../src/lib/api-utils.ts#L468)
 - `sendVerificationEmail()` — [L472](../src/lib/api-utils.ts#L472)
-- `shouldUseSecureCookies()` — [L489](../src/lib/api-utils.ts#L489)
-- `shouldUseCrossSiteCookies()` — [L509](../src/lib/api-utils.ts#L509)
-- `getSameSiteValue()` — [L527](../src/lib/api-utils.ts#L527)
-- `setCookie()` — [L529](../src/lib/api-utils.ts#L529)
-- `clearCookie()` — [L564](../src/lib/api-utils.ts#L564)
+- `shouldUseSecureCookies()` — [L493](../src/lib/api-utils.ts#L493)
+- `shouldUseCrossSiteCookies()` — [L513](../src/lib/api-utils.ts#L513)
+- `getSameSiteValue()` — [L531](../src/lib/api-utils.ts#L531)
+- `setCookie()` — [L533](../src/lib/api-utils.ts#L533)
+- `clearCookie()` — [L568](../src/lib/api-utils.ts#L568)
 
 ## [src/lib/auth.ts](../src/lib/auth.ts)
 
@@ -3964,6 +3979,11 @@ Links target the working tree, so line positions can move after changes.
 - `brusselsDay()` — [L4](../src/lib/driver-activity.ts#L4)
 - `activityFilters()` — [L9](../src/lib/driver-activity.ts#L9)
 - `summarizeActivity()` — [L18](../src/lib/driver-activity.ts#L18)
+
+## [src/lib/email-verification.ts](../src/lib/email-verification.ts)
+
+- `email-verification.ts` — [L1](../src/lib/email-verification.ts#L1)
+- `verifyEmailCode()` — [L5](../src/lib/email-verification.ts#L5)
 
 ## [src/lib/fleet-sharing-runtime.ts](../src/lib/fleet-sharing-runtime.ts)
 

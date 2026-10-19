@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import {PasswordInput} from "./PasswordInput";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -27,7 +28,7 @@ const resetPasswordSchema = z
       .max(6, "The verification code should be a six-digit number"),
     password: z
       .string()
-      .min(6, "The password must be at least six characters long"),
+      .min(12, "Use at least 12 characters").refine(v=>new TextEncoder().encode(v).length<=72,"Maximum 72 bytes"),
     confirmPassword: z.string().min(6, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -181,7 +182,7 @@ export function ResetPasswordForm({
           </div>
         </div>
         <div className="text-center text-sm text-muted-foreground">
-          Reset your password and secure your account
+          Use a code valid for 3 minutes, then choose a password of at least 12 characters.
         </div>
       </div>
       <div className="p-6 pt-0">
@@ -192,14 +193,14 @@ export function ResetPasswordForm({
         )}
 
         {currentStep === 1 && (
-          <form
+          <form noValidate
             onSubmit={emailForm.handleSubmit(handleEmailSubmit)}
             className="space-y-4"
           >
             <div className="space-y-2">
-              <div className="mb-[4px] h-[22px] text-sm font-medium">Email</div>
+              <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
               <Input
-                id="email"
+                id="email" autoComplete="email"
                 type="email"
                 placeholder="Enter your email address"
                 {...emailForm.register("email")}
@@ -239,11 +240,11 @@ export function ResetPasswordForm({
         {currentStep === 2 && (
           <div className="space-y-4">
             <div className="text-center text-sm text-muted-foreground mb-6">
-              We sent a verification code to{" "}
+              If this address has an eligible account, a verification code was sent to{" "}
               <span className="font-medium">{userEmail}</span>
             </div>
 
-            <form
+            <form noValidate
               onSubmit={resetForm.handleSubmit(handleResetSubmit)}
               className="space-y-4"
             >
@@ -294,11 +295,9 @@ export function ResetPasswordForm({
               </div>
 
               <div className="space-y-2">
-                <div className="mb-[4px] h-[22px] text-sm font-medium">
-                  New Password
-                </div>
-                <Input
-                  id="password"
+                <label htmlFor="password" className="mb-1 block text-sm font-medium">New Password</label>
+                <PasswordInput
+                  id="password" autoComplete="new-password"
                   type="password"
                   placeholder="Enter new password"
                   {...resetForm.register("password")}
@@ -312,11 +311,9 @@ export function ResetPasswordForm({
               </div>
 
               <div className="space-y-2">
-                <div className="mb-[4px] h-[22px] text-sm font-medium">
-                  Confirm Password
-                </div>
-                <Input
-                  id="confirmPassword"
+                <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium">Confirm Password</label>
+                <PasswordInput
+                  id="confirmPassword" autoComplete="new-password"
                   type="password"
                   placeholder="Confirm new password"
                   {...resetForm.register("confirmPassword")}

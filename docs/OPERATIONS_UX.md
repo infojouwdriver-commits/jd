@@ -83,3 +83,24 @@ Provider acceptance is announced separately from confirmed delivery. Missing
 mail configuration leaves the contract untouched and gives a recoverable
 configuration message. Existing shared Button, Sonner and document primitives
 remain canonical; no native app or signed document changes apply.
+
+## Website email confirmation and recovery — 2026-10-19
+
+Existing LanguageContext, registration Dialog/Input/Label/Button and masked fields
+remain canonical. Final review requests a six-digit company-email code tied to
+its request UUID; the server consumes the proof atomically with onboarding. A
+changed email clears the local code. Codes expire after three minutes, the latest
+code supersedes earlier ones, and storage bounds each code to five comparisons.
+A rejected code leaves the form editable; ambiguous onboarding preserves the exact
+payload and request UUID for replay even after its consumed proof expires.
+No code/password is written to browser storage or URLs. Historical requests keep
+their existing status and are not retroactively marked verified.
+
+Login and account availability use the shared provider configuration, including
+Brevo. The company portal reuses ResetPasswordForm, with shared PasswordInput and
+Input/Button primitives. Recovery responses do not disclose account existence.
+A successful reset consumes the latest matching proof and changes the canonical
+user password while revoking existing sessions in one transaction. Inactive and
+Google-only accounts stay unavailable; MFA and membership rules remain unchanged.
+Contract invitations keep the existing protected owner portal workflow and cannot
+sign or activate anything. No financial email is retried during verification.

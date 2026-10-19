@@ -149,9 +149,7 @@ function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
           </>
         )}
 
-        {portal === PortalEnum.COMPANY && (
-          <CompanyLoginForm onSuccess={handleSuccess} />
-        )}
+        {portal === PortalEnum.COMPANY && (mode === ModeEnum.RESET ? <ResetPasswordForm onBack={()=>setMode(ModeEnum.LOGIN)} onSuccess={()=>setMode(ModeEnum.LOGIN)} /> : <CompanyLoginForm onSuccess={handleSuccess} onForgotPassword={emailEnabled?()=>setMode(ModeEnum.RESET):undefined} />)}
         {!emailEnabled && <p dir="rtl" className="mt-5 text-center text-sm text-slate-200">لإنشاء حساب أو استعادة الوصول، تواصل مع إدارة شركتك.</p>}
         <p className="mt-4 text-center text-sm text-slate-200"><Link href="/privacy-policy" className="underline">الخصوصية · Confidentialité</Link></p>
       </div>
