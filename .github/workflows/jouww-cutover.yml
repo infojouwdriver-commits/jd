@@ -84,7 +84,55 @@ jobs:
           try{
             fs.writeFileSync(dir+'/proof.zip',bytes,{mode:0o600});
             const proof=JSON.parse(execFileSync('unzip',['-p',dir+'/proof.zip','candidate-native-proof.json'],{encoding:'utf8'}));
-            if(proof.candidateImage!==i.image||proof.passed!==proof.checks?.length||proof.passed<70||!proof.checks.some(c=>c.startsWith('Candidate app origin accepts host-only')))throw Error('Exact image/origin acceptance missing');
+            const requiredNativeChecks = [
+              "Final PostgreSQL TCP server accepts authenticated SELECT 1 after bootstrap",
+              "PostgreSQL has no published host port",
+              "Reconstructed schema and full deployment migration sequence applied on native PostgreSQL",
+              "Read-only live schema exporter saves native pg_dump tables, functions and RLS without row data",
+              "Gateway database login is not superuser and does not bypass RLS or inherit service privileges",
+              "PostgREST publishes only a random loopback port",
+              "JWT switches real PostgREST to non-superuser service role under RLS",
+              "Service role writes and reads business data",
+              "Browser role cannot read tables or invoke restored PUBLIC function",
+              "Concurrent completion retries create one trip, force server owner and lock completed trip",
+              "Subsequent completion retry returns the original record",
+              "Browser role cannot invoke completion RPC",
+              "Native MFA claim accepts once, rejects replay and browser role",
+              "Native shared rate bucket enforces limit and denies browser RPC",
+              "Exact immutable candidate image preloaded for native acceptance",
+              "Independent core foreign keys and tenant identity validate on native PostgreSQL and reject mismatched driver company",
+              "Native lifecycle RPCs enforce browser denial, unique accounts, atomic rollback, credential synchronization and history-preserving deactivation",
+              "Standalone startup passes real preflight/readiness as UID10001 with read-only filesystem",
+              "Production readiness accepts validated independent schema and refuses an unvalidated core foreign key",
+              "Real application phone login validates bcrypt and issues secure cookies with browser role",
+              "Cookie session resolves authenticated driver through real database",
+              "Candidate app origin accepts host-only sessions and exact legacy origin; marketing origins denied for authenticated GET and POST",
+              "Real application completion persists canonical Chiron environment, original offline times, exact owner/vehicle/price and zero coordinates without Chiron",
+              "Two application retries return the original completed record without duplication or repricing",
+              "Application refuses edits to the locked completed trip",
+              "Real database-backed driver authorization denies admin routes and another owner trip",
+              "Annual 50 EUR VAT-inclusive registration contract stays unsigned and unbilled until authenticated owner signature; native HTTP retries preserve one signature and cross-tenant isolation",
+              "Native company onboarding persists encrypted pending records, blocks both logins until MFA approval, denies browser RPCs and retries without duplication; approval preserves Chiron TEST",
+              "Native company pricing saves euro cents and preserves zero fees; invalid values and driver writes are rejected without changing stored rates",
+              "Native contracts use canonical company identity, clamp calendar dates, preserve exact cents and prevent changes or deletion of signed documents",
+              "Cancelling an unsigned draft retains the original document and record rather than deleting it",
+              "Real administrator MFA session creates and lists a company through production handlers and native PostgreSQL",
+              "Creating a company with credentials atomically provisions its isolated login identity; company login normalizes email and cannot enter admin routes",
+              "Administrator trip overview includes all owners and selected company; driver remains scoped to own trips",
+              "Real driver composing, sent-message inbox and management replies work; unrelated driver threads reject both reads and replies",
+              "Reviewed Chiron routes replace disabled stubs, accept UI trip identifiers, encrypt credentials, reject wrong environments and preserve driver authorization",
+              "Actual PostgreSQL and HTTP billing use exact cents, immutable issuance, idempotent payment, owner read-only statements and PDF; archive preserves history and restore does not resume billing",
+              "Native conditional event claim permits only one concurrent sender without altering a locked trip price",
+              "Self password change reauthenticates current password, saves the canonical hash and immediately invalidates the existing session",
+              "Logout revokes existing access token against real PostgreSQL and clears cookies",
+              "Actual backup.sh produces a private age-encrypted custom-format dump with no plaintext dump file",
+              "Failed pg_dump leaves no published backup or temporary plaintext file",
+              "Encrypted backup restores in a separate network-isolated PostgreSQL container with matching all-table hashes, sequences, constraints, functions, RLS and browser/service access",
+              "Wrong decryption key and corrupted encrypted backup are rejected",
+              "Actual app fails closed with 503 when real PostgREST rate storage is unavailable"
+            ];
+            const completedNativeChecks=new Set(Array.isArray(proof.checks)?proof.checks:[]);
+            if(proof.candidateImage!==i.image||!Array.isArray(proof.checks)||proof.passed!==proof.checks.length||completedNativeChecks.size!==proof.checks.length||requiredNativeChecks.some(check=>!completedNativeChecks.has(check)))throw Error('Exact image/origin acceptance missing');
           }finally{fs.rmSync(dir,{recursive:true,force:true});}
           fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup='+backup+'\n');
           console.log('Verified patched merged candidate, exact-image origin/tenant/PDF acceptance and recent restore drill.');
