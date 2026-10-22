@@ -161,3 +161,36 @@ image does not authorize a production cutover.
 Runtime inventory, origin TLS, Mapbox account restrictions, isolated acceptance,
 physical Android/iOS acceptance and a fresh encrypted backup/restore remain
 open gates. Repository checks cannot substitute for these external observations.
+
+## Verified continuation · 2026-10-22, after PR #97
+
+- Main was confirmed at `f3cde10dfbe20a774265fed3cd2041eb55cd6d31`.
+- Candidate run `39826612875` passed domain, web, native database and publish.
+  Its actual digest was `sha256:f246a6f55934d91b9b4a31b2d5455e55db33b820504c505770af93470e87ce8e`.
+  **Do not deploy this image:** subsequent audit rejected its DOMPurify 3.4.16.
+- Native run `39825433711`: Android and visual review succeeded; iOS skipped.
+- Runtime inspection `39826512310` succeeded, retaining live revision
+  `c4ffb842af9f7a8fdde6fa5dc63c391be1623924` and the previous documented digest.
+  Disk was 98% full (1.3 GiB free), and only legacy origin TLS passed.
+- Cloudflare authenticated re-read: zone active, zero DNS records, SSL full,
+  minimum TLS 1.0 and Always Use HTTPS off. No changes made.
+- Correct verified origin IPv4 is **162.19.70.78**; the abbreviated address in
+  the handoff was invalid. No AAAA planned.
+- Mapbox account inspection: `JOUW DRIVER Driver Portal` public token currently
+  restricts URLs to `https://jouw-driver.duckdns.org`. New app origin is absent.
+  No token, scope or URL changes made. Confirm the exact token used by the next
+  candidate build before adjusting its URL allowlist.
+- New CI audit fails on GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr and
+  GHSA-c6gr-qvv4-5v3f. Direct and transitive DOMPurify now resolve to 3.4.17;
+  locked local production audit reports no known vulnerabilities. Rebuild required.
+- PR #98 adds metadata-only Caddy/disk inspection and an isolated immutable
+  image acceptance workflow. The latter verifies image provenance and runs
+  actual PostgreSQL/PostgREST/auth, tenant, trip and PDF tests with synthetic
+  data, app origin plus exact legacy trust, host-only cookies and marketing
+  origin denial. It does not expose production credentials or send mail/Chiron.
+- The user has explicitly authorized routine fixes, merge, tested publication
+  and domain linking in this continuation. Earlier approval wording is historical;
+  all technical readiness gates and automatic/production protections still apply.
+- No live release, DNS, cleanup or production data modification has occurred.
+  TLS, capacity, candidate image acceptance and a reviewed cutover/rollback path
+  remain prerequisites. No physical iOS acceptance is claimed.

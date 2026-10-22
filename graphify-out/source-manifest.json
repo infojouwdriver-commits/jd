@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "dfa895b08c2ca68919e12cb5f11fc334d52ca8ef",
+  "source_commit_context": "f3cde10dfbe20a774265fed3cd2041eb55cd6d31",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -138,8 +138,8 @@
     "mobile/scripts/configure.mjs": "0e193908b5eb052442f0de05db3da412f2a9506e623b76efce4d0a914bb9c5e5",
     "mobile/scripts/native-permissions.mjs": "b4f45791f4def7873ad98e19a1e56e3c48e937f756fe448598835e5b54e72d14",
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
-    "package.json": "62a49c33d2639699174dca21ab561f80ddb758d138d166cfe1b565a4c0fea8d3",
-    "pnpm-workspace.yaml": "bc1b5a3743b85ff06f1c7cd9d8a3ee92cae862486b63fdcb5c61c4faa3e3e312",
+    "package.json": "60cb56c29a65471ad83222886c1c650762b41d514c8694d817e7395716cc1cca",
+    "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
     "scripts/apply-release.mjs": "6e6647ebcaad60ffdbd9e20d791fa70cfe23cd0050eddd8b4acd9d0804216f42",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
     "scripts/code-map.py": "a4d5f75b9f7a0b2c7e9ea064a10d9664d5d976fee9fac63a1ecbab9aeb046837",
@@ -548,11 +548,11 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "SOURCE_INDEX.md": "9952ab0857a3cdadafb10d8180a0fcb2016fe08734f002f96bb188cf9bcfb944",
-    "graph.json": "2ecd5317f6780b1552cbb6339fe63dad3a74616287c2f03e3e32924f543d9c90",
-    "GRAPH_TREE.html": "88e16ee2a4a1cd0d00f3d36fb597ee7ba99918006ecc8c2d2def47902521f4c8",
     "health.json": "e11d370b9a9aec39e141c9966b162bf5dc134aff6ebe0896ed0e923873863bec",
-    "GRAPH_REPORT.md": "2039e033383d2137b57accbab66f93430c04df3daf7cdd6b3f100b129dab84e6"
+    "graph.json": "e93e6824e1ff0452754c96ec6dd802d2ea802f8833ccd92e6d649dad5659f886",
+    "SOURCE_INDEX.md": "9952ab0857a3cdadafb10d8180a0fcb2016fe08734f002f96bb188cf9bcfb944",
+    "GRAPH_REPORT.md": "4c3eb94817b56359d236da10489551ec213a4d6e1010e79f068dc30a4a42103e",
+    "GRAPH_TREE.html": "88e16ee2a4a1cd0d00f3d36fb597ee7ba99918006ecc8c2d2def47902521f4c8"
   },
   "nodes": 3076,
   "edges": 10437,
