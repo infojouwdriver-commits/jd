@@ -1,0 +1,71 @@
+name: Verify immutable jouww image in isolation
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        type: string
+        required: true
+        description: Immutable candidate digest from a successful jouww release
+      release_run:
+        type: string
+        required: true
+        description: Successful release-domain-candidate workflow run
+permissions:
+  contents: read
+  actions: read
+  packages: read
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Verify candidate provenance and full source acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ inputs.image }}
+          RELEASE_RUN: ${{ inputs.release_run }}
+        run: |
+          set -euo pipefail
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$RELEASE_RUN" =~ ^[1-9][0-9]+$ ]]
+          config=$(mktemp -d)
+          export DOCKER_CONFIG="$config"
+          trap 'rm -rf "$config"' EXIT
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+          node --input-type=module <<'GATE'
+          const api=async p=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+p,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Acceptance unavailable');return r.json();};
+          const run=await api('/actions/runs/'+process.env.RELEASE_RUN);
+          if(run.status!=='completed'||run.conclusion!=='success'||run.path!=='.github/workflows/release-domain-candidate.yml')throw Error('Successful domain candidate release required');
+          const jobs=await api('/actions/runs/'+run.id+'/jobs?per_page=100');
+          for(const name of ['domain / candidate','checks / verify','checks / native-database','publish'])if(!jobs.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Full candidate checks required');
+          const ancestry=await api('/compare/'+run.head_sha+'...main');
+          if(!['identical','ahead'].includes(ancestry.status))throw Error('Candidate must be merged');
+          const {execFileSync}=await import('node:child_process');
+          execFileSync('docker',['pull',process.env.IMAGE],{stdio:['ignore','ignore','pipe']});
+          const labels=JSON.parse(execFileSync('docker',['inspect','--format','{{json .Config.Labels}}',process.env.IMAGE],{encoding:'utf8'}));
+          if(labels['org.opencontainers.image.revision']!==run.head_sha||labels['com.jouwdriver.portal-origin']!=='https://app.jouww.com'||labels['com.jouwdriver.build-run']!==run.id+'/'+run.run_attempt)throw Error('Candidate image provenance mismatch');
+          console.log('Immutable image matches the successful merged candidate build.');
+          GATE
+      - name: Install locked test dependencies
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+          pnpm audit --prod
+      - name: Exercise exact image with synthetic PostgreSQL and both trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ inputs.image }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: jouww-image-acceptance-${{ github.run_id }}
+          path: candidate-native-proof.json
+          retention-days: 14
