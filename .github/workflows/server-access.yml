@@ -119,6 +119,17 @@ jobs:
           for(const path of ['/srv/jouw-driver','/srv/jouw-driver/backups','/srv/jouw-driver/releases','/var/lib/docker','/var/log','/home','/tmp']){
             try{report.diskBytes[path]=Number(execFileSync('sudo',['-n','du','-sx','--block-size=1',path],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000}).split(/\s+/)[0]);}catch{report.diskBytes[path]='unavailable';}
           }
+          report.dockerStorageBytes={};
+          for(const path of ['/var/lib/docker/containers','/var/lib/docker/overlay2','/var/lib/docker/image','/var/lib/docker/volumes','/var/lib/docker/buildkit','/var/lib/containerd']){
+            try{report.dockerStorageBytes[path]=Number(execFileSync('sudo',['-n','du','-sx','--block-size=1',path],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000}).split(/\s+/)[0]);}catch{report.dockerStorageBytes[path]='unavailable';}
+          }
+          report.containerLogMetadata=[];
+          for(const id of docker('ps','--all','--quiet').split('\n').filter(Boolean)){
+            const info=JSON.parse(docker('container','inspect',id))[0];
+            let bytes;try{bytes=Number(execFileSync('sudo',['-n','stat','--format=%s',info.LogPath],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:5000}).trim());}catch{bytes='unavailable';}
+            const service=info.Config.Labels?.['com.docker.compose.service'];
+            report.containerLogMetadata.push({service:['app','edge','db','postgrest'].includes(service)?service:'other',running:info.State.Running,driver:info.HostConfig.LogConfig?.Type,rotationConfigured:Boolean(info.HostConfig.LogConfig?.Config?.['max-size']),bytes});
+          }
           report.eligibleUnusedImages=[];
           const protectedIds=new Set(ids.map(id=>docker('inspect','--format','{{.Image}}',id)));
           for(const ref of [state.image,state.previousImage,release.image,release.previousImage].filter(Boolean))protectedIds.add(JSON.parse(docker('image','inspect',ref))[0].Id);
