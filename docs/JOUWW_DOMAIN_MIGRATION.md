@@ -1,8 +1,10 @@
 # jouww.com migration preparation · Issue #96
 
-Status: **preparation only; not deployed; DNS unchanged**. Production cutover
-requires the user's final approval after the gates below pass. This supersedes
-the issue's earlier assumption that the domain had not yet been purchased at OVH.
+Status: **candidate built and exact-image acceptance passed; not deployed; DNS unchanged**.
+The user authorized tested publication and domain linking. A specific automatic
+approval refusal currently blocks adding the new app origin to the existing
+Mapbox token allowlist. Obtain explicit approval for that change; do not bypass
+the refusal or replace the token to work around it.
 
 ## Verified read-only inventory · 2026-10-22 UTC
 
@@ -243,3 +245,38 @@ prepare -> activate -> verify -> rollback, plus failure while replacing the app.
 These tests verify configuration preservation/recovery; they do not prove real
 TLS, DNS or Docker rollout. CI additionally tests routing and the HTTP mutation
 policy against the observed Caddy image binary.
+
+
+## Latest continuation · 2026-10-22
+
+- #98, #99 and #100 are merged. Corrected candidate release **39839710966,
+  attempt 2**, completed successfully. Its image is
+  `ghcr.io/infojouwdriver-commits/jd@sha256:a078a3694a7259db839fd3e3e32917b29c11fd4ee46eff9f2c5d3de24c2b6ace`,
+  source `d2d7d5ec1c582221336425a92e450d360ac0fbf7`.
+- Exact-image acceptance **39844006439** completed successfully: all **45 named
+  check groups**, including app/legacy origin trust, marketing denial, host-only
+  cookies, tenant isolation, MFA, immutable records, PDFs and encrypted restore.
+  Only synthetic records/credentials were used. The initial acceptance runner
+  omitted age-keygen; #100 fixed setup and the same image was accepted again.
+- The new cutover gate's guessed numeric threshold must be replaced by checking
+  every observed acceptance property, unique checks, consistent total and the
+  exact digest. Negative tests reject missing/substituted checks and forged proof.
+- Controlled cleanup **39841225076** preserved live/rollback and container
+  images, backups and volumes; available disk rose from about 1.3 to 2.6 GiB.
+  The large PostgreSQL diagnostic log remains unchanged. Recheck space before
+  pulling; review longer-term log rotation separately.
+- Mapbox compiled-token identity matched the existing Driver Portal token.
+  Proposed change: append **only** `https://app.jouww.com` to its saved
+  `https://jouw-driver.duckdns.org` allowlist, preserving the key and scopes.
+  The form was prepared, but automatic approval review **rejected Save changes**
+  because compatibility-check authorization was not accepted as specific approval
+  to expand the allowed origins. Nothing was saved; no workaround was attempted.
+- Obtain that explicit approval before retrying the exact Mapbox save. Then
+  verify the two saved origins and proceed through protected prepare-tls,
+  reviewed DNS-only records, trusted origin TLS, activation and independent
+  public verification. Use the accepted image/source above, release_run
+  **39839710966**, acceptance_run **39844006439** and backup_run **39824041698**
+  while the backup remains fresh and covers the unchanged live release.
+- No TLS preparation, DNS change, live application publication, production
+  data restore, mail/Chiron change or native device release has occurred.
+  The legacy domain remains available. Do not mark the migration complete.
