@@ -53,7 +53,7 @@ jobs:
           const ancestry=await api('/compare/'+i.revision+'...main');
           if(!['identical','ahead'].includes(ancestry.status))throw Error('Revision must be reachable from main');
           const scope=await api('/compare/'+baseline+'...'+i.revision);
-          const allowed=new Set(["DESIGN.md", "UX-CONTRACT.md", "tests/run-auth-integration.mjs", "tests/driver-shifts.test.mjs", "src/lib/security-policy.ts", "src/app/next_api/drivers/shifts/pdf/route.ts", ".github/workflows/update-native-driver.yml", "deploy/tests/native-driver-update.test.mjs", "tests/verification/auth-integration.json"]);
+          const allowed=new Set(["DESIGN.md", "UX-CONTRACT.md", "tests/run-auth-integration.mjs", "tests/driver-shifts.test.mjs", "src/lib/security-policy.ts", "src/app/next_api/drivers/shifts/pdf/route.ts", ".github/workflows/update-native-driver.yml", "deploy/tests/native-driver-update.test.mjs", "tests/verification/auth-integration.json", "tests/verification/native-shift-cockpit-static-audit-20261022.json"]);
           if(scope.status!=='ahead'||!scope.files?.length||scope.files.length>=300||scope.files.some(f=>!allowed.has(f.filename)&&!f.filename.startsWith('driver-app/')&&!f.filename.startsWith('graphify-out/')||f.status!=='modified'&&f.status!=='added'))throw Error('Only reviewed native driver files may differ from the live baseline');
           for(const [id,path] of [[i.release_run,'release.yml'],[i.backup_run,'backup-foundation.yml']]){
             if(!/^[1-9][0-9]+$/.test(id))throw Error('Verified run required');
