@@ -1,0 +1,168 @@
+name: Update verified marketing image only
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        type: string
+        required: true
+        description: Immutable GHCR image from the verified release
+      revision:
+        type: string
+        required: true
+        description: Exact tested marketing revision reachable from main
+      release_run:
+        type: string
+        required: true
+        description: Successful Verified server image run for this revision
+      backup_run:
+        type: string
+        required: true
+        description: Recent successful encrypted backup and native restore drill
+permissions:
+  contents: read
+  actions: read
+  packages: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Verify marketing scope, main ancestry, release and recovery
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          import fs from 'node:fs';
+          const i=JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH)).inputs;
+          const baseline='195baf50e6e123dd7c5448229c7879b47a5bd725';
+          if(!/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/.test(i.image)||!/^[a-f0-9]{40}$/.test(i.revision))throw Error('Invalid immutable release');
+          const api=async p=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+p,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Acceptance unavailable');return r.json();};
+          const ancestry=await api('/compare/'+i.revision+'...main');
+          if(!['identical','ahead'].includes(ancestry.status))throw Error('Revision must be reachable from main');
+          const scope=await api('/compare/'+baseline+'...'+i.revision);
+          const allowed=new Set(['src/components/landing/PlatformLanding.tsx','src/components/landing/platform.css','tests/run-marketing-ui.mjs','DESIGN.md','.21st/design.json','.21st/DESIGN.md','graphify-out/GRAPH_REPORT.md','graphify-out/GRAPH_TREE.html','graphify-out/SOURCE_INDEX.md','graphify-out/graph.json','graphify-out/health.json','graphify-out/source-manifest.json']);
+          if(scope.status!=='ahead'||!scope.files?.length||scope.files.length>=300||scope.files.some(f=>!allowed.has(f.filename)||f.status!=='modified'&&f.status!=='added'))throw Error('Only reviewed marketing files may differ from the live baseline');
+          for(const [id,path] of [[i.release_run,'release.yml'],[i.backup_run,'backup-foundation.yml']]){
+            if(!/^[1-9][0-9]+$/.test(id))throw Error('Verified run required');
+            const run=await api('/actions/runs/'+id);
+            if(run.status!=='completed'||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Acceptance did not pass');
+            if(path==='release.yml'){
+              if(run.head_sha!==i.revision)throw Error('Release revision mismatch');
+              const jobs=await api('/actions/runs/'+id+'/jobs?per_page=100');
+              for(const name of ['checks / verify','checks / native-database','publish'])if(!jobs.jobs?.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Full native and browser acceptance required');
+            }else{
+              const age=Date.now()-Date.parse(run.updated_at);
+              if(!Number.isFinite(age)||age<0||age>24*60*60*1000)throw Error('Recent restore drill required');
+              fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup_tag='+run.id+'-'+run.run_attempt+'\n');
+            }
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'baseline='+baseline+'\n');
+          console.log('Marketing-only scope, main ancestry, full release acceptance and recent recovery verified.');
+          GATE
+      - name: Replace only the application image over pinned SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ inputs.image }}
+          REVISION: ${{ inputs.revision }}
+          BASELINE: ${{ steps.gate.outputs.baseline }}
+          BACKUP_TAG: ${{ steps.gate.outputs.backup_tag }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export MARKETING_IMAGE=$1 MARKETING_REVISION=$2 MARKETING_BASELINE=$3 MARKETING_BACKUP=$4
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$MARKETING_IMAGE")" = "$MARKETING_REVISION"
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.MARKETING_BASELINE)throw Error('Live release differs from the reviewed marketing baseline');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.MARKETING_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover the live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .marketing-update.XXXXXX)
+          cp private-app.yaml runtime-mode.json "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env Caddyfile compose.yaml > "$work/preserved.sha256"
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.MARKETING_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$MARKETING_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const base='https://jouw-driver.duckdns.org';
+          for(const path of ['/','/login','/driver-login','/register-company','/privacy-policy']){
+            const r=await fetch(base+path,{redirect:'error',signal:AbortSignal.timeout(20000)});
+            if(r.status!==200||!r.headers.get('content-security-policy')?.includes("default-src 'self'"))throw Error('HTTPS page or security policy failed');
+            if(path==='/'&&!(await r.text()).includes('pm-orbital'))throw Error('Marketing design absent');
+          }
+          for(const [path,status,headers] of [['/next_api/auth/user',401,{}],['/next_api/trips',401,{}],['/next_api/companies',401,{}],['/next_api/auth/user',403,{Origin:'https://untrusted.example'}],['/admin-setup',404,{}]]){
+            if((await fetch(base+path,{headers,redirect:'error',signal:AbortSignal.timeout(15000)})).status!==status)throw Error('Access guard failed');
+          }
+          console.log('New marketing design, HTTPS pages and authentication guards verified.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.MARKETING_IMAGE,revision:process.env.MARKETING_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.MARKETING_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Marketing application image updated; database, credentials, mail, Chiron and TLS configuration preserved.\n'
+          REMOTE
