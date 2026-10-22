@@ -3,6 +3,7 @@ on:
   pull_request:
     paths: ['src/lib/portal-origin.ts', 'src/components/landing/PlatformLanding.tsx', 'driver-app/src/app-origin.ts', 'deploy/Caddyfile.jouww.candidate', 'tests/run-domain-proxy.mjs', 'tests/run-marketing-ui.mjs', '.github/workflows/domain-candidate.yml']
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:

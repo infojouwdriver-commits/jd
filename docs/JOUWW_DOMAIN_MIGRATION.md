@@ -137,3 +137,27 @@ this PR does not bypass that restriction or enable a production cutover action.
   execution encountered SIGSEGV in this runtime, so it is not reported passed.
 - No live DNS, Cloudflare settings, OVH settings, production data, email,
   Chiron, native release or live application changes performed.
+
+## Continuation: candidate release preparation
+
+PR #97 uploads the full original candidate tree, verified equal to local
+commit 340ad9c039043d04e30c61da4cd2c7bc1457df16. Connector-created commit
+identities differ; tree equality is the content check.
+
+The first real-Caddy CI run verified the binary checksum and adapted the
+configuration, then exposed a test-transport fault: Node fetch replaced the
+supplied Host header with the loopback address. The harness now uses node:http
+with an explicit Host header; only a successful rerun proves virtual-host routing.
+
+`release-domain-candidate.yml` prepares a manual candidate-image path. It requires
+both full application/database checks and isolated domain acceptance, passes the
+portal build argument, labels the origin/revision/build run, and publishes under
+`jouww-sha-<revision>-run-<run>-<attempt>` with a digest in its summary. It never
+uses the existing `sha-<revision>` release tag and contains no deployment step.
+This workflow has not been dispatched and no candidate image is claimed built.
+Existing release and deployment gates remain unchanged; approving a candidate
+image does not authorize a production cutover.
+
+Runtime inventory, origin TLS, Mapbox account restrictions, isolated acceptance,
+physical Android/iOS acceptance and a fresh encrypted backup/restore remain
+open gates. Repository checks cannot substitute for these external observations.
