@@ -106,6 +106,26 @@ jobs:
           report.proxy=ids.map(id=>JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id))).filter(x=>/^caddy(?::|@)/.test(x));
           report.proxyMounts=[];
           for(const id of ids){const img=JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id));if(/^caddy(?::|@)/.test(img)){const mounts=JSON.parse(docker('inspect','--format','{{json .Mounts}}',id));report.proxyMounts=mounts.map(m=>({destination:m.Destination,readOnly:!m.RW}));}}
+          // Metadata only: no environment values, customer rows or private filenames.
+          report.proxyDetails=[];
+          for(const id of ids){
+            const image=JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id));
+            if(!/^caddy(?::|@)/.test(image))continue;
+            const imageId=docker('inspect','--format','{{.Image}}',id);
+            const info=JSON.parse(docker('image','inspect',imageId))[0];
+            report.proxyDetails.push({version:docker('exec',id,'caddy','version'),imageId,digests:info.RepoDigests,ports:JSON.parse(docker('inspect','--format','{{json .HostConfig.PortBindings}}',id)),certificateStorageWritable:JSON.parse(docker('inspect','--format','{{json .Mounts}}',id)).some(m=>m.Destination==='/data'&&m.RW)});
+          }
+          report.diskBytes={};
+          for(const path of ['/srv/jouw-driver','/srv/jouw-driver/backups','/srv/jouw-driver/releases','/var/lib/docker','/var/log','/home','/tmp']){
+            try{report.diskBytes[path]=Number(execFileSync('sudo',['-n','du','-sx','--block-size=1',path],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000}).split(/\s+/)[0]);}catch{report.diskBytes[path]='unavailable';}
+          }
+          report.eligibleUnusedImages=[];
+          const protectedIds=new Set(ids.map(id=>docker('inspect','--format','{{.Image}}',id)));
+          for(const ref of [state.image,state.previousImage,release.image,release.previousImage].filter(Boolean))protectedIds.add(JSON.parse(docker('image','inspect',ref))[0].Id);
+          for(const id of [...new Set(docker('image','ls','--quiet','--no-trunc','--filter','label=org.opencontainers.image.source=https://github.com/infojouwdriver-commits/jd').split('\n').filter(Boolean))]){
+            const info=JSON.parse(docker('image','inspect',id))[0];
+            if(!protectedIds.has(id)&&Date.now()-Date.parse(info.Created)>48*60*60*1000)report.eligibleUnusedImages.push({id,size:info.Size,created:info.Created});
+          }
           report.httpsChecks={};
           for(const host of ['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com']){try{report.httpsChecks[host]=execFileSync('curl',['--proto','=https','--tlsv1.2','--resolve',host+':443:127.0.0.1','--max-time','10','--silent','--fail','--output','/dev/null','--write-out','%{http_code}','https://'+host+'/privacy-policy'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:12000});}catch(e){report.httpsChecks[host]='unavailable-exit-'+e.status;}}
           console.log(JSON.stringify(report,null,2));
