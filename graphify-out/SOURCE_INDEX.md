@@ -2977,11 +2977,13 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/PlatformLanding.tsx](../src/components/landing/PlatformLanding.tsx)
 
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
-- `translations` — [L13](../src/components/landing/PlatformLanding.tsx#L13)
-- `ButtonStart()` — [L19](../src/components/landing/PlatformLanding.tsx#L19)
-- `Route()` — [L20](../src/components/landing/PlatformLanding.tsx#L20)
-- `PlatformLanding()` — [L22](../src/components/landing/PlatformLanding.tsx#L22)
-- `tabKey()` — [L27](../src/components/landing/PlatformLanding.tsx#L27)
+- `translations` — [L24](../src/components/landing/PlatformLanding.tsx#L24)
+- `ButtonStart()` — [L286](../src/components/landing/PlatformLanding.tsx#L286)
+- `Route()` — [L300](../src/components/landing/PlatformLanding.tsx#L300)
+- `PlatformLanding()` — [L320](../src/components/landing/PlatformLanding.tsx#L320)
+- `openRegistration()` — [L364](../src/components/landing/PlatformLanding.tsx#L364)
+- `closeRegistration()` — [L368](../src/components/landing/PlatformLanding.tsx#L368)
+- `tabKey()` — [L372](../src/components/landing/PlatformLanding.tsx#L372)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 
