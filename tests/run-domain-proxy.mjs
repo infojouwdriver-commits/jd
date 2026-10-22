@@ -1,6 +1,6 @@
 // Isolated real-Caddy acceptance; no external DNS, TLS issuance or production IO.
 import assert from 'node:assert/strict';
-import {createServer} from 'node:http';
+import {createServer,request as httpRequest} from 'node:http';
 import {spawn} from 'node:child_process';
 import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -19,14 +19,21 @@ const config='{\nadmin off\nauto_https off\n}\n'+template
   .replaceAll('app:3000',`127.0.0.1:${upstream.address().port}`);
 await writeFile(join(work,'Caddyfile'),config);
 let logs='';const child=spawn(binary,['run','--config',join(work,'Caddyfile'),'--adapter','caddyfile'],{env:{...process.env,XDG_DATA_HOME:work,XDG_CONFIG_HOME:work},stdio:['ignore','ignore','pipe']});child.stderr.on('data',b=>{logs+=b;});
-const request=(host,path,method='GET')=>fetch(`http://127.0.0.1:${port}${path}`,{method,headers:{Host:host},redirect:'manual',signal:AbortSignal.timeout(3000)});
+// Node fetch may replace a supplied Host header with the connection address.
+// Use the HTTP transport directly so these checks exercise the named vhosts.
+const request=(host,path,method='GET')=>new Promise((resolve,reject)=>{
+  const req=httpRequest({hostname:'127.0.0.1',port,path,method,headers:{Host:host},signal:AbortSignal.timeout(3000)},res=>{
+    const chunks=[];res.on('data',chunk=>chunks.push(chunk));res.on('error',reject);
+    res.on('end',()=>resolve(new Response(method==='HEAD'?null:Buffer.concat(chunks),{status:res.statusCode,headers:res.headers})));
+  });req.on('error',reject);req.end();
+});
 try {
   let ready=false;for(let i=0;i<60;i++){if(child.exitCode!==null||child.signalCode!==null)throw Error(`Caddy exited: ${child.exitCode ?? child.signalCode}\n${logs}`);try{if((await request('jouww.com','/')).status===200){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,50));}
   assert.ok(ready,logs);
   let count=0;
   for(const host of ['jouww.com','www.jouww.com']) {
     for(const path of ['/','/privacy-policy','/privacy-center','/features/security','/_next/static/example.js']) {assert.equal((await request(host,path)).status,200);count++;}
-    for(const path of ['/next_api','/next_api/auth/login','/api/webhook','/admin-setup']) {const before=requests.length;assert.equal((await request(host,path)).status,404);assert.equal(requests.length,before);count++;}
+    for(const path of ['/next_api','/next_api/auth/login','/api/webhook','/admin-setup']) {const before=requests.length;assert.equal((await request(host,path)).status,404,`${host}${path} must be blocked`);assert.equal(requests.length,before);count++;}
     for(const path of ['/','/register-company','/next_api/auth/login','/next_api/webhooks/brevo']) {const before=requests.length;const res=await request(host,path,'POST');assert.equal(res.status,405);assert.equal(res.headers.get('location'),null);assert.equal(requests.length,before);count++;}
     for(const path of ['/login?portal=company','/register-company?lang=nl','/company/dashboard','/sign-contract/test?x=1','/login?next=https://evil.test']) {const before=requests.length;const res=await request(host,path);assert.equal(res.status,302);assert.equal(res.headers.get('location'),'https://app.jouww.com'+path);assert.equal(res.headers.get('cache-control'),'no-store');assert.equal(requests.length,before);count++;}
     assert.equal((await request(host,'/','HEAD')).status,200);count++;
