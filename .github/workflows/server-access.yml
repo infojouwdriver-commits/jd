@@ -2,6 +2,10 @@ name: Verify server access
 on:
   workflow_dispatch:
     inputs:
+      inspect_domain_runtime:
+        type: boolean
+        default: false
+        description: Read-only domain runtime inventory; no private values or production records
       reclaim_reproducible_cache:
         type: boolean
         default: false
@@ -24,6 +28,7 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           RECLAIM_CACHE: ${{ inputs.reclaim_reproducible_cache }}
+          INSPECT_DOMAIN: ${{ inputs.inspect_domain_runtime }}
         shell: bash
         run: |
           set -euo pipefail
@@ -36,7 +41,8 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
           printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
           [[ "$RECLAIM_CACHE" = true || "$RECLAIM_CACHE" = false ]]
-          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE'" <<'REMOTE'
+          [[ "$INSPECT_DOMAIN" = true || "$INSPECT_DOMAIN" = false ]]
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE' '$INSPECT_DOMAIN'" <<'REMOTE'
           set -euo pipefail
           printf 'SSH identity verified\n'
           uname -sr
@@ -80,4 +86,29 @@ jobs:
           fi
           free -h
           test ! -e /srv/jouw-driver/.env || printf 'Server configuration already exists; preserve it\n'
+          if test "$2" = true; then
+            cd /srv/jouw-driver/foundation
+            node --input-type=module <<'DOMAIN_INVENTORY'
+          import fs from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          const read=p=>fs.readFileSync(p,'utf8');
+          const state=JSON.parse(read('runtime-mode.json'));
+          const release=JSON.parse(read('/srv/jouw-driver/release.json'));
+          const caddy=read('Caddyfile'),compose=read('private-app.yaml');
+          const env=new Map(read('.app-staging.env').split(/\r?\n/).filter(x=>x&&!x.startsWith('#')).map(x=>{const i=x.indexOf('=');return [x.slice(0,i),x.slice(i+1)];}));
+          const known=['https://jouw-driver.duckdns.org','https://app.jouww.com'];
+          const imagePattern=/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/;
+          if(!imagePattern.test(state.image)||!/^[a-f0-9]{40}$/.test(state.revision))throw Error('Unexpected runtime metadata; values withheld');
+          const report={readOnly:true,mode:state.mode==='public'?'public':'other',image:state.image,revision:state.revision,releaseAgreement:state.image===release.image&&state.revision===release.revision,composeImageAgreement:compose.includes(state.image),caddySha256:createHash('sha256').update(caddy).digest('hex'),configuredHosts:Object.fromEntries(['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com'].map(h=>[h,caddy.includes(h)])),appOrigin:known.includes(env.get('APP_ORIGIN'))?env.get('APP_ORIGIN'):'other-or-missing',requiredKeyPresence:Object.fromEntries(['JWT_SECRET','DATA_ENCRYPTION_KEY','HASH_SALT_KEY','RATE_LIMIT_SECRET','POSTGREST_URL'].map(k=>[k,Boolean(env.get(k))])),trustedOrigins:env.has('TRUSTED_ORIGINS')?'configured-values-withheld':'absent'};
+          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:15000}).trim();
+          const ids=docker('ps','--quiet').split('\n').filter(Boolean);
+          report.proxy=ids.map(id=>JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id))).filter(x=>/^caddy(?::|@)/.test(x));
+          report.proxyMounts=[];
+          for(const id of ids){const img=JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id));if(/^caddy(?::|@)/.test(img)){const mounts=JSON.parse(docker('inspect','--format','{{json .Mounts}}',id));report.proxyMounts=mounts.map(m=>({destination:m.Destination,readOnly:!m.RW}));}}
+          report.httpsChecks={};
+          for(const host of ['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com']){try{report.httpsChecks[host]=execFileSync('curl',['--proto','=https','--tlsv1.2','--resolve',host+':443:127.0.0.1','--max-time','10','--silent','--fail','--output','/dev/null','--write-out','%{http_code}','https://'+host+'/privacy-policy'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:12000});}catch(e){report.httpsChecks[host]='unavailable-exit-'+e.status;}}
+          console.log(JSON.stringify(report,null,2));
+          DOMAIN_INVENTORY
+          fi
           REMOTE
