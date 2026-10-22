@@ -131,12 +131,12 @@ jobs:
           cp private-app.yaml runtime-mode.json "$work/"
           cp /srv/jouw-driver/release.json "$work/release.json"
           sha256sum .app-staging.env .database.env Caddyfile compose.yaml > "$work/preserved.sha256"
+          changed=true
           node --input-type=module <<'IMAGE'
           import fs from 'node:fs';
           const c=fs.readFileSync('private-app.yaml','utf8');
           fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.MARKETING_IMAGE),{mode:0o600});
           IMAGE
-          changed=true
           docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
           app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
           test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$MARKETING_IMAGE"
