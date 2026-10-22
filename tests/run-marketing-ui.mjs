@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 const output = process.env.MARKETING_QA_DIR || "/workspace/scratch";
+const portal = process.env.PORTAL_QA_ORIGIN || "";
+assert.ok(["", "https://app.jouww.com"].includes(portal));
 fs.mkdirSync(output, { recursive: true });
 const { chromium } = await import(
   pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href
@@ -101,7 +103,7 @@ try {
         await page.locator(`#role-${i}`).click();
         assert.equal(
           await page.locator("#role-panel a").getAttribute("href"),
-          ["/driver-login", "/login?portal=company", "/login"][i],
+          portal + ["/driver-login", "/login?portal=company", "/login"][i],
         );
       }
       await page.locator("#role-0").click();
@@ -122,6 +124,17 @@ try {
         .locator(".pm-links a, .pm-hero-index a, .pm-secondary")
         .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))))
         assert.equal(await page.locator(anchor).count(), 1, "Anchor resolves");
+      if (portal) {
+        assert.equal(await page.getByRole("dialog").count(), 0);
+        await context.route(portal + "/**", route => {
+          assert.equal(route.request().method(), "GET");
+          return route.fulfill({contentType: "text/html", body: "<h1>Isolated portal handoff fixture</h1>"});
+        });
+        await page.locator(".pm-hero-copy .pm-button").first().click();
+        await page.waitForURL(portal + "/register-company?lang=" + language);
+        await page.goto(base);
+        await page.waitForSelector(".pm");
+      } else {
       await page.locator(".pm-hero-copy .pm-button").first().click();
       const dialog = page.getByRole("dialog");
       await dialog.waitFor({ state: "visible" });
@@ -136,6 +149,7 @@ try {
           document.querySelector(".pm-hero-copy .pm-button") ===
           document.activeElement,
       );
+      }
       await page
         .locator(".pm-languages button")
         .filter({ hasText: "NL" })

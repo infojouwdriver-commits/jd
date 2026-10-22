@@ -1,0 +1,50 @@
+name: Verified jouww candidate image (no deployment)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jouww-candidate-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+  domain:
+    uses: ./.github/workflows/domain-candidate.yml
+  publish:
+    needs: [checks, domain]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Build a separately identified candidate; never deploy
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          tag="jouww-sha-${GITHUB_SHA}-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN" \
+            --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            --label "com.jouwdriver.build-run=$GITHUB_RUN_ID/$GITHUB_RUN_ATTEMPT" \
+            --tag "$image:$tag" .
+          docker push "$image:$tag"
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf '### Jouww candidate — not deployed\n`%s`\n\nRevision: `%s`\n\nPortal build origin: `https://app.jouww.com`\n\nTag: `%s`\n' "$digest" "$GITHUB_SHA" "$tag" >> "$GITHUB_STEP_SUMMARY"

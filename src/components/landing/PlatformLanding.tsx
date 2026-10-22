@@ -20,6 +20,9 @@ import CompanyRegistrationDialog from "@/components/registration/CompanyRegistra
 import { registrationCopy } from "@/components/registration/copy";
 import { onboardingMarketingCopy } from "./onboarding-copy";
 import CookiePreferencesButton from "@/components/gdpr/CookiePreferencesButton";
+import { portalHref, registrationHandoff } from "@/lib/portal-origin";
+
+const configuredPortal = process.env.NEXT_PUBLIC_PORTAL_ORIGIN;
 
 const translations = {
   ar: {
@@ -327,7 +330,7 @@ export default function PlatformLanding({
   const [role, setRole] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const registrationTrigger = useRef<HTMLButtonElement | null>(null);
-  const portals = ["/driver-login", "/login?portal=company", "/login"];
+  const portals = ["/driver-login", "/login?portal=company", "/login"].map(path => portalHref(path, configuredPortal));
   const icons = [Gauge, MapPin, Users, Mail, FileText, Building2];
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -362,6 +365,11 @@ export default function PlatformLanding({
     if (lang === "ar" || lang === "fr" || lang === "nl") setLanguage(lang);
   }, [startRegistration, setLanguage]);
   function openRegistration(event: React.MouseEvent<HTMLButtonElement>) {
+    const destination = registrationHandoff(window.location.origin, language, configuredPortal);
+    if (destination) {
+      window.location.assign(destination);
+      return;
+    }
     registrationTrigger.current = event.currentTarget;
     setRegistration(true);
   }
@@ -417,7 +425,7 @@ export default function PlatformLanding({
           ))}
         </nav>
         <ButtonStart onClick={openRegistration}>{t.quote}</ButtonStart>
-        <Link href="/login" className="pm-login">
+        <Link href={portalHref("/login", configuredPortal)} className="pm-login">
           {t.login}
         </Link>
       </header>
