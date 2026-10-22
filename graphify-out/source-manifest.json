@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "d8b60ecb06ee94c4e6e5df9402b5bca63540c3c3",
+  "source_commit_context": "6cd985d6a1a77c85e0c75bdd2897c16ee2a93665",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -33,7 +33,8 @@
     "driver-app/src/TripPanel.tsx": "a8fb3c089b9996f64d8a4815a6c331b8150ac0fc23c64d9b6f7a570b722d8f89",
     "driver-app/src/action-gate.ts": "5c79a018dc8711a5d9511dbb4033c7d386b5e4d1f658a4af5243cfbace3ee632",
     "driver-app/src/activity-filters.ts": "42e3b5d6a902694efd7807280016b401af78f5656470a28ad4c935beeb147cde",
-    "driver-app/src/api.ts": "b07feb5bc9232497442c439029d6f145b6d5d1c27011adf85105b59b22c0681b",
+    "driver-app/src/api.ts": "0e9bf0c217bb8c0f1643096b5c83282cc5eadc5ae3d3aeb35bccd9ed7377bc78",
+    "driver-app/src/app-origin.ts": "16c2861179950e57ec3603cd32a049158d4f2db3c9071edfd206d8c8089423e3",
     "driver-app/src/app/_layout.tsx": "0e2a969d3be49f290f42b5e35caa47c9de3d954f37097581a03150cf4f432946",
     "driver-app/src/app/account.tsx": "8598b266d32bb86683135e212f465d727db7686373842347cc73c2c6dcf73948",
     "driver-app/src/app/active.tsx": "70be59a9fd3b32d9386eca306f39396659a475843a72b7799e759816ff297761",
@@ -73,7 +74,7 @@
     "driver-app/src/experience/receipt.ts": "54a86378456101446c88a12b421bd40dcdad281ab1bd041c189247ed4d033128",
     "driver-app/src/experience/recovery-copy.ts": "78ed31beca6b036c39e9399e396c6db7f26469a8e6cc9d8a03ed9b8d958e33b5",
     "driver-app/src/experience/reporting-ui.tsx": "aef33769ed31a25fef705e1ac634d30cc54fb0f6dd876ffaec39e57cc22d624d",
-    "driver-app/src/experience/session.tsx": "39f76a4bd0c0091b093f2f2fbbb6e9255747f0d4ae6d7e4abb85e51c10e5a608",
+    "driver-app/src/experience/session.tsx": "9791b45894c7ff6cd69ed7bcd591cf3712b2f89ac56b919de88b218749d9884e",
     "driver-app/src/experience/shift-copy.ts": "243db77fa35252f4b4f4c6e10881f7b4449069803bd3d98f419ba6f2bbf5104c",
     "driver-app/src/experience/shift-state.tsx": "89d36a51c1461058b5be121d8e39cea2b6077c567e264411bca271a688e3d261",
     "driver-app/src/experience/tokens.ts": "ebae66d988a73d6accb013f88c9470ab993f75c8fa75735f4de4959af6571c57",
@@ -383,7 +384,7 @@
     "src/components/landing/LandingPage.tsx": "a2a80fd229cacd103c15f158b21e70d8fb6192d1a74862ebf5d5deae66eead39",
     "src/components/landing/LoginModal.tsx": "5a70a752e431d76f57beab13fa750bc956e1756b803b30d4aa56cce63b40885f",
     "src/components/landing/ParallaxSection.tsx": "8b09cd46492c731317d6dd9f2f9f40fc727fc7f632c56149afefa64729d1fec7",
-    "src/components/landing/PlatformLanding.tsx": "526589034d5f0e1c9d53c8164ade52613c728b85553a87d8d6bf7c79fb239bf0",
+    "src/components/landing/PlatformLanding.tsx": "47f810978326764d49da1199af1d9cc19a8fc30b9942538b0bd0ad72b3b6e47e",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
@@ -521,6 +522,7 @@
     "src/lib/operations-access.ts": "b528dfcba577e8d2f7a54ff4a66b451b5d5415b808e49fa25dfd9834750b4c06",
     "src/lib/payment-reference.ts": "54dbec05024c9df5d62802fe8927997b8bf9901edb5b160ade2099938d783207",
     "src/lib/pdf-generator.ts": "04083c79c11454b3f2a61216eee0d8057ff7e05139cddcb17180d40e9d92d0d4",
+    "src/lib/portal-origin.ts": "b4a075e6ede9056f76c7787e228bc5b5a778413971c484c64d770ba90fbf6efc",
     "src/lib/postgrest.ts": "cfbd0b5d90f9cc8e4462b7509d29c8190433b308f81fa99f6657e02767f3c7df",
     "src/lib/rate-limit.ts": "455d0ce713b2da3a7fc9c994abf1b348bf7cfc0f49e4825fe1008c4099dfc4bc",
     "src/lib/sanitize-html.ts": "ecb1a3a60a5bbc804df90637acd99efc6471666f9363cb4c842d7dfa4b7f846c",
@@ -546,18 +548,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "GRAPH_REPORT.md": "d96e64f1c38bb7c0205e0548d65e523da3783bc00d4655a9538b9baaa0753332",
-    "graph.json": "c647ca26fbfcfe54ef1b169f8b5d159f48be0255167d76f15323715a1508d7fd",
-    "SOURCE_INDEX.md": "f707f40c96f3ae591506ec1c8d2c660ee93e27ec5706a5070568cf7cfd6b877a",
-    "health.json": "d65dfe414f1c468185ff67239f2137cbe50a058fe310ee5a3ac013513f6c7b87",
-    "GRAPH_TREE.html": "cd13c96aa332d1cbe205e4e112f367b95e0e7365632fcc081c4bd82b20e54df5"
+    "SOURCE_INDEX.md": "9952ab0857a3cdadafb10d8180a0fcb2016fe08734f002f96bb188cf9bcfb944",
+    "graph.json": "9e5782990ef581ee13ea0d483c3e4e3391c4640e719a7df06f2671bcd40fe64d",
+    "GRAPH_TREE.html": "88e16ee2a4a1cd0d00f3d36fb597ee7ba99918006ecc8c2d2def47902521f4c8",
+    "health.json": "e11d370b9a9aec39e141c9966b162bf5dc134aff6ebe0896ed0e923873863bec",
+    "GRAPH_REPORT.md": "65ef117f04d4d20f3a1972232ea79fcfa2e4a048bd4bedbabbeb979bdf6e9210"
   },
-  "nodes": 3068,
-  "edges": 10417,
-  "raw_edges": 10638,
-  "communities": 165,
+  "nodes": 3076,
+  "edges": 10437,
+  "raw_edges": 10661,
+  "communities": 153,
   "confidence_counts": {
-    "EXTRACTED": 10389,
+    "EXTRACTED": 10412,
     "INFERRED": 249
   }
 }

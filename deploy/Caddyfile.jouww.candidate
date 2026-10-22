@@ -1,0 +1,58 @@
+# INACTIVE migration candidate. No workflow loads this file.
+# Validate in an isolated environment; retain the old virtual host at cutover.
+(jouww_proxy) {
+  reverse_proxy app:3000 {
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto https
+    header_up -Forwarded
+  }
+}
+(jouww_headers) {
+  encode zstd gzip
+  request_body {
+    max_size 256KB
+  }
+  header {
+    X-Content-Type-Options nosniff
+    -Server
+  }
+}
+jouw-driver.duckdns.org, app.jouww.com {
+  import jouww_headers
+  header Strict-Transport-Security "max-age=31536000"
+  @setup path /admin-setup /admin-setup/*
+  handle @setup {
+    respond "Not found" 404
+  }
+  @health path /healthz
+  handle @health {
+    rewrite * /privacy-policy
+    import jouww_proxy
+  }
+  handle {
+    import jouww_proxy
+  }
+}
+jouww.com, www.jouww.com {
+  import jouww_headers
+  # Public site must never accept credentials or forward API/webhook mutations.
+  @unsafe not method GET HEAD
+  handle @unsafe {
+    respond "Method not allowed" 405
+  }
+  @api path /next_api /next_api/* /api /api/* /admin-setup /admin-setup/*
+  handle @api {
+    respond "Not found" 404
+  }
+  # Only these public pages/assets stay on the marketing host. All other safe
+  # navigations preserve path/query on the fixed portal host (never user input).
+  @public path / /landing /faq /privacy-policy /privacy-center /features/* /_next/* /marketing-driver.jpg /manifest.json /sw.js /favicon.ico
+  handle @public {
+    import jouww_proxy
+  }
+  handle {
+    header Cache-Control no-store
+    redir https://app.jouww.com{uri} 302
+  }
+}

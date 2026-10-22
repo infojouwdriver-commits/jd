@@ -1,0 +1,52 @@
+name: Isolated domain candidate checks
+on:
+  pull_request:
+    paths: ['src/lib/portal-origin.ts', 'src/components/landing/PlatformLanding.tsx', 'driver-app/src/app-origin.ts', 'deploy/Caddyfile.jouww.candidate', 'tests/run-domain-proxy.mjs', 'tests/run-marketing-ui.mjs', '.github/workflows/domain-candidate.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Verify proxy binary and isolated routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl --fail --location --retry 2 --max-time 90 https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_linux_amd64.tar.gz --output caddy.tar.gz
+          printf '%s  caddy.tar.gz\n' '747df7ee74de188485157a383633a1a963fd9233b71fbb4a69ddcbcc589ce4e2cc82dacf5dbbe136cb51d17e14c59daeb5d9bc92487610b0f3b93680b2646546' | sha512sum --check
+          tar --no-same-owner -xzf caddy.tar.gz caddy
+          cd "$GITHUB_WORKSPACE"
+          "$RUNNER_TEMP/caddy" adapt --adapter caddyfile --config deploy/Caddyfile.jouww.candidate --validate >/dev/null
+          CADDY_BIN="$RUNNER_TEMP/caddy" node tests/run-domain-proxy.mjs
+      - name: Review both native destination modes
+        run: |
+          node --experimental-strip-types --test driver-app/tests/app-origin.test.mjs
+          EXPO_PUBLIC_APP_ORIGIN=https://app.jouww.com node --experimental-strip-types --test driver-app/tests/app-origin.test.mjs
+      - name: Install locked web dependencies
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+      - name: Build opt-in portal destination (no publish or deploy)
+        env:
+          NEXT_PUBLIC_PORTAL_ORIGIN: https://app.jouww.com
+          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: pk_test
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: pnpm build
+      - name: Install isolated UI runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/domain-ui" --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          node "$RUNNER_TEMP/domain-ui/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Test portal handoff, languages, keyboard and phone layouts
+        env:
+          PORTAL_QA_ORIGIN: https://app.jouww.com
+        run: MARKETING_QA_DIR="$RUNNER_TEMP/domain-qa" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/domain-ui/node_modules/playwright/index.mjs" node tests/run-marketing-ui.mjs

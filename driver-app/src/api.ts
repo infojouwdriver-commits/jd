@@ -1,6 +1,7 @@
 import {validShift,shiftUuid,type ShiftList,type ShiftDetail,type DriverShift,type ShiftCommand} from './shift-model.ts';
 import type {MeterPoint} from './trip-meter';
-export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
+import {APP_ORIGIN as API_ORIGIN} from './app-origin.ts';
+export {APP_ORIGIN as API_ORIGIN} from './app-origin.ts';
 export interface DriverProfile {
   native_trip_contract_version?: number;
   driver: {id: number; status?: string; full_name: string; company_id: number; current_vehicle_id: number | null};
