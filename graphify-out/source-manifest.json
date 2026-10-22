@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "f3cde10dfbe20a774265fed3cd2041eb55cd6d31",
+  "source_commit_context": "4ab26a9dd63416a7c2b4435282038d15f2077191",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -16,6 +16,7 @@
     "deploy/configure-native-push.mjs": "da395d57869ce4e2c175ea5fffb778fb6aa18907f2af64a73d313abd015c15a6",
     "deploy/enroll-initial-owner.sql": "495e88b648cff179583c462f785538365a98c0cecb17989caaec69c1ecda673b",
     "deploy/import-private-archive.sh": "6d72bc403df2a7c5cec58c316ff4a440265ab36fbc8d5e81d8b39bb8bf7ee956",
+    "deploy/jouww-cutover.mjs": "b1ff99c5343892fcf2918406ebbdbf2aaed63c26ac7aa0ed96ebed261f61667f",
     "deploy/native-push-envelope.mjs": "1a92f6d63b35a3d80b2cbf3f17a47906230f7da27ed0fb0e61e249d184d246cd",
     "deploy/prepare-customer-runtime.sh": "496adc4de7350097f72c667999af0fb1ff3325e80c02b8623bb4b1edc47de28f",
     "deploy/publish-customer-runtime.sh": "6b29e13d1aaf3694ea1b00cac8eab4c7c7707bd3980240f4f9fb2844d5ee8546",
@@ -548,18 +549,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "health.json": "e11d370b9a9aec39e141c9966b162bf5dc134aff6ebe0896ed0e923873863bec",
-    "graph.json": "e93e6824e1ff0452754c96ec6dd802d2ea802f8833ccd92e6d649dad5659f886",
-    "SOURCE_INDEX.md": "9952ab0857a3cdadafb10d8180a0fcb2016fe08734f002f96bb188cf9bcfb944",
-    "GRAPH_REPORT.md": "4c3eb94817b56359d236da10489551ec213a4d6e1010e79f068dc30a4a42103e",
-    "GRAPH_TREE.html": "88e16ee2a4a1cd0d00f3d36fb597ee7ba99918006ecc8c2d2def47902521f4c8"
+    "health.json": "a037a90d3cb80fa4837b345f322aca7b5dfad79b5219e7cb6cd6ef09dbfa4ced",
+    "graph.json": "27986a79052c17a38e6a1f6009d32a77989977a72e1727a7f447c65cf4e3e335",
+    "SOURCE_INDEX.md": "87c990a67d87898a80817f5dfc56799ff7ca2e17ca2759f95dc330a693b8692a",
+    "GRAPH_REPORT.md": "7b7c917b7e55b4681a4a293291dbcfa636f895b8dc6072ba154fa2718dcd2ecb",
+    "GRAPH_TREE.html": "a42fb6daad8349a3cd0e6c9313321af224d44e378990d5557cebce8a993d9dee"
   },
-  "nodes": 3076,
-  "edges": 10437,
-  "raw_edges": 10661,
-  "communities": 153,
+  "nodes": 3101,
+  "edges": 10501,
+  "raw_edges": 10725,
+  "communities": 167,
   "confidence_counts": {
-    "EXTRACTED": 10412,
+    "EXTRACTED": 10476,
     "INFERRED": 249
   }
 }

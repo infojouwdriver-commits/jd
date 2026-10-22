@@ -53,6 +53,22 @@ jobs:
           if(labels['org.opencontainers.image.revision']!==run.head_sha||labels['com.jouwdriver.portal-origin']!=='https://app.jouww.com'||labels['com.jouwdriver.build-run']!==run.id+'/'+run.run_attempt)throw Error('Candidate image provenance mismatch');
           console.log('Immutable image matches the successful merged candidate build.');
           GATE
+      - name: Read only public Mapbox token identifiers embedded in the image
+        env:
+          IMAGE: ${{ inputs.image }}
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --read-only --entrypoint node "$IMAGE" -e '
+            const fs=require("node:fs"),tokens=new Map();
+            for(const p of fs.readdirSync("/app/.next/static",{recursive:true}).filter(p=>p.endsWith(".js"))){
+              const text=fs.readFileSync("/app/.next/static/"+p,"utf8");
+              for(const m of text.matchAll(/pk\.([A-Za-z0-9_-]+)\.[A-Za-z0-9_-]+/g)){
+                try{const v=JSON.parse(Buffer.from(m[1],"base64url"));if(typeof v.u==="string"&&typeof v.a==="string")tokens.set(v.a,{username:v.u,tokenId:v.a});}catch{}
+              }
+            }
+            if(!tokens.size)throw Error("No compiled Mapbox public token identified");
+            console.log(JSON.stringify({publicTokenIdentifiers:[...tokens.values()]},null,2));
+          ' | tee candidate-mapbox-identifiers.json
       - name: Install locked test dependencies
         run: |
           npm install --global pnpm@11.25.0
@@ -67,5 +83,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: jouww-image-acceptance-${{ github.run_id }}
-          path: candidate-native-proof.json
+          path: |
+            candidate-native-proof.json
+            candidate-mapbox-identifiers.json
           retention-days: 14

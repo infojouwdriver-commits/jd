@@ -194,3 +194,52 @@ open gates. Repository checks cannot substitute for these external observations.
 - No live release, DNS, cleanup or production data modification has occurred.
   TLS, capacity, candidate image acceptance and a reviewed cutover/rollback path
   remain prerequisites. No physical iOS acceptance is claimed.
+
+
+## Protected transition path · continuation after PR #98
+
+PR #98 merged as `d2d7d5ec1c582221336425a92e450d360ac0fbf7` after all five
+current checks passed. Patched candidate build `39839710966` was dispatched
+from this main source; follow that run rather than starting another build.
+Read-only runtime inventory `39839589679` succeeded:
+
+- Actual Caddy is `v2.11.7`, image/digest
+  `sha256:f2a1290d0463aad60660d4ec134943f183ee2a5f6c3eb7bf32dd984f2f020772`.
+  Ports 80/tcp and 443/tcp are published; certificate storage is writable.
+- Foundation release/image/Caddy remain the established baseline.
+- Docker directory uses about 43.27 GB while Docker image accounting reports
+  only about 2.99 GB. More granular metadata inspection is needed before
+  deciding what can be reclaimed. Backups use about 84 MB; do not delete them.
+
+The new manual `jouww-cutover.yml` requires main source, a merged patched
+candidate release, successful exact-image acceptance and a recent verified
+backup/restore. It preserves the existing protected production environment,
+SSH host pinning and deployment concurrency. Its default phase is verification.
+
+`prepare-tls` preserves the old application and virtual host, retains private
+rollback files on the origin, and adds maintenance hosts so automatic ACME can
+issue certificates after reviewed DNS-only records point to the verified origin.
+Use DNS-only records initially: no Cloudflare forwarded header trust is needed;
+Caddy overwrites the client IP headers. Do not enable Cloudflare proxy without
+separate exact trusted-proxy/IP handling acceptance. Certificate renewal uses the
+existing persistent Caddy storage and reachable standard ACME ports.
+
+`activate` requires trusted origin HTTPS on all three new maintenance hosts,
+reviewed disk headroom, the exact accepted image identity and the unchanged live
+baseline. It changes only the application image and two origin variables:
+APP_ORIGIN becomes app.jouww.com and TRUSTED_ORIGINS is the exact legacy origin.
+It validates the application and database readiness without applying migrations,
+then activates reviewed routing and verifies both origin trust boundaries.
+HTTP mutations receive 405 instead of a redirect that could replay credentials.
+
+The previous image/configuration/metadata remain in the private transition
+snapshot; failure invokes configuration rollback, with no database restore.
+Manual rollback is not blocked by fresh-release artifact/backup expiration.
+Successful publication requires independent public DNS/HTTPS checks and image
+identity checks, not only a workflow success or merge. No cutover has run yet.
+
+Local orchestration acceptance includes disposable files and simulated commands:
+prepare -> activate -> verify -> rollback, plus failure while replacing the app.
+These tests verify configuration preservation/recovery; they do not prove real
+TLS, DNS or Docker rollout. CI additionally tests routing and the HTTP mutation
+policy against the observed Caddy image binary.

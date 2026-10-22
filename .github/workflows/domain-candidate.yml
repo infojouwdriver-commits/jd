@@ -1,7 +1,7 @@
 name: Isolated domain candidate checks
 on:
   pull_request:
-    paths: ['src/lib/portal-origin.ts', 'src/components/landing/PlatformLanding.tsx', 'driver-app/src/app-origin.ts', 'deploy/Caddyfile.jouww.candidate', 'tests/run-domain-proxy.mjs', 'tests/run-marketing-ui.mjs', '.github/workflows/domain-candidate.yml']
+    paths: ['src/lib/portal-origin.ts', 'src/components/landing/PlatformLanding.tsx', 'driver-app/src/app-origin.ts', 'deploy/Caddyfile.jouww.candidate', 'tests/run-domain-proxy.mjs', 'tests/run-marketing-ui.mjs', '.github/workflows/domain-candidate.yml', 'deploy/jouww-cutover.mjs', 'tests/run-domain-http.mjs']
   workflow_dispatch:
   workflow_call:
 permissions:
@@ -29,6 +29,18 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           "$RUNNER_TEMP/caddy" adapt --adapter caddyfile --config deploy/Caddyfile.jouww.candidate --validate >/dev/null
           CADDY_BIN="$RUNNER_TEMP/caddy" node tests/run-domain-proxy.mjs
+      - name: Verify routing and insecure HTTP policy using the observed origin binary
+        run: |
+          set -euo pipefail
+          proxy='caddy@sha256:f2a1290d0463aad60660d4ec134943f183ee2a5f6c3eb7bf32dd984f2f020772'
+          docker pull "$proxy"
+          container=$(docker create --network none "$proxy")
+          trap 'docker rm "$container" >/dev/null' EXIT
+          docker cp "$container:/usr/bin/caddy" "$RUNNER_TEMP/caddy-runtime"
+          chmod +x "$RUNNER_TEMP/caddy-runtime"
+          [[ "$("$RUNNER_TEMP/caddy-runtime" version)" == 'v2.11.7 '* ]]
+          CADDY_BIN="$RUNNER_TEMP/caddy-runtime" node tests/run-domain-proxy.mjs
+          CADDY_BIN="$RUNNER_TEMP/caddy-runtime" node tests/run-domain-http.mjs
       - name: Review both native destination modes
         run: |
           node --experimental-strip-types --test driver-app/tests/app-origin.test.mjs

@@ -90,9 +90,9 @@ try {
  const step=Math.floor(Date.now()/30000);const otpArgs={p_user_id:222,p_step:step};assert.equal(await success('/rpc/security_claim_mfa',service,'POST',otpArgs),true);assert.equal(await success('/rpc/security_claim_mfa',service,'POST',otpArgs),false);await denied('/rpc/security_claim_mfa',browser,'POST',otpArgs);checks.push('Native MFA claim accepts once, rejects replay and browser role');
  const rateArgs={p_key:randomBytes(32).toString('hex'),p_limit:2};assert.equal(await success('/rpc/security_rate_limit',service,'POST',rateArgs),true);assert.equal(await success('/rpc/security_rate_limit',service,'POST',rateArgs),true);assert.equal(await success('/rpc/security_rate_limit',service,'POST',rateArgs),false);await denied('/rpc/security_rate_limit',browser,'POST',rateArgs);checks.push('Native shared rate bucket enforces limit and denies browser RPC');
  // Test the actual production Dockerfile and standalone server against the real stack.
- if(acceptedImage)await docker(['pull',acceptedImage]);
+ if(acceptedImage)await docker(['image','inspect',acceptedImage]);
  else await docker(['build','--tag',appImage,'.'],{timeout:720000});
- checks.push(acceptedImage?'Exact immutable candidate image pulled for native acceptance':'Actual root Dockerfile builds the production standalone image');
+ checks.push(acceptedImage?'Exact immutable candidate image preloaded for native acceptance':'Actual root Dockerfile builds the production standalone image');
  const appPassword=randomBytes(24).toString('base64url');const hash=await bcrypt.hash(appPassword,12);
  await success('/users',service,'POST',[{id:1,email:'admin@example.invalid',password:hash,user_type:'admin',role:'jd_browser'},{id:2,email:'driver@example.invalid',password:hash,user_type:'driver',role:'jd_browser'},{id:222,email:'rpc-owner@example.invalid',password:hash,user_type:'driver',role:'jd_browser'}]);
  await success('/companies?id=eq.1',service,'PATCH',{chiron_mode:'TEST'});
