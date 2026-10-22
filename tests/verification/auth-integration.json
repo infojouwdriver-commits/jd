@@ -1,5 +1,5 @@
 {
-  "passed": 78,
+  "passed": 79,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -33,6 +33,7 @@
     "One-click break self-scopes and never accepts counters",
     "Status rejects explicit counter injection",
     "Shift endpoint rejects malformed report identity",
+    "Native Dutch service PDF is owner-scoped and does not issue a customer invoice",
     "Shift endpoint rejects deletion",
     "Native activity paginates all own matching records and summary covers the entire period",
     "Activity ignores hostile owner filters even for administrator",

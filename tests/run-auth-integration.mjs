@@ -38,7 +38,7 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
    else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_change'){assert.equal(body.p_actor,1);data={id:body.p_id,status:body.p_decision};}
-   else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);data={active:null,shifts:[]};}
+   else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);if(body.p_shift_id){if(body.p_shift_id!=='11111111-1111-4111-8111-111111111111'||body.p_user_id!==2){res.writeHead(403);res.end(JSON.stringify({code:'42501',message:'Shift unavailable'}));return;}data={shift:{id:body.p_shift_id,driver_id:1,company_id:1,vehicle_id:1,driver_name:'Synthetic Driver',company_name:'Synthetic Company',plate_number:'DEMO',started_at:'2026-10-22T08:00:00Z',ended_at:null,start_odometer:217000,odometer:217000,passenger_km:0,work_status:'available',version:1},events:[{version:1,action:'start',recorded_at:'2026-10-22T08:00:00Z',odometer:217000,passenger_km:0,work_status:'available'}],activity:[],summary:{trip_count:0,activity_count:1,payments:[]}};}else data={active:null,shifts:[]};}
    else if(url.pathname==='/rpc/security_shift_status'){shiftCalls.push(body);data={id:body.p_shift_id,version:2,work_status:body.p_status};}
    else if(url.pathname==='/rpc/security_record_driver_shift'){shiftCalls.push(body);data={id:body.p_shift_id,version:1};}
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
@@ -130,6 +130,9 @@ try {
  await status('One-click break self-scopes and never accepts counters',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break'},driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_status,'break');
  await status('Status rejects explicit counter injection',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break',odometer:0},driverToken),400);
  await status('Shift endpoint rejects malformed report identity',request('/next_api/drivers/shifts?id=not-a-uuid','GET',null,driverToken),400);
+ const invoicesBeforeShiftPdf=rows.invoices.length;
+ const servicePdf=await native.shiftPdf(1,shiftDeclaration.shift_id);assert.equal(new TextDecoder().decode(servicePdf.subarray(0,5)),'%PDF-');assert.ok(servicePdf.length>1000);assert.equal(rows.invoices.length,invoicesBeforeShiftPdf);
+ await assert.rejects(native.shiftPdf(1,'22222222-2222-4222-8222-222222222222'),error=>error.status===403);checks.push('Native Dutch service PDF is owner-scoped and does not issue a customer invoice');
  await status('Shift endpoint rejects deletion',request('/next_api/drivers/shifts','DELETE',null,driverToken),405);
 
  const activityQuery={from:'2026-10-14',to:'2026-10-15',platform:'all',status:'all'};

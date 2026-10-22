@@ -1,3 +1,6 @@
+import {publishNativeTripStatus} from './shift-trip';
+import {hasShiftIntent} from './native-shift-intent';
+import type {ShiftList} from './shift-model';
 import {useEffect, useRef, useState} from 'react';
 import * as Location from 'expo-location';
 import {nativeEngine} from './native-runtime';
@@ -87,16 +90,25 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     }).catch(() => {if (!stopped) setError('تعذّر استعادة قياس الرحلة.');});}, 2000);
     return () => {stopped = true; clearInterval(timer);};
   }, [trip?.key, onLocation]);
+  useEffect(()=>{
+    const key=trip?.key;if(!key)return;let alive=true,inFlight=false;
+    const publish=async()=>{const active=activeRef.current;if(inFlight||!alive||active?.key!==key)return;inFlight=true;try{await publishNativeTripStatus(api,profile.driver.id,active);}catch{/* Local trip stays durable; the shift card exposes refresh/retry. */}finally{inFlight=false;}};
+    void publish();const timer=setInterval(()=>void publish(),20000);return()=>{alive=false;clearInterval(timer);};
+  },[trip?.key,profile.driver.id]);
   async function start() {
-    if (!engine.current || busy || sessionBusy || !actionGate.acquire()) return;
+    if (!engine.current || pending>0 || busy || sessionBusy || !actionGate.acquire()) return;
     setBusy(true); setError(''); setReceipt(null);
     try {
-      const point = await currentPoint(); onLocation(point);
+      if(await hasShiftIntent(profile.driver.id))throw Error('أعد تأكيد طلب الوردية السابق أولًا.');
       const current = await api.tripAssignment(profile.driver.id);
+      const {active}=await api.shifts(profile.driver.id) as ShiftList;
+      if(!active||active.ended_at||active.vehicle_id!==current.driver.current_vehicle_id||active.company_id!==current.driver.company_id||!['available','driving_empty'].includes(active.work_status))throw Error('ابدأ وردية للمركبة الحالية واستأنف العمل قبل بدء الرحلة.');
+      const point = await currentPoint(); onLocation(point);
       onProfile(current);
-      const next = await engine.current.start({companyId: current.driver.company_id, vehicleId: current.driver.current_vehicle_id ?? 0,
+      const next = await engine.current.start({shiftId:active.id,companyId: current.driver.company_id, vehicleId: current.driver.current_vehicle_id ?? 0,
         environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment, platform, externalReference, ...(endSelection&&endSelection.label===endAddress?{navigationDestination:{lat:endSelection.lat,lon:endSelection.lon}}:{})});
       updateTrip(next);
+      try{await publishNativeTripStatus(api,profile.driver.id,next);}catch{setError('الرحلة محفوظة على الهاتف؛ تعذّر تأكيد حالتها في الوردية.');}
       try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
     } catch(error) {setError(tripError(error, 'تعذّر بدء الرحلة. لا تحذف بيانات التطبيق.'));}
     finally {setBusy(false); actionGate.release();}
