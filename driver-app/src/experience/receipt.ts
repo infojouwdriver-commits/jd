@@ -12,3 +12,8 @@ export async function shareReceipt(owner:number,tripId:number){
  await Sharing.shareAsync(file.uri,{mimeType:'application/pdf',dialogTitle:'JOUW DRIVER · PDF',UTI:'com.adobe.pdf'});
  }finally{sharing=false;}
 }
+
+export async function shareShiftReport(owner:number,id:string){
+ if(sharing)return;sharing=true;
+ try{if(!await Sharing.isAvailableAsync())throw Error('Sharing unavailable');const bytes=await driverApi.shiftPdf(owner,id);const dir=directory();dir.create({idempotent:true,intermediates:true});const file=new File(dir,`Dienststaat-${id}.pdf`);file.write(bytes);await Sharing.shareAsync(file.uri,{mimeType:'application/pdf',dialogTitle:'JOUW DRIVER · Dienststaat',UTI:'com.adobe.pdf'});}finally{sharing=false;}
+}

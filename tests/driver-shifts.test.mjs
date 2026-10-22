@@ -91,6 +91,9 @@ test("declarations accept explicit zero and decimal kilometres, reject GPS/owner
     }),
     { total: 50.25, passenger: 20.15, withoutPassenger: 30.1 },
   );
+  assert.equal(memberEndpoint('/next_api/drivers/shifts/pdf','GET','driver'),true);
+  assert.equal(memberEndpoint('/next_api/drivers/shifts/pdf','POST','driver'),false);
+  assert.equal(memberEndpoint('/next_api/drivers/shifts/pdf','GET','manager'),false);
   assert.match(shiftTime("2026-10-25T01:30:00Z"), /02:30:00/);
   assert.equal(
     memberEndpoint("/next_api/drivers/shifts", "GET", "driver"),

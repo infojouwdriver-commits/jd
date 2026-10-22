@@ -5,9 +5,9 @@ description: A navy and gold driver workspace aligned with the driver portal, wi
 colors:
   primary: "#E0BD5B"
   on-primary: "#302408"
-  dark-background: "#0D1626"
-  dark-surface: "#172338"
-  light-background: "#F1F3F7"
+  dark-background: "#0B1423"
+  dark-surface: "#142238"
+  light-background: "#F5F3ED"
   light-surface: "#FFFFFF"
   hero: "#101E33"
   hero-text: "#F2F7F8"
@@ -18,9 +18,9 @@ typography:
   data:
     fontFamily: "Menlo, monospace"
 rounded:
-  card: "24px"
-  control: "17px"
-  chip: "12px"
+  card: "20px"
+  control: "16px"
+  chip: "10px"
 spacing:
   page: "20px"
   section: "24px"
@@ -70,7 +70,7 @@ Use native system sans for Arabic and Latin UI so text is available immediately,
 without a network font swap. The runtime platform adapter uses System on iOS,
 sans-serif on Android, and system-ui for web QA. Use the platform monospace
 adapter (Menlo / monospace) only for plates, prices and timer values; mixed-script
-labels stay in system sans. Display headings are 27–29px, body 15px, secondary
+labels stay in system sans. Display headings are 27–29px, body 16px, secondary
 copy 12–14px. Arabic has a 1.55 line-height multiplier; Latin uses 1.45.
 No constrained single-line heading may hide a long driver name or translation.
 
@@ -94,7 +94,7 @@ large gradients and motion behind a running trip meter.
 
 ## Shapes
 
-Cards use 24px corners, controls 17px, and compact choices 12px. Vehicle plates
+Cards use 20px corners, controls 16px, and compact choices 10px. Vehicle plates
 use a small utility label. Thin route connectors express origin and destination;
 they are not a decorative timeline with invented steps.
 
@@ -216,3 +216,29 @@ the product illustration beneath the headline; demo labels stay explicit.
 Reduced motion disables orbit, phone float, route travel and section reveals;
 all motion pauses on a hidden document. Keyboard focus remains visible and
 the existing roving tab keyboard interactions remain available.
+
+## Native service cockpit · 0.3.0 (22 October 2026)
+
+The Android redesign makes the service shift the first action. A navy service
+ticket presents the real work state, vehicle, last explicitly recorded odometer
+and server-recorded start time. A compact trip entry follows it; the existing
+decorative route remains a single restrained signature, never a GPS reading.
+The five-destination navigation stays in normal flow, with service history reached
+from Home. Shared cards now use 20px radii, controls 16px and choices 10px.
+Dark background/surface are #0B1423/#142238; light background is warm #F5F3ED.
+Gold remains #E0BD5B. tokens.ts is the sole runtime owner; system fonts and
+Arabic line-height remain unchanged. No web/marketing palette is modified.
+
+ShiftCard, Shifts and ShiftProvider reuse native Field, Button, Notice, Screen
+and the session action gate. The server remains authoritative. Start needs an
+explicit odometer; readings never come from GPS or trip kilometres. Pause/resume
+keeps the same shift. Active or unsent local trips block pause/end. Pending
+declarations are encrypted in SecureStore before transmission, frozen on an
+uncertain outcome and replayed explicitly with the same UUID after restart.
+The Dutch service PDF reuses the existing server document and shares from the
+private cache. It never adds a shift to a customer invoice.
+
+UI/UX Pro Max guidance was checked for native keyboard handling, readable type
+and reduced motion. Its generic landing-page/palette suggestion was rejected
+in favour of this operational product contract and the established navy/gold.
+21st assets are web-oriented; no web component or WebView is added to Android.

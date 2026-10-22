@@ -257,3 +257,23 @@ profiles. Customer invoice source, snapshot RPC and PDF remain unchanged.
 
 Closing a shift freezes its count and currency-separated payment summary. Later
 changes to trip metadata cannot rewrite a previously closed service report.
+
+## Native shift parity · 0.3.0
+
+Native ShiftProvider owns refresh, pending declaration replay and operation state;
+ShiftCard and Shifts use the established native ui primitives and session action
+gate. The existing /drivers/shifts API and SQL functions own tenant/driver isolation,
+versions, status transitions, explicit readings, immutable activity and trip links.
+The new read-only /drivers/shifts/pdf endpoint reuses driverShiftPdf and the same
+user-scoped snapshot. It never calls invoice generation or writes financial data.
+
+| Operation | Pending/success | Recovery | Source |
+| --- | --- | --- | --- |
+| Start native shift | Explicit odometer; same request/shift UUID; server receipt | SecureStore intent, exact replay on uncertain transport | security_record_driver_shift |
+| Pause/resume | No counters sent; same shift retained; trip/action gate | Version conflict refresh; same UUID retry after restart | security_shift_status |
+| Record/end | Explicit counters; no GPS inference; end requires native confirmation | Preserve fields, reject decreases, freeze uncertain payload | shift-model.ts + server declaration schema |
+| Native trip | Open matching vehicle shift required for new trip; durable journal first | Restore existing trip; publish passenger status by completion UUID; completed insert clears matching state | native journal + security_record_trip_shift |
+| History/PDF | 25-row pages; full selected activity ledger; Dutch PDF separate from customer receipt | Stale-response guard, retain selected ledger, retry share | security_driver_shifts + driverShiftPdf |
+
+Logout never closes a shift. Phone push remains paused. Existing encrypted trip
+storage, owner separation, GPS handling and completion receipts are preserved.

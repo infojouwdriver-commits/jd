@@ -1,3 +1,4 @@
+import {validShift,shiftUuid,type ShiftList,type ShiftDetail,type DriverShift,type ShiftCommand} from './shift-model.ts';
 import type {MeterPoint} from './trip-meter';
 export const API_ORIGIN = 'https://jouw-driver.duckdns.org';
 export interface DriverProfile {
@@ -92,6 +93,29 @@ export function createDriverApi(transport: typeof fetch = fetch) {
   return {
     profile,
     vehicles,
+    async shifts(owner:number,query:{offset?:number;id?:string}={}) {
+      const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
+      if(query.id&&!shiftUuid(query.id)||query.offset!==undefined&&(!Number.isSafeInteger(query.offset)||query.offset<0||query.offset>100000))throw new ApiError(400);
+      const result=await ownerRead<ShiftList|ShiftDetail>(owner,'/next_api/drivers/shifts',query);
+      // Historical snapshots retain their original company; RPC remains user-scoped.
+      const check=(s:DriverShift)=>validShift(s,owner);
+      if(query.id){const d=result as ShiftDetail;if(!check(d.shift)||d.shift.id!==query.id||!Array.isArray(d.events)||!Array.isArray(d.activity)||d.events.some(e=>!Number.isSafeInteger(e.version)||!Number.isFinite(Date.parse(e.recorded_at))||![e.odometer,e.passenger_km].every(n=>Number.isFinite(n)&&n>=0)))throw new ApiError(502);}
+      else {const list=result as ShiftList;if(!Array.isArray(list.shifts)||list.shifts.length>25||list.shifts.some(s=>!check(s))||list.active!==null&&(!validShift(list.active,owner,current.driver.company_id)||list.active.ended_at!==null))throw new ApiError(502);}
+      return result;
+    },
+    async shiftCommand(owner:number,body:ShiftCommand){
+      const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
+      const result=await request<DriverShift>('/next_api/drivers/shifts',body);
+      if(!validShift(result,owner,current.driver.company_id)||result.id!==body.shift_id||result.version<body.expected_version)throw new ApiError(502);return result;
+    },
+    async shiftPdf(owner:number,id:string){
+      if(!shiftUuid(id))throw new ApiError(400);if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+      try{const response=await transport(API_ORIGIN+'/next_api/drivers/shifts/pdf?id='+encodeURIComponent(id),{method:'GET',credentials:'include',redirect:'error',headers:{Origin:API_ORIGIN,Accept:'application/pdf'},signal:controller.signal}).catch(()=>{throw new ApiError(controller.signal.aborted?408:0);});
+        if(!response.ok)throw new ApiError(response.status);if(!response.headers.get('content-type')?.toLowerCase().startsWith('application/pdf')||Number(response.headers.get('content-length'))>8000000)throw new ApiError(502);
+        const bytes=new Uint8Array(await response.arrayBuffer());if(bytes.length<5||bytes.length>8000000||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-')throw new ApiError(502);return bytes;
+      }finally{clearTimeout(timer);}
+    },
     async billingNotice(owner:number){
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
       const result=await ownerRead<{driver_id:number;notice:{notice_key:string;company_id:number}|null}>(owner,'/next_api/drivers/billing-notice');
