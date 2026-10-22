@@ -1,0 +1,461 @@
+{
+  "version": 1,
+  "project": {
+    "name": "jouw-driver",
+    "productType": null,
+    "stack": [
+      "nextjs",
+      "react",
+      "shadcn",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/app/globals.css"
+    ],
+    "components": [
+      "src/components/ui"
+    ],
+    "assets": [],
+    "instructions": [
+      "DESIGN.md",
+      "AGENTS.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light-and-dark",
+    "colors": {
+      "--color-background": {
+        "value": "var(--background)",
+        "source": "src/app/globals.css"
+      },
+      "--color-foreground": {
+        "value": "var(--foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-ring": {
+        "value": "var(--sidebar-ring)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-border": {
+        "value": "var(--sidebar-border)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-accent-foreground": {
+        "value": "var(--sidebar-accent-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-accent": {
+        "value": "var(--sidebar-accent)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-primary-foreground": {
+        "value": "var(--sidebar-primary-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-primary": {
+        "value": "var(--sidebar-primary)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar-foreground": {
+        "value": "var(--sidebar-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-sidebar": {
+        "value": "var(--sidebar)",
+        "source": "src/app/globals.css"
+      },
+      "--color-chart-5": {
+        "value": "var(--chart-5)",
+        "source": "src/app/globals.css"
+      },
+      "--color-chart-4": {
+        "value": "var(--chart-4)",
+        "source": "src/app/globals.css"
+      },
+      "--color-chart-3": {
+        "value": "var(--chart-3)",
+        "source": "src/app/globals.css"
+      },
+      "--color-chart-2": {
+        "value": "var(--chart-2)",
+        "source": "src/app/globals.css"
+      },
+      "--color-chart-1": {
+        "value": "var(--chart-1)",
+        "source": "src/app/globals.css"
+      },
+      "--color-ring": {
+        "value": "var(--ring)",
+        "source": "src/app/globals.css"
+      },
+      "--color-input": {
+        "value": "var(--input)",
+        "source": "src/app/globals.css"
+      },
+      "--color-border": {
+        "value": "var(--border)",
+        "source": "src/app/globals.css"
+      },
+      "--color-destructive": {
+        "value": "var(--destructive)",
+        "source": "src/app/globals.css"
+      },
+      "--color-accent-foreground": {
+        "value": "var(--accent-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-accent": {
+        "value": "var(--accent)",
+        "source": "src/app/globals.css"
+      },
+      "--color-muted-foreground": {
+        "value": "var(--muted-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-muted": {
+        "value": "var(--muted)",
+        "source": "src/app/globals.css"
+      },
+      "--color-secondary-foreground": {
+        "value": "var(--secondary-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-secondary": {
+        "value": "var(--secondary)",
+        "source": "src/app/globals.css"
+      },
+      "--color-primary-foreground": {
+        "value": "var(--primary-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-primary": {
+        "value": "var(--primary)",
+        "source": "src/app/globals.css"
+      },
+      "--color-popover-foreground": {
+        "value": "var(--popover-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-popover": {
+        "value": "var(--popover)",
+        "source": "src/app/globals.css"
+      },
+      "--color-card-foreground": {
+        "value": "var(--card-foreground)",
+        "source": "src/app/globals.css"
+      },
+      "--color-card": {
+        "value": "var(--card)",
+        "source": "src/app/globals.css"
+      },
+      "--background": {
+        "value": "oklch(0.145 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--card-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--popover-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--primary": {
+        "value": "oklch(0.922 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--primary-foreground": {
+        "value": "oklch(0.205 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--secondary": {
+        "value": "oklch(0.269 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--secondary-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--muted": {
+        "value": "oklch(0.269 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--muted-foreground": {
+        "value": "oklch(0.708 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--accent": {
+        "value": "oklch(0.269 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--accent-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--destructive": {
+        "value": "oklch(0.704 0.191 22.216)",
+        "source": "src/app/globals.css"
+      },
+      "--border": {
+        "value": "oklch(1 0 0 / 10%)",
+        "source": "src/app/globals.css"
+      },
+      "--ring": {
+        "value": "oklch(0.556 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--chart-1": {
+        "value": "oklch(0.488 0.243 264.376)",
+        "source": "src/app/globals.css"
+      },
+      "--chart-2": {
+        "value": "oklch(0.696 0.17 162.48)",
+        "source": "src/app/globals.css"
+      },
+      "--chart-3": {
+        "value": "oklch(0.769 0.188 70.08)",
+        "source": "src/app/globals.css"
+      },
+      "--chart-4": {
+        "value": "oklch(0.627 0.265 303.9)",
+        "source": "src/app/globals.css"
+      },
+      "--chart-5": {
+        "value": "oklch(0.645 0.246 16.439)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-primary": {
+        "value": "oklch(0.488 0.243 264.376)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-primary-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-accent": {
+        "value": "oklch(0.269 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-accent-foreground": {
+        "value": "oklch(0.985 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-border": {
+        "value": "oklch(1 0 0 / 10%)",
+        "source": "src/app/globals.css"
+      },
+      "--sidebar-ring": {
+        "value": "oklch(0.556 0 0)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-text-muted": {
+        "value": "#CBD5E1",
+        "source": "src/app/globals.css"
+      },
+      "--dp-border": {
+        "value": "rgba(255, 255, 255, 0.07)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-border-strong": {
+        "value": "rgba(255, 255, 255, 0.14)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-accent": {
+        "value": "#3B82F6",
+        "source": "src/app/globals.css"
+      },
+      "--dp-accent-hover": {
+        "value": "#2563EB",
+        "source": "src/app/globals.css"
+      },
+      "--dp-accent-soft": {
+        "value": "rgba(59, 130, 246, 0.15)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-accent-soft-2": {
+        "value": "rgba(59, 130, 246, 0.08)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-sans": {
+        "value": "var(--font-geist-sans)",
+        "source": "src/app/globals.css"
+      },
+      "--font-mono": {
+        "value": "var(--font-geist-mono)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-text": {
+        "value": "#F9FAFB",
+        "source": "src/app/globals.css"
+      },
+      "--dp-text-soft": {
+        "value": "#94A3B8",
+        "source": "src/app/globals.css"
+      }
+    },
+    "spacing": {
+      "--workspace-rail": {
+        "value": "248px",
+        "source": "src/app/globals.css"
+      }
+    },
+    "radius": {
+      "--radius-sm": {
+        "value": "calc(var(--radius) - 4px)",
+        "source": "src/app/globals.css"
+      },
+      "--radius-md": {
+        "value": "calc(var(--radius) - 2px)",
+        "source": "src/app/globals.css"
+      },
+      "--radius-lg": {
+        "value": "var(--radius)",
+        "source": "src/app/globals.css"
+      },
+      "--radius-xl": {
+        "value": "calc(var(--radius) + 4px)",
+        "source": "src/app/globals.css"
+      },
+      "--radius": {
+        "value": "0.625rem",
+        "source": "src/app/globals.css"
+      }
+    },
+    "shadows": {
+      "--dp-shadow-sm": {
+        "value": "0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.20)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-shadow": {
+        "value": "0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.20)",
+        "source": "src/app/globals.css"
+      },
+      "--dp-shadow-lg": {
+        "value": "0 16px 48px rgba(0,0,0,0.50), 0 4px 12px rgba(0,0,0,0.30)",
+        "source": "src/app/globals.css"
+      }
+    },
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [
+      "accordion",
+      "alert",
+      "alert-dialog",
+      "aspect-ratio",
+      "avatar",
+      "badge",
+      "breadcrumb",
+      "button",
+      "calendar",
+      "card",
+      "carousel",
+      "chart",
+      "checkbox",
+      "collapsible",
+      "command",
+      "container-scroll-animation",
+      "context-menu",
+      "demo",
+      "dialog",
+      "drawer",
+      "dropdown-menu",
+      "form",
+      "hover-card",
+      "input",
+      "input-otp",
+      "label",
+      "menubar",
+      "navigation-menu",
+      "pagination",
+      "popover",
+      "progress",
+      "radio-group",
+      "resizable",
+      "scroll-area",
+      "select",
+      "separator",
+      "sheet",
+      "sidebar",
+      "skeleton",
+      "slider",
+      "sonner",
+      "switch",
+      "table",
+      "tabs",
+      "textarea",
+      "toast",
+      "toaster",
+      "toggle",
+      "toggle-group",
+      "tooltip"
+    ],
+    "preferredPrimitives": [
+      "radix-ui"
+    ],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    {
+      "scope": "marketing homepage",
+      "decision": "Botanical editorial composition with navy/gold, oversized system typography, thin rules, pill actions and a decorative orbital phone/dashboard/route sculpture. Preserve localized product copy, registration and portals; respect reduced motion.",
+      "reference": "https://21st.dev/@kedhareswer/templates/botanical-3d-flower-landing-page"
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "src/components/ui"
+    },
+    {
+      "fact": "design.colorMode:light-and-dark",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "DESIGN.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:shadcn",
+      "source": "components.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-10-21T23:52:43.877Z"
+}

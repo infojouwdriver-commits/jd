@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "89b6f18993e49f294f1a31b46f22f2eee5437c9c",
+  "source_commit_context": "eed3a1a9aa03266b58ff9239205e5498683aea32",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -373,7 +373,7 @@
     "src/components/landing/LandingPage.tsx": "a2a80fd229cacd103c15f158b21e70d8fb6192d1a74862ebf5d5deae66eead39",
     "src/components/landing/LoginModal.tsx": "5a70a752e431d76f57beab13fa750bc956e1756b803b30d4aa56cce63b40885f",
     "src/components/landing/ParallaxSection.tsx": "8b09cd46492c731317d6dd9f2f9f40fc727fc7f632c56149afefa64729d1fec7",
-    "src/components/landing/PlatformLanding.tsx": "f458373e64b2cf0d8355682f73726a6c2bfa5bd37f085b00dab816d4eb9b5777",
+    "src/components/landing/PlatformLanding.tsx": "526589034d5f0e1c9d53c8164ade52613c728b85553a87d8d6bf7c79fb239bf0",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
@@ -384,7 +384,7 @@
     "src/components/landing/features/TeamManagementPage.tsx": "6860a9df451fbe7b39aa2d8f75d298488742e0faf14a46d04a24e1dc6974d8a8",
     "src/components/landing/features/TripManagementPage.tsx": "14fe21f2475e8b0cd6500703c767dfad7175bfb8073ef603c51ba03afa4d72c7",
     "src/components/landing/onboarding-copy.ts": "fe71d72b2e8407505becb73d8def6fc40e99ababf0d55a055e43575e69110d1e",
-    "src/components/landing/platform.css": "6a6bb64c11347dda0392664408425e65a15954858a13150d1ddf91ace0cba001",
+    "src/components/landing/platform.css": "4f83e775ab69c9dc4c011d0261c2080be7001a1535961326ccf5e8e76e4232cb",
     "src/components/navigation/ManagementShell.tsx": "e55ab070065646824e8673c032d082e7ea4d7a0b7c66c8cde86c97377ce069dd",
     "src/components/navigation/management-menu.ts": "81a95336ec8af751c08954a60276c00b41894daebb5114e632ea789edae746e4",
     "src/components/operations/BillingPanel.tsx": "2c5164c37e97b7e6a5542656887d4cd06d30bbcbd555c0e2a0a094d2de2830e7",
@@ -536,18 +536,18 @@
     "tsconfig.json": "ef2968f99b86e066482fed1f6447f6e099c6ae820133738c964df941ea598525"
   },
   "artifacts": {
-    "SOURCE_INDEX.md": "0bc02770868a6783189b7df05196c51fab221d869acc1c3e2323167f0ba78f1a",
-    "health.json": "0ae390d8ff3fefea4ce4cbcf1798686b67120caea3d2917d80685e19db4a971b",
-    "GRAPH_TREE.html": "5c44253b77ffc2374df6c89d8b9bc8fe3bff39104a7949d8c77b73f369220137",
-    "graph.json": "8a69fe8a9b3bba01b3c6a311ad8dd02e64394c50a5548853a5791ed3a253548b",
-    "GRAPH_REPORT.md": "a6d0e0ffa1cd45b31b53222f0d089e06db3d392d856dbfb631ed68f4374f5a01"
+    "GRAPH_TREE.html": "376b95edfdcc761fed98c21b06d54026684d63e3658b3f4bf8563434ceba9cc7",
+    "SOURCE_INDEX.md": "de47d2a573a17ae030d07e3cdb780c28e01a6be62ced1210976a278898653a8f",
+    "health.json": "328387c43616e3753fab22bfad74c2b4f66f62ce1a706ce69ea029eb70fa2fcb",
+    "graph.json": "6cd5ae469adbb2348c48e2b7ba3fd99b3c3977685dd21b2cdc2a051ca54a94ff",
+    "GRAPH_REPORT.md": "a6bedf8a92bcf33cfaec42c3d449b90cdf2381ba9f0833e107d4a0deb6e348de"
   },
-  "nodes": 3013,
-  "edges": 10178,
-  "raw_edges": 10394,
-  "communities": 163,
+  "nodes": 3015,
+  "edges": 10180,
+  "raw_edges": 10396,
+  "communities": 160,
   "confidence_counts": {
-    "EXTRACTED": 10146,
+    "EXTRACTED": 10148,
     "INFERRED": 248
   }
 }

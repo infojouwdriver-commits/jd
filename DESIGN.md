@@ -196,3 +196,23 @@ to profile and history; do not mix GPS sharing with declaration status. Use the
 same card, OperationForm and Arabic/French/Dutch copy in both themes. Trip links belong to the separate Dutch service sheet; customer receipts stay unchanged.
 Use a structured A4 report with company identity, shift metadata, time and kilometre
 summaries, actual payments and a paginated audit ledger. Never guess odometer values.
+
+## Marketing homepage · botanical editorial direction (2026-10-22)
+
+Reference: Kedhareswer’s Botanical 3D Flower Landing Page on 21st.dev, reviewed
+from its published cover and template description. The composition, spacious
+typography and fine rules inform the layout; the flower is replaced by the
+existing JOUW DRIVER phone, company window and illustrative street route.
+Midnight navy, warm paper, gold and native system fonts retain the product identity.
+A slow decorative orbit connects those three forms without suggesting live GPS.
+The first section owns the expressive composition; subsequent sections use
+quiet editorial rows rather than repeated boxed cards. Actions are rounded pills.
+
+PlatformLanding and platform.css own this marketing scope. LanguageContext,
+company registration, cookie preferences and portal links retain their existing
+owners and behavior. No customer, integration, price or acceptance claim changes.
+Arabic has independent line-height and no Latin tracking. Narrow screens stack
+the product illustration beneath the headline; demo labels stay explicit.
+Reduced motion disables orbit, phone float, route travel and section reveals;
+all motion pauses on a hidden document. Keyboard focus remains visible and
+the existing roving tab keyboard interactions remain available.
