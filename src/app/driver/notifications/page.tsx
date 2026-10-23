@@ -21,9 +21,9 @@ interface Notification {
 }
 
 const glassCard = {
-  background: 'rgba(10,15,30,0.75)',
+  background: 'var(--dp-card)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(212,175,55,0.15)',
+  border: '1px solid var(--dp-border)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
 };
 
@@ -164,7 +164,7 @@ export default function DriverNotificationsPage() {
       announcement: { icon: Megaphone, gradient: 'from-purple-500 to-purple-600', glow: 'rgba(168,85,247,0.4)' },
       update: { icon: Sparkles, gradient: 'from-green-500 to-green-600', glow: 'rgba(34,197,94,0.4)' },
       alert: { icon: AlertCircle, gradient: 'from-red-500 to-red-600', glow: 'rgba(239,68,68,0.4)' },
-      promotion: { icon: TrendingUp, gradient: 'from-amber-500 to-yellow-600', glow: 'rgba(212,175,55,0.4)' },
+      promotion: { icon: TrendingUp, gradient: 'from-amber-500 to-yellow-600', glow: 'rgba(52,211,153,0.4)' },
     };
     return configs[type] || { icon: Bell, gradient: 'from-slate-500 to-slate-600', glow: 'rgba(100,116,139,0.4)' };
   };
@@ -174,7 +174,7 @@ export default function DriverNotificationsPage() {
       urgent: { background: 'rgba(239,68,68,0.18)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)' },
       high: { background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.35)' },
       normal: { background: 'rgba(59,130,246,0.18)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.35)' },
-      low: { background: 'rgba(212,175,55,0.12)', color: 'rgba(212,175,55,0.9)', border: '1px solid rgba(212,175,55,0.25)' },
+      low: { background: 'var(--dp-accent-soft)', color: 'var(--dp-text-muted)', border: '1px solid var(--dp-border)' },
     };
     return styles[priority] || styles.normal;
   };
@@ -198,7 +198,7 @@ export default function DriverNotificationsPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         >
-          <Bell className="w-10 h-10" style={{ color: '#d4af37' }} />
+          <Bell className="w-10 h-10" style={{ color: 'var(--dp-accent)' }} />
         </motion.div>
       </div>
     );
@@ -213,7 +213,7 @@ export default function DriverNotificationsPage() {
             <h1
               className="text-2xl font-black tracking-tight"
               style={{
-                background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)',
+                background: 'var(--dp-accent)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
@@ -248,11 +248,11 @@ export default function DriverNotificationsPage() {
               whileTap={{ scale: 0.9 }}
               className="w-10 h-10 rounded-2xl flex items-center justify-center"
               style={{
-                background: 'rgba(212,175,55,0.1)',
-                border: '1px solid rgba(212,175,55,0.2)',
+                background: 'var(--dp-accent-soft)',
+                border: '1px solid var(--dp-border)',
               }}
             >
-              <RefreshCw className="w-4 h-4" style={{ color: '#d4af37' }} />
+              <RefreshCw className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />
             </motion.button>
 
             <motion.div
@@ -260,15 +260,15 @@ export default function DriverNotificationsPage() {
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="w-12 h-12 rounded-2xl flex items-center justify-center"
               style={{
-                background: 'rgba(212,175,55,0.12)',
-                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'var(--dp-accent-soft)',
+                border: '1px solid var(--dp-border)',
               }}
             >
-              <Bell className="w-6 h-6" style={{ color: '#d4af37' }} />
+              <Bell className="w-6 h-6" style={{ color: 'var(--dp-accent)' }} />
             </motion.div>
           </div>
         </div>
-        <p className="text-sm" style={{ color: 'rgba(212,175,55,0.78)' }}>
+        <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>
           {t.latestNews}
         </p>
       </motion.div>
@@ -285,12 +285,12 @@ export default function DriverNotificationsPage() {
             <div
               className="p-4 rounded-2xl flex items-center justify-between gap-3"
               style={{
-                background: 'rgba(212,175,55,0.08)',
-                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'var(--dp-accent-soft)',
+                border: '1px solid var(--dp-border)',
               }}
             >
               <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 flex-shrink-0" style={{ color: '#d4af37' }} />
+                <Bell className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--dp-accent)' }} />
                 <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
                   {language === 'ar'
                     ? 'فعّل الإشعارات لتلقي التنبيهات الفورية'
@@ -304,8 +304,8 @@ export default function DriverNotificationsPage() {
                 whileTap={{ scale: 0.95 }}
                 className="px-4 py-2 rounded-xl text-xs font-bold flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #b8860b, #d4af37)',
-                  color: '#1a1200',
+                  background: 'var(--dp-accent)',
+                  color: 'var(--dp-action-text)',
                 }}
               >
                 {language === 'ar'
@@ -359,13 +359,13 @@ export default function DriverNotificationsPage() {
                 <div
                   className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4"
                   style={{
-                    background: 'rgba(212,175,55,0.1)',
-                    border: '1px solid rgba(212,175,55,0.2)',
+                    background: 'var(--dp-accent-soft)',
+                    border: '1px solid var(--dp-border)',
                   }}
                 >
-                  <Bell className="w-10 h-10" style={{ color: 'rgba(212,175,55,0.6)' }} />
+                  <Bell className="w-10 h-10" style={{ color: 'var(--dp-text-muted)' }} />
                 </div>
-                <p style={{ color: 'rgba(212,175,55,0.78)' }}>{t.noNotifications}</p>
+                <p style={{ color: 'var(--dp-text-muted)' }}>{t.noNotifications}</p>
               </div>
             </motion.div>
           ) : (
@@ -390,9 +390,9 @@ export default function DriverNotificationsPage() {
                       ...(notification.is_read
                         ? {}
                         : {
-                            border: '1px solid rgba(212,175,55,0.3)',
+                            border: '1px solid var(--dp-border)',
                             boxShadow:
-                              '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.12)',
+                              '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(52,211,153,0.12)',
                           }),
                     }}
                   >
@@ -416,8 +416,8 @@ export default function DriverNotificationsPage() {
                               transition={{ duration: 1.5, repeat: Infinity }}
                               className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1"
                               style={{
-                                background: '#d4af37',
-                                boxShadow: '0 0 8px rgba(212,175,55,0.8)',
+                                background: 'var(--dp-accent)',
+                                boxShadow: '0 0 8px rgba(52,211,153,0.8)',
                               }}
                             />
                           )}
@@ -440,7 +440,7 @@ export default function DriverNotificationsPage() {
 
                           <div
                             className="flex items-center gap-1 text-xs"
-                            style={{ color: 'rgba(212,175,55,0.7)' }}
+                            style={{ color: 'var(--dp-text-muted)' }}
                           >
                             <Clock className="w-3 h-3" />
                             <span>

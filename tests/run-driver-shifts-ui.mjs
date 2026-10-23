@@ -256,27 +256,17 @@ try {
           path: path.join(qa, "shift-first-start-ar.png"),
           fullPage: true,
         });
-      await page.getByRole("button", { name: c.start, exact: true }).click();
+      assert.equal(await page.getByRole("dialog").count(),0,"Start reading is inline in the shift card");
       await page.locator("#operation-odometer").fill("100.10");
-      await page
-        .getByRole("dialog")
-        .getByRole("button", { name: c.start, exact: true })
-        .click();
+      await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
       if (lang === "fr" && theme === "dark") {
-        await page.getByRole("dialog").getByRole("alert").waitFor();
-        assert.equal(
-          await page.locator("#operation-odometer").isDisabled(),
-          true,
-        );
-        // Closing and reopening keeps the exact retry identity and payload.
-        await page.keyboard.press("Escape");
-        await page.getByRole("button", { name: c.start, exact: true }).click();
-        await page
-          .getByRole("dialog")
-          .getByRole("button", { name: /Réessayer/ })
-          .click();
+        const startForm=page.getByRole("form",{name:c.start,exact:true});
+        await startForm.getByRole("alert").waitFor();
+        assert.equal(await page.locator("#operation-odometer").isDisabled(),true);
+        // Ambiguous inline submission keeps the exact original identity and readings.
+        await startForm.getByRole("button", {name:/Réessayer/}).click();
       }
-      await page.getByRole("dialog").waitFor({ state: "hidden" });
+      await page.locator("#operation-odometer").waitFor({state:"hidden"});
       assert.equal(
         (await db.query("SELECT count(*) n FROM driver_shift_events")).rows[0]
           .n,

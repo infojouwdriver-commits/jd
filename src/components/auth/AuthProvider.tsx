@@ -1,5 +1,6 @@
 
 'use client';
+import {driverReturnPath} from '@/lib/driver-return-path';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '@/types/auth';
@@ -114,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (userData?.userType === 'distributor') {
       router.push('/distributor/dashboard');
     } else if (userData?.userType === 'driver' && !userData?.isAdmin) {
-      router.push('/driver/taximeter');
+      router.push(driverReturnPath(new URLSearchParams(window.location.search).get('redirect')));
     } else if (
       userData?.userType === 'manager' ||
       userData?.userType === 'company' ||

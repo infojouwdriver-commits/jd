@@ -3,14 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import {driverReturnPath} from '../src/lib/driver-return-path.ts';
 import {connectionFailure,connectionMessage} from '../src/lib/connection-state.ts';
 
-function client(pathname, fetch) {
+function client(pathname, fetch, search='') {
   const source = readFileSync(new URL('../src/lib/api-client.ts', import.meta.url), 'utf8')
     .replace(/import \{ AUTH_ENABLED, authConfig \}[^;]+;/, 'const AUTH_ENABLED = true; const authConfig = {loginPath:"/login"};')
     .replace(/import \{ AUTH_CODE \}[^;]+;/, 'const AUTH_CODE = {TOKEN_MISSING:"TOKEN_MISSING", TOKEN_EXPIRED:"TOKEN_EXPIRED"};');
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const context = { exports: {}, require:name=>{if(name==='./connection-state')return {connectionFailure,connectionMessage};throw Error('Unexpected import');},AbortSignal, fetch, window: { location: { pathname, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
+  const context = { exports: {}, require:name=>{if(name==='./driver-return-path')return {driverReturnPath};if(name==='./connection-state')return {connectionFailure,connectionMessage};throw Error('Unexpected import');},AbortSignal, fetch, window: { location: { pathname, search, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
   vm.runInNewContext(output, context);
   return { api: context.exports.api, location: context.window.location };
 }
@@ -50,3 +51,5 @@ test('parallel expired requests share a refresh and retry without document navig
   assert.equal(results[1][0].id, 1);
   assert.equal(location.href, '');
 });
+
+test('expired shift document login preserves the scanned shift identity',async()=>{const id='45bf75f8-bae3-4df3-b809-287134548a54';const {api,location}=client('/driver/shifts',missing,'?id='+id);await assert.rejects(api.get('/drivers/shifts?id='+id));assert.equal(location.href,'/driver-login?redirect='+encodeURIComponent('/driver/shifts?id='+id));});

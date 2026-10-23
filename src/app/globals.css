@@ -87,20 +87,22 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Driver Portal tokens — LIGHT */
-  --dp-bg: #F8FAFC;
-  --dp-bg-2: #F1F5F9;
+  --dp-bg: #F3F7F5;
+  --dp-bg-2: #E7F0EB;
   --dp-card: #FFFFFF;
-  --dp-card-2: #F8FAFC;
-  --dp-card-3: #F1F5F9;
+  --dp-card-2: #F3F7F5;
+  --dp-card-3: #E7F0EB;
   --dp-text: #0F172A;
   --dp-text-muted: #475569;
   --dp-text-soft: #64748B;
   --dp-border: #E2E8F0;
   --dp-border-strong: #CBD5E1;
-  --dp-accent: #2563EB;
-  --dp-accent-hover: #1D4ED8;
-  --dp-accent-soft: rgba(37, 99, 235, 0.10);
-  --dp-accent-soft-2: rgba(37, 99, 235, 0.06);
+  --dp-accent: #047857;
+  --dp-accent-hover: #065F46;
+  --dp-action: #047857;
+  --dp-action-text: #FFFFFF;
+  --dp-accent-soft: rgba(5, 150, 105, 0.10);
+  --dp-accent-soft-2: rgba(5, 150, 105, 0.06);
   --dp-success: #10B981;
   --dp-success-soft: rgba(16, 185, 129, 0.10);
   --dp-danger: #EF4444;
@@ -147,20 +149,22 @@
   --sidebar-ring: oklch(0.556 0 0);
 
   /* Driver Portal tokens — DARK */
-  --dp-bg: #020617;
-  --dp-bg-2: #0B1120;
-  --dp-card: #111827;
-  --dp-card-2: #1E293B;
-  --dp-card-3: #0F172A;
+  --dp-bg: #0C131B;
+  --dp-bg-2: #101923;
+  --dp-card: #151F2A;
+  --dp-card-2: #202D3A;
+  --dp-card-3: #12232C;
   --dp-text: #F9FAFB;
   --dp-text-muted: #CBD5E1;
   --dp-text-soft: #94A3B8;
   --dp-border: rgba(255, 255, 255, 0.07);
   --dp-border-strong: rgba(255, 255, 255, 0.14);
-  --dp-accent: #3B82F6;
-  --dp-accent-hover: #2563EB;
-  --dp-accent-soft: rgba(59, 130, 246, 0.15);
-  --dp-accent-soft-2: rgba(59, 130, 246, 0.08);
+  --dp-accent: #34D399;
+  --dp-accent-hover: #065F46;
+  --dp-action: #047857;
+  --dp-action-text: #FFFFFF;
+  --dp-accent-soft: rgba(52, 211, 153, 0.15);
+  --dp-accent-soft-2: rgba(52, 211, 153, 0.08);
   --dp-success: #22C55E;
   --dp-success-soft: rgba(34, 197, 94, 0.12);
   --dp-danger: #EF4444;
@@ -377,7 +381,7 @@
 }
 
 .dp-btn-primary {
-  background: var(--dp-accent);
+  background: var(--dp-action);
   color: #ffffff;
   box-shadow: 0 4px 14px var(--dp-accent-soft);
 }
@@ -773,7 +777,7 @@
 
 /* --- Accent bg --- */
 .dp-accent-bg {
-  background: var(--dp-accent);
+  background: var(--dp-action);
   color: #ffffff;
 }
 

@@ -28,9 +28,9 @@ interface Reply {
 }
 
 const glassCard = {
-  background: 'rgba(10,15,30,0.75)',
+  background: 'var(--dp-card)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(212,175,55,0.15)',
+  border: '1px solid var(--dp-border)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
 };
 
@@ -103,7 +103,7 @@ export default function DriverMessagesPage() {
       urgent: { background: 'rgba(239,68,68,0.18)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)' },
       high: { background: 'rgba(249,115,22,0.18)', color: '#fb923c', border: '1px solid rgba(249,115,22,0.35)' },
       normal: { background: 'rgba(59,130,246,0.18)', color: '#93c5fd', border: '1px solid rgba(59,130,246,0.35)' },
-      low: { background: 'rgba(212,175,55,0.12)', color: 'rgba(212,175,55,0.9)', border: '1px solid rgba(212,175,55,0.25)' },
+      low: { background: 'var(--dp-accent-soft)', color: 'var(--dp-text-muted)', border: '1px solid var(--dp-border)' },
     };
     return styles[priority] || styles.normal;
   };
@@ -116,8 +116,8 @@ export default function DriverMessagesPage() {
   const unreadCount = messages.filter(m => !m.is_read).length;
 
   const dialogInputStyle = {
-    background: 'rgba(10,15,30,0.7)',
-    border: '1px solid rgba(212,175,55,0.2)',
+    background: 'var(--dp-card)',
+    border: '1px solid var(--dp-border)',
     color: 'white',
     borderRadius: '1rem',
   };
@@ -125,7 +125,7 @@ export default function DriverMessagesPage() {
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-        <MessageSquare className="w-10 h-10" style={{ color: '#d4af37' }} />
+        <MessageSquare className="w-10 h-10" style={{ color: 'var(--dp-accent)' }} />
       </motion.div>
     </div>
   );
@@ -137,7 +137,7 @@ export default function DriverMessagesPage() {
         <div className="flex items-center justify-between mb-2">
           <div>
             <h1 className="text-2xl font-black tracking-tight"
-              style={{ background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
             >
               {t.messages || 'Berichten'}
             </h1>
@@ -155,22 +155,22 @@ export default function DriverMessagesPage() {
             <DialogTrigger asChild>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold"
-                style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200', boxShadow: '0 4px 16px rgba(212,175,55,0.3)' }}
+                style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}
               >
                 <Plus className="w-4 h-4" />
                 {language === 'nl' ? 'Nieuw' : 'Nouveau'}
               </motion.button>
             </DialogTrigger>
-            <DialogContent className="rounded-3xl max-h-[90vh] overflow-y-auto" style={{ background: 'rgba(5,10,20,0.99)', border: '1px solid rgba(212,175,55,0.25)' }}>
+            <DialogContent className="rounded-3xl max-h-[90vh] overflow-y-auto" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
               <DialogHeader>
                 <DialogTitle style={{ color: 'white' }}>{language === 'nl' ? 'Bericht naar beheer' : 'Message à la direction'}</DialogTitle>
-                <DialogDescription style={{ color: 'rgba(212,175,55,0.78)' }}>
+                <DialogDescription style={{ color: 'var(--dp-text-muted)' }}>
                   {language === 'nl' ? 'Stuur een bericht of vraag naar het beheer' : 'Envoyez un message ou une question à la direction'}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
-                  <Label style={{ color: 'rgba(212,175,55,0.85)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Onderwerp *' : 'Sujet *'}</Label>
+                  <Label style={{ color: 'var(--dp-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Onderwerp *' : 'Sujet *'}</Label>
                   <Input value={newMessage.subject} onChange={(e) => setNewMessage({ ...newMessage, subject: e.target.value })}
                     className="rounded-2xl mt-2 border-0"
                     style={{ ...dialogInputStyle }}
@@ -178,7 +178,7 @@ export default function DriverMessagesPage() {
                   />
                 </div>
                 <div>
-                  <Label style={{ color: 'rgba(212,175,55,0.85)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Bericht *' : 'Message *'}</Label>
+                  <Label style={{ color: 'var(--dp-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Bericht *' : 'Message *'}</Label>
                   <Textarea value={newMessage.message_body} onChange={(e) => setNewMessage({ ...newMessage, message_body: e.target.value })}
                     className="rounded-2xl mt-2 border-0 min-h-[120px]"
                     style={{ ...dialogInputStyle }}
@@ -186,12 +186,12 @@ export default function DriverMessagesPage() {
                   />
                 </div>
                 <div>
-                  <Label style={{ color: 'rgba(212,175,55,0.85)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Prioriteit' : 'Priorité'}</Label>
+                  <Label style={{ color: 'var(--dp-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>{language === 'nl' ? 'Prioriteit' : 'Priorité'}</Label>
                   <Select value={newMessage.message_priority} onValueChange={(value) => setNewMessage({ ...newMessage, message_priority: value })}>
-                    <SelectTrigger className="rounded-2xl mt-2 border-0" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', color: 'white' }}>
+                    <SelectTrigger className="rounded-2xl mt-2 border-0" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)', color: 'white' }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)' }}>
+                    <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
                       <SelectItem value="low" style={{ color: 'white' }}>{t.low}</SelectItem>
                       <SelectItem value="normal" style={{ color: 'white' }}>{t.normal}</SelectItem>
                       <SelectItem value="high" style={{ color: 'white' }}>{t.high}</SelectItem>
@@ -201,7 +201,7 @@ export default function DriverMessagesPage() {
                 </div>
                 <button onClick={handleSendNewMessage}
                   className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200' }}
+                  style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)' }}
                 >
                   <Send className="w-4 h-4" />
                   {language === 'nl' ? 'Bericht verzenden' : 'Envoyer le message'}
@@ -210,7 +210,7 @@ export default function DriverMessagesPage() {
             </DialogContent>
           </Dialog>
         </div>
-        <p className="text-sm" style={{ color: 'rgba(212,175,55,0.78)' }}>{t.messagesFromManagement || 'Berichten van het beheer'}</p>
+        <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>{t.messagesFromManagement || 'Berichten van het beheer'}</p>
       </motion.div>
 
       {/* Messages List */}
@@ -219,10 +219,10 @@ export default function DriverMessagesPage() {
           {messages.length === 0 ? (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
               <div className="p-12 rounded-3xl text-center" style={glassCard}>
-                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
-                  <MessageSquare className="w-10 h-10" style={{ color: 'rgba(212,175,55,0.6)' }} />
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)' }}>
+                  <MessageSquare className="w-10 h-10" style={{ color: 'var(--dp-text-muted)' }} />
                 </div>
-                <p style={{ color: 'rgba(212,175,55,0.78)' }}>{t.noMessages || 'Geen berichten'}</p>
+                <p style={{ color: 'var(--dp-text-muted)' }}>{t.noMessages || 'Geen berichten'}</p>
               </div>
             </motion.div>
           ) : (
@@ -230,7 +230,7 @@ export default function DriverMessagesPage() {
               <motion.div key={message.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ delay: index * 0.05 }} whileHover={{ scale: 1.01 }}>
                 <div
                   className="p-5 rounded-3xl cursor-pointer transition-all"
-                  style={{ ...glassCard, ...(message.is_read ? {} : { border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,175,55,0.12)' }) }}
+                  style={{ ...glassCard, ...(message.is_read ? {} : { border: '1px solid var(--dp-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(52,211,153,0.12)' }) }}
                   onClick={() => handleViewReplies(message)}
                 >
                   <div className="flex items-start gap-4">
@@ -245,7 +245,7 @@ export default function DriverMessagesPage() {
                         {!message.is_read && (
                           <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
                             className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1"
-                            style={{ background: '#d4af37', boxShadow: '0 0 8px rgba(212,175,55,0.8)' }}
+                            style={{ background: 'var(--dp-accent)', boxShadow: '0 0 8px rgba(52,211,153,0.8)' }}
                           />
                         )}
                       </div>
@@ -254,7 +254,7 @@ export default function DriverMessagesPage() {
                         <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={getPriorityStyle(message.message_priority)}>
                           {getPriorityLabel(message.message_priority)}
                         </span>
-                        <div className="flex items-center gap-1 text-xs" style={{ color: 'rgba(212,175,55,0.7)' }}>
+                        <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--dp-text-muted)' }}>
                           <Clock className="w-3 h-3" />
                           <span>{new Date(message.created_at).toLocaleDateString(language === 'nl' ? 'nl-BE' : 'fr-BE')}</span>
                         </div>
@@ -280,10 +280,10 @@ export default function DriverMessagesPage() {
 
       {/* Reply Dialog */}
       <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
-        <DialogContent className="rounded-3xl max-h-[90vh] overflow-y-auto max-w-2xl" style={{ background: 'rgba(5,10,20,0.99)', border: '1px solid rgba(212,175,55,0.25)' }}>
+        <DialogContent className="rounded-3xl max-h-[90vh] overflow-y-auto max-w-2xl" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
           <DialogHeader>
             <DialogTitle style={{ color: 'white' }}>{selectedMessage?.subject}</DialogTitle>
-            <DialogDescription style={{ color: 'rgba(212,175,55,0.78)' }}>{t.messageDetails || 'Berichtdetails'}</DialogDescription>
+            <DialogDescription style={{ color: 'var(--dp-text-muted)' }}>{t.messageDetails || 'Berichtdetails'}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {selectedMessage && (
@@ -301,34 +301,34 @@ export default function DriverMessagesPage() {
               </div>
             )}
 
-            <div className="p-4 rounded-2xl" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.15)' }}>
+            <div className="p-4 rounded-2xl" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
               <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4" style={{ color: 'rgba(212,175,55,0.7)' }} />
-                <p className="text-sm font-medium" style={{ color: 'rgba(212,175,55,0.85)' }}>
+                <User className="w-4 h-4" style={{ color: 'var(--dp-text-muted)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--dp-text-muted)' }}>
                   {selectedMessage?.sender_type === 'admin' ? (t.fromManagement || 'Van beheer') : (language === 'nl' ? 'U' : 'Vous')}
                 </p>
               </div>
               <p className="text-sm text-white">{selectedMessage?.message_body}</p>
-              <p className="text-xs mt-2" style={{ color: 'rgba(212,175,55,0.65)' }}>
+              <p className="text-xs mt-2" style={{ color: 'var(--dp-text-muted)' }}>
                 {selectedMessage && new Date(selectedMessage.created_at).toLocaleString(language === 'nl' ? 'nl-BE' : 'fr-BE')}
               </p>
             </div>
 
             <div className="space-y-3 max-h-[300px] overflow-y-auto">
               {replies.length === 0 ? (
-                <p className="text-center text-sm py-4" style={{ color: 'rgba(212,175,55,0.65)' }}>{t.noReplies || 'Nog geen antwoorden'}</p>
+                <p className="text-center text-sm py-4" style={{ color: 'var(--dp-text-muted)' }}>{t.noReplies || 'Nog geen antwoorden'}</p>
               ) : (
                 replies.map((reply) => (
                   <div key={reply.id} className="p-4 rounded-2xl" style={{ background: reply.sender_type === 'admin' ? 'rgba(59,130,246,0.12)' : 'rgba(168,85,247,0.12)', border: reply.sender_type === 'admin' ? '1px solid rgba(59,130,246,0.25)' : '1px solid rgba(168,85,247,0.25)' }}>
                     <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4" style={{ color: 'rgba(212,175,55,0.7)' }} />
+                      <User className="w-4 h-4" style={{ color: 'var(--dp-text-muted)' }} />
                       <p className="text-sm font-medium text-white">{reply.sender_name}</p>
                       <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={reply.sender_type === 'admin' ? { background: 'rgba(59,130,246,0.18)', color: '#93c5fd' } : { background: 'rgba(168,85,247,0.18)', color: '#c084fc' }}>
                         {reply.sender_type === 'admin' ? (language === 'nl' ? 'Beheer' : 'Direction') : (language === 'nl' ? 'Chauffeur' : 'Chauffeur')}
                       </span>
                     </div>
                     <p className="text-sm text-white mb-2">{reply.reply_body}</p>
-                    <p className="text-xs" style={{ color: 'rgba(212,175,55,0.65)' }}>{new Date(reply.created_at).toLocaleString(language === 'nl' ? 'nl-BE' : 'fr-BE')}</p>
+                    <p className="text-xs" style={{ color: 'var(--dp-text-muted)' }}>{new Date(reply.created_at).toLocaleString(language === 'nl' ? 'nl-BE' : 'fr-BE')}</p>
                   </div>
                 ))
               )}
@@ -336,15 +336,15 @@ export default function DriverMessagesPage() {
 
             {selectedMessage && !selectedMessage.is_locked && selectedMessage.status !== 'resolved' ? (
               <div className="space-y-2">
-                <Label style={{ color: 'rgba(212,175,55,0.85)', fontSize: '0.75rem', fontWeight: '600' }}>{t.addReply || 'Antwoord toevoegen'}</Label>
+                <Label style={{ color: 'var(--dp-text-muted)', fontSize: '0.75rem', fontWeight: '600' }}>{t.addReply || 'Antwoord toevoegen'}</Label>
                 <Textarea value={replyText} onChange={(e) => setReplyText(e.target.value)}
                   className="rounded-2xl border-0 min-h-[100px]"
-                  style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', color: 'white' }}
+                  style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)', color: 'white' }}
                   placeholder={t.writeReply || 'Schrijf hier uw antwoord...'}
                 />
                 <button onClick={handleSendReply}
                   className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-                  style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200' }}
+                  style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)' }}
                 >
                   <Send className="w-4 h-4" />{t.sendReply || 'Antwoord verzenden'}
                 </button>

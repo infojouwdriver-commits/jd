@@ -1,4 +1,6 @@
 "use client";
+import {shiftReference, shiftDocumentUrl} from "@/lib/shift-document";
+import DocumentQr from "./DocumentQr";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ApiError, api } from "@/lib/api-client";
@@ -69,7 +71,8 @@ export default function DriverShifts() {
   );
   useEffect(() => {
     const epoch = generation;
-    void load();
+    const id = new URLSearchParams(window.location.search).get("id");
+    void load(0, id && /^[0-9a-f-]{36}$/i.test(id) ? id : undefined);
     return () => {
       ++epoch.current;
     };
@@ -209,7 +212,8 @@ export default function DriverShifts() {
           <h2 className="text-xl font-bold">
             {c.title} · {detail.shift.ended_at ? c.closed : c.active}
           </h2>
-          <p className="break-all text-xs">{detail.shift.id}</p>
+          <p className="dp-text-soft break-all font-mono text-sm" dir="ltr">{shiftReference(detail.shift.id)}</p>
+          <DocumentQr url={shiftDocumentUrl(detail.shift.id)} label={c.title} />
           <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {[
               [c.company, detail.shift.company_name],

@@ -67,7 +67,7 @@ try {
     await logoutContext.route('**/*',handleRoute);
     const logoutPage=await logoutContext.newPage();await logoutPage.goto(base+'/driver/taximeter');
     await logoutPage.getByText('Position partagée avec votre société et l’administration',{exact:true}).waitFor();
-    await logoutPage.getByRole('button',{name:'Déconnexion',exact:true}).click();await logoutPage.waitForURL(base+'/driver-login');
+    await logoutPage.getByRole('button',{name:'Déconnexion',exact:true}).click();await logoutPage.waitForURL(base+'/driver-login?redirect=%2Fdriver%2Ftaximeter');
     assert.deepEqual(fleetWrites.at(-1),{shift_active:false,sharing_enabled:false});
     await logoutContext.close();loggedIn=true;
     const page=await context.newPage();

@@ -25,7 +25,6 @@ export default function DriverShiftWorkspace({
   const [localActive, setLocalActive] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [starting, setStarting] = useState(false);
   const flight = useRef(false),
     generation = useRef(0);
   const retry = useRef<{
@@ -108,7 +107,7 @@ export default function DriverShiftWorkspace({
     <>
       {!isSheet && (
         <section
-          className="shift-controls dp-card mx-4 mt-4 space-y-3 border-2 p-4"
+          className="shift-controls dp-card mx-4 mt-4 space-y-5 p-5"
           style={{ borderColor: "var(--dp-accent)" }}
           aria-label={c.title}
         >
@@ -126,12 +125,7 @@ export default function DriverShiftWorkspace({
             <div className="flex flex-wrap gap-2">
               {data &&
                 (!active ? (
-                  <Button
-                    onClick={() => setStarting(true)}
-                    disabled={busy || localActive}
-                  >
-                    {c.start}
-                  </Button>
+                  null
                 ) : (
                   <Button
                     onClick={() => void toggle()}
@@ -155,26 +149,8 @@ export default function DriverShiftWorkspace({
               </Link>
             </div>
           </div>
-          {!data && !error && (
-            <p role="status">{operationsCopy[language].loading}</p>
-          )}
-          {error && (
-            <div role="alert">
-              <p>{error}</p>
-              <Button
-                variant="outline"
-                disabled={busy}
-                onClick={() => void (retry.current ? toggle() : load())}
-              >
-                {operationsCopy[language].retry}
-              </Button>
-            </div>
-          )}
-        </section>
-      )}
-      <div hidden={needsStart}>{children}</div>
-      {starting && (
-        <OperationForm
+          {data && !active && !localActive && (
+        <OperationForm inline
           title={c.start}
           description={c.firstStep}
           c={operationsCopy[language]}
@@ -191,7 +167,7 @@ export default function DriverShiftWorkspace({
             },
           ]}
           initial={{ odometer: "" }}
-          onClose={() => setStarting(false)}
+          onClose={() => {}}
           errorMessage={(e) =>
             e instanceof ApiError && e.status === 409 ? c.conflict : c.invalid
           }
@@ -211,6 +187,25 @@ export default function DriverShiftWorkspace({
           }}
         />
       )}
+          {!data && !error && (
+            <p role="status">{operationsCopy[language].loading}</p>
+          )}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void (retry.current ? toggle() : load())}
+              >
+                {operationsCopy[language].retry}
+              </Button>
+            </div>
+          )}
+        </section>
+      )}
+      <div hidden={needsStart}>{children}</div>
+
     </>
   );
 }

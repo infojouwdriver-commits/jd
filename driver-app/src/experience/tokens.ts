@@ -2,8 +2,8 @@ import {Platform} from 'react-native';
 
 // Runtime source of truth; DESIGN.md records the accepted mapping and rationale.
 export const palette = {
-  dark: {bg:'#0B1423',surface:'#142238',raised:'#20314A',text:'#F2F7F8',muted:'#B6C4D8',line:'#354760',accent:'#E0BD5B',icon:'#E0BD5B',accentText:'#302408',danger:'#FFB4AE',dangerBg:'#4B2C32',hero:'#101E33',heroText:'#F2F7F8',heroMuted:'#B6C4D8',artRoad:'#30435E',shadow:'#070D17'},
-  light: {bg:'#F5F3ED',surface:'#FFFFFF',raised:'#ECECE6',text:'#1A2940',muted:'#52647C',line:'#CED7E4',accent:'#E0BD5B',icon:'#765514',accentText:'#302408',danger:'#9C2933',dangerBg:'#FFE9EB',hero:'#101E33',heroText:'#F2F7F8',heroMuted:'#B6C4D8',artRoad:'#30435E',shadow:'#101E33'},
+  dark: {bg:'#0C131B',surface:'#151F2A',raised:'#202D3A',text:'#F2F7F8',muted:'#B6C4D8',line:'#344353',accent:'#34D399',icon:'#34D399',accentText:'#062C20',danger:'#FFB4AE',dangerBg:'#4B2C32',hero:'#12232C',heroText:'#F2F7F8',heroMuted:'#B6C4D8',artRoad:'#29444C',shadow:'#070D17'},
+  light: {bg:'#F3F7F5',surface:'#FFFFFF',raised:'#E7F0EB',text:'#1A2940',muted:'#52647C',line:'#CED7E4',accent:'#34D399',icon:'#047857',accentText:'#062C20',danger:'#9C2933',dangerBg:'#FFE9EB',hero:'#12232C',heroText:'#F2F7F8',heroMuted:'#B6C4D8',artRoad:'#29444C',shadow:'#12232C'},
 };
 export const design = {
   radius: {card:20,control:16,chip:10},

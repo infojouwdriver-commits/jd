@@ -100,7 +100,9 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       const result=await ownerRead<ShiftList|ShiftDetail>(owner,'/next_api/drivers/shifts',query);
       // Historical snapshots retain their original company; RPC remains user-scoped.
       const check=(s:DriverShift)=>validShift(s,owner);
-      if(query.id){const d=result as ShiftDetail;if(!check(d.shift)||d.shift.id!==query.id||!Array.isArray(d.events)||!Array.isArray(d.activity)||d.events.some(e=>!Number.isSafeInteger(e.version)||!Number.isFinite(Date.parse(e.recorded_at))||![e.odometer,e.passenger_km].every(n=>Number.isFinite(n)&&n>=0)))throw new ApiError(502);}
+      if(query.id){const d=result as ShiftDetail;
+        if(d.document){const doc=d.document;if(doc.url!=='https://app.jouww.com/driver/shifts?id='+d.shift.id||typeof doc.reference!=='string'||doc.reference.length>80||!Number.isInteger(doc.qr?.size)||doc.qr.size<21||doc.qr.size>177||!Array.isArray(doc.qr.modules)||doc.qr.modules.length!==doc.qr.size**2||doc.qr.modules.some(n=>n!==0&&n!==1))throw new ApiError(502);}
+        if(!check(d.shift)||d.shift.id!==query.id||!Array.isArray(d.events)||!Array.isArray(d.activity)||d.events.some(e=>!Number.isSafeInteger(e.version)||!Number.isFinite(Date.parse(e.recorded_at))||![e.odometer,e.passenger_km].every(n=>Number.isFinite(n)&&n>=0)))throw new ApiError(502);}
       else {const list=result as ShiftList;if(!Array.isArray(list.shifts)||list.shifts.length>25||list.shifts.some(s=>!check(s))||list.active!==null&&(!validShift(list.active,owner,current.driver.company_id)||list.active.ended_at!==null))throw new ApiError(502);}
       return result;
     },
@@ -245,6 +247,13 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     async changeAccount(owner:number,body:{action:'request_email_code'|'update_email'|'update_password';current_password:string;email?:string;passcode?:string;password?:string}) {
       if((await profile()).driver.id!==owner)throw new ApiError(403);
       return request<{sent?:boolean;updated?:boolean;sign_in_required?:boolean}>('/next_api/auth/account',body);
+    },
+    async invoiceLink(owner:number,id:number) {
+      if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);
+      if((await profile()).driver.id!==owner)throw new ApiError(403);
+      const result=await request<{url:string;reference:string}>('/next_api/trips/generate-invoice',{},'POST',{id,format:'link'});
+      if(!result||!/^https:\/\/app\.jouww\.com\/documents\/receipts\/[1-9][0-9]{0,15}\.[A-Za-z0-9_-]{43}$/.test(result.url)||typeof result.reference!=='string'||result.reference.length>100)throw new ApiError(502);
+      return result;
     },
     async invoice(owner:number,id:number) {
       if(!Number.isSafeInteger(id)||id<1)throw new ApiError(400);

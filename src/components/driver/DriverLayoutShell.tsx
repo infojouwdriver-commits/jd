@@ -1,5 +1,6 @@
 
 "use client";
+import {driverReturnPath} from "@/lib/driver-return-path";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -109,7 +110,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/driver-login");
+      router.push("/driver-login?redirect="+encodeURIComponent(driverReturnPath(window.location.pathname+window.location.search)));
     }
   }, [isLoading, router, user]);
 

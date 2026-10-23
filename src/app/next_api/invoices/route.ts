@@ -170,6 +170,9 @@ export const POST = requestMiddleware(async (request, context) => {
 export const PUT = requestMiddleware(async (request, context) => {
   const { id } = parseQueryParams(request);
   const body = await validateRequestBody(request);
+  if (body && Object.prototype.hasOwnProperty.call(body, 'receipt_snapshot')) {
+    return createErrorResponse({status:409,errorMessage:'Issued receipt snapshots cannot be edited'});
+  }
 
   if (!id) {
     return createErrorResponse({

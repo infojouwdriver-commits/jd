@@ -1,3 +1,4 @@
+import ShiftDocumentQr from './ShiftDocumentQr';
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {Alert,View} from 'react-native';
 import * as Crypto from 'expo-crypto';
@@ -41,7 +42,7 @@ export default function Shifts(){
  {minutes&&<View style={{gap:12}}>{Object.entries(minutes).map(([state,value])=><Row key={state} style={{justifyContent:'space-between'}}><Label muted size={14}>{c[state as 'available']}</Label><Label numeric size={14}>{number(value)} {c.minutes}</Label></Row>)}</View>}
  {detail.summary&&<><SectionHeading title={c.payments}/><Label>{c.tripCount}: {detail.summary.trip_count}</Label>{detail.summary.payments.map(payment=><View key={payment.currency} style={{gap:6}}><Label bold numeric>{number(payment.total)} {payment.currency}</Label>{payment.missing_amounts>0&&<Label muted>{c.missing}: {payment.missing_amounts}</Label>}</View>)}</>}
  <Button label={c.pdf} icon="share-outline" busy={pdfBusy} onPress={()=>void pdf()}/>{pdfError&&<Notice error>{c.pdfFailed}</Notice>}
- <SectionHeading title={c.readings}/>{detail.events.map(e=><View key={e.version} style={{borderTopWidth:1,borderColor:colors.line,paddingTop:12,gap:4}}><Label size={14}>{shiftDate(e.recorded_at,locale)} · {c[e.action==='start'?'start':e.action==='end'?'end':'record']}</Label><Label numeric size={14}>{number(e.odometer)} km · {number(e.passenger_km)} km</Label><Label muted size={13}>{c[e.work_status]}</Label></View>)}
+ <ShiftDocumentQr document={detail.document}/><SectionHeading title={c.readings}/>{detail.events.map(e=><View key={e.version} style={{borderTopWidth:1,borderColor:colors.line,paddingTop:12,gap:4}}><Label size={14}>{shiftDate(e.recorded_at,locale)} · {c[e.action==='start'?'start':e.action==='end'?'end':'record']}</Label><Label numeric size={14}>{number(e.odometer)} km · {number(e.passenger_km)} km</Label><Label muted size={13}>{c[e.work_status]}</Label></View>)}
  <SectionHeading title={c.activity}/>{detail.activity?.filter(a=>a.kind!=='declaration').map(a=><View key={a.id} style={{borderTopWidth:1,borderColor:colors.line,paddingTop:12,gap:4}}><Label size={14}>{shiftDate(a.occurred_at,locale)} · {c[a.kind]}</Label><Label muted size={13}>{a.work_status?c[a.work_status]:''}{a.trip_id?` #${a.trip_id} · ${a.source||''}`:''}</Label></View>)}
  </Card>}
  <SectionHeading title={c.history} icon="archive-outline"/>{rows?.shifts.length===0&&<Notice>{c.empty}</Notice>}{rows?.shifts.map(row=><Card key={row.id}><Label bold>{row.plate_number}</Label><Label muted size={14}>{shiftDate(row.started_at,locale)} · {row.ended_at?c.closed:c.open}</Label><Button secondary label={c.details} disabled={loading} onPress={()=>{setSelected(row.id);setPdfError(false);}}/></Card>)}

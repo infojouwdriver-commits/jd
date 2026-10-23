@@ -61,3 +61,10 @@ test('damaged encrypted intent fails closed without erasing or sending readings'
   const saved=JSON.stringify(body);let cleared=0,sent=0;const intent=createShiftIntent({get:async()=>saved,set:async()=>{},clear:async()=>{cleared++}},async()=>{sent++;return shift});await assert.rejects(intent.restore());assert.equal(cleared,0);assert.equal(sent,0);
  }
 });
+
+test('document QR accepts the canonical portal even on legacy builds, and rejects foreign or oversized metadata',async()=>{
+ const document={reference:'DS-SYNTHETIC',url:'https://app.jouww.com/driver/shifts?id='+id,qr:{size:21,modules:Array(441).fill(0)}};
+ const api=data=>createDriverApi(async url=>ok(url.endsWith('/drivers/me')?profile:{shift,events:[],activity:[],document:data}));
+ assert.equal((await api(document).shifts(1,{id})).document.url,document.url);
+ for(const bad of [{...document,url:'https://evil.invalid/driver/shifts?id='+id},{...document,url:document.url+'&token=x'},{...document,qr:{size:178,modules:[]}},{...document,qr:{size:21,modules:Array(440).fill(0)}},{...document,qr:{size:21,modules:Array(441).fill(2)}}])await assert.rejects(api(bad).shifts(1,{id}),e=>e.status===502);
+});
