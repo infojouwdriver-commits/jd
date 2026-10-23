@@ -29,6 +29,8 @@ const fonts = compiled("src/legal/pdf-fonts.ts");
 const { driverShiftPdf } = compiled("src/lib/driver-shift-pdf.ts", {
   "@/legal/pdf-fonts": fonts,
   "./driver-shifts": shifts,
+  "./pdf-qr": compiled("src/lib/pdf-qr.ts"),
+  "./shift-document": compiled("src/lib/shift-document.ts"),
 });
 test("Dutch PDF contains all pages of long Unicode declarations and preserves provisional status", () => {
   const shift = {

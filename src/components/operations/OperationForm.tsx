@@ -49,7 +49,9 @@ export function OperationForm({
   children,
   submitLabel,
   errorMessage,
+  inline = false,
 }: {
+  inline?: boolean;
   title: string;
   description?: string;
   fields: OperationField[];
@@ -136,23 +138,9 @@ export function OperationForm({
     }
   }
 
-  return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open && !busy) onClose();
-      }}
-    >
-      <DialogContent
-        closeLabel={c.cancel}
-        closeDisabled={busy}
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
-      >
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description || title}</DialogDescription>
-        </DialogHeader>
-        <form noValidate onSubmit={submit} className="space-y-4">
+  const Footer = inline ? "div" : DialogFooter;
+  const content = (
+        <form aria-label={title} noValidate onSubmit={submit} className="space-y-4">
           {children}
           <fieldset disabled={busy || !!frozen.current} className="space-y-4">
             {fields.map((f) => (
@@ -191,6 +179,7 @@ export function OperationForm({
                   </Select>
                 ) : (
                   <Input
+                    className={inline ? "dp-input" : undefined}
                     id={`operation-${f.key}`}
                     type={
                       f.type === "password"
@@ -250,8 +239,8 @@ export function OperationForm({
               {error}
             </p>
           )}
-          <DialogFooter>
-            <Button
+          <Footer className={inline ? "flex gap-3" : undefined}>
+            {!inline && <Button
               autoFocus
               type="button"
               variant="outline"
@@ -259,16 +248,23 @@ export function OperationForm({
               onClick={onClose}
             >
               {c.cancel}
-            </Button>
-            <Button type="submit" disabled={busy} aria-busy={busy}>
+            </Button>}
+            <Button className={inline ? "dp-btn-primary w-full" : undefined} type="submit" disabled={busy} aria-busy={busy}>
               {busy
                 ? c.loading
                 : frozen.current
                   ? c.retry
                   : submitLabel || c.save}
             </Button>
-          </DialogFooter>
+          </Footer>
         </form>
+  );
+  if (inline) return <section className="space-y-3" aria-label={title}>{content}</section>;
+  return (
+    <Dialog open onOpenChange={(open)=>{if(!open&&!busy)onClose();}}>
+      <DialogContent closeLabel={c.cancel} closeDisabled={busy} className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl">
+        <DialogHeader><DialogTitle>{title}</DialogTitle><DialogDescription>{description||title}</DialogDescription></DialogHeader>
+        {content}
       </DialogContent>
     </Dialog>
   );

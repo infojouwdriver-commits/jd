@@ -1,4 +1,6 @@
 import { jsPDF } from "jspdf";
+import {drawPdfQr} from "./pdf-qr";
+import {shiftReference, shiftDocumentUrl} from "./shift-document";
 import { configurePdfFonts } from "@/legal/pdf-fonts";
 import { shiftDurations, shiftKilometres, shiftTime } from "./driver-shifts";
 import type { ShiftDetail, ShiftStatus } from "./driver-shifts";
@@ -15,7 +17,7 @@ export function driverShiftPdf(detail: ShiftDetail) {
   });
   doc.setLanguage("nl-BE");
   const navy: [number, number, number] = [20, 36, 56],
-    gold: [number, number, number] = [171, 133, 59];
+    gold: [number, number, number] = [5, 150, 105];
   const gray: [number, number, number] = [98, 110, 124];
   const status: Record<ShiftStatus, string> = {
     available: "Beschikbaar",
@@ -167,7 +169,7 @@ export function driverShiftPdf(detail: ShiftDetail) {
   }
   doc.setFillColor(...navy);
   doc.rect(0, 0, 210, 36, "F");
-  font(9, true, [225, 197, 133]);
+  font(9, true, [110, 231, 183]);
   doc.text("JOUW DRIVER  /  SERVICE ADMINISTRATIE", 16, 10);
   font(24, true, [255, 255, 255]);
   doc.text("Dienststaat", 16, 23);
@@ -205,7 +207,7 @@ export function driverShiftPdf(detail: ShiftDetail) {
       "Voertuig-ID / identificatiecode",
       `${present(s.vehicle_id)} / ${present(profile.vehicle_code)}`,
     ],
-    ["Dienstnummer / referentie", s.id],
+    ["Dienstnummer / referentie", shiftReference(s.id)],
     ["Aanvang dienst - België", shiftTime(s.started_at)],
     [
       "Einde dienst - België",
@@ -295,6 +297,14 @@ export function driverShiftPdf(detail: ShiftDetail) {
         8,
       );
   }
+  ensure(48);
+  drawPdfQr(doc, shiftDocumentUrl(s.id), 16, y, 34);
+  font(9, true);
+  doc.text("Open deze dienst in het portaal", 55, y + 10);
+  font(8, false, gray);
+  doc.text("Aanmelden vereist. PDF wordt op aanvraag gemaakt.", 55, y + 17);
+  doc.text(s.ended_at ? "Afgesloten dienst" : "Voorlopig: open dienst kan nog wijzigen.", 55, y + 24);
+  y += 40;
   page();
   section("Tellerstanden en statussen");
   table(
@@ -340,7 +350,7 @@ export function driverShiftPdf(detail: ShiftDetail) {
     doc.setDrawColor(222, 228, 234);
     doc.line(16, 281, 194, 281);
     font(7, false, gray);
-    doc.text(`Dienststaat ${s.id}`, 16, 286);
+    doc.text(`Dienststaat ${shiftReference(s.id)}`, 16, 286);
     doc.text(`${p} / ${pages}`, 194, 286, { align: "right" });
   }
   return doc;

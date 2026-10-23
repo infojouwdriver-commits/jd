@@ -277,3 +277,28 @@ user-scoped snapshot. It never calls invoice generation or writes financial data
 
 Logout never closes a shift. Phone push remains paused. Existing encrypted trip
 storage, owner separation, GPS handling and completion receipts are preserved.
+
+## Approved QR documents and emerald cockpit — 23 October 2026
+
+Driver home places the odometer entry with the start action in the service card.
+Web uses the canonical OperationForm inline variant, preserving its pending
+request identity and validation. Native uses its existing declaration controller.
+Five-tab navigation, locale/theme preferences and session/trip guards persist.
+
+A completed trip's invoice action issues a stable capability URL for its saved
+receipt_snapshot. Share the URL, never a blob URL or session credential. The
+recipient can open that single receipt without portal access; the web share
+panel explains this. A local QR is embedded when rendering PDF on demand.
+Legacy invoices without a persisted snapshot use their private existing PDF
+path, with no public QR and no backfilled historical data. No PDF is uploaded or
+stored on the server. Native PDF cache fallback and shift export remain private.
+
+Shift detail and PDF use the same DS reference and protected portal URL. The
+QR itself grants no shift access: login and existing owner RPC checks still
+apply. A scan can select the requested shift directly after authentication.
+Native QR matrices come only from the authenticated report API, with bounded
+shape validation. Open report data remains provisional until the shift closes.
+
+Canonical map extension: DocumentQr (web), ShiftDocumentQr (native) own QR
+presentation; pdf-qr owns local PDF vector rendering; document-links owns
+receipt capability verification; shift-document owns shift reference/URL.

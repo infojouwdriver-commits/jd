@@ -23,3 +23,12 @@ test('notification read failures propagate instead of confirming read state',asy
 test('an ambiguous invoice POST is never repeated automatically',async()=>{
  let writes=0;const api=createDriverApi(async url=>{if(url.endsWith('/drivers/me'))return ok(profile);writes++;throw new TypeError('Network request failed');});await assert.rejects(api.invoice(1,7));assert.equal(writes,1);
 });
+
+test('receipt links are authenticated, share only reviewed document URLs and never retry an ambiguous POST',async()=>{
+ const url='https://app.jouww.com/documents/receipts/7.'+'a'.repeat(43);let writes=0;
+ const build=data=>createDriverApi(async (path,opts)=>{if(path.endsWith('/drivers/me'))return ok(profile);writes++;assert.equal(opts.method,'POST');assert.equal(opts.redirect,'error');assert.equal(new URL(path).searchParams.get('format'),'link');return ok(data);});
+ assert.equal((await build({url,reference:'TRIP-7'}).invoiceLink(1,7)).url,url);
+ for(const bad of ['blob:'+url,'https://evil.invalid/r','https://app.jouww.com/driver/shifts?id=x',url+'?session=secret'])await assert.rejects(build({url:bad,reference:'TRIP-7'}).invoiceLink(1,7));
+ const before=writes;await assert.rejects(build({url,reference:'TRIP-7'}).invoiceLink(99,7));assert.equal(writes,before);
+ let attempts=0;const api=createDriverApi(async path=>{if(path.endsWith('/drivers/me'))return ok(profile);attempts++;throw new TypeError('lost');});await assert.rejects(api.invoiceLink(1,7));assert.equal(attempts,1);
+});

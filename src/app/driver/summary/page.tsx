@@ -36,14 +36,14 @@ interface SummaryData {
 type PeriodType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
 
 const glassCard = {
-  background: 'rgba(10,15,30,0.75)',
+  background: 'var(--dp-card)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(212,175,55,0.15)',
+  border: '1px solid var(--dp-border)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
 };
 
 const labelStyle = {
-  color: 'rgba(212,175,55,0.85)',
+  color: 'var(--dp-text-muted)',
   fontSize: '0.7rem',
   fontWeight: '700',
   textTransform: 'uppercase' as const,
@@ -165,7 +165,7 @@ export default function SummaryPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-          <BarChart3 className="w-10 h-10" style={{ color: '#d4af37' }} />
+          <BarChart3 className="w-10 h-10" style={{ color: 'var(--dp-accent)' }} />
         </motion.div>
       </div>
     );
@@ -174,8 +174,8 @@ export default function SummaryPage() {
   if (!summary) return null;
 
   const inputStyle = {
-    background: 'rgba(10,15,30,0.7)',
-    border: '1px solid rgba(212,175,55,0.2)',
+    background: 'var(--dp-card)',
+    border: '1px solid var(--dp-border)',
     color: 'white',
     borderRadius: '1rem',
     height: '44px',
@@ -198,11 +198,11 @@ export default function SummaryPage() {
       >
         <div
           className="p-6 rounded-3xl overflow-hidden relative"
-          style={{ ...glassCard, border: '1px solid rgba(212,175,55,0.28)' }}
+          style={{ ...glassCard, border: '1px solid var(--dp-border)' }}
         >
           <motion.div
             className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl"
-            style={{ background: 'rgba(212,175,55,0.12)', marginRight: '-6rem', marginTop: '-6rem' }}
+            style={{ background: 'var(--dp-accent-soft)', marginRight: '-6rem', marginTop: '-6rem' }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 4, repeat: Infinity }}
           />
@@ -213,12 +213,12 @@ export default function SummaryPage() {
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <BarChart3 className="w-6 h-6" style={{ color: '#d4af37' }} />
+                  <BarChart3 className="w-6 h-6" style={{ color: 'var(--dp-accent)' }} />
                 </motion.div>
                 <h1
                   className="text-2xl font-black tracking-tight"
                   style={{
-                    background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)',
+                    background: 'var(--dp-accent)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
@@ -232,13 +232,13 @@ export default function SummaryPage() {
                   <Sparkles className="w-5 h-5" style={{ color: '#ffd700' }} />
                 </motion.div>
               </div>
-              <p className="text-sm" style={{ color: 'rgba(212,175,55,0.78)' }}>{t.detailedReports}</p>
+              <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>{t.detailedReports}</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold"
-              style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', color: 'rgba(212,175,55,0.9)' }}
+              style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)', color: 'var(--dp-text-muted)' }}
             >
               <Filter className="w-3.5 h-3.5" />
               {t.filters}
@@ -263,10 +263,10 @@ export default function SummaryPage() {
                 <div>
                   <label className="block mb-2" style={labelStyle}>{t.periodType}</label>
                   <Select value={periodType} onValueChange={(v) => setPeriodType(v as PeriodType)}>
-                    <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white' }}>
+                    <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)', height: '44px', color: 'white' }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)' }}>
+                    <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
                       <SelectItem value="daily" style={{ color: 'white' }}>{t.daily}</SelectItem>
                       <SelectItem value="weekly" style={{ color: 'white' }}>{t.weekly}</SelectItem>
                       <SelectItem value="monthly" style={{ color: 'white' }}>{t.monthly}</SelectItem>
@@ -281,7 +281,7 @@ export default function SummaryPage() {
                   <div>
                     <label className="block mb-2" style={labelStyle}>{t.date}</label>
                     <div className="relative">
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(212,175,55,0.6)' }} />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--dp-text-muted)' }} />
                       <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={inputStyle} />
                     </div>
                   </div>
@@ -301,10 +301,10 @@ export default function SummaryPage() {
                 <div>
                   <label className="block mb-2" style={labelStyle}>{t.platform}</label>
                   <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-                    <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white' }}>
+                    <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)', height: '44px', color: 'white' }}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)' }}>
+                    <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
                       <SelectItem value="all" style={{ color: 'white' }}>{t.all}</SelectItem>
                       <SelectItem value="INTERNAL" style={{ color: 'white' }}>{t.taxi}</SelectItem>
                       <SelectItem value="BOLT" style={{ color: 'white' }}>Bolt</SelectItem>
@@ -334,10 +334,10 @@ export default function SummaryPage() {
         transition={{ duration: 0.5, delay: 0.5 }}
         className="mb-5"
       >
-        <div className="p-5 rounded-3xl" style={{ ...glassCard, border: '1px solid rgba(212,175,55,0.22)' }}>
+        <div className="p-5 rounded-3xl" style={{ ...glassCard, border: '1px solid var(--dp-border)' }}>
           <div className="flex items-center gap-2 mb-4">
             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-              <Wallet className="w-5 h-5" style={{ color: '#d4af37' }} />
+              <Wallet className="w-5 h-5" style={{ color: 'var(--dp-accent)' }} />
             </motion.div>
             <h3 className="font-bold text-white">{t.paymentInfo}</h3>
             <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 2, repeat: Infinity }}>
@@ -388,7 +388,7 @@ export default function SummaryPage() {
               { label: t.tax6, value: summary.tax_rate_6_amount, color: '#f87171' },
               { label: t.totalTax, value: summary.total_tax_amount, color: '#f87171' },
             ].map((item, i) => (
-              <div key={i} className="flex justify-between items-center p-3 rounded-2xl" style={{ background: 'rgba(10,15,30,0.6)', border: '1px solid rgba(212,175,55,0.1)' }}>
+              <div key={i} className="flex justify-between items-center p-3 rounded-2xl" style={{ background: 'var(--dp-card)', border: '1px solid var(--dp-border)' }}>
                 <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.82)' }}>{item.label}</span>
                 <span className="font-bold text-sm" style={{ color: item.color }}>€{item.value.toFixed(2)}</span>
               </div>
@@ -410,7 +410,7 @@ export default function SummaryPage() {
       >
         <div className="p-5 rounded-3xl" style={glassCard}>
           <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" style={{ color: '#d4af37' }} />
+            <BarChart3 className="w-5 h-5" style={{ color: 'var(--dp-accent)' }} />
             {t.platformBreakdown}
           </h3>
           <div className="space-y-3">
@@ -428,17 +428,17 @@ export default function SummaryPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-sm text-white">{platform === 'INTERNAL' ? t.taxi : platform}</span>
                     <div className="text-right">
-                      <span className="font-bold text-sm" style={{ color: '#d4af37' }}>€{stats.revenue.toFixed(2)}</span>
-                      <span className="text-xs ml-2" style={{ color: 'rgba(212,175,55,0.75)' }}>{stats.count} {t.trips}</span>
+                      <span className="font-bold text-sm" style={{ color: 'var(--dp-accent)' }}>€{stats.revenue.toFixed(2)}</span>
+                      <span className="text-xs ml-2" style={{ color: 'var(--dp-text-muted)' }}>{stats.count} {t.trips}</span>
                     </div>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(212,175,55,0.12)' }}>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--dp-accent-soft)' }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}
                       transition={{ duration: 1, delay: 0.9 + index * 0.1 }}
                       className="h-full rounded-full"
-                      style={{ background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)' }}
+                      style={{ background: 'var(--dp-accent)' }}
                     />
                   </div>
                 </motion.div>
@@ -461,9 +461,9 @@ export default function SummaryPage() {
           disabled={generating || summary.total_trips === 0}
           className="relative w-full h-14 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #b8860b 0%, #d4af37 50%, #ffd700 100%)',
-            color: '#1a1200',
-            boxShadow: '0 8px 32px rgba(212,175,55,0.4)',
+            background: 'var(--dp-accent)',
+            color: 'var(--dp-action-text)',
+            boxShadow: '0 8px 32px rgba(52,211,153,0.4)',
           }}
         >
           <motion.div

@@ -1,6 +1,8 @@
 
 'use client';
 
+import DocumentQr from '@/components/driver/DocumentQr';
+import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -109,14 +111,14 @@ const platformLogos: Record<string, string> = {
 };
 
 const glassCard = {
-  background: 'rgba(10,15,30,0.75)',
+  background: 'var(--dp-card)',
   backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(212,175,55,0.15)',
+  border: '1px solid rgba(52,211,153,0.15)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
 };
 
 const labelStyle = {
-  color: 'rgba(212,175,55,0.85)',
+  color: 'rgba(52,211,153,0.85)',
   fontSize: '0.7rem',
   fontWeight: '700',
   textTransform: 'uppercase' as const,
@@ -139,6 +141,7 @@ export default function DriverTripsPage() {
   const [summaryPlatform, setSummaryPlatform] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [receiptDocument,setReceiptDocument]=useState<{url:string;reference:string}|null>(null);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   useEffect(() => { if (!isLoading && !user) router.push('/driver-login'); }, [user, isLoading, router]);
@@ -203,10 +206,24 @@ export default function DriverTripsPage() {
 
   useEffect(() => { if (user) fetchTrips(); }, [user]);
 
+  async function shareDocument() {
+    if(!receiptDocument)return;
+    try {
+      if(navigator.share)await navigator.share({title:receiptDocument.reference,url:receiptDocument.url});
+      else {await navigator.clipboard.writeText(receiptDocument.url);toast.success(language==='ar'?'تم نسخ الرابط':language==='nl'?'Link gekopieerd':'Lien copié');}
+    } catch(error) {if(!(error instanceof DOMException&&error.name==='AbortError'))toast.error(t.invoiceError);}
+  }
   const generateInvoice = async (tripId: number) => {
     setGeneratingInvoice(tripId);
     toast.loading(t.invoiceGenerating, { id: 'invoice-generation' });
     try {
+      const documentResponse=await fetch(`/next_api/trips/generate-invoice?id=${tripId}&format=link`,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'});
+      if(documentResponse.ok){
+        const result=await documentResponse.json();
+        if(!result.success||!/^https:\/\/app\.jouww\.com\/documents\/receipts\/[1-9][0-9]{0,15}\.[A-Za-z0-9_-]{43}$/.test(result.data?.url))throw new Error(t.invoiceError);
+        setReceiptDocument(result.data);toast.success(t.invoiceSuccess,{id:'invoice-generation'});return;
+      }
+      if(documentResponse.status!==409)throw new Error(t.invoiceError);
       const response = await fetch(
         `/next_api/trips/generate-invoice?id=${tripId}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }
@@ -255,7 +272,7 @@ export default function DriverTripsPage() {
     const config = configs[status] || {
       icon: AlertCircle,
       label: status,
-      style: { background: 'rgba(212,175,55,0.12)', color: 'rgba(212,175,55,0.9)', border: '1px solid rgba(212,175,55,0.25)' }
+      style: { background: 'rgba(52,211,153,0.12)', color: 'rgba(52,211,153,0.9)', border: '1px solid rgba(52,211,153,0.25)' }
     };
     const Icon = config.icon;
     return (
@@ -283,7 +300,7 @@ export default function DriverTripsPage() {
 
   if (isLoading || loading) return (
     <div className="flex items-center justify-center min-h-screen">
-      <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#d4af37' }} />
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--dp-accent)' }} />
     </div>
   );
 
@@ -294,26 +311,26 @@ export default function DriverTripsPage() {
 
       {/* Daily Earnings */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="rounded-3xl p-6 mb-6 overflow-hidden relative" style={{ ...glassCard, border: '1px solid rgba(212,175,55,0.25)' }}>
+        <div className="rounded-3xl p-6 mb-6 overflow-hidden relative" style={{ ...glassCard, border: '1px solid rgba(52,211,153,0.25)' }}>
           <motion.div
             className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl"
-            style={{ background: 'rgba(212,175,55,0.1)', marginRight: '-5rem', marginTop: '-5rem' }}
+            style={{ background: 'rgba(52,211,153,0.1)', marginRight: '-5rem', marginTop: '-5rem' }}
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 4, repeat: Infinity }}
           />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5" style={{ color: '#d4af37' }} />
-              <span className="text-sm font-medium" style={{ color: 'rgba(212,175,55,0.85)' }}>{t.dailyEarnings}</span>
+              <TrendingUp className="w-5 h-5" style={{ color: 'var(--dp-accent)' }} />
+              <span className="text-sm font-medium" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.dailyEarnings}</span>
             </div>
             <motion.div
               initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}
               className="text-5xl font-black mb-1 tracking-tight"
-              style={{ background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
             >
               €{dailyEarnings.toFixed(2)}
             </motion.div>
-            <p className="text-sm" style={{ color: 'rgba(212,175,55,0.75)' }}>{t.today}</p>
+            <p className="text-sm" style={{ color: 'rgba(52,211,153,0.75)' }}>{t.today}</p>
           </div>
         </div>
       </motion.div>
@@ -323,12 +340,12 @@ export default function DriverTripsPage() {
         <div className="rounded-3xl p-5 mb-5" style={glassCard}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-bold flex items-center gap-2 text-white">
-              <BarChart3 className="w-5 h-5" style={{ color: '#d4af37' }} />{t.summary}
+              <BarChart3 className="w-5 h-5" style={{ color: 'var(--dp-accent)' }} />{t.summary}
             </h3>
             <button
               onClick={() => setShowSummary(!showSummary)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-              style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', color: 'rgba(212,175,55,0.9)' }}
+              style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgba(52,211,153,0.9)' }}
             >
               <Filter className="w-3.5 h-3.5" />{showSummary ? t.hideSummary : t.showSummary}
             </button>
@@ -341,31 +358,31 @@ export default function DriverTripsPage() {
                   <div>
                     <label className="block mb-1.5" style={labelStyle}>{t.period}</label>
                     <Select value={summaryPeriod} onValueChange={setSummaryPeriod}>
-                      <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white' }}>
+                      <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)', height: '44px', color: 'var(--dp-text)' }}>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)' }}>
-                        <SelectItem value="daily" style={{ color: 'white' }}>{t.daily}</SelectItem>
-                        <SelectItem value="weekly" style={{ color: 'white' }}>{t.weekly}</SelectItem>
-                        <SelectItem value="monthly" style={{ color: 'white' }}>{t.monthly}</SelectItem>
-                        <SelectItem value="quarterly" style={{ color: 'white' }}>{t.quarterly}</SelectItem>
-                        <SelectItem value="yearly" style={{ color: 'white' }}>{t.yearly}</SelectItem>
-                        <SelectItem value="custom" style={{ color: 'white' }}>{t.custom}</SelectItem>
+                      <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                        <SelectItem value="daily" style={{ color: 'var(--dp-text)' }}>{t.daily}</SelectItem>
+                        <SelectItem value="weekly" style={{ color: 'var(--dp-text)' }}>{t.weekly}</SelectItem>
+                        <SelectItem value="monthly" style={{ color: 'var(--dp-text)' }}>{t.monthly}</SelectItem>
+                        <SelectItem value="quarterly" style={{ color: 'var(--dp-text)' }}>{t.quarterly}</SelectItem>
+                        <SelectItem value="yearly" style={{ color: 'var(--dp-text)' }}>{t.yearly}</SelectItem>
+                        <SelectItem value="custom" style={{ color: 'var(--dp-text)' }}>{t.custom}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <label className="block mb-1.5" style={labelStyle}>{t.platform}</label>
                     <Select value={summaryPlatform} onValueChange={setSummaryPlatform}>
-                      <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white' }}>
+                      <SelectTrigger className="rounded-2xl border-0 text-sm" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)', height: '44px', color: 'var(--dp-text)' }}>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent style={{ background: 'rgba(5,10,20,0.98)', border: '1px solid rgba(212,175,55,0.25)' }}>
-                        <SelectItem value="all" style={{ color: 'white' }}>{t.all}</SelectItem>
-                        <SelectItem value="INTERNAL" style={{ color: 'white' }}>{t.taxi}</SelectItem>
-                        <SelectItem value="BOLT" style={{ color: 'white' }}>Bolt</SelectItem>
-                        <SelectItem value="UBER" style={{ color: 'white' }}>Uber</SelectItem>
-                        <SelectItem value="HEETCH" style={{ color: 'white' }}>Heetch</SelectItem>
+                      <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                        <SelectItem value="all" style={{ color: 'var(--dp-text)' }}>{t.all}</SelectItem>
+                        <SelectItem value="INTERNAL" style={{ color: 'var(--dp-text)' }}>{t.taxi}</SelectItem>
+                        <SelectItem value="BOLT" style={{ color: 'var(--dp-text)' }}>Bolt</SelectItem>
+                        <SelectItem value="UBER" style={{ color: 'var(--dp-text)' }}>Uber</SelectItem>
+                        <SelectItem value="HEETCH" style={{ color: 'var(--dp-text)' }}>Heetch</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -373,7 +390,7 @@ export default function DriverTripsPage() {
                     <button
                       onClick={fetchSummary} disabled={loading}
                       className="w-full h-11 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                      style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200' }}
+                      style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)' }}
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart3 className="w-4 h-4" />}
                       {t.applyFilter}
@@ -388,7 +405,7 @@ export default function DriverTripsPage() {
                       <input
                         type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)}
                         className="w-full px-3 rounded-2xl text-sm outline-none"
-                        style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white', colorScheme: 'dark' }}
+                        style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)', height: '44px', color: 'var(--dp-text)', colorScheme: 'dark' }}
                       />
                     </div>
                     <div>
@@ -396,7 +413,7 @@ export default function DriverTripsPage() {
                       <input
                         type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)}
                         className="w-full px-3 rounded-2xl text-sm outline-none"
-                        style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)', height: '44px', color: 'white', colorScheme: 'dark' }}
+                        style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)', height: '44px', color: 'var(--dp-text)', colorScheme: 'dark' }}
                       />
                     </div>
                   </div>
@@ -411,7 +428,7 @@ export default function DriverTripsPage() {
                         { icon: MapPin, label: t.totalDistance, value: `${summary.total_distance.toFixed(2)} km`, color: '#c084fc' },
                         { icon: TrendingUp, label: t.averageTripValue, value: `€${summary.average_trip_value.toFixed(2)}`, color: '#fb923c' },
                       ].map((stat, i) => (
-                        <div key={i} className="p-4 rounded-2xl" style={{ background: 'rgba(10,15,30,0.6)', border: `1px solid ${stat.color}35` }}>
+                        <div key={i} className="p-4 rounded-2xl" style={{ background: 'var(--dp-card-2)', border: `1px solid ${stat.color}35` }}>
                           <div className="flex items-center gap-2 mb-2">
                             <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
                             <span className="text-xs font-medium" style={{ color: `${stat.color}cc` }}>{stat.label}</span>
@@ -422,9 +439,9 @@ export default function DriverTripsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="p-4 rounded-2xl" style={{ background: 'rgba(10,15,30,0.6)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                      <div className="p-4 rounded-2xl" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.15)' }}>
                         <h4 className="font-bold mb-3 flex items-center gap-2 text-white text-sm">
-                          <PieChart className="w-4 h-4" style={{ color: '#d4af37' }} />{t.platformBreakdown}
+                          <PieChart className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />{t.platformBreakdown}
                         </h4>
                         <div className="space-y-2">
                           {Object.entries(summary.platform_stats).map(([platform, stats]) => stats.count > 0 && (
@@ -436,24 +453,24 @@ export default function DriverTripsPage() {
                                 <span className="font-medium text-sm text-white">{platform === 'INTERNAL' ? t.taxi : platform}</span>
                               </div>
                               <div className="text-right">
-                                <p className="font-bold text-sm" style={{ color: '#d4af37' }}>€{stats.revenue.toFixed(2)}</p>
-                                <p className="text-xs" style={{ color: 'rgba(212,175,55,0.7)' }}>{stats.count} {t.trips}</p>
+                                <p className="font-bold text-sm" style={{ color: 'var(--dp-accent)' }}>€{stats.revenue.toFixed(2)}</p>
+                                <p className="text-xs" style={{ color: 'rgba(52,211,153,0.7)' }}>{stats.count} {t.trips}</p>
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
-                      <div className="p-4 rounded-2xl" style={{ background: 'rgba(10,15,30,0.6)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                      <div className="p-4 rounded-2xl" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.15)' }}>
                         <h4 className="font-bold mb-3 flex items-center gap-2 text-white text-sm">
-                          <PieChart className="w-4 h-4" style={{ color: '#d4af37' }} />{t.paymentMethodBreakdown}
+                          <PieChart className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />{t.paymentMethodBreakdown}
                         </h4>
                         <div className="space-y-2">
                           {Object.entries(summary.payment_method_stats).map(([method, stats]) => (
                             <div key={method} className="flex justify-between items-center p-2 rounded-xl hover:bg-yellow-500/5 transition-colors">
                               <span className="font-medium text-sm text-white">{getPaymentMethodLabel(method)}</span>
                               <div className="text-right">
-                                <p className="font-bold text-sm" style={{ color: '#d4af37' }}>€{stats.revenue.toFixed(2)}</p>
-                                <p className="text-xs" style={{ color: 'rgba(212,175,55,0.7)' }}>{stats.count} {t.trips}</p>
+                                <p className="font-bold text-sm" style={{ color: 'var(--dp-accent)' }}>€{stats.revenue.toFixed(2)}</p>
+                                <p className="text-xs" style={{ color: 'rgba(52,211,153,0.7)' }}>{stats.count} {t.trips}</p>
                               </div>
                             </div>
                           ))}
@@ -464,7 +481,7 @@ export default function DriverTripsPage() {
                     <button
                       onClick={downloadPDFReport} disabled={downloadingPDF}
                       className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                      style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)', color: 'white', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}
+                      style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)', color: 'var(--dp-text)', boxShadow: '0 4px 16px rgba(239,68,68,0.3)' }}
                     >
                       {downloadingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                       {downloadingPDF ? t.downloading : t.downloadPDF}
@@ -490,8 +507,8 @@ export default function DriverTripsPage() {
             onClick={() => setFilter(tab.key as 'all' | 'completed' | 'pending' | 'failed')}
             className="px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all"
             style={filter === tab.key
-              ? { background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200', boxShadow: '0 4px 12px rgba(212,175,55,0.3)' }
-              : { background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', color: 'rgba(212,175,55,0.85)' }
+              ? { background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 4px 12px rgba(52,211,153,0.3)' }
+              : { background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: 'rgba(52,211,153,0.85)' }
             }
           >
             {tab.label}
@@ -503,10 +520,10 @@ export default function DriverTripsPage() {
       <div className="space-y-4">
         {filteredTrips.length === 0 ? (
           <div className="p-12 rounded-3xl text-center" style={glassCard}>
-            <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
-              <MapPin className="w-10 h-10" style={{ color: 'rgba(212,175,55,0.6)' }} />
+            <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <MapPin className="w-10 h-10" style={{ color: 'rgba(52,211,153,0.6)' }} />
             </div>
-            <p style={{ color: 'rgba(212,175,55,0.75)' }}>{t.noTrips}</p>
+            <p style={{ color: 'rgba(52,211,153,0.75)' }}>{t.noTrips}</p>
           </div>
         ) : (
           filteredTrips.map((trip, index) => (
@@ -518,24 +535,24 @@ export default function DriverTripsPage() {
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.22), rgba(184,142,4,0.18))', border: '1px solid rgba(212,175,55,0.35)' }}
+                      style={{ background: 'linear-gradient(135deg, rgba(52,211,153,0.22), rgba(184,142,4,0.18))', border: '1px solid rgba(52,211,153,0.35)' }}
                     >
-                      <MapPin className="w-6 h-6" style={{ color: '#d4af37' }} />
+                      <MapPin className="w-6 h-6" style={{ color: 'var(--dp-accent)' }} />
                     </motion.div>
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-bold text-white text-sm">{t.trip} #{trip.id}</span>
                         {getStatusBadge(trip.status)}
                         {trip.ride_type === 'INTERNAL' ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ background: 'rgba(212,175,55,0.18)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.35)' }}>{t.taxi}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ background: 'rgba(52,211,153,0.18)', color: 'var(--dp-accent)', border: '1px solid rgba(52,211,153,0.35)' }}>{t.taxi}</span>
                         ) : trip.external_source && platformLogos[trip.external_source.toUpperCase()] ? (
-                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: 'rgba(10,15,30,0.7)', border: '1px solid rgba(212,175,55,0.2)' }}>
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)' }}>
                             <img src={platformLogos[trip.external_source.toUpperCase()]} alt={trip.external_source} className="w-5 h-5 object-contain" />
                             <span className="text-xs font-medium text-white">{trip.external_source}</span>
                           </div>
                         ) : null}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(212,175,55,0.75)' }}>
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: 'rgba(52,211,153,0.75)' }}>
                         <Calendar className="w-3.5 h-3.5" />
                         {new Date(trip.start_time).toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
                       </div>
@@ -544,7 +561,7 @@ export default function DriverTripsPage() {
                   <motion.div
                     initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}
                     className="text-2xl font-black"
-                    style={{ background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                    style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                   >
                     €{(trip.price ?? 0).toFixed(2)}
                   </motion.div>
@@ -552,9 +569,9 @@ export default function DriverTripsPage() {
 
                 {/* Passenger */}
                 {trip.passenger_name && (
-                  <div className="mb-3 p-3 rounded-2xl flex items-center gap-2" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
-                    <User className="w-4 h-4" style={{ color: '#d4af37' }} />
-                    <span className="text-xs" style={{ color: 'rgba(212,175,55,0.85)' }}>{t.passenger}:</span>
+                  <div className="mb-3 p-3 rounded-2xl flex items-center gap-2" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                    <User className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />
+                    <span className="text-xs" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.passenger}:</span>
                     <span className="font-bold text-sm text-white">{trip.passenger_name}</span>
                   </div>
                 )}
@@ -565,15 +582,15 @@ export default function DriverTripsPage() {
                     { color: '#4ade80', label: t.startPoint, address: trip.start_address, time: trip.start_time },
                     { color: '#f87171', label: t.endPoint, address: trip.end_address, time: trip.end_time },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-2xl" style={{ background: 'rgba(10,15,30,0.6)', border: '1px solid rgba(212,175,55,0.1)' }}>
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-2xl" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.1)' }}>
                       <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${item.color}22`, border: `1px solid ${item.color}50` }}>
                         <MapPin className="w-3.5 h-3.5" style={{ color: item.color }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs mb-0.5" style={{ color: 'rgba(212,175,55,0.75)' }}>{item.label}</p>
+                        <p className="text-xs mb-0.5" style={{ color: 'rgba(52,211,153,0.75)' }}>{item.label}</p>
                         <p className="text-sm font-bold text-white leading-tight truncate">{item.address || '—'}</p>
                         {item.time && (
-                          <p className="text-xs mt-0.5" style={{ color: 'rgba(212,175,55,0.6)' }}>
+                          <p className="text-xs mt-0.5" style={{ color: 'rgba(52,211,153,0.6)' }}>
                             {new Date(item.time).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
@@ -651,7 +668,7 @@ export default function DriverTripsPage() {
                   onClick={() => generateInvoice(trip.id)}
                   disabled={generatingInvoice === trip.id}
                   className="w-full h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
-                  style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200', boxShadow: '0 4px 16px rgba(212,175,55,0.3)' }}
+                  style={{ background: 'var(--dp-action)', color: '#ffffff' }}
                 >
                   {generatingInvoice === trip.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                   {t.generateInvoice}
@@ -661,6 +678,12 @@ export default function DriverTripsPage() {
           ))
         )}
       </div>
+      <Dialog open={!!receiptDocument} onOpenChange={open=>{if(!open)setReceiptDocument(null);}}>
+        <DialogContent className="dp-card sm:max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
+          <DialogHeader><DialogTitle>{receiptDocument?.reference}</DialogTitle><DialogDescription>{language==='ar'?'رابط دائم لهذه الفاتورة. من يملك الرابط يستطيع عرضها.':language==='nl'?'Vaste link naar dit vervoerbewijs. Iedereen met de link kan het bekijken.':'Lien permanent vers ce reçu. Toute personne disposant du lien peut le consulter.'}</DialogDescription></DialogHeader>
+          {receiptDocument&&<><DocumentQr url={receiptDocument.url} label={language==='ar'?'عرض الفاتورة':language==='nl'?'Vervoerbewijs bekijken':'Voir le reçu'}/><a className="dp-btn-primary flex items-center justify-center p-4 rounded-2xl" href={receiptDocument.url} target="_blank" rel="noreferrer">PDF</a><button className="dp-btn-secondary p-4 rounded-2xl" onClick={()=>void shareDocument()}>{language==='ar'?'مشاركة الرابط':language==='nl'?'Link delen':'Partager le lien'}</button></>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

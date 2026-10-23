@@ -242,3 +242,30 @@ UI/UX Pro Max guidance was checked for native keyboard handling, readable type
 and reduced motion. Its generic landing-page/palette suggestion was rejected
 in favour of this operational product contract and the established navy/gold.
 21st assets are web-oriented; no web component or WebView is added to Android.
+
+## Approved emerald driver redesign — 23 October 2026
+
+The user approved the dark charcoal and emerald mobile cockpit shown in the
+conversation. This supersedes the navy/gold driver-interface guidance above for
+the native driver app and `/driver` portal only. Marketing and administration
+retain their own identities. Runtime ownership remains
+`driver-app/src/experience/tokens.ts` for native and the `--dp-*` token adapter in
+`src/app/globals.css` for web. The approved dark background/surface/raised roles
+are #0C131B / #151F2A / #202D3A. Native action emerald #34D399 uses #062C20 ink;
+web action uses #047857 with white text in both themes, while dark-mode
+informational accent uses #34D399. Native small
+informational icons use #047857 in light mode. These roles feed the existing
+shared controls, screens, lists and navigation rather than new screen-local kits.
+
+The start-odometer field belongs inside the primary shift card, immediately
+above its action. Web reuses the canonical OperationForm through its inline
+variant so validation, duplicate prevention and uncertain-request replay remain
+identical. All five destinations and their existing features remain available.
+Native navigation uses restrained emerald tint, with no gold highlight.
+
+Document QR is black on an opaque white surface with four-module quiet zone,
+locally generated. Receipts link to the persisted invoice snapshot and render
+PDF on request; no server PDF object is saved. Shift QR opens the authenticated
+shift detail; open shifts are explicitly provisional. Document references are
+stable; the grouped DS reference is a lossless base36 encoding of the shift ID,
+not a new business sequence. Historical records and signatures are not rewritten.

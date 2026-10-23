@@ -17,6 +17,7 @@ class CapturedPDF extends jsPDF {
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../src/legal/vervoerbewijs.ts', import.meta.url), 'utf8'), {
   compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022},
 }).outputText, {exports, Date, require: name => {
+  if (name === '../lib/pdf-qr') return {drawPdfQr:()=>{}};
   if (name === 'jspdf') return {jsPDF: CapturedPDF};
   if (name === './pdf-fonts') return {configurePdfFonts() {}};
   throw Error(`Unexpected import ${name}`);

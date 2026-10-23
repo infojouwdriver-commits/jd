@@ -1,3 +1,4 @@
+import {receiptDocumentUrl} from '@/lib/document-links';
 import CrudOperations from '@/lib/crud-operations';
 import { createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams } from '@/lib/api-utils';
@@ -64,7 +65,7 @@ export const POST = requestMiddleware(async (request, context) => {
       }
     }
 
-    // Public sharing is disabled; never expose a nonfunctional URL or send it to an external QR service.
+    // Customer document links refer to the persisted receipt, never a browser blob.
     const invoiceNumber = `TRIP-${trip.id}`;
 
     // ── Resolve Belgian legal fields ────────────────────────────────────────
@@ -171,7 +172,13 @@ export const POST = requestMiddleware(async (request, context) => {
       });
       if (saved.error || !saved.data?.id || !saved.data.invoice_number) throw new Error('Invoice persistence failed');
       const receipt = saved.data.receipt_snapshot || { ...vervoerbewijsData, document_number: saved.data.invoice_number, document_date: saved.data.trip_datetime || vervoerbewijsData.document_date };
-      const pdfDoc = generateVervoerbewijs(receipt);
+      // Legacy invoices without a snapshot stay private; never publish reconstructed data.
+      const documentUrl = saved.data.receipt_snapshot ? receiptDocumentUrl(Number(saved.data.id)) : undefined;
+      if (request.nextUrl.searchParams.get('format') === 'link') {
+        if (!documentUrl) return createErrorResponse({status:409,errorMessage:'Historical receipt has no immutable snapshot'});
+        return Response.json({success:true,data:{url:documentUrl,reference:saved.data.invoice_number}}, {headers:{'Cache-Control':'private, no-store'}});
+      }
+      const pdfDoc = generateVervoerbewijs({...receipt, document_url:documentUrl});
       const buffer = Buffer.from(getVervoerbewijsArrayBuffer(pdfDoc));
       if (buffer.length === 0) throw new Error('Failed to generate Vervoerbewijs PDF');
 

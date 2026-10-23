@@ -81,6 +81,8 @@ jobs:
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-email-auth-ui.mjs
       - name: Declared driver shifts browser and persistence acceptance
         run: PGLITE_MODULE_PATH="$RUNNER_TEMP/jd-pglite/node_modules/@electric-sql/pglite/dist/index.js" UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-driver-shifts-ui.mjs
+      - name: Stable receipt links, QR sharing and failure recovery UI
+        run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-document-ui.mjs
       - name: Save synthetic marketing previews
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

@@ -1,6 +1,7 @@
 
 import { jsPDF } from 'jspdf';
 import {configurePdfFonts} from './pdf-fonts';
+import {drawPdfQr} from '../lib/pdf-qr';
 
 // ─── Data Types ───────────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ export interface VervoerbewijsData {
   document_date: string;
   vat_rate?: number;
   qr_code_url?: string;
+  document_url?: string;
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -306,7 +308,13 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   hline(0.3);
 
   // ── QR code ────────────────────────────────────────────────────────────────
-  if (data.qr_code_url) {
+  if (data.document_url) {
+    setFont(7.5, true, DARK);
+    doc.text('Scan voor dit vervoerbewijs', MID, y, {align: 'center'});
+    y += 4;
+    drawPdfQr(doc, data.document_url, (PAGE_W - 32) / 2, y, 32);
+    y += 35;
+  } else if (data.qr_code_url) {
     try {
       setFont(7.5, true, DARK);
       doc.text('Bekijk online:', MID, y, { align: 'center' });

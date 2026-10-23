@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+import {shiftReference,shiftDocumentUrl} from "@/lib/shift-document";
 import { requestMiddleware, validateRequestBody } from "@/lib/api-utils";
 import {
   createSuccessResponse,
@@ -56,7 +58,12 @@ export const GET = requestMiddleware(async (request, context) => {
     p_shift_id: id,
     p_offset: offset,
   });
-  return error ? failure(error.code) : createSuccessResponse(data);
+  if(error)return failure(error.code);
+  if(id && data?.shift?.id?.toLowerCase()===id.toLowerCase()) {
+    const url=shiftDocumentUrl(data.shift.id), qr=QRCode.create(url,{errorCorrectionLevel:'M'});
+    return createSuccessResponse({...data,document:{reference:shiftReference(data.shift.id),url,qr:{size:qr.modules.size,modules:Array.from(qr.modules.data)}}});
+  }
+  return createSuccessResponse(data);
 }, true);
 export const POST = requestMiddleware(async (request, context) => {
   const userId = Number(context.payload?.sub);

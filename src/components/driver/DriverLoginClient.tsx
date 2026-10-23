@@ -1,5 +1,6 @@
 
 "use client";
+import {driverReturnPath} from "@/lib/driver-return-path";
 
 import React, { Suspense, useCallback, useState } from "react";
 import Image from "next/image";
@@ -197,7 +198,7 @@ function DriverLoginContent() {
   });
 
   const handleRedirect = useCallback(() => {
-    const redirectTo = searchParams.get("redirect") || "/driver/taximeter";
+    const redirectTo = driverReturnPath(searchParams.get("redirect"));
     router.replace(redirectTo);
   }, [router, searchParams]);
 

@@ -25,8 +25,8 @@ interface LatestReportResponse {
 }
 
 const glassCard = {
-  background: 'rgba(10,15,30,0.7)', backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(212,175,55,0.12)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+  background: 'var(--dp-card)', backdropFilter: 'blur(20px)',
+  border: '1px solid var(--dp-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
 };
 
 export default function DriverTestPage() {
@@ -75,7 +75,7 @@ export default function DriverTestPage() {
   if (isLoading || loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-        <TestTube className="w-10 h-10" style={{ color: '#d4af37' }} />
+        <TestTube className="w-10 h-10" style={{ color: 'var(--dp-accent)' }} />
       </motion.div>
     </div>
   );
@@ -87,24 +87,24 @@ export default function DriverTestPage() {
 
       {/* Hero Card */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, type: 'spring' }}>
-        <div className="p-8 rounded-3xl mb-6 text-center overflow-hidden relative" style={{ ...glassCard, border: '1px solid rgba(212,175,55,0.25)' }}>
-          <motion.div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style={{ background: 'rgba(212,175,55,0.1)', marginRight: '-6rem', marginTop: '-6rem' }} animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 4, repeat: Infinity }} />
+        <div className="p-8 rounded-3xl mb-6 text-center overflow-hidden relative" style={{ ...glassCard, border: '1px solid var(--dp-border)' }}>
+          <motion.div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style={{ background: 'var(--dp-accent-soft)', marginRight: '-6rem', marginTop: '-6rem' }} animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 4, repeat: Infinity }} />
           <motion.div className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-3xl" style={{ background: 'rgba(168,85,247,0.08)', marginLeft: '-4rem', marginBottom: '-4rem' }} animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 5, repeat: Infinity, delay: 2 }} />
           <div className="relative z-10">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
               className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', boxShadow: '0 0 30px rgba(212,175,55,0.2)' }}
+              style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)', boxShadow: '0 0 30px rgba(52,211,153,0.2)' }}
             >
-              <TestTube className="w-10 h-10" style={{ color: '#d4af37' }} />
+              <TestTube className="w-10 h-10" style={{ color: 'var(--dp-accent)' }} />
             </motion.div>
             <h1 className="text-2xl font-black mb-2"
-              style={{ background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
             >
               {t.acceptanceTest}
             </h1>
-            <p className="text-sm" style={{ color: 'rgba(212,175,55,0.5)' }}>{t.testDescription}</p>
+            <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>{t.testDescription}</p>
           </div>
         </div>
       </motion.div>
@@ -140,13 +140,13 @@ export default function DriverTestPage() {
       {!reportData?.hasReport ? (
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
           <div className="p-8 rounded-3xl text-center" style={glassCard}>
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)' }}>
-              <FileText className="w-8 h-8" style={{ color: 'rgba(212,175,55,0.4)' }} />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)' }}>
+              <FileText className="w-8 h-8" style={{ color: 'var(--dp-text-muted)' }} />
             </div>
             <h3 className="text-lg font-semibold mb-2 text-white">
               {language === 'nl' ? 'Geen testrapport beschikbaar' : 'Aucun rapport de test disponible'}
             </h3>
-            <p className="text-sm" style={{ color: 'rgba(212,175,55,0.5)' }}>
+            <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>
               {reportData?.message || (language === 'nl' ? 'Neem contact op met de beheerder om een acceptatietest uit te voeren.' : "Contactez l'administrateur pour effectuer un test d'acceptation.")}
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function DriverTestPage() {
                   <h3 className="text-xl font-bold mb-1 text-white">
                     {reportData.report?.reportStatus === 'completed' ? (language === 'nl' ? 'Test voltooid' : 'Test terminé') : (language === 'nl' ? 'Test in behandeling' : 'Test en cours')}
                   </h3>
-                  <div className="flex items-center gap-2 text-sm" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                  <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--dp-text-muted)' }}>
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(reportData.report?.createdAt)}</span>
                   </div>
@@ -197,8 +197,8 @@ export default function DriverTestPage() {
               )}
 
               {reportData.report?.notes && (
-                <div className="mt-3 p-3 rounded-2xl" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)' }}>
-                  <p className="text-xs mb-1" style={{ color: 'rgba(212,175,55,0.5)' }}>{language === 'nl' ? 'Opmerkingen' : 'Remarques'}</p>
+                <div className="mt-3 p-3 rounded-2xl" style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)' }}>
+                  <p className="text-xs mb-1" style={{ color: 'var(--dp-text-muted)' }}>{language === 'nl' ? 'Opmerkingen' : 'Remarques'}</p>
                   <p className="text-sm text-white">{reportData.report.notes}</p>
                 </div>
               )}
@@ -233,24 +233,24 @@ export default function DriverTestPage() {
                               <div key={i} className="flex items-start gap-2">
                                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: item.color }} />
                                 <div className="flex-1">
-                                  <p className="text-xs mb-0.5" style={{ color: 'rgba(212,175,55,0.5)' }}>{item.label}</p>
+                                  <p className="text-xs mb-0.5" style={{ color: 'var(--dp-text-muted)' }}>{item.label}</p>
                                   <p className="text-sm font-medium text-white">{item.address}</p>
                                   {item.lat !== undefined && item.lon !== undefined && (
-                                    <p className="text-xs mt-0.5" style={{ color: 'rgba(212,175,55,0.4)' }}>{item.lat?.toFixed(6)}, {item.lon?.toFixed(6)}</p>
+                                    <p className="text-xs mt-0.5" style={{ color: 'var(--dp-text-muted)' }}>{item.lat?.toFixed(6)}, {item.lon?.toFixed(6)}</p>
                                   )}
                                 </div>
                               </div>
                             ))}
                           </div>
-                          <div className="flex items-center gap-4 pt-2" style={{ borderTop: '1px solid rgba(212,175,55,0.1)' }}>
+                          <div className="flex items-center gap-4 pt-2" style={{ borderTop: '1px solid var(--dp-border)' }}>
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" style={{ color: 'rgba(212,175,55,0.5)' }} />
-                              <span className="text-xs" style={{ color: 'rgba(212,175,55,0.6)' }}>{formatTime(result.startTime)}</span>
+                              <Clock className="w-4 h-4" style={{ color: 'var(--dp-text-muted)' }} />
+                              <span className="text-xs" style={{ color: 'var(--dp-text-muted)' }}>{formatTime(result.startTime)}</span>
                             </div>
-                            <span className="text-xs" style={{ color: 'rgba(212,175,55,0.3)' }}>→</span>
+                            <span className="text-xs" style={{ color: 'var(--dp-text-muted)' }}>→</span>
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4" style={{ color: 'rgba(212,175,55,0.5)' }} />
-                              <span className="text-xs" style={{ color: 'rgba(212,175,55,0.6)' }}>{formatTime(result.endTime)}</span>
+                              <Clock className="w-4 h-4" style={{ color: 'var(--dp-text-muted)' }} />
+                              <span className="text-xs" style={{ color: 'var(--dp-text-muted)' }}>{formatTime(result.endTime)}</span>
                             </div>
                           </div>
                           <div className="flex gap-2 mt-3">
@@ -272,7 +272,7 @@ export default function DriverTestPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <button onClick={downloadReport} disabled={downloading}
                 className="w-full h-14 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200', boxShadow: '0 8px 24px rgba(212,175,55,0.4)' }}
+                style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 8px 24px rgba(52,211,153,0.4)' }}
               >
                 {downloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
                 {t.downloadReport}
@@ -281,8 +281,8 @@ export default function DriverTestPage() {
           )}
 
           {/* Contact Info */}
-          <div className="p-4 rounded-2xl text-center" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.1)' }}>
-            <p className="text-sm" style={{ color: 'rgba(212,175,55,0.5)' }}>
+          <div className="p-4 rounded-2xl text-center" style={{ background: 'var(--dp-accent-soft)', border: '1px solid var(--dp-border)' }}>
+            <p className="text-sm" style={{ color: 'var(--dp-text-muted)' }}>
               {language === 'nl' ? 'Voor een nieuwe acceptatietest, neem contact op met de systeembeheerder.' : "Pour un nouveau test d'acceptation, contactez l'administrateur système."}
             </p>
           </div>

@@ -65,9 +65,9 @@ function GlassCard({
     <div
       className={`rounded-3xl ${className}`}
       style={{
-        background: 'rgba(10,15,30,0.75)',
+        background: 'var(--dp-card)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(212,175,55,0.15)',
+        border: '1px solid rgba(52,211,153,0.15)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
         ...style,
       }}
@@ -79,14 +79,14 @@ function GlassCard({
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.15)' }}>
+    <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(52,211,153,0.15)' }}>
       <div
         className="w-7 h-7 rounded-xl flex items-center justify-center"
-        style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)' }}
+        style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)' }}
       >
-        <Icon className="w-3.5 h-3.5" style={{ color: '#d4af37' }} />
+        <Icon className="w-3.5 h-3.5" style={{ color: 'var(--dp-accent)' }} />
       </div>
-      <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(212,175,55,0.95)' }}>
+      <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(52,211,153,0.95)' }}>
         {title}
       </h2>
     </div>
@@ -98,8 +98,8 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   return (
     <div className="flex items-start justify-between gap-3 py-3 px-4 border-b border-white/5 last:border-b-0">
       <div className="flex items-center gap-2 flex-shrink-0">
-        <Icon className="w-4 h-4" style={{ color: 'rgba(212,175,55,0.55)' }} />
-        <span className="text-xs" style={{ color: 'rgba(212,175,55,0.7)' }}>{label}</span>
+        <Icon className="w-4 h-4" style={{ color: 'rgba(52,211,153,0.55)' }} />
+        <span className="text-xs" style={{ color: 'rgba(52,211,153,0.7)' }}>{label}</span>
       </div>
       <span className="text-sm font-medium text-white text-right break-words max-w-[60%]">{value}</span>
     </div>
@@ -147,25 +147,25 @@ function VehicleCard({
       layout
       className="flex items-center justify-between p-3 rounded-2xl"
       style={{
-        background: isActive ? 'rgba(212,175,55,0.18)' : 'rgba(10,15,30,0.55)',
-        border: isActive ? '1px solid rgba(212,175,55,0.45)' : '1px solid rgba(212,175,55,0.1)',
+        background: isActive ? 'rgba(52,211,153,0.18)' : 'rgba(10,15,30,0.55)',
+        border: isActive ? '1px solid rgba(52,211,153,0.45)' : '1px solid rgba(52,211,153,0.1)',
       }}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{
-            background: isActive ? 'rgba(212,175,55,0.25)' : 'rgba(212,175,55,0.1)',
-            border: '1px solid rgba(212,175,55,0.2)',
+            background: isActive ? 'rgba(52,211,153,0.25)' : 'rgba(52,211,153,0.1)',
+            border: '1px solid rgba(52,211,153,0.2)',
           }}
         >
-          <Car className="w-4 h-4" style={{ color: isActive ? '#ffd700' : 'rgba(212,175,55,0.55)' }} />
+          <Car className="w-4 h-4" style={{ color: isActive ? '#ffd700' : 'rgba(52,211,153,0.55)' }} />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white truncate">
             {vehicle.brand} {vehicle.model}
           </p>
-          <p className="text-xs font-mono truncate" style={{ color: 'rgba(212,175,55,0.55)' }}>
+          <p className="text-xs font-mono truncate" style={{ color: 'rgba(52,211,153,0.55)' }}>
             {vehicle.plate_number}
           </p>
         </div>
@@ -175,7 +175,7 @@ function VehicleCard({
         {isActive ? (
           <span
             className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-            style={{ background: 'linear-gradient(135deg, #b8860b, #d4af37)', color: '#1a1200' }}
+            style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)' }}
           >
             {activeLabel}
           </span>
@@ -186,9 +186,9 @@ function VehicleCard({
             disabled={isSaving}
             className="text-[11px] px-3 py-1 rounded-full font-bold transition-all disabled:opacity-50"
             style={{
-              background: 'rgba(212,175,55,0.12)',
-              border: '1px solid rgba(212,175,55,0.35)',
-              color: '#d4af37',
+              background: 'rgba(52,211,153,0.12)',
+              border: '1px solid rgba(52,211,153,0.35)',
+              color: 'var(--dp-accent)',
             }}
           >
             {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : selectLabel}
@@ -242,7 +242,7 @@ export default function DriverProfilePage() {
     return (
       <div className="container mx-auto px-4 py-12 max-w-2xl flex justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-          <Loader2 className="w-8 h-8" style={{ color: '#d4af37' }} />
+          <Loader2 className="w-8 h-8" style={{ color: 'var(--dp-accent)' }} />
         </motion.div>
       </div>
     );
@@ -254,12 +254,12 @@ export default function DriverProfilePage() {
         <GlassCard className="p-8 text-center">
           <div
             className="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4"
-            style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)' }}
+            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)' }}
           >
-            <User className="w-8 h-8" style={{ color: '#d4af37' }} />
+            <User className="w-8 h-8" style={{ color: 'var(--dp-accent)' }} />
           </div>
           <h2 className="text-lg font-bold text-white mb-2">{t.profileNotComplete}</h2>
-          <p className="text-sm" style={{ color: 'rgba(212,175,55,0.7)' }}>{t.profileNotCompleteDesc}</p>
+          <p className="text-sm" style={{ color: 'rgba(52,211,153,0.7)' }}>{t.profileNotCompleteDesc}</p>
         </GlassCard>
       </div>
     );
@@ -285,10 +285,10 @@ export default function DriverProfilePage() {
     <div className="container mx-auto px-4 py-6 max-w-2xl space-y-5">
       {/* Hero status card */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, type: 'spring' }}>
-        <GlassCard className="p-6 text-center relative overflow-hidden" style={{ border: '1px solid rgba(212,175,55,0.3)' }}>
+        <GlassCard className="p-6 text-center relative overflow-hidden" style={{ border: '1px solid rgba(52,211,153,0.3)' }}>
           <motion.div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full blur-3xl pointer-events-none"
-            style={{ background: 'rgba(212,175,55,0.12)' }}
+            style={{ background: 'rgba(52,211,153,0.12)' }}
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
             transition={{ duration: 5, repeat: Infinity }}
           />
@@ -299,9 +299,9 @@ export default function DriverProfilePage() {
               transition={{ delay: 0.1, type: 'spring' }}
               className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(212,175,55,0.3), rgba(184,142,4,0.18))',
-                border: '2px solid rgba(212,175,55,0.45)',
-                boxShadow: '0 8px 24px rgba(212,175,55,0.25)',
+                background: 'linear-gradient(135deg, rgba(52,211,153,0.3), rgba(184,142,4,0.18))',
+                border: '2px solid rgba(52,211,153,0.45)',
+                boxShadow: '0 8px 24px rgba(52,211,153,0.25)',
               }}
             >
               <User className="w-10 h-10" style={{ color: '#ffd700' }} />
@@ -309,14 +309,14 @@ export default function DriverProfilePage() {
             <h1
               className="text-xl font-bold mb-1"
               style={{
-                background: 'linear-gradient(90deg, #b8860b, #d4af37, #ffd700)',
+                background: 'var(--dp-accent)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
               {driver?.full_name || '—'}
             </h1>
-            <p className="text-xs mb-4 font-mono" style={{ color: 'rgba(212,175,55,0.55)' }}>
+            <p className="text-xs mb-4 font-mono" style={{ color: 'rgba(52,211,153,0.55)' }}>
               {t.driverId}: #{driver?.id}
             </p>
             <StatusBadge status={driver?.registration_status || 'pending'} language={language} />
@@ -379,8 +379,8 @@ export default function DriverProfilePage() {
               </motion.div>
             ) : (
               <motion.div key="no-vehicle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 py-6 text-center">
-                <Car className="w-10 h-10 mx-auto mb-2" style={{ color: 'rgba(212,175,55,0.3)' }} />
-                <p className="text-sm" style={{ color: 'rgba(212,175,55,0.6)' }}>{t.noVehicleAssigned}</p>
+                <Car className="w-10 h-10 mx-auto mb-2" style={{ color: 'rgba(52,211,153,0.3)' }} />
+                <p className="text-sm" style={{ color: 'rgba(52,211,153,0.6)' }}>{t.noVehicleAssigned}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -393,9 +393,9 @@ export default function DriverProfilePage() {
           <GlassCard className="overflow-hidden">
             <SectionHeader icon={Car} title={`${t.companyVehicles} (${allVehicles.length})`} />
             {allVehicles.length > 1 && (
-              <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(212,175,55,0.08)' }}>
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#d4af37' }} />
-                <p className="text-[11px]" style={{ color: 'rgba(212,175,55,0.6)' }}>{t.changeVehicle}</p>
+              <div className="px-4 py-2 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(52,211,153,0.08)' }}>
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--dp-accent)' }} />
+                <p className="text-[11px]" style={{ color: 'rgba(52,211,153,0.6)' }}>{t.changeVehicle}</p>
               </div>
             )}
             <div className="p-3 space-y-2">
