@@ -123,6 +123,17 @@ Links target the working tree, so line positions can move after changes.
 - `CUSTOMER_REVISION` — [L25](../deploy/publish-customer-runtime.sh#L25)
 - `VERIFIED_BACKUP_TAG` — [L25](../deploy/publish-customer-runtime.sh#L25)
 
+## [deploy/recover-db-log.mjs](../deploy/recover-db-log.mjs)
+
+- `recover-db-log.mjs` — [L1](../deploy/recover-db-log.mjs#L1)
+- `compose` — [L9](../deploy/recover-db-log.mjs#L9)
+- `digest()` — [L10](../deploy/recover-db-log.mjs#L10)
+- `run()` — [L11](../deploy/recover-db-log.mjs#L11)
+- `docker()` — [L12](../deploy/recover-db-log.mjs#L12)
+- `planLogRecovery()` — [L14](../deploy/recover-db-log.mjs#L14)
+- `assertOnlyLoggingChanged()` — [L28](../deploy/recover-db-log.mjs#L28)
+- `recoverDatabaseLog()` — [L36](../deploy/recover-db-log.mjs#L36)
+
 ## [deploy/rollout.mjs](../deploy/rollout.mjs)
 
 - `rollout.mjs` — [L1](../deploy/rollout.mjs#L1)
@@ -2282,7 +2293,7 @@ Links target the working tree, so line positions can move after changes.
 - `driver-registration/route.ts` — [L1](../src/app/next_api/driver-registration/route.ts#L1)
 - `registrationSchema` — [L10](../src/app/next_api/driver-registration/route.ts#L10)
 - `POST` — [L38](../src/app/next_api/driver-registration/route.ts#L38)
-- `GET` — [L227](../src/app/next_api/driver-registration/route.ts#L227)
+- `GET` — [L225](../src/app/next_api/driver-registration/route.ts#L225)
 
 ## [src/app/next_api/drivers/activity/route.ts](../src/app/next_api/drivers/activity/route.ts)
 

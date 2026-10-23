@@ -39,7 +39,7 @@ BEGIN
  END LOOP;
  IF p_data->>'poster_data' IS NOT NULL AND (jsonb_typeof(p_data->'poster_data')<>'string' OR octet_length(p_data->>'poster_data')>218496 OR p_data->>'poster_data' !~ '^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$') THEN RAISE EXCEPTION 'Invalid poster' USING ERRCODE='22023';END IF;
  SELECT * INTO STRICT s FROM app_experience_settings WHERE id=1 FOR UPDATE;
- IF s.version IS DISTINCT FROM p_expected THEN RAISE EXCEPTION 'Configuration changed; refresh' USING ERRCODE='40001';END IF;
+ IF s.version IS DISTINCT FROM p_expected THEN RAISE EXCEPTION 'Configuration changed; refresh' USING ERRCODE='PT409';END IF;
  UPDATE app_experience_settings SET version=version+1,enabled=(p_data->>'enabled')::boolean,motion=(p_data->>'motion')::boolean,title=p_data->'title',subtitle=p_data->'subtitle',poster_data=p_data->>'poster_data',updated_by=p_actor,updated_at=clock_timestamp() WHERE id=1 RETURNING * INTO s;
  INSERT INTO app_experience_events(version,actor_id,enabled,motion) VALUES(s.version,p_actor,s.enabled,s.motion);
  RETURN to_jsonb(s)-'id'-'updated_by'-'updated_at';

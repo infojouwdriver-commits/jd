@@ -63,8 +63,6 @@ export const POST = requestMiddleware(async (request: NextRequest, context) => {
         email: data.company_email || null,
         phone: data.company_phone || null,
         chiron_mode: 'TEST',
-        bank_account_iban: 'BE16973450355674',
-        bank_account_bic: 'ARSPBE22',
         bank_account_holder: data.company_name,
       };
 
@@ -211,7 +209,7 @@ export const POST = requestMiddleware(async (request: NextRequest, context) => {
     if (error instanceof z.ZodError) {
       console.error("Operation failed");
       return createErrorResponse({
-        errorMessage: error.errors[0]?.message || 'Validation failed',
+        errorMessage: error.issues[0]?.message || 'Validation failed',
         status: 400,
       });
     }

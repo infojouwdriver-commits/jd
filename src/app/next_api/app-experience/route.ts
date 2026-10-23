@@ -43,6 +43,8 @@ export const PUT = requestMiddleware(async (request, context) => {
     p_expected: value.version,
     p_data: welcomePayload(value),
   });
+  if (result.error?.code === "PT409")
+    return createErrorResponse({status:409,errorMessage:"Welcome changed. Refresh before trying again."});
   if (result.error) return operationFailure(result.error);
   const response = createSuccessResponse(result.data);
   response.headers.set("Cache-Control", "no-store");

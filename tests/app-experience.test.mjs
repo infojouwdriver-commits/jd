@@ -71,7 +71,7 @@ test("welcome migration keeps one public config, serializes changes, records act
     assert.ok(!("updated_by" in result.rows[0].value));
     await assert.rejects(
       save(1, 0, welcomePayload(DEFAULT_WELCOME)),
-      (e) => e.code === "40001",
+      (e) => e.code === "PT409",
     );
     await assert.rejects(
       save(2, 1, welcomePayload(DEFAULT_WELCOME)),

@@ -1,0 +1,57 @@
+name: Retire approved database diagnostic log and bound rotation
+on:
+  workflow_dispatch:
+    inputs:
+      expected_revision:
+        type: string
+        required: true
+        description: Exact current live application revision
+      confirm_discard_old_diagnostics:
+        type: boolean
+        default: false
+        required: true
+        description: Permanently discard the old database diagnostic log; preserve database volume and private tail
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Verify protected source and explicit diagnostic retirement input
+        env:
+          REF: ${{ github.ref }}
+          APPROVED: ${{ inputs.confirm_discard_old_diagnostics }}
+          REVISION: ${{ inputs.expected_revision }}
+        run: |
+          set -euo pipefail
+          test "$REF" = refs/heads/main
+          test "$APPROVED" = true
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          node --test deploy/tests/db-log-recovery.test.mjs
+      - name: Retire only the approved diagnostic log and verify unchanged database volume
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REVISION: ${{ inputs.expected_revision }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "node --input-type=module - '$REVISION' DISCARD_OLD_DATABASE_DIAGNOSTICS" < deploy/recover-db-log.mjs
