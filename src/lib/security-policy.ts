@@ -14,7 +14,7 @@ export function isPlatformAdmin(userId: string, configured = ''): boolean {
 }
 export function publicEndpoint(path: string, method: string): boolean {
   return (method === 'POST' && ['/next_api/company-registrations', '/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout'].includes(path)) ||
-    (method === 'GET' && ['/next_api/gdpr/privacy-policy', '/next_api/gdpr/cookie-categories'].includes(path));
+    (method === 'GET' && ['/next_api/app-experience', '/next_api/gdpr/privacy-policy', '/next_api/gdpr/cookie-categories'].includes(path));
 }
 export function disabledEndpoint(path: string): boolean {
   return ['/next_api/ai-assistant', '/next_api/contracts/sign', '/next_api/contracts/verify-token', '/next_api/invoices/view', '/next_api/invoices/share-link', '/next_api/auth/google-login', '/next_api/example', '/next_api/websocket', '/next_api/zoer_health', '/next_api/company-portal/register', '/next_api/company-portal/set-password'].some(prefix => path === prefix || path.startsWith(prefix + '/'));

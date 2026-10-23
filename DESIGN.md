@@ -269,3 +269,21 @@ PDF on request; no server PDF object is saved. Shift QR opens the authenticated
 shift detail; open shifts are explicitly provisional. Document references are
 stable; the grouped DS reference is a lossless base36 encoding of the shift ID,
 not a new business sequence. Historical records and signatures are not rewritten.
+
+## Approved taxi welcome and J-arrow identity — 23 October 2026
+
+The user approved the simplified emerald J/northeast-arrow emblem from the taxi
+welcome artwork. `driver-app/assets/app-icon.png` is the opaque 1024px icon used
+by Expo and Android adaptive masking; the matching web preview is in
+`public/app-brand`. `BrandMark` owns its native display. This replaces neither
+the marketing identity nor the established operational palette.
+
+The welcome surface shows the approved Brussels taxi with an illuminated TAXI
+roof sign, a fixed brand mark and localized text above the primary continue
+action. `design.brand` owns its fixed charcoal #0B1110, white #FFFFFF and muted
+#DCE6E1 roles. A slow 1–1.045 camera scale is decorative; it stops in background
+and under OS/user reduced motion. No GIF light sweeps, fake driving or progress.
+`WelcomeScreen` owns this native surface; the admin preview mirrors it in scoped
+`welcome-preview.css`. Static raster replacement and motion enable/disable are
+remote settings; the installed icon remains a build-time asset. Videos/GIFs are
+not accepted as administrator uploads in this implementation.

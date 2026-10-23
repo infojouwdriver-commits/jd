@@ -302,3 +302,39 @@ shape validation. Open report data remains provisional until the shift closes.
 Canonical map extension: DocumentQr (web), ShiftDocumentQr (native) own QR
 presentation; pdf-qr owns local PDF vector rendering; document-links owns
 receipt capability verification; shift-document owns shift reference/URL.
+
+## Administrator-managed welcome — 23 October 2026
+
+`/admin/app-experience` uses the existing management shell, LanguageContext,
+Input/Label/Button/Switch/Card, AlertDialog and sonner feedback. It preserves
+drafts on errors, verifies ambiguous saves, guards duplicate submissions and
+warns before discarding unsaved edits. A version conflict requires refresh;
+neither administrator silently overwrites another publication. The form and
+preview support Arabic/French/Dutch, with content fields for all four native
+languages. Image processing uses a platform file picker and browser raster
+decoder; it re-encodes a maximum 5 MB input to at most 160 KiB before upload.
+SVG, arbitrary remote URLs and control/permission data are rejected. Only the
+current compressed poster is stored; the publication event records actor,
+version, flags and time without a second poster copy.
+
+Authoritative permission sources are `security-policy.ts`, `security-guard.ts`
+and the versioned `security_save_app_experience` service-only function. Anonymous
+GET exposes only the public presentation fields. PUT still requires an active
+platform administrator and existing production MFA, origin and size protections.
+Company owners/managers and drivers cannot publish. The public config includes
+no account, company, link, credential, GPS or trip settings.
+
+Native startup does not wait for welcome retrieval. Its compiled origin is
+unchanged; public GET omits credentials and times out after five seconds. The
+last valid config is cached separately from trip/session storage; errors or
+invalid data retain the cached/bundled presentation. An image decode error uses
+the bundled taxi. New content is read on the next process launch; it never
+interrupts an authenticated driver or restored active trip. Welcome appears
+only before login and can be disabled remotely; Continue immediately reveals
+the existing login. JourneyLoading remains actual work only, with no minimum
+delay. The app icon and native startup identity require installing the new app
+binary, while later welcome-image/text/motion changes do not.
+
+The native declaration, local journal, financial records, QR documents, Chiron,
+push pause and location permissions are unchanged. Apply the additive welcome
+migration before starting the new server; old apps ignore the new endpoint.
