@@ -1,8 +1,6 @@
 const assert=require('node:assert/strict');const path=require('node:path');
 exports.fixtures=f=>{
- const id='11111111-1111-4111-8111-111111111111',url='https://app.jouww.com/driver/shifts?id='+id,qr=require('../../node_modules/qrcode').create(url,{errorCorrectionLevel:'M'});
- const reference='DS-'+BigInt('0x'+id.replaceAll('-','')).toString(36).toUpperCase().padStart(25,'0').match(/.{1,5}/g).join('-');
- const document={reference,url,qr:{size:qr.modules.size,modules:Array.from(qr.modules.data)}};
+ const document=require('./shift-qr.json');
  f.secure+=';export async function deleteItemAsync(key){localStorage.removeItem(key)}';
  f.receipt+=';export async function shareShiftReport(owner,id){globalThis.__shiftPdfCalls??=[];globalThis.__shiftPdfCalls.push({owner,id})}';
  f.api=f.api.replace('export const driverApi={',`const shiftId='11111111-1111-4111-8111-111111111111';
