@@ -1,5 +1,6 @@
 "use client";
 import ContractBillingPanel from "./ContractBillingPanel";
+import StripeBillingPanel from "./StripeBillingPanel";
 import {subscriptionOfferCopy} from "@/lib/subscription-offer";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -39,7 +40,7 @@ interface BillingData {
     amount_cents: number;
     payment_date: string;
     reference: string;
-    payment_method: "cash" | "bank_transfer" | "manual";
+    payment_method: "cash" | "bank_transfer" | "manual" | "stripe";
   }[];
   documents: Doc[];
   entries: {
@@ -379,6 +380,7 @@ export default function BillingPanel({
       <Button variant="outline" onClick={()=>setShowContracts(v=>!v)} aria-expanded={showContracts}>{offer.contracts}</Button>
       {showContracts&&<ContractBillingPanel key={companyId} companyId={companyId} admin={admin} linked={!!data?.profile?.contract_id} onChanged={reload}/>}
       {data?.profile?.contract_id&&<p className="rounded-xl border p-4 text-sm">{offer.linked} #{String(data.profile.contract_id)} · {offer.readonly}</p>}
+      {!archived&&<StripeBillingPanel companyId={companyId}/>}
       <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
         {c.noSuspension}
       </p>
@@ -561,7 +563,7 @@ export default function BillingPanel({
                 >
                   <span>
                     #{receipt.invoice_id} · {receipt.payment_date} ·{" "}
-                    {c[receipt.payment_method]}
+                    {receipt.payment_method==='stripe'?'Stripe':c[receipt.payment_method]}
                   </span>
                   <span className="break-all">{receipt.reference}</span>
                   <strong className="tabular-nums">

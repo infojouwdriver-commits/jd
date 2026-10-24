@@ -356,3 +356,8 @@ and mail acceptance are separate; confirmations reuse delivery-ledger event keys
 Signed parties can print/save the reviewed contract and proof through the existing
 print document styles. Expired links require administration; persistent access
 continues through the existing authenticated portals.
+
+
+### Stripe subscription collection
+
+Source: docs/STRIPE_BILLING_AR.md and the signed annual offer in src/lib/subscription-offer.ts. BillingPanel reuses StripeBillingPanel for company-scoped status; LanguageContext, useOperationData, OperationForm, Checkbox, Button and existing semantic tokens remain canonical. Only the active company owner authorizes recurring collection in Stripe-hosted Checkout. No client-side return URL confirms payment. The local receipt appears only after verified provider settlement; waiting for legal invoice issuance is distinct from an allocated payment. Retain consent and the same request identity after an uncertain failure. Never silently create another external enrollment after its 23-hour retry window. Show failures, review status, invoice-payment recovery and a refresh action in Arabic/French/Dutch; pending collection polls for at most two minutes and stops on unmount. Existing cash/transfer flows remain for other contracts; automatic contracts require reconciliation before manual financial adjustments.
