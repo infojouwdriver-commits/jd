@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Content-Security-Policy', csp);
   if (process.env.NODE_ENV === 'production') response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   if (api || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
-  if (request.nextUrl.pathname.startsWith('/documents/')) response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  if (/^\/(documents|sign-contract)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   return response;
 }
 export const config = {matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']};

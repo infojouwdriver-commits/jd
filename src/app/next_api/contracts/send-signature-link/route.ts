@@ -5,6 +5,7 @@ import {generateAdminUserToken} from '@/lib/auth';
 import {createPostgrestClient} from '@/lib/postgrest';
 import {sendTransactionalMail} from '@/lib/mail-service';
 import {mailConfiguration} from '@/lib/mail-policy';
+import {contractDigest,issueContractEmailLink} from '@/lib/contract-email-link';
 import {contractInvitation} from '@/lib/contract-invitation';
 const command=z.object({contract_id:z.number().int().positive(),request_id:z.string().uuid()}).strict();
 export const POST=requestMiddleware(async(request,context)=>{
@@ -12,7 +13,7 @@ export const POST=requestMiddleware(async(request,context)=>{
  try{
   const value=command.parse(await validateRequestBody(request));
   const client=createPostgrestClient(await generateAdminUserToken());
-  const result=await client.from('company_contracts').select('id,company_id,contract_number,contract_language,monthly_fee,annual_fee,contract_status,signed_at').eq('id',value.contract_id).maybeSingle();
+  const result=await client.from('company_contracts').select('id,company_id,contract_number,contract_language,monthly_fee,annual_fee,contract_status,signed_at,updated_at,contract_html_template').eq('id',value.contract_id).maybeSingle();
   if(result.error)throw result.error;
   const contract=result.data;
   if(!contract)return createErrorResponse({status:404,errorMessage:'العقد غير موجود'});
@@ -30,7 +31,8 @@ export const POST=requestMiddleware(async(request,context)=>{
   const owner=owners.data?.find(u=>u.email?.trim().toLowerCase()===company.email?.trim().toLowerCase())||(owners.data?.length===1?owners.data[0]:null);
   if(!owner?.email)return createErrorResponse({status:409,errorMessage:'يجب تحديد بريد حساب صاحب الشركة لتجنب إرسال الدعوة إلى شخص آخر'});
   if(!mailConfiguration(process.env).ready)return createErrorResponse({status:409,errorMessage:'البريد غير مفعّل بعد. يلزم إعداد مزود مجاني ومرسل معتمد؛ يستطيع صاحب الشركة التوقيع الآن من بوابة الشركة.'});
-  const content=contractInvitation(contract,company,process.env.APP_ORIGIN||'');
+  const link=issueContractEmailLink({v:1,contract:contract.id,company:company.id,owner:owner.id,email:owner.email.trim().toLowerCase(),request:value.request_id,revision:contract.updated_at,digest:contractDigest(contract.contract_html_template||''),expires:Date.now()+72*3600000},process.env.JWT_SECRET||'');
+  const content=contractInvitation(contract,company,process.env.APP_ORIGIN||'',link);
   const sent=await sendTransactionalMail({...content,to:owner.email,purpose:'contract_invitation',event:`contract-invitation:${contract.id}:${owner.id}:${value.request_id}`});
   if(!sent.accepted)return createErrorResponse({status:sent.status==='quota_exceeded'?429:409,errorMessage:sent.status==='quota_exceeded'?'وصل البريد إلى الحد المجاني؛ حاول لاحقًا.':sent.status==='uncertain'||sent.status==='sending'?'لم يتأكد قبول الرسالة. أعد المحاولة بنفس الطلب لتجنب التكرار.':'لم يقبل مزود البريد الدعوة. راجع إعداد المرسل وحالة التسليم.'});
   return createSuccessResponse({accepted:true,status:sent.status,delivery_id:sent.delivery_id});

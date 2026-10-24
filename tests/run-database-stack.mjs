@@ -11,6 +11,7 @@ import {contractSql,auditSql} from '../scripts/independent-schema.mjs';
 import assert from 'node:assert/strict';
 import {SignJWT,jwtVerify} from 'jose';
 import bcrypt from 'bcryptjs';
+import {issueContractEmailLink,contractDigest} from '../src/lib/contract-email-link.ts';
 import {totpAt} from '../src/lib/totp.ts';
 const images={postgres:'postgres:16.15-bookworm',postgrest:'postgrest/postgrest:v13.0.8'};
 const prefix=`jd-stack-${randomBytes(5).toString('hex')}`;
@@ -62,7 +63,7 @@ try {
  await psql(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await psql(`CREATE FUNCTION public.stack_public_canary() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$;
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
- for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261023_app_experience.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
+ for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261023_app_experience.sql','migrations/20261024_contract_email_signing.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
@@ -285,6 +286,25 @@ try {
  assert.equal((await appApi('/next_api/company-portal?company_id='+newCompanyId,'GET',undefined,companyCookie)).status,401);
  assert.equal((await appApi('/next_api/company-lifecycle','POST',{company_id:newCompanyId,action:'restore',request_id:randomUUID(),reason:'Synthetic restoration'},adminCookie)).status,200);assert.equal((await success('/subscription_billing_profiles?company_id=eq.'+newCompanyId,service))[0].enabled,false);
  checks.push('Actual PostgreSQL and HTTP billing use exact cents, immutable issuance, idempotent payment, owner read-only statements and PDF; archive preserves history and restore does not resume billing');
+ const emailCompany=await appApi('/next_api/companies','POST',{name:'Synthetic email signing',vat_number:'BE0222222222',kbo_number:'0222222222',email:'email-owner@example.invalid',password:appPassword},adminCookie);assert.equal(emailCompany.status,201);
+ const emailCompanyId=emailCompany.data.data.id;
+ await success('/companies?id=eq.'+emailCompanyId,service,'PATCH',{subscription_status:'active'});
+ const emailOwner=(await success('/users?email=eq.email-owner@example.invalid',service))[0];
+ const emailDraft=await appApi('/next_api/contracts','POST',{company_id:emailCompanyId,contract_number:'SYN-EMAIL-'+randomUUID(),contract_start_date:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels'}).format(new Date()),contract_duration_months:12,monthly_fee:50,language:'fr'},adminCookie);assert.equal(emailDraft.status,201);
+ const emailContract=emailDraft.data.data,mailRequest=randomUUID();
+ const mailClaims={v:1,company:emailCompanyId,contract:emailContract.id,owner:emailOwner.id,email:emailOwner.email,request:mailRequest,revision:emailContract.updated_at,digest:contractDigest(emailContract.contract_html_template),expires:Date.now()+72*3600000};
+ const emailLink=issueContractEmailLink(mailClaims,jwtSecret);
+ assert.equal((await appApi('/next_api/contracts/verify-token','POST',{signature_token:emailLink})).data.data.signed,false);
+ assert.equal((await success('/contract_signatures?contract_id=eq.'+emailContract.id,service)).length,0);
+ const changedLink=issueContractEmailLink({...mailClaims,digest:'0'.repeat(64)},jwtSecret);
+ assert.equal((await appApi('/next_api/contracts/verify-token','POST',{signature_token:changedLink})).status,409);
+ assert.equal((await appApi('/next_api/contracts/sign','POST',{signature_token:emailLink,signer_name:'Synthetic Owner',signer_position:'Director',consent:false})).status,400);
+ const emailSignature={signature_token:emailLink,signer_name:'Synthetic Owner',signer_position:'Director',consent:true};
+ const emailSigned=await appApi('/next_api/contracts/sign','POST',emailSignature);assert.equal(emailSigned.status,200);assert.equal(emailSigned.data.data.signed,true);assert.equal(emailSigned.data.data.confirmation_accepted,false);
+ assert.equal((await appApi('/next_api/contracts/sign','POST',emailSignature)).status,200);
+ const emailProof=(await success('/contract_signatures?contract_id=eq.'+emailContract.id,service));assert.equal(emailProof.length,1);assert.equal(emailProof[0].signer_email,emailOwner.email);assert.equal(emailProof[0].is_verified,false);assert.equal(emailProof[0].signature_method,'email_link');assert.equal(emailProof[0].email_link_evidence.contract_sha256,mailClaims.digest);
+ await denied('/rpc/security_email_contract',browser,'POST',{});
+ checks.push('Email contract links permit anonymous review and explicit signature only for the active invited owner and exact document; immutable evidence and HTTP retries preserve one simple signature without invoice delivery');
  const originalState=(await success('/trips?id=eq.'+finished.id,service))[0].chiron_sync_state;
  assert.ok(['CREATED','ERROR'].includes(originalState));
  const claimPath='/trips?id=eq.'+finished.id+'&chiron_sync_state=eq.'+originalState;
@@ -303,6 +323,11 @@ try {
  checks.push(...await backupRestoreAcceptance({docker,source:database,image:images.postgres,prefix}));
  await docker(['stop',gateway],{timeout:30000});assert.equal((await appApi('/next_api/trips','GET',undefined,undefined,access)).status,503);checks.push('Actual app fails closed with 503 when real PostgREST rate storage is unavailable');
  console.log(JSON.stringify({candidateImage:acceptedImage||null,passed:checks.length,checks,images,engine:'Actual standalone Docker application + native PostgreSQL + official PostgREST',data:'Synthetic only; inferred schema, not Zoer authoritative',chiron_tested:false},null,2));
+}catch(error){
+ // Synthetic containers only: expose lock/state diagnostics, never credentials or row contents.
+ try{console.error('Native acceptance database wait states:',await psql("SELECT coalesce(json_agg(json_build_object('pid',pid,'state',state,'wait_type',wait_event_type,'wait',wait_event,'blocking',pg_blocking_pids(pid),'query_prefix',left(query,160))),'[]'::json) FROM pg_stat_activity WHERE datname='jd_test' AND pid<>pg_backend_pid();"));}catch{}
+ try{console.error('Native acceptance application log tail:',(await docker(['logs','--tail','30',application])).slice(-5000));}catch{}
+ throw error;
 }finally {
  if(schemaExportWork)fs.rmSync(schemaExportWork,{recursive:true,force:true});
  // Only remove resources whose cryptographically random task-specific names we created.

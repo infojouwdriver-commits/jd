@@ -1,5 +1,5 @@
 {
-  "passed": 86,
+  "passed": 92,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -16,6 +16,12 @@
     "Welcome rejects API-origin injection",
     "MFA admin publishes bounded welcome",
     "Stale welcome publication rejected",
+    "Anonymous malformed email contract request /next_api/contracts/verify-token",
+    "Contract token cannot be sent in GET /next_api/contracts/verify-token",
+    "Foreign origin cannot use email contract /next_api/contracts/verify-token",
+    "Anonymous malformed email contract request /next_api/contracts/sign",
+    "Contract token cannot be sent in GET /next_api/contracts/sign",
+    "Foreign origin cannot use email contract /next_api/contracts/sign",
     "Anonymous company registration list denied",
     "Anonymous company review denied",
     "Driver cannot list company registrations",
