@@ -1,0 +1,56 @@
+name: Configure verified Stripe billing
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        type: string
+        required: true
+        description: Exact tested Stripe release revision already live
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Require reviewed main source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVISION: ${{ inputs.revision }}
+        run: |
+          node --input-type=module <<'GATE'
+          if(process.env.GITHUB_REF!=='refs/heads/main'||!/^[a-f0-9]{40}$/.test(process.env.REVISION||''))throw Error('Reviewed main revision required');
+          const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+process.env.REVISION+'...main',{headers:{Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)});
+          if(!r.ok||!['identical','ahead'].includes((await r.json()).status))throw Error('Reviewed revision ancestry required');
+          GATE
+      - name: Install private credential and signed callback without customer charges
+        env:
+          REVISION: ${{ inputs.revision }}
+          STRIPE_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$STRIPE_KEY" && test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'umask 077; mkdir -p /srv/jouw-driver/stripe-setup; chmod 700 /srv/jouw-driver/stripe-setup' </dev/null
+          scp "${args[@]}" deploy/configure-stripe.mjs "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/stripe-setup/configure-stripe.mjs"
+          printf '%s' "$STRIPE_KEY" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "cd /srv/jouw-driver/foundation; node /srv/jouw-driver/stripe-setup/configure-stripe.mjs '$REVISION'"

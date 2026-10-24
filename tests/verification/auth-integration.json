@@ -1,5 +1,5 @@
 {
-  "passed": 92,
+  "passed": 95,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -9,6 +9,9 @@
     "Refresh preserves administrator MFA claim",
     "Rotated refresh cookie cannot be replayed",
     "Password-only admin access is denied in production",
+    "Anonymous Stripe billing access denied",
+    "Anonymous Stripe authorization denied",
+    "Unconfigured Stripe notifications fail closed",
     "Anonymous welcome exposes only presentation",
     "Anonymous cannot publish welcome",
     "Driver cannot publish welcome",

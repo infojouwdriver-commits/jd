@@ -90,6 +90,9 @@ try {
  await status('Rotated refresh cookie cannot be replayed',request('/next_api/auth/refresh','POST',{},null,cookie),401);
  await status('Password-only admin access is denied in production',request('/next_api/trips','GET',null,await sign(1)),401);
  const driverToken=await sign(2);
+ await status('Anonymous Stripe billing access denied',request('/next_api/stripe-billing?company_id=1'),401);
+ await status('Anonymous Stripe authorization denied',request('/next_api/stripe-billing?company_id=1','POST',{}),401);
+ await status('Unconfigured Stripe notifications fail closed',request('/next_api/webhooks/stripe','POST',{}),503);
  const welcome=await status('Anonymous welcome exposes only presentation',request('/next_api/app-experience'),200);assert.deepEqual((await welcome.json()).data,DEFAULT_WELCOME);
  await status('Anonymous cannot publish welcome',request('/next_api/app-experience','PUT',DEFAULT_WELCOME),401);
  await status('Driver cannot publish welcome',request('/next_api/app-experience','PUT',DEFAULT_WELCOME,driverToken),403);
