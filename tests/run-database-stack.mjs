@@ -323,6 +323,11 @@ try {
  checks.push(...await backupRestoreAcceptance({docker,source:database,image:images.postgres,prefix}));
  await docker(['stop',gateway],{timeout:30000});assert.equal((await appApi('/next_api/trips','GET',undefined,undefined,access)).status,503);checks.push('Actual app fails closed with 503 when real PostgREST rate storage is unavailable');
  console.log(JSON.stringify({candidateImage:acceptedImage||null,passed:checks.length,checks,images,engine:'Actual standalone Docker application + native PostgreSQL + official PostgREST',data:'Synthetic only; inferred schema, not Zoer authoritative',chiron_tested:false},null,2));
+}catch(error){
+ // Synthetic containers only: expose lock/state diagnostics, never credentials or row contents.
+ try{console.error('Native acceptance database wait states:',await psql("SELECT coalesce(json_agg(json_build_object('pid',pid,'state',state,'wait_type',wait_event_type,'wait',wait_event,'blocking',pg_blocking_pids(pid),'query_prefix',left(query,160))),'[]'::json) FROM pg_stat_activity WHERE datname='jd_test' AND pid<>pg_backend_pid();"));}catch{}
+ try{console.error('Native acceptance application log tail:',(await docker(['logs','--tail','30',application])).slice(-5000));}catch{}
+ throw error;
 }finally {
  if(schemaExportWork)fs.rmSync(schemaExportWork,{recursive:true,force:true});
  // Only remove resources whose cryptographically random task-specific names we created.
