@@ -1,5 +1,5 @@
 {
-  "passed": 79,
+  "passed": 86,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -9,6 +9,13 @@
     "Refresh preserves administrator MFA claim",
     "Rotated refresh cookie cannot be replayed",
     "Password-only admin access is denied in production",
+    "Anonymous welcome exposes only presentation",
+    "Anonymous cannot publish welcome",
+    "Driver cannot publish welcome",
+    "Production welcome publish requires admin MFA",
+    "Welcome rejects API-origin injection",
+    "MFA admin publishes bounded welcome",
+    "Stale welcome publication rejected",
     "Anonymous company registration list denied",
     "Anonymous company review denied",
     "Driver cannot list company registrations",

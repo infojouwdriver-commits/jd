@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import {SignJWT,jwtVerify} from 'jose';
 import {totpAt} from '../src/lib/totp.ts';
 import {createDriverApi} from '../driver-app/src/api.ts';
+import {DEFAULT_WELCOME,welcomePayload} from '../driver-app/src/welcome-config.ts';
 
 const secret=randomBytes(48).toString('hex');
 const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -16,6 +17,8 @@ const totpSecret=Array.from(randomBytes(32),n=>alphabet[n%32]).join('');
 const password=randomBytes(18).toString('base64url');
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
 rows.user_passcode=[];
+rows.app_experience_settings=[{id:1,...DEFAULT_WELCOME}];
+let welcomeWrites=0;
 const shiftCalls=[];
 const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
@@ -38,6 +41,7 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_subscription_statement'){assert.equal(body.p_company,1);data={documents:[],entries:[],total:0,entry_total:0,posted_balance_cents:0,overdue_cents:0,prepared_count:0};}
    else if(url.pathname==='/rpc/security_submit_company_change'){changeCalls.push(body);data={id:1,status:'pending'};}
    else if(url.pathname==='/rpc/security_review_company_change'){assert.equal(body.p_actor,1);data={id:body.p_id,status:body.p_decision};}
+   else if(url.pathname==='/rpc/security_save_app_experience'){assert.equal(body.p_actor,1);if(body.p_expected!==rows.app_experience_settings[0].version){res.writeHead(409,{'Content-Type':'application/json'});res.end(JSON.stringify({code:'PT409'}));return;}welcomeWrites++;Object.assign(rows.app_experience_settings[0],body.p_data,{version:body.p_expected+1});const {id,...config}=rows.app_experience_settings[0];data=config;}
    else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);if(body.p_shift_id){if(body.p_shift_id!=='11111111-1111-4111-8111-111111111111'||body.p_user_id!==2){res.writeHead(403);res.end(JSON.stringify({code:'42501',message:'Shift unavailable'}));return;}data={shift:{id:body.p_shift_id,driver_id:1,company_id:1,vehicle_id:1,driver_name:'Synthetic Driver',company_name:'Synthetic Company',plate_number:'DEMO',started_at:'2026-10-22T08:00:00Z',ended_at:null,start_odometer:217000,odometer:217000,passenger_km:0,work_status:'available',version:1},events:[{version:1,action:'start',recorded_at:'2026-10-22T08:00:00Z',odometer:217000,passenger_km:0,work_status:'available'}],activity:[],summary:{trip_count:0,activity_count:1,payments:[]}};}else data={active:null,shifts:[]};}
    else if(url.pathname==='/rpc/security_shift_status'){shiftCalls.push(body);data={id:body.p_shift_id,version:2,work_status:body.p_status};}
    else if(url.pathname==='/rpc/security_record_driver_shift'){shiftCalls.push(body);data={id:body.p_shift_id,version:1};}
@@ -86,6 +90,15 @@ try {
  await status('Rotated refresh cookie cannot be replayed',request('/next_api/auth/refresh','POST',{},null,cookie),401);
  await status('Password-only admin access is denied in production',request('/next_api/trips','GET',null,await sign(1)),401);
  const driverToken=await sign(2);
+ const welcome=await status('Anonymous welcome exposes only presentation',request('/next_api/app-experience'),200);assert.deepEqual((await welcome.json()).data,DEFAULT_WELCOME);
+ await status('Anonymous cannot publish welcome',request('/next_api/app-experience','PUT',DEFAULT_WELCOME),401);
+ await status('Driver cannot publish welcome',request('/next_api/app-experience','PUT',DEFAULT_WELCOME,driverToken),403);
+ await status('Production welcome publish requires admin MFA',request('/next_api/app-experience','PUT',DEFAULT_WELCOME,await sign(1)),401);
+ await status('Welcome rejects API-origin injection',request('/next_api/app-experience','PUT',{...DEFAULT_WELCOME,api_origin:'https://untrusted.invalid'},null,cookie),400);
+ assert.equal(welcomeWrites,0);
+ const publishedWelcome=await status('MFA admin publishes bounded welcome',request('/next_api/app-experience','PUT',{...DEFAULT_WELCOME,motion:false},null,cookie),200);assert.equal((await publishedWelcome.json()).data.version,1);
+ await status('Stale welcome publication rejected',request('/next_api/app-experience','PUT',DEFAULT_WELCOME,null,cookie),409);assert.equal(welcomeWrites,1);
+
  await status('Anonymous company registration list denied',request('/next_api/company-registrations'),401);
  await status('Anonymous company review denied',request('/next_api/company-registrations','PUT',{}),401);
  await status('Driver cannot list company registrations',request('/next_api/company-registrations','GET',null,driverToken),403);

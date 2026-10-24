@@ -45,6 +45,6 @@ export async function mutateDriverAccount(token: string, action: 'create' | 'upd
 
 export function driverValidationError(error: unknown): Response | null {
   if (error instanceof Response) return error;
-  if (error instanceof z.ZodError) return new Response(JSON.stringify({success:false,errorMessage:error.errors[0]?.message || 'Invalid driver fields'}), {status:400,headers:{'Content-Type':'application/json'}});
+  if (error instanceof z.ZodError) return new Response(JSON.stringify({success:false,errorMessage:error.issues[0]?.message || 'Invalid driver fields'}), {status:400,headers:{'Content-Type':'application/json'}});
   return null;
 }

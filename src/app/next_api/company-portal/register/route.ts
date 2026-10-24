@@ -79,7 +79,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
     return createSuccessResponse({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createErrorResponse({ errorMessage: error.errors[0].message, status: 400 });
+      return createErrorResponse({ errorMessage: error.issues[0].message, status: 400 });
     }
     console.error("Operation failed");
     return createErrorResponse({ errorMessage: 'Registration failed', status: 500 });

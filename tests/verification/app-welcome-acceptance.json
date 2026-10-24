@@ -1,0 +1,97 @@
+{
+  "scope": "Synthetic local acceptance; no production writes or physical-device acceptance",
+  "native_version": "0.3.1",
+  "android_version_code": 13,
+  "web_unit_postgresql_tests": 205,
+  "native_unit_tests": 104,
+  "auth_handler_checks": 86,
+  "admin_browser": {
+    "passed": 6,
+    "checks": [
+      "ar/dark: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion",
+      "ar/light: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion",
+      "fr/dark: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion",
+      "fr/light: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion",
+      "nl/dark: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion",
+      "nl/light: preview, publish/busy lock, raster processing, invalid type, conflict draft, discard cancel, narrow layout, reduced motion"
+    ]
+  },
+  "native_browser": {
+    "status": "passed",
+    "shifts": {
+      "explicitReadings": true,
+      "pauseResume": true,
+      "persistentRetry": true,
+      "tripLink": true,
+      "dutchPdf": true,
+      "recordStatus": true,
+      "activeTripGuard": true
+    },
+    "screenshots": 42,
+    "reliabilityMotion": {
+      "homeVehicleRemoved": true,
+      "settingsVehicleLink": true,
+      "missingServerVsOffline": true,
+      "startupLoading": true,
+      "reducedMotion": true,
+      "pushPaused": true
+    },
+    "portalParity": {
+      "profile": true,
+      "vehicleSelection": true,
+      "activeTripGuard": true,
+      "filters": true,
+      "pagination": true,
+      "staleRequests": true,
+      "invoiceButtons": true,
+      "revenue": true
+    },
+    "locales": [
+      "ar",
+      "fr",
+      "en",
+      "nl"
+    ],
+    "navigation": true,
+    "messageReply": true,
+    "pushPausedUI": true,
+    "passwordVisibility": true,
+    "narrowOverflow": false,
+    "historyStates": [
+      "loading",
+      "empty",
+      "error"
+    ],
+    "motion": {
+      "enabled": true,
+      "userOff": true,
+      "systemReduced": true
+    },
+    "addressSearch": {
+      "explicitRequest": true,
+      "belgiumOnly": true,
+      "nearestFirst": true,
+      "editingClearsSelection": true
+    },
+    "preferencePersistence": true,
+    "network": "local page and intercepted synthetic geocoder fixtures only",
+    "scope": "React Native Web visual review; not a native Mapbox or physical-device acceptance"
+  },
+  "native_welcome": [
+    "Arabic/French/Dutch/English",
+    "bundled fallback when public API unavailable",
+    "remote text publication",
+    "Continue action",
+    "remote motion off",
+    "visible smooth camera when enabled",
+    "OS reduced motion stops camera"
+  ],
+  "native_prebuild": "passed; generated versionName 0.3.1 / versionCode 13 and launcher assets",
+  "strict_static_audit": {
+    "errors": 27,
+    "baseline": 26,
+    "new_native_onPress_false_positives": 1,
+    "explanation": "The scanner recognizes onclick but not React Native onPress. Continue uses the canonical native Button and the browser workflow activates it successfully. Raw audit remains nonzero; this is not a clean strict-audit claim."
+  },
+  "deployment": "Not deployed; additive migration and new APK required. Existing apps remain compatible."
+}

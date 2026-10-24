@@ -294,7 +294,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse({
-        errorMessage: error.errors?.[0]?.message || "Invalid request",
+        errorMessage: error.issues?.[0]?.message || "Invalid request",
         status: 400,
       });
     }

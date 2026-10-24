@@ -90,7 +90,7 @@ export const POST = requestMiddleware(async (request: NextRequest) => {
     if (error instanceof Response) return createErrorResponse({errorMessage:"Invalid administrator verification code",status:error.status});
     if (error instanceof z.ZodError) {
       return createErrorResponse({
-        errorMessage: error.errors[0].message,
+        errorMessage: error.issues[0].message,
         status: 400,
       });
     }

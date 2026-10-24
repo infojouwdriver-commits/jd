@@ -123,6 +123,17 @@ Links target the working tree, so line positions can move after changes.
 - `CUSTOMER_REVISION` — [L25](../deploy/publish-customer-runtime.sh#L25)
 - `VERIFIED_BACKUP_TAG` — [L25](../deploy/publish-customer-runtime.sh#L25)
 
+## [deploy/recover-db-log.mjs](../deploy/recover-db-log.mjs)
+
+- `recover-db-log.mjs` — [L1](../deploy/recover-db-log.mjs#L1)
+- `compose` — [L9](../deploy/recover-db-log.mjs#L9)
+- `digest()` — [L10](../deploy/recover-db-log.mjs#L10)
+- `run()` — [L11](../deploy/recover-db-log.mjs#L11)
+- `docker()` — [L12](../deploy/recover-db-log.mjs#L12)
+- `planLogRecovery()` — [L14](../deploy/recover-db-log.mjs#L14)
+- `assertOnlyLoggingChanged()` — [L28](../deploy/recover-db-log.mjs#L28)
+- `recoverDatabaseLog()` — [L36](../deploy/recover-db-log.mjs#L36)
+
 ## [deploy/rollout.mjs](../deploy/rollout.mjs)
 
 - `rollout.mjs` — [L1](../deploy/rollout.mjs#L1)
@@ -452,6 +463,12 @@ Links target the working tree, so line positions can move after changes.
 - `load()` — [L20](../driver-app/src/experience/BillingReminder.tsx#L20)
 - `close()` — [L39](../driver-app/src/experience/BillingReminder.tsx#L39)
 
+## [driver-app/src/experience/BrandMark.tsx](../driver-app/src/experience/BrandMark.tsx)
+
+- `BrandMark.tsx` — [L1](../driver-app/src/experience/BrandMark.tsx#L1)
+- `icon` — [L4](../driver-app/src/experience/BrandMark.tsx#L4)
+- `BrandMark()` — [L5](../driver-app/src/experience/BrandMark.tsx#L5)
+
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
@@ -460,9 +477,9 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/JourneyLoading.tsx](../driver-app/src/experience/JourneyLoading.tsx)
 
 - `JourneyLoading.tsx` — [L1](../driver-app/src/experience/JourneyLoading.tsx#L1)
-- `JourneyMark()` — [L9](../driver-app/src/experience/JourneyLoading.tsx#L9)
-- `WelcomeHeader()` — [L10](../driver-app/src/experience/JourneyLoading.tsx#L10)
-- `JourneyLoading()` — [L11](../driver-app/src/experience/JourneyLoading.tsx#L11)
+- `JourneyMark()` — [L10](../driver-app/src/experience/JourneyLoading.tsx#L10)
+- `WelcomeHeader()` — [L11](../driver-app/src/experience/JourneyLoading.tsx#L11)
+- `JourneyLoading()` — [L12](../driver-app/src/experience/JourneyLoading.tsx#L12)
 
 ## [driver-app/src/experience/Messages.tsx](../driver-app/src/experience/Messages.tsx)
 
@@ -524,6 +541,15 @@ Links target the working tree, so line positions can move after changes.
 - `Trips()` — [L13](../driver-app/src/experience/Trips.tsx#L13)
 - `more()` — [L18](../driver-app/src/experience/Trips.tsx#L18)
 - `invoice()` — [L19](../driver-app/src/experience/Trips.tsx#L19)
+
+## [driver-app/src/experience/WelcomeScreen.tsx](../driver-app/src/experience/WelcomeScreen.tsx)
+
+- `WelcomeScreen.tsx` — [L1](../driver-app/src/experience/WelcomeScreen.tsx#L1)
+- `poster` — [L25](../driver-app/src/experience/WelcomeScreen.tsx#L25)
+- `cacheFile()` — [L26](../driver-app/src/experience/WelcomeScreen.tsx#L26)
+- `cachedSettings()` — [L29](../driver-app/src/experience/WelcomeScreen.tsx#L29)
+- `useWelcomeSettings()` — [L39](../driver-app/src/experience/WelcomeScreen.tsx#L39)
+- `WelcomeScreen()` — [L71](../driver-app/src/experience/WelcomeScreen.tsx#L71)
 
 ## [driver-app/src/experience/activity-state.tsx](../driver-app/src/experience/activity-state.tsx)
 
@@ -615,17 +641,17 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/session.tsx](../driver-app/src/experience/session.tsx)
 
 - `session.tsx` — [L1](../driver-app/src/experience/session.tsx#L1)
-- `Context` — [L20](../driver-app/src/experience/session.tsx#L20)
-- `useSessionState()` — [L21](../driver-app/src/experience/session.tsx#L21)
-- `login()` — [L26](../driver-app/src/experience/session.tsx#L26)
-- `logout()` — [L27](../driver-app/src/experience/session.tsx#L27)
-- `accountChanged()` — [L28](../driver-app/src/experience/session.tsx#L28)
-- `useSession()` — [L31](../driver-app/src/experience/session.tsx#L31)
-- `TripContext` — [L32](../driver-app/src/experience/session.tsx#L32)
-- `useTrip()` — [L33](../driver-app/src/experience/session.tsx#L33)
-- `TripRuntime()` — [L34](../driver-app/src/experience/session.tsx#L34)
-- `Login()` — [L35](../driver-app/src/experience/session.tsx#L35)
-- `SessionProvider()` — [L36](../driver-app/src/experience/session.tsx#L36)
+- `Context` — [L21](../driver-app/src/experience/session.tsx#L21)
+- `useSessionState()` — [L22](../driver-app/src/experience/session.tsx#L22)
+- `login()` — [L27](../driver-app/src/experience/session.tsx#L27)
+- `logout()` — [L28](../driver-app/src/experience/session.tsx#L28)
+- `accountChanged()` — [L29](../driver-app/src/experience/session.tsx#L29)
+- `useSession()` — [L32](../driver-app/src/experience/session.tsx#L32)
+- `TripContext` — [L33](../driver-app/src/experience/session.tsx#L33)
+- `useTrip()` — [L34](../driver-app/src/experience/session.tsx#L34)
+- `TripRuntime()` — [L35](../driver-app/src/experience/session.tsx#L35)
+- `Login()` — [L36](../driver-app/src/experience/session.tsx#L36)
+- `SessionProvider()` — [L37](../driver-app/src/experience/session.tsx#L37)
 
 ## [driver-app/src/experience/shift-copy.ts](../driver-app/src/experience/shift-copy.ts)
 
@@ -850,6 +876,28 @@ Links target the working tree, so line positions can move after changes.
 - `end()` — [L121](../driver-app/src/useTripController.ts#L121)
 - `changeVehicle()` — [L133](../driver-app/src/useTripController.ts#L133)
 - `retrySync()` — [L146](../driver-app/src/useTripController.ts#L146)
+
+## [driver-app/src/welcome-config.ts](../driver-app/src/welcome-config.ts)
+
+- `welcome-config.ts` — [L1](../driver-app/src/welcome-config.ts#L1)
+- `WELCOME_LANGUAGES` — [L2](../driver-app/src/welcome-config.ts#L2)
+- `WelcomeLanguage` — [L3](../driver-app/src/welcome-config.ts#L3)
+- `WelcomeText` — [L4](../driver-app/src/welcome-config.ts#L4)
+- `WelcomeSettings` — [L5](../driver-app/src/welcome-config.ts#L5)
+- `MAX_WELCOME_IMAGE_BYTES` — [L13](../driver-app/src/welcome-config.ts#L13)
+- `MAX_WELCOME_JSON_BYTES` — [L14](../driver-app/src/welcome-config.ts#L14)
+- `DEFAULT_WELCOME` — [L15](../driver-app/src/welcome-config.ts#L15)
+- `record()` — [L33](../driver-app/src/welcome-config.ts#L33)
+- `localized()` — [L36](../driver-app/src/welcome-config.ts#L36)
+- `validWelcomePoster()` — [L48](../driver-app/src/welcome-config.ts#L48)
+- `parseWelcome()` — [L59](../driver-app/src/welcome-config.ts#L59)
+- `welcomePayload()` — [L79](../driver-app/src/welcome-config.ts#L79)
+- `sameWelcomeContent()` — [L83](../driver-app/src/welcome-config.ts#L83)
+
+## [driver-app/src/welcome-loader.ts](../driver-app/src/welcome-loader.ts)
+
+- `welcome-loader.ts` — [L1](../driver-app/src/welcome-loader.ts#L1)
+- `fetchWelcome()` — [L8](../driver-app/src/welcome-loader.ts#L8)
 
 ## [driver-app/tsconfig.json](../driver-app/tsconfig.json)
 
@@ -1078,6 +1126,12 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_driver_shifts()` — [L148](../migrations/20261019_shift_activity.sql#L148)
 - `"schema".security_guard_shift_work()` — [L164](../migrations/20261019_shift_activity.sql#L164)
 - `guard_shift_work` — [L178](../migrations/20261019_shift_activity.sql#L178)
+
+## [migrations/20261023_app_experience.sql](../migrations/20261023_app_experience.sql)
+
+- `20261023_app_experience.sql` — [source](../migrations/20261023_app_experience.sql#)
+- `"schema".app_experience_settings` — [L4](../migrations/20261023_app_experience.sql#L4)
+- `"schema".app_experience_events` — [L18](../migrations/20261023_app_experience.sql#L18)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -1545,6 +1599,12 @@ Links target the working tree, so line positions can move after changes.
 - `EMPTY_FORM` — [L60](../src/app/admin/ad-slots/page.tsx#L60)
 - `AdSlotsPage()` — [L70](../src/app/admin/ad-slots/page.tsx#L70)
 
+## [src/app/admin/app-experience/page.tsx](../src/app/admin/app-experience/page.tsx)
+
+- `app-experience/page.tsx` — [L1](../src/app/admin/app-experience/page.tsx#L1)
+- `metadata` — [L2](../src/app/admin/app-experience/page.tsx#L2)
+- `AppExperiencePage()` — [L3](../src/app/admin/app-experience/page.tsx#L3)
+
 ## [src/app/admin/approval-requests/page.tsx](../src/app/admin/approval-requests/page.tsx)
 
 - `approval-requests/page.tsx` — [L1](../src/app/admin/approval-requests/page.tsx#L1)
@@ -1931,6 +1991,12 @@ Links target the working tree, so line positions can move after changes.
 - `search/route.ts` — [L1](../src/app/next_api/ai-assistant/search/route.ts#L1)
 - `GET` — [L7](../src/app/next_api/ai-assistant/search/route.ts#L7)
 
+## [src/app/next_api/app-experience/route.ts](../src/app/next_api/app-experience/route.ts)
+
+- `app-experience/route.ts` — [L1](../src/app/next_api/app-experience/route.ts#L1)
+- `GET` — [L12](../src/app/next_api/app-experience/route.ts#L12)
+- `PUT` — [L28](../src/app/next_api/app-experience/route.ts#L28)
+
 ## [src/app/next_api/approval-requests/route.ts](../src/app/next_api/approval-requests/route.ts)
 
 - `approval-requests/route.ts` — [L1](../src/app/next_api/approval-requests/route.ts#L1)
@@ -2227,7 +2293,7 @@ Links target the working tree, so line positions can move after changes.
 - `driver-registration/route.ts` — [L1](../src/app/next_api/driver-registration/route.ts#L1)
 - `registrationSchema` — [L10](../src/app/next_api/driver-registration/route.ts#L10)
 - `POST` — [L38](../src/app/next_api/driver-registration/route.ts#L38)
-- `GET` — [L227](../src/app/next_api/driver-registration/route.ts#L227)
+- `GET` — [L225](../src/app/next_api/driver-registration/route.ts#L225)
 
 ## [src/app/next_api/drivers/activity/route.ts](../src/app/next_api/drivers/activity/route.ts)
 
@@ -2790,6 +2856,29 @@ Links target the working tree, so line positions can move after changes.
 - `handleRejectAction()` — [L501](../src/components/ai/SiteAIAgent.tsx#L501)
 - `handleReset()` — [L515](../src/components/ai/SiteAIAgent.tsx#L515)
 - `handleKeyDown()` — [L524](../src/components/ai/SiteAIAgent.tsx#L524)
+
+## [src/components/app-experience/AppExperiencePanel.tsx](../src/components/app-experience/AppExperiencePanel.tsx)
+
+- `AppExperiencePanel.tsx` — [L1](../src/components/app-experience/AppExperiencePanel.tsx#L1)
+- `languageNames` — [L31](../src/components/app-experience/AppExperiencePanel.tsx#L31)
+- `AppExperiencePanel()` — [L38](../src/components/app-experience/AppExperiencePanel.tsx#L38)
+- `askLeave()` — [L55](../src/components/app-experience/AppExperiencePanel.tsx#L55)
+- `patch()` — [L123](../src/components/app-experience/AppExperiencePanel.tsx#L123)
+- `publish()` — [L127](../src/components/app-experience/AppExperiencePanel.tsx#L127)
+
+## [src/components/app-experience/copy.ts](../src/components/app-experience/copy.ts)
+
+- `app-experience/copy.ts` — [L1](../src/components/app-experience/copy.ts#L1)
+- `experienceCopy` — [L1](../src/components/app-experience/copy.ts#L1)
+
+## [src/components/app-experience/prepare-image.ts](../src/components/app-experience/prepare-image.ts)
+
+- `prepare-image.ts` — [L1](../src/components/app-experience/prepare-image.ts#L1)
+- `prepareWelcomeImage()` — [L2](../src/components/app-experience/prepare-image.ts#L2)
+
+## [src/components/app-experience/welcome-preview.css](../src/components/app-experience/welcome-preview.css)
+
+- Tracked source; no structural symbols extracted.
 
 ## [src/components/auth/AuthProvider.tsx](../src/components/auth/AuthProvider.tsx)
 
@@ -3965,6 +4054,12 @@ Links target the working tree, so line positions can move after changes.
 - `setCookie()` — [L533](../src/lib/api-utils.ts#L533)
 - `clearCookie()` — [L568](../src/lib/api-utils.ts#L568)
 
+## [src/lib/app-experience.ts](../src/lib/app-experience.ts)
+
+- `app-experience.ts` — [L1](../src/lib/app-experience.ts#L1)
+- `welcomeImageValid()` — [L12](../src/lib/app-experience.ts#L12)
+- `parseWelcomeSave()` — [L34](../src/lib/app-experience.ts#L34)
+
 ## [src/lib/auth.ts](../src/lib/auth.ts)
 
 - `lib/auth.ts` — [L1](../src/lib/auth.ts#L1)
@@ -4555,14 +4650,15 @@ Links target the working tree, so line positions can move after changes.
 - `skipLibCheck` — [L10](../tsconfig.json#L10)
 - `strict` — [L11](../tsconfig.json#L11)
 - `noEmit` — [L12](../tsconfig.json#L12)
-- `esModuleInterop` — [L13](../tsconfig.json#L13)
-- `module` — [L14](../tsconfig.json#L14)
-- `moduleResolution` — [L15](../tsconfig.json#L15)
-- `resolveJsonModule` — [L16](../tsconfig.json#L16)
-- `isolatedModules` — [L17](../tsconfig.json#L17)
-- `jsx` — [L18](../tsconfig.json#L18)
-- `incremental` — [L19](../tsconfig.json#L19)
-- `plugins` — [L20](../tsconfig.json#L20)
-- `paths` — [L25](../tsconfig.json#L25)
-- `include` — [L31](../tsconfig.json#L31)
-- `exclude` — [L40](../tsconfig.json#L40)
+- `allowImportingTsExtensions` — [L13](../tsconfig.json#L13)
+- `esModuleInterop` — [L14](../tsconfig.json#L14)
+- `module` — [L15](../tsconfig.json#L15)
+- `moduleResolution` — [L16](../tsconfig.json#L16)
+- `resolveJsonModule` — [L17](../tsconfig.json#L17)
+- `isolatedModules` — [L18](../tsconfig.json#L18)
+- `jsx` — [L19](../tsconfig.json#L19)
+- `incremental` — [L20](../tsconfig.json#L20)
+- `plugins` — [L21](../tsconfig.json#L21)
+- `paths` — [L26](../tsconfig.json#L26)
+- `include` — [L32](../tsconfig.json#L32)
+- `exclude` — [L41](../tsconfig.json#L41)
