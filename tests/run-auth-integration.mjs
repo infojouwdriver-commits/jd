@@ -99,6 +99,11 @@ try {
  const publishedWelcome=await status('MFA admin publishes bounded welcome',request('/next_api/app-experience','PUT',{...DEFAULT_WELCOME,motion:false},null,cookie),200);assert.equal((await publishedWelcome.json()).data.version,1);
  await status('Stale welcome publication rejected',request('/next_api/app-experience','PUT',DEFAULT_WELCOME,null,cookie),409);assert.equal(welcomeWrites,1);
 
+ for(const path of ['/next_api/contracts/verify-token','/next_api/contracts/sign']){
+  await status('Anonymous malformed email contract request '+path,request(path,'POST',{}),400);
+  await status('Contract token cannot be sent in GET '+path,request(path),405);
+  await status('Foreign origin cannot use email contract '+path,fetch(base+path,{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:'{}'}),403);
+ }
  await status('Anonymous company registration list denied',request('/next_api/company-registrations'),401);
  await status('Anonymous company review denied',request('/next_api/company-registrations','PUT',{}),401);
  await status('Driver cannot list company registrations',request('/next_api/company-registrations','GET',null,driverToken),403);

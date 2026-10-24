@@ -338,3 +338,21 @@ binary, while later welcome-image/text/motion changes do not.
 The native declaration, local journal, financial records, QR documents, Chiron,
 push pause and location permissions are unchanged. Apply the additive welcome
 migration before starting the new server; old apps ignore the new endpoint.
+
+## Email contract signature — 24 October 2026
+
+The existing web Button, ContractDocument, OperationForm inline variant, ApiError
+and LanguageContext own the invited signing page (ar/fr/nl). No native change.
+A personal HMAC link in the URL fragment grants review/sign only for one active
+company owner, email, contract revision and HTML SHA-256, for 72 hours. It grants
+no account session. Legacy unsigned/query-string tokens remain unsupported.
+Opening/previewing never signs. Name, representative position and explicit consent
+are required. Email is server-bound, not editable. The notice describes simple
+electronic signature and evidence processing; no identity verification or QES claim.
+Server transactions lock and recheck the owner, approved company, contract and
+immutable replay evidence. Changes require a fresh invitation. Network uncertainty
+freezes the entered form for explicit same-payload retry. Signature persistence
+and mail acceptance are separate; confirmations reuse delivery-ledger event keys.
+Signed parties can print/save the reviewed contract and proof through the existing
+print document styles. Expired links require administration; persistent access
+continues through the existing authenticated portals.

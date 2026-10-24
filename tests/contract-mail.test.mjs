@@ -12,11 +12,11 @@ test('invitation preserves historical amounts, escapes company content and links
 test('all supported invitation languages retain login and no-payment explanations',()=>{
  for(const lang of ['ar','fr','nl']){const m=contractInvitation({...contract,contract_language:lang},{name:'Example'},'https://portal.example.invalid');assert.ok(m.html.includes(`lang="${lang}"`));assert.ok(m.text.includes('/company/dashboard'));}
 });
-test('reviewed invitation handler is admin-only; bearer-token signing remains disabled',()=>{
+test('invitation handler is admin-only; reviewed email signing is POST-only',()=>{
  assert.equal(disabledEndpoint('/next_api/contracts/send-signature-link'),false);
  assert.equal(publicEndpoint('/next_api/contracts/send-signature-link','POST'),false);
  for(const type of ['driver','company','owner','manager'])assert.equal(memberEndpoint('/next_api/contracts/send-signature-link','POST',type),false);
- for(const path of ['/next_api/contracts/sign','/next_api/contracts/verify-token'])assert.equal(disabledEndpoint(path),true);
+ for(const path of ['/next_api/contracts/sign','/next_api/contracts/verify-token']){assert.equal(disabledEndpoint(path),false);assert.equal(publicEndpoint(path,'POST'),true);assert.equal(publicEndpoint(path,'GET'),false);}
 });
 const env={MAIL_PROVIDER:'brevo',BREVO_API_KEY:'synthetic-key',BREVO_FROM_EMAIL:'sender@example.invalid',BREVO_SENDER_VERIFIED:'true',BREVO_FREE_PLAN_CONFIRMED:'true',BREVO_WEBHOOK_TOKEN:'a'.repeat(48),DATA_ENCRYPTION_KEY:'b'.repeat(64)};
 test('Brevo requires verified sender, free plan and authenticated delivery reporting',()=>{

@@ -1133,6 +1133,10 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".app_experience_settings` — [L4](../migrations/20261023_app_experience.sql#L4)
 - `"schema".app_experience_events` — [L18](../migrations/20261023_app_experience.sql#L18)
 
+## [migrations/20261024_contract_email_signing.sql](../migrations/20261024_contract_email_signing.sql)
+
+- `20261024_contract_email_signing.sql` — [source](../migrations/20261024_contract_email_signing.sql#)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -2236,14 +2240,13 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/contracts/send-signature-link/route.ts](../src/app/next_api/contracts/send-signature-link/route.ts)
 
 - `send-signature-link/route.ts` — [L1](../src/app/next_api/contracts/send-signature-link/route.ts#L1)
-- `command` — [L9](../src/app/next_api/contracts/send-signature-link/route.ts#L9)
-- `POST` — [L10](../src/app/next_api/contracts/send-signature-link/route.ts#L10)
+- `command` — [L10](../src/app/next_api/contracts/send-signature-link/route.ts#L10)
+- `POST` — [L11](../src/app/next_api/contracts/send-signature-link/route.ts#L11)
 
 ## [src/app/next_api/contracts/sign/route.ts](../src/app/next_api/contracts/sign/route.ts)
 
 - `sign/route.ts` — [L1](../src/app/next_api/contracts/sign/route.ts#L1)
-- `POST` — [L8](../src/app/next_api/contracts/sign/route.ts#L8)
-- `sendInvoiceToClient()` — [L180](../src/app/next_api/contracts/sign/route.ts#L180)
+- `POST` — [L2](../src/app/next_api/contracts/sign/route.ts#L2)
 
 ## [src/app/next_api/contracts/signatures/route.ts](../src/app/next_api/contracts/signatures/route.ts)
 
@@ -2253,7 +2256,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/contracts/verify-token/route.ts](../src/app/next_api/contracts/verify-token/route.ts)
 
 - `verify-token/route.ts` — [L1](../src/app/next_api/contracts/verify-token/route.ts#L1)
-- `GET` — [L7](../src/app/next_api/contracts/verify-token/route.ts#L7)
+- `POST` — [L3](../src/app/next_api/contracts/verify-token/route.ts#L3)
 
 ## [src/app/next_api/distributors/assign-company/route.ts](../src/app/next_api/distributors/assign-company/route.ts)
 
@@ -2693,10 +2696,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/sign-contract/[token]/page.tsx](../src/app/sign-contract/%5Btoken%5D/page.tsx)
 
 - `sign-contract/[token]/page.tsx` — [L1](../src/app/sign-contract/%5Btoken%5D/page.tsx#L1)
-- `SignatureInfo` — [L25](../src/app/sign-contract/%5Btoken%5D/page.tsx#L25)
-- `ContractData` — [L32](../src/app/sign-contract/%5Btoken%5D/page.tsx#L32)
-- `translations` — [L55](../src/app/sign-contract/%5Btoken%5D/page.tsx#L55)
-- `SignContractPage()` — [L136](../src/app/sign-contract/%5Btoken%5D/page.tsx#L136)
+- `ContractReview` — [L10](../src/app/sign-contract/%5Btoken%5D/page.tsx#L10)
+- `SignContractPage()` — [L15](../src/app/sign-contract/%5Btoken%5D/page.tsx#L15)
 
 ## [src/app/taximeter/page.tsx](../src/app/taximeter/page.tsx)
 
@@ -4208,10 +4209,33 @@ Links target the working tree, so line positions can move after changes.
 - `contract-document-style.ts` — [L1](../src/lib/contract-document-style.ts#L1)
 - `CONTRACT_DOCUMENT_CSS` — [L2](../src/lib/contract-document-style.ts#L2)
 
+## [src/lib/contract-email-handler.ts](../src/lib/contract-email-handler.ts)
+
+- `contract-email-handler.ts` — [L1](../src/lib/contract-email-handler.ts#L1)
+- `review` — [L12](../src/lib/contract-email-handler.ts#L12)
+- `signature` — [L13](../src/lib/contract-email-handler.ts#L13)
+- `emailContractHandler()` — [L14](../src/lib/contract-email-handler.ts#L14)
+
+## [src/lib/contract-email-link.ts](../src/lib/contract-email-link.ts)
+
+- `contract-email-link.ts` — [L1](../src/lib/contract-email-link.ts#L1)
+- `claims` — [L3](../src/lib/contract-email-link.ts#L3)
+- `ContractEmailLink` — [L4](../src/lib/contract-email-link.ts#L4)
+- `contractDigest()` — [L5](../src/lib/contract-email-link.ts#L5)
+- `mac()` — [L6](../src/lib/contract-email-link.ts#L6)
+- `issueContractEmailLink()` — [L7](../src/lib/contract-email-link.ts#L7)
+- `readContractEmailLink()` — [L8](../src/lib/contract-email-link.ts#L8)
+
 ## [src/lib/contract-invitation.ts](../src/lib/contract-invitation.ts)
 
 - `contract-invitation.ts` — [L1](../src/lib/contract-invitation.ts#L1)
 - `contractInvitation()` — [L2](../src/lib/contract-invitation.ts#L2)
+
+## [src/lib/contract-signing-copy.ts](../src/lib/contract-signing-copy.ts)
+
+- `contract-signing-copy.ts` — [L1](../src/lib/contract-signing-copy.ts#L1)
+- `contractSigningCopy` — [L1](../src/lib/contract-signing-copy.ts#L1)
+- `contractSigningLanguage()` — [L6](../src/lib/contract-signing-copy.ts#L6)
 
 ## [src/lib/contract-template.ts](../src/lib/contract-template.ts)
 

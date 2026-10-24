@@ -1,10 +1,14 @@
-/** Invitations lead to the authenticated owner flow; they never grant signing authority. */
-export function contractInvitation(contract: {id:number;contract_number:string;contract_language?:string;monthly_fee:unknown;annual_fee:unknown}, company: {name:string}, origin:string) {
+/** Direct invitations are restricted to the resolved owner and reviewed contract version. */
+export function contractInvitation(contract: {id:number;contract_number:string;contract_language?:string;monthly_fee:unknown;annual_fee:unknown}, company: {name:string}, origin:string, invitation?:string) {
  const base=new URL(origin);
  if(base.protocol!=='https:'||base.username||base.password||base.pathname!=='/'||base.search||base.hash)throw new Error('Valid application origin required');
  const language=contract.contract_language==='nl'?'nl':contract.contract_language==='ar'?'ar':'fr';
  const copy={ar:{subject:'دعوة لمراجعة وتوقيع العقد',intro:'يرجى الدخول بحساب صاحب الشركة، ثم فتح «الاشتراك وكشف الحساب ← العقد والفوترة» لمراجعة العقد وتوقيعه.',button:'فتح بوابة الشركة',note:'الدخول مطلوب. هذه الدعوة لا تفعّل العقد ولا تنشئ دفعة أو ترسل فاتورة.'},fr:{subject:'Invitation à consulter et signer le contrat',intro:'Connectez-vous avec le compte du propriétaire, puis ouvrez « Abonnement et relevé → Contrat et facturation » pour consulter et signer le contrat.',button:'Ouvrir le portail entreprise',note:'Connexion requise. Cette invitation n’active pas le contrat et ne déclenche ni paiement ni envoi de facture.'},nl:{subject:'Uitnodiging om het contract te bekijken en ondertekenen',intro:'Meld u aan met het eigenaarsaccount en open « Abonnement en overzicht → Contract en facturatie » om het contract te bekijken en te ondertekenen.',button:'Bedrijfsportaal openen',note:'Aanmelden vereist. Deze uitnodiging activeert geen contract en veroorzaakt geen betaling of factuurverzending.'}}[language];
- const link=new URL('/company/dashboard',base).href;
+ if(invitation){
+  const direct={ar:{intro:'راجع العقد واكتب اسمك وصفتك ثم أكد موافقتك. لا يلزم تسجيل الدخول. الرابط خاص بك وصالح لمدة 72 ساعة؛ لا تشاركه.',button:'مراجعة وتوقيع العقد',note:'فتح الرابط لا يوقّع العقد ولا ينشئ دفعًا أو يرسل فاتورة.'},fr:{intro:'Consultez le contrat, indiquez votre nom et votre fonction, puis confirmez votre accord. Sans connexion. Lien personnel valable 72 heures ; ne le partagez pas.',button:'Consulter et signer le contrat',note:'Ouvrir le lien ne signe pas le contrat et ne déclenche ni paiement ni envoi de facture.'},nl:{intro:'Bekijk het contract, vul uw naam en functie in en bevestig uw akkoord. Aanmelden is niet nodig. Persoonlijke link, 72 uur geldig; deel deze niet.',button:'Contract bekijken en ondertekenen',note:'De link openen ondertekent niets en veroorzaakt geen betaling of factuurverzending.'}}[language];Object.assign(copy,direct);
+ }
+ const target=new URL(invitation?'/sign-contract/email':'/company/dashboard',base);if(invitation)target.hash=invitation;
+ const link=target.href;
  const esc=(v:unknown)=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
  const money=(v:unknown)=>{const n=Number(v);if(!Number.isFinite(n)||n<0)throw new Error('Invalid contract price');return new Intl.NumberFormat(language==='ar'?'ar-BE':language+'-BE',{style:'currency',currency:'EUR'}).format(n);};
  const terms=`${money(contract.monthly_fee)} × 12 = ${money(contract.annual_fee)}`;
