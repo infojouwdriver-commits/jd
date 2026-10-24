@@ -4613,9 +4613,10 @@ Links target the working tree, so line positions can move after changes.
 - `stripeClient()` — [L19](../src/lib/stripe-billing-core.ts#L19)
 - `stripeObjectId()` — [L22](../src/lib/stripe-billing-core.ts#L22)
 - `stripePaymentRequest()` — [L23](../src/lib/stripe-billing-core.ts#L23)
-- `finiteSchedule()` — [L27](../src/lib/stripe-billing-core.ts#L27)
-- `assertStripeInvoice()` — [L34](../src/lib/stripe-billing-core.ts#L34)
-- `verifiedStripeReceipt()` — [L41](../src/lib/stripe-billing-core.ts#L41)
+- `stripeCycleAt()` — [L27](../src/lib/stripe-billing-core.ts#L27)
+- `finiteSchedule()` — [L31](../src/lib/stripe-billing-core.ts#L31)
+- `assertStripeInvoice()` — [L41](../src/lib/stripe-billing-core.ts#L41)
+- `verifiedStripeReceipt()` — [L48](../src/lib/stripe-billing-core.ts#L48)
 
 ## [src/lib/stripe-billing.ts](../src/lib/stripe-billing.ts)
 

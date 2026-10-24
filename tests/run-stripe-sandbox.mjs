@@ -1,6 +1,6 @@
 // Explicit, opt-in provider acceptance. Synthetic data only, isolated test credentials only.
 import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {randomUUID,createHash} from 'node:crypto';import Stripe from 'stripe';
-import {finiteSchedule,verifiedStripeReceipt} from '../src/lib/stripe-billing-core.ts';
+import {finiteSchedule,stripeCycleAt,verifiedStripeReceipt} from '../src/lib/stripe-billing-core.ts';
 const credentialFile=process.env.STRIPE_QA_CREDENTIALS,qa=process.env.STRIPE_QA_DIRECTORY;
 if(!credentialFile||!qa)throw Error('Private isolated sandbox credentials and output directory required');
 if(process.env.STRIPE_QA_NO_CLOCK==='true'&&process.env.STRIPE_QA_SMOKE!=='true')throw Error('A smoke test cannot certify the full subscription lifecycle');
@@ -55,14 +55,14 @@ async function scenario(name,start,end,payment='pm_card_visa'){
  // Advance monthly, then settle the asynchronous invoice cycle. Never jump >2 billing intervals.
  for(let n=s.step;n<14;n++){
   stage=name+'-cycle-'+n;
-  const d=new Date(start*1000),month=d.getUTCMonth()+n+1,year=d.getUTCFullYear()+Math.floor(month/12),m=((month%12)+12)%12,day=Math.min(d.getUTCDate(),new Date(Date.UTC(year,m+1,0)).getUTCDate());
-  const target=Math.min(Math.floor(Date.UTC(year,m,day,d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds())/1000)+7200,end+86400);
-  await advance(s.clock,target);s.step=n+1;save();if(target>=end+86400)break;
+  const scheduleEnd=stripeCycleAt(start,12);
+  const target=Math.min(stripeCycleAt(start,n+1)+7200,scheduleEnd+86400);
+  await advance(s.clock,target);s.step=n+1;save();console.log(JSON.stringify({scenario:name,completed_cycle:n+1}));if(target>=scheduleEnd+86400)break;
  }
  const all=(await stripe.invoices.list({customer:s.customer,subscription:s.subscription,limit:100})).data;
  const final=await stripe.subscriptions.retrieve(s.subscription),schedule=await stripe.subscriptionSchedules.retrieve(s.schedule);
  s.summary={count:all.length,paid:all.filter(i=>i.status==='paid').length,totals:all.map(i=>i.total),sum:all.reduce((n,i)=>n+i.amount_paid,0),subscription_status:final.status,schedule_status:schedule.status};save();console.log(JSON.stringify({scenario:name,...s.summary}));
- assert.equal(all.length,12);assert.ok(all.every(i=>i.status==='paid'&&i.total===5000&&i.amount_paid===5000));assert.equal(s.summary.sum,60000);assert.equal(final.status,'canceled');
+ assert.equal(all.length,12);assert.ok(all.every(i=>i.status==='paid'&&i.total===5000&&i.amount_paid===5000));assert.equal(s.summary.sum,60000);assert.equal(final.status,'canceled');assert.ok(all.every(i=>i.lines.data.every(l=>l.period.start<end)),'All twelve installment due dates stay inside the legal contract');
  for(const paid of all)await verifiedStripeReceipt(stripe,paid,enrollment);
 }
 try{

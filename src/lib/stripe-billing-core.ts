@@ -24,12 +24,19 @@ export function stripePaymentRequest(invoice:string){
  const h=createHash('sha256').update('jouw-driver:stripe:'+invoice).digest('hex');
  return `${h.slice(0,8)}-${h.slice(8,12)}-5${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`;
 }
+export function stripeCycleAt(start:number,months:number){
+ const d=new Date(start*1000),month=d.getUTCMonth()+months,year=d.getUTCFullYear()+Math.floor(month/12),m=((month%12)+12)%12;
+ return Date.UTC(year,m,Math.min(d.getUTCDate(),new Date(Date.UTC(year,m+1,0)).getUTCDate()),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds())/1000;
+}
 export function finiteSchedule(e:StripeEnrollment,paymentMethod:string,now=Math.floor(Date.now()/1000)):Stripe.SubscriptionScheduleCreateParams{
  if(!e.customer_id||!e.end_at||e.end_at<=now||!e.session_id)throw Error('Incomplete collection authorization');
+ if(stripeCycleAt(now,11)>=e.end_at)throw Error('Twelve installments cannot fit inside the signed contract');
+ // A mid-cycle cancel_at prorates the final invoice even with phase proration disabled.
+ // Twelve complete monthly cycles bound collection without changing the legal contract dates.
  return {customer:e.customer_id,start_date:'now',end_behavior:'cancel',billing_mode:{type:'flexible'},
   metadata:{project:'jouw-driver',enrollment_id:e.id},
   default_settings:{collection_method:'charge_automatically',default_payment_method:paymentMethod},
-  phases:[{items:[{price:e.price_id,quantity:1}],end_date:e.end_at,proration_behavior:'none',default_tax_rates:[e.tax_rate_id],metadata:{enrollment_id:e.id}}]};
+  phases:[{items:[{price:e.price_id,quantity:1}],duration:{interval:'month',interval_count:12},proration_behavior:'none',default_tax_rates:[e.tax_rate_id],metadata:{enrollment_id:e.id}}]};
 }
 export function assertStripeInvoice(invoice:Stripe.Invoice,e:StripeEnrollment){
  const line=invoice.lines.data[0];
