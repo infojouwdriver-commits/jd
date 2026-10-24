@@ -21,12 +21,12 @@ export function emailContractHandler(action:'review'|'sign'){
   try{
    const client=createPostgrestClient(await generateAdminUserToken());
    // The transaction checks active owner/email, expiry, revision, digest and replay together.
-   const reviewed=await client.rpc('security_email_contract',{p_action:'review',p_company:invite.company,p_contract:invite.contract,p_actor:invite.owner,p_request:invite.request,p_email:invite.email,p_expected:invite.revision,p_digest:invite.digest,p_expires:new Date(invite.expires).toISOString(),p_name:null,p_position:null,p_ip:null,p_agent:null,p_consent:null});
+   const reviewed=await client.rpc('security_email_contract',{p_action:'review',p_company:invite.company,p_contract:invite.contract,p_actor:invite.owner,p_request:invite.request,p_email:invite.email,p_expected:invite.revision,p_digest:invite.digest,p_expires:new Date(invite.expires).toISOString(),p_name:null,p_position:null,p_ip:null,p_agent:null,p_consent:null}).abortSignal(AbortSignal.timeout(10000));
    if(reviewed.error)throw reviewed.error;
    let data=reviewed.data;
    if(v){
     const language=contractSigningLanguage(data.contract.contract_language);
-    const result=await client.rpc('security_email_contract',{p_action:'sign',p_company:invite.company,p_contract:invite.contract,p_actor:invite.owner,p_request:invite.request,p_email:invite.email,p_expected:invite.revision,p_digest:invite.digest,p_expires:new Date(invite.expires).toISOString(),p_name:v.signer_name,p_position:v.signer_position,p_ip:getRequestIp(request),p_agent:(request.headers.get('user-agent')||'').slice(0,1000),p_consent:contractSigningCopy[language].consent});
+    const result=await client.rpc('security_email_contract',{p_action:'sign',p_company:invite.company,p_contract:invite.contract,p_actor:invite.owner,p_request:invite.request,p_email:invite.email,p_expected:invite.revision,p_digest:invite.digest,p_expires:new Date(invite.expires).toISOString(),p_name:v.signer_name,p_position:v.signer_position,p_ip:getRequestIp(request),p_agent:(request.headers.get('user-agent')||'').slice(0,1000),p_consent:contractSigningCopy[language].consent}).abortSignal(AbortSignal.timeout(10000));
     if(result.error)throw result.error;
     data=result.data;
     // Persisted signature is independent of mail transport; retry uses the same mail events.

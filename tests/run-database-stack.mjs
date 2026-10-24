@@ -292,7 +292,7 @@ try {
  const emailOwner=(await success('/users?email=eq.email-owner@example.invalid',service))[0];
  const emailDraft=await appApi('/next_api/contracts','POST',{company_id:emailCompanyId,contract_number:'SYN-EMAIL-'+randomUUID(),contract_start_date:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels'}).format(new Date()),contract_duration_months:12,monthly_fee:50,language:'fr'},adminCookie);assert.equal(emailDraft.status,201);
  const emailContract=emailDraft.data.data,mailRequest=randomUUID();
- const mailClaims={v:1,company:emailCompanyId,contract:emailContract.id,owner:emailOwner.id,email:emailOwner.email,request:mailRequest,revision:new Date(emailContract.updated_at).toISOString(),digest:contractDigest(emailContract.contract_html_template),expires:Date.now()+72*3600000};
+ const mailClaims={v:1,company:emailCompanyId,contract:emailContract.id,owner:emailOwner.id,email:emailOwner.email,request:mailRequest,revision:emailContract.updated_at,digest:contractDigest(emailContract.contract_html_template),expires:Date.now()+72*3600000};
  const emailLink=issueContractEmailLink(mailClaims,jwtSecret);
  assert.equal((await appApi('/next_api/contracts/verify-token','POST',{signature_token:emailLink})).data.data.signed,false);
  assert.equal((await success('/contract_signatures?contract_id=eq.'+emailContract.id,service)).length,0);

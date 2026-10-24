@@ -1,3 +1,4 @@
+-- Domain conflicts use 23514, never 40001 (which PostgREST may automatically retry).
 -- Additive evidence only. Existing signatures, terms, prices and invoices are preserved.
 BEGIN;
 ALTER TABLE :"schema".contract_signatures ADD COLUMN IF NOT EXISTS email_link_evidence jsonb;
@@ -13,16 +14,16 @@ BEGIN
  IF NOT FOUND THEN RAISE EXCEPTION 'Invitation unavailable' USING ERRCODE='23514';END IF;
  PERFORM 1 FROM company_users WHERE company_id=p_company AND user_id=p_actor AND is_active AND role IN('owner','portal_owner') FOR SHARE;
  IF NOT FOUND THEN RAISE EXCEPTION 'Invitation unavailable' USING ERRCODE='23514';END IF;
- IF p_digest IS NULL OR p_digest IS DISTINCT FROM encode(sha256(convert_to(k.contract_html_template,'UTF8')),'hex') THEN RAISE EXCEPTION 'Contract changed; request a new invitation' USING ERRCODE='40001';END IF;
+ IF p_digest IS NULL OR p_digest IS DISTINCT FROM encode(sha256(convert_to(k.contract_html_template,'UTF8')),'hex') THEN RAISE EXCEPTION 'Contract changed; request a new invitation' USING ERRCODE='23514';END IF;
  SELECT * INTO prior FROM contract_signatures WHERE request_id=p_request;
  IF FOUND THEN
-  IF prior.contract_id<>k.id OR prior.company_id<>c.id OR prior.signature_method IS DISTINCT FROM 'email_link' OR prior.signer_email IS DISTINCT FROM p_email OR (p_action='sign' AND (prior.signer_name IS DISTINCT FROM trim(p_name) OR prior.signer_position IS DISTINCT FROM nullif(trim(p_position),''))) THEN RAISE EXCEPTION 'Invitation conflict' USING ERRCODE='40001';END IF;
+  IF prior.contract_id<>k.id OR prior.company_id<>c.id OR prior.signature_method IS DISTINCT FROM 'email_link' OR prior.signer_email IS DISTINCT FROM p_email OR (p_action='sign' AND (prior.signer_name IS DISTINCT FROM trim(p_name) OR prior.signer_position IS DISTINCT FROM nullif(trim(p_position),''))) THEN RAISE EXCEPTION 'Invitation conflict' USING ERRCODE='23514';END IF;
  ELSE
-  IF k.updated_at IS DISTINCT FROM p_expected OR k.contract_status IS DISTINCT FROM 'pending_signature' OR k.signed_at IS NOT NULL OR k.contract_end_date IS NULL OR k.contract_end_date<=(clock_timestamp() AT TIME ZONE 'Europe/Brussels')::date THEN RAISE EXCEPTION 'Contract unavailable; request a new invitation' USING ERRCODE='40001';END IF;
+  IF k.updated_at IS DISTINCT FROM p_expected OR k.contract_status IS DISTINCT FROM 'pending_signature' OR k.signed_at IS NOT NULL OR k.contract_end_date IS NULL OR k.contract_end_date<=(clock_timestamp() AT TIME ZONE 'Europe/Brussels')::date THEN RAISE EXCEPTION 'Contract unavailable; request a new invitation' USING ERRCODE='23514';END IF;
   IF p_action='sign' THEN
    IF coalesce(length(trim(p_name)),0) NOT BETWEEN 2 AND 160 OR coalesce(length(trim(p_position)),0) NOT BETWEEN 2 AND 120 OR coalesce(length(p_consent),0) NOT BETWEEN 20 AND 2000 OR coalesce(length(p_ip),0)>128 OR coalesce(length(p_agent),0)>1000 THEN RAISE EXCEPTION 'Signature details required' USING ERRCODE='22023';END IF;
    SELECT * INTO profile FROM subscription_billing_profiles WHERE company_id=p_company FOR UPDATE;
-   IF profile.company_id IS NOT NULL AND profile.contract_id IS DISTINCT FROM k.id THEN RAISE EXCEPTION 'Existing billing schedule requires review' USING ERRCODE='40001';END IF;
+   IF profile.company_id IS NOT NULL AND profile.contract_id IS DISTINCT FROM k.id THEN RAISE EXCEPTION 'Existing billing schedule requires review' USING ERRCODE='23514';END IF;
    INSERT INTO contract_signatures(request_id,contract_id,company_id,signer_name,signer_email,signer_position,signature_ip,signature_user_agent,signed_at,signature_method,is_verified,email_link_evidence)
    VALUES(p_request,k.id,c.id,trim(p_name),p_email,trim(p_position),p_ip,p_agent,clock_timestamp(),'email_link',false,jsonb_build_object('version',1,'contract_sha256',p_digest,'reviewed_revision',p_expected,'invitation_expires',p_expires,'recipient_user_id',p_actor,'consent',p_consent,'assurance','simple_email_link')) RETURNING * INTO prior;
    UPDATE company_contracts SET contract_status='active',signed_at=prior.signed_at,signer_ip=p_ip,signer_user_agent=p_agent,updated_at=clock_timestamp() WHERE id=k.id;

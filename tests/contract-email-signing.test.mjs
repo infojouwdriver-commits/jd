@@ -4,6 +4,7 @@ import {contractInvitation} from '../src/lib/contract-invitation.ts';
 const secret='synthetic-signing-key-'.repeat(3),now=Date.now();
 const invitation={v:1,contract:1,company:3,owner:1000,email:'owner@example.invalid',request:randomUUID(),revision:new Date().toISOString(),digest:contractDigest('Synthetic reviewed contract'),expires:now+72*3600000};
 test('email links are signed, purpose separated, expire and bind the owner, recipient, revision and exact document',()=>{
+ const precise={...invitation,revision:'2026-10-24T01:00:00.123456+00:00'};assert.equal(readContractEmailLink(issueContractEmailLink(precise,secret),secret,now).revision,precise.revision);
  const token=issueContractEmailLink(invitation,secret);assert.deepEqual(readContractEmailLink(token,secret,now),invitation);
  assert.throws(()=>readContractEmailLink(token,secret+'wrong',now));assert.throws(()=>readContractEmailLink(token,secret,now+72*3600000));assert.throws(()=>readContractEmailLink(token,secret,now-2*3600000));assert.throws(()=>readContractEmailLink('x'.repeat(3000),secret));
  const [body,mac]=token.split('.');const tampered=Buffer.from(JSON.stringify({...invitation,owner:1001})).toString('base64url');assert.throws(()=>readContractEmailLink(tampered+'.'+mac,secret,now));assert.throws(()=>readContractEmailLink(body+'.'+mac.slice(0,-1),secret,now));
@@ -28,7 +29,7 @@ test('review creates no signature, invoice, payment or email; signing records im
  await db.exec(sql('migrations/20261024_contract_email_signing.sql'));assert.equal((await db.query('SELECT count(*)::int n FROM contract_signatures')).rows[0].n,1);
  }finally{await db.close();}});
 test('expired, changed, cross-company, revoked owner and recipient substitution fail without writes',async()=>{const {db,k}=await setup();try{
- for(const v of [{expires:new Date(Date.now()-1).toISOString()},{expected:'2000-01-01T00:00:00Z'},{digest:contractDigest('Changed')},{email:'attacker@example.invalid'},{actor:1001},{company:4},{action:'sign',consent:''},{action:'sign',position:''}])await assert.rejects(call(db,k,v));
+ for(const v of [{expires:new Date(Date.now()-1).toISOString()},{expected:'2000-01-01T00:00:00Z'},{digest:contractDigest('Changed')},{email:'attacker@example.invalid'},{actor:1001},{company:4},{action:'sign',consent:''},{action:'sign',position:''}])await assert.rejects(call(db,k,v),error=>['23514','22023'].includes(error.code));
  await db.exec('UPDATE users SET is_active=false WHERE id=1000');await assert.rejects(call(db,k),/unavailable/);await db.exec('UPDATE users SET is_active=true WHERE id=1000;UPDATE company_users SET is_active=false WHERE user_id=1000');await assert.rejects(call(db,k),/unavailable/);
  await db.exec('UPDATE company_users SET is_active=true WHERE user_id=1000;UPDATE companies SET archived_at=clock_timestamp() WHERE id=3');await assert.rejects(call(db,k),/unavailable/);assert.equal((await db.query('SELECT count(*)::int n FROM contract_signatures')).rows[0].n,0);
  }finally{await db.close();}});
