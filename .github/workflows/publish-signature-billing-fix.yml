@@ -1,0 +1,113 @@
+name: Publish tested contract signature storage fix
+on:
+  workflow_dispatch:
+    inputs:
+      backup_run:
+        type: string
+        required: true
+        description: Recent encrypted backup and successful native restore drill
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+  apply:
+    needs: checks
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Verify exact tested source and recent recovery
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BACKUP_RUN: ${{ inputs.backup_run }}
+        run: |
+          python3 scripts/code-map.py --check
+          node --input-type=module <<'GATE'
+          import fs from 'node:fs';
+          const api=async path=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+path,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Release proof unavailable');return r.json();};
+          const allowed=new Set(['.github/workflows/publish-signature-billing-fix.yml','docs/CODE_MAP_AR.md','scripts/apply-release.mjs','migrations/20261026_signature_billing_conflict.sql','tests/contract-billing-database.test.mjs','tests/contract-email-signing.test.mjs','tests/run-database-stack.mjs','graphify-out/GRAPH_REPORT.md','graphify-out/GRAPH_TREE.html','graphify-out/SOURCE_INDEX.md','graphify-out/graph.json','graphify-out/health.json','graphify-out/source-manifest.json']);
+          const scope=await api('/compare/2ceda27386c1b57f70d4b403d4d90e94394ecfb7...'+process.env.GITHUB_SHA);
+          if(scope.status!=='ahead'||!scope.files?.length||scope.files.length>=300||scope.files.some(f=>!allowed.has(f.filename)||!['added','modified'].includes(f.status)))throw Error('Only reviewed signature storage changes accepted');
+          const jobs=await api('/actions/runs/'+process.env.GITHUB_RUN_ID+'/jobs?per_page=100');
+          for(const name of ['checks / verify','checks / native-database'])if(!jobs.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Full application and native HTTP acceptance required');
+          if(!/^[1-9][0-9]+$/.test(process.env.BACKUP_RUN))throw Error('Backup run required');
+          const backup=await api('/actions/runs/'+process.env.BACKUP_RUN);
+          const age=Date.now()-Date.parse(backup.updated_at);
+          if(backup.path!=='.github/workflows/backup-foundation.yml'||backup.status!=='completed'||backup.conclusion!=='success'||age<0||age>86400000)throw Error('Recent successful backup and restore required');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup_tag='+backup.id+'-'+backup.run_attempt+'\n');
+          GATE
+      - name: Replace only the two tested signature functions
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          BACKUP_TAG: ${{ steps.gate.outputs.backup_tag }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          migration_sha=$(sha256sum migrations/20261026_signature_billing_conflict.sql | awk '{print $1}')
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p /srv/jouw-driver/releases/$GITHUB_SHA"
+          scp "${args[@]}" migrations/20261026_signature_billing_conflict.sql "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$GITHUB_SHA/signature-billing-fix.sql"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$GITHUB_SHA' '$BACKUP_TAG' '$migration_sha'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export SIGNATURE_REVISION=$1 SIGNATURE_BACKUP=$2 SIGNATURE_SHA=$3
+          cd /srv/jouw-driver/foundation
+          mkdir /srv/jouw-driver/.deployment-lock
+          trap 'rmdir /srv/jouw-driver/.deployment-lock' EXIT
+          node --env-file=.database.env --input-type=module <<'APPLY'
+          import fs from 'node:fs';import {spawnSync} from 'node:child_process';import {createHash} from 'node:crypto';
+          const e=process.env,dir='/srv/jouw-driver/releases/'+e.SIGNATURE_REVISION;
+          if(e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||e.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
+          const runtime=JSON.parse(fs.readFileSync('runtime-mode.json')),release=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(runtime.mode!=='public'||runtime.revision!=='7e88fac17285b1c1db74c13fa05fa6c7f7d51dcc'||runtime.image!==release.image||runtime.revision!==release.revision)throw Error('Live baseline changed');
+          const backup='/srv/jouw-driver/backups/foundation-'+e.SIGNATURE_BACKUP;
+          if(fs.statSync(backup+'.tar.age').mtimeMs<Date.parse(runtime.deployedAt)||createHash('sha256').update(fs.readFileSync(backup+'.tar.age')).digest('hex')!==fs.readFileSync(backup+'.sha256','utf8').trim())throw Error('Recovery does not cover current live data');
+          const raw=fs.readFileSync(dir+'/signature-billing-fix.sql');
+          if(createHash('sha256').update(raw).digest('hex')!==e.SIGNATURE_SHA)throw Error('Migration identity mismatch');
+          const paths=['.app-staging.env','.database.env','private-app.yaml','runtime-mode.json','compose.yaml','Caddyfile','/srv/jouw-driver/release.json'];
+          const hashes=paths.map(p=>createHash('sha256').update(fs.readFileSync(p)).digest('hex'));
+          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
+          const query=sql=>{const r=spawnSync('docker',args,{input:sql,encoding:'utf8'});if(r.status!==0)throw Error('Signature schema operation rejected; inspect privately on host');return r.stdout.trim();};
+          const identities=["public.security_email_contract(text,bigint,bigint,bigint,uuid,text,timestamptz,text,timestamptz,text,text,text,text,text)","public.security_sign_company_contract(bigint,bigint,bigint,uuid,text,text,text,text,timestamptz)"];
+          const rollback=query("SELECT pg_get_functiondef(oid) FROM pg_proc WHERE oid IN ("+identities.map(i=>"'"+i+"'::regprocedure").join(',')+");");
+          fs.writeFileSync(dir+'/signature-functions-before.sql','BEGIN;\n'+rollback+'\nCOMMIT;\n',{mode:0o600});
+          let applied=false;
+          try{
+            const sql=raw.toString('utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"').replaceAll(':"user_role"','"jouw_app_user"');
+            query(sql);applied=true;
+            for(const i of identities){
+              if(query("SELECT position('contract_billing_review_required' IN pg_get_functiondef('"+i+"'::regprocedure))>0 AND NOT has_function_privilege('jouw_app_user','"+i+"','EXECUTE') AND has_function_privilege('jouw_service','"+i+"','EXECUTE');")!=='t')throw Error('Function acceptance failed');
+            }
+            for(let n=0;n<paths.length;n++)if(createHash('sha256').update(fs.readFileSync(paths[n])).digest('hex')!==hashes[n])throw Error('Runtime configuration changed');
+            const base='https://app.jouww.com';
+            for(const path of ['/login','/sign-contract/email','/admin/invoices'])if((await fetch(base+path,{signal:AbortSignal.timeout(15000)})).status!==200)throw Error('Page acceptance failed');
+            for(const path of ['/next_api/contracts/sign','/next_api/contracts/verify-token'])if((await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)})).status!==400)throw Error('Signature validation guard failed');
+            if((await fetch(base+'/next_api/webhooks/stripe',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(15000)})).status!==400)throw Error('Stripe signature guard failed');
+            fs.writeFileSync(dir+'/signature-billing-fix.json',JSON.stringify({revision:e.SIGNATURE_REVISION,migration_sha:e.SIGNATURE_SHA,applied_at:new Date().toISOString(),live_image:runtime.image,backup:e.SIGNATURE_BACKUP,passed:true})+'\n',{mode:0o600});
+          }catch(error){if(applied)query(fs.readFileSync(dir+'/signature-functions-before.sql','utf8'));throw error;}
+          console.log('Signature storage fix applied. Existing application image, documents, financial schedules, Stripe credentials and services preserved. No real signature or payment was created.');
+          APPLY
+          REMOTE
