@@ -13,7 +13,7 @@ on:
       revision:
         type: string
         required: true
-        description: Exact tested independent invoice revision reachable from main
+        description: Exact tested bank QR revision reachable from main
       release_run:
         type: string
         required: true
@@ -229,14 +229,14 @@ jobs:
           const before=spawnSync('docker',args,{input:"SELECT public.independent_schema_ready() AND NOT EXISTS(SELECT FROM unnest(ARRAY['jouw_app_user','jouw_service','jouw_gateway']) r(role) WHERE has_schema_privilege(role,'jouw_driver_archive_20261009','USAGE'));",encoding:'utf8'});
           if(before.status!==0||before.stdout.trim()!=='t')throw Error('Operational schema or archive isolation is not accepted');
           const applied=spawnSync('docker',args,{input:sql+"\nNOTIFY pgrst, 'reload schema';\n",encoding:'utf8'});
-          if(applied.status!==0)throw Error('Additive welcome migration rejected; old application retained');
+          if(applied.status!==0)throw Error('Invoice bank snapshot migration rejected; old application retained');
           const iban=e.COLLECTION_IBAN;
           if(!/^BE[0-9]{14}$/.test(iban)||BigInt(iban.slice(4)+'1114'+iban.slice(2,4))%97n!==1n)throw Error('Invalid collection IBAN');
-          const configured=spawnSync('docker',args,{input:`BEGIN; SET LOCAL lock_timeout='5s'; DO $$ DECLARE issuer public.companies; settings public.subscription_billing_settings; BEGIN SELECT * INTO settings FROM public.subscription_billing_settings WHERE id=1 FOR UPDATE; SELECT * INTO issuer FROM public.companies WHERE id=settings.issuer_company_id AND archived_at IS NULL AND NOT is_test; IF issuer.id IS NULL OR coalesce(length(trim(issuer.name)),0) NOT BETWEEN 1 AND 70 OR issuer.name~'[\\r\\n]' THEN RAISE EXCEPTION 'Existing real legal issuer required';END IF; IF settings.collection_iban IS NOT NULL AND (settings.collection_iban IS DISTINCT FROM '${iban}' OR settings.collection_issuer_id IS DISTINCT FROM issuer.id) THEN RAISE EXCEPTION 'Existing bank instructions require review';END IF; UPDATE public.subscription_billing_settings SET collection_iban='${iban}',collection_issuer_id=issuer.id,updated_at=clock_timestamp() WHERE id=1; END $$; COMMIT;`,encoding:'utf8'});
+          const configured=spawnSync('docker',args,{input:`BEGIN; SET LOCAL lock_timeout='5s'; DO $$ DECLARE issuer public.companies; settings public.subscription_billing_settings; BEGIN SELECT * INTO settings FROM public.subscription_billing_settings WHERE id=1 FOR UPDATE; SELECT * INTO issuer FROM public.companies WHERE id=settings.issuer_company_id AND archived_at IS NULL AND NOT is_test; IF issuer.id IS NULL OR coalesce(length(trim(issuer.name)),0) NOT BETWEEN 1 AND 70 OR position(chr(10) in issuer.name)>0 OR position(chr(13) in issuer.name)>0 THEN RAISE EXCEPTION 'Existing real legal issuer required';END IF; IF settings.collection_iban IS NOT NULL AND (settings.collection_iban IS DISTINCT FROM '${iban}' OR settings.collection_issuer_id IS DISTINCT FROM issuer.id) THEN RAISE EXCEPTION 'Existing bank instructions require review';END IF; UPDATE public.subscription_billing_settings SET collection_iban='${iban}',collection_issuer_id=issuer.id,updated_at=clock_timestamp() WHERE id=1; END $$; COMMIT;`,encoding:'utf8'});
           if(configured.status!==0)throw Error('Bank instruction configuration rejected; inspect privately on host');
           const check=spawnSync('docker',args,{input:"SELECT EXISTS(SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='manual_invoices' AND column_name='bank_payment') AND EXISTS(SELECT FROM information_schema.columns WHERE table_schema='public' AND table_name='subscription_documents' AND column_name='bank_payment') AND NOT has_function_privilege('jouw_app_user','public.security_snapshot_invoice_bank()','EXECUTE') AND has_function_privilege('jouw_service','public.security_snapshot_invoice_bank()','EXECUTE');",encoding:'utf8'});
           if(check.status!==0||check.stdout.trim()!=='t')throw Error('Invoice snapshots or browser isolation failed');
-          console.log('Additive Stripe reconciliation schema applied; existing financial records preserved.');
+          console.log('Invoice bank instructions configured; existing financial records preserved.');
           MIGRATE
           docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml restart postgrest </dev/null
           changed=true
