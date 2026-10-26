@@ -213,6 +213,8 @@ REVOKE ALL ON FUNCTION :"schema".security_invoice_email_tick() FROM PUBLIC,:"use
 GRANT EXECUTE ON FUNCTION :"schema".security_invoice_email_tick() TO :"admin_role";
 CREATE OR REPLACE FUNCTION :"schema".security_invoice_service_guard() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=:"schema",pg_catalog AS $$
 BEGIN
+ -- Completed/cancelled uploads are history, not a new work start. Never discard a driver's saved completion.
+ IF TG_TABLE_NAME='trips' THEN IF NEW.status IN('completed','cancelled') THEN RETURN NEW;END IF;END IF;
  IF EXISTS(SELECT FROM invoice_service_activation WHERE company_id=NEW.company_id AND paid_at IS NULL) THEN RAISE EXCEPTION 'First subscription invoice payment required before service activation' USING ERRCODE='23514';END IF;RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS invoice_service_guard ON :"schema".trips;

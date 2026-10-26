@@ -1197,7 +1197,7 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_subscription_immutable()` — [L138](../migrations/20261026_invoice_checkout.sql#L138)
 - `"schema".security_manual_invoice_immutable()` — [L143](../migrations/20261026_invoice_checkout.sql#L143)
 - `"schema".security_invoice_email_issue()` — [L148](../migrations/20261026_invoice_checkout.sql#L148)
-- `invoice_service_guard` — [L219](../migrations/20261026_invoice_checkout.sql#L219)
+- `invoice_service_guard` — [L221](../migrations/20261026_invoice_checkout.sql#L221)
 
 ## [migrations/20261026_manual_invoices.sql](../migrations/20261026_manual_invoices.sql)
 

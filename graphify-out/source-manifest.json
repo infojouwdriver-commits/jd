@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "6541bdf1deeb94032d7f7c2d5837acb27fbf24a0",
+  "source_commit_context": "ac47ce340a1694bb09522b143a631d88989b7b52",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -136,7 +136,7 @@
     "migrations/20261024_contract_email_signing.sql": "dc54164cacd3dcd8c7e252302041ff985347006c222d6b2c4f7b4ab094fee506",
     "migrations/20261024_stripe_billing.sql": "3670b732676d9cedf98251ea1eb4449ad552517c6cdc0e9e61c4f16802deb8ce",
     "migrations/20261026_invoice_bank_qr.sql": "509a8ff6b71e71212f2f9bc569122a02220aecd50af5755ff3a607076bc06dc8",
-    "migrations/20261026_invoice_checkout.sql": "993011421d4580a89d31688bca15162d0939eb6f2a8575a2f00f2d7238fd290b",
+    "migrations/20261026_invoice_checkout.sql": "054bbe39fbf0626b91f4f1d9347b267448b028c2a531b51ed32910df860f5919",
     "migrations/20261026_manual_invoices.sql": "cbce069066424698b447c0e4d31fc1467ce1f327f8caf97749cbb430119333c2",
     "migrations/20261026_signature_billing_conflict.sql": "0fbfb119b694a7aa79f692e9463ee9f362462068ef15811bf9242ebcce041803",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
@@ -553,7 +553,7 @@
     "src/lib/fleet-tracking.ts": "88ab8497ba28f5952a29abc78dd49ba6483638da35be94d724d40d2473c9f5e4",
     "src/lib/invoice-bank-payment.ts": "9d2d72d87abf7ab5a57f056493d205d300886bf741f663b3b3d9c661e5e82fa1",
     "src/lib/invoice-checkout.ts": "c74254dd2f3f0856464862dd91154459d6f8d94d37d50d561610c9810b365fd3",
-    "src/lib/invoice-email.ts": "9efe0a53180a3a98551f7c251263f91bd3620cafcd06e802c1de7ff9a958dfc7",
+    "src/lib/invoice-email.ts": "58ffcd1a46609248bcffc7b7393158078fb7161a87a25281d5f479521706fd7c",
     "src/lib/invoice-payment-handler.ts": "470cfdc792ef1723d7434cbe22e2d3d4dfa50bb74a65a41b368f5556b31a79b2",
     "src/lib/invoice-payment-link.ts": "9704be9fc07aca8feba343fe4549fb0b430b547d60cd19fa431452dd9d866f02",
     "src/lib/invoice-payment-state.ts": "f63aac313cf07d8b4fad852c92f78abfe7a5a2061d41f841238027c72e7270e6",
@@ -597,10 +597,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_REPORT.md": "ef90196109484be2e2bc92313e9538e882d42a9a791f3c1602ba3171974a346c",
-    "graph.json": "91fb8e8f3b76ef50460d95ef779262ddfa321bb646a8ba517d14299e01e13aa6",
-    "SOURCE_INDEX.md": "141084d6881b50b4f5af2dbd2b6d0acdfc3eebc83890f6134da9d21c3abd75c2",
     "health.json": "d06253b37a251c8bf6bad2afb4f84c7ba5a955c783ddeddeb7bcf19e1a4b267d",
+    "graph.json": "cb850d9ffc591918d5127aaf84cf01396bc52eea1a6b3f375291e16ffabbb965",
+    "GRAPH_REPORT.md": "a9af973eb012d93f52f535efaffa8a93b36ad2520b719227689ddc616ea6d2eb",
+    "SOURCE_INDEX.md": "427d4bfd70733a42b13ef425ac0e9e724e0c6a802ac5b59518340476a66d3794",
     "GRAPH_TREE.html": "b19c4e0d97de38d4eee334bd3c984fc3482c7c2a32257b7eb79b2c996f69940a"
   },
   "nodes": 3380,
