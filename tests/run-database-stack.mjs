@@ -287,7 +287,7 @@ try {
  await denied('/subscription_documents',browser);await denied('/rpc/security_subscription_tick',browser,'POST',{});
  const pdfResponse=await fetch(appBase+billingPath+'&document_id='+subscriptionDoc.id,{headers:{Origin:appOrigin,Cookie:adminCookie},signal:AbortSignal.timeout(20000)});assert.equal(pdfResponse.status,200);assert.equal(Buffer.from(await pdfResponse.arrayBuffer()).subarray(0,5).toString(),'%PDF-');
  // Invoice-only checkout and first-service activation on real PostgREST. No external charge or mail.
- const gated=await onboardingApi('/next_api/company-portal/vehicles?company_id='+pending.company_id,'GET',undefined,onboardingCookie);assert.equal(gated.status,402);
+ const gated=await onboardingApi('/next_api/company-portal/staff?company_id='+pending.company_id,'GET',undefined,onboardingCookie);assert.equal(gated.status,402);
  await psql(`BEGIN; SELECT id FROM companies WHERE id=${pending.company_id} FOR UPDATE; DO $$ BEGIN IF NOT EXISTS(SELECT FROM subscription_documents WHERE company_id=${pending.company_id} AND installment_number=1) THEN PERFORM security_prepare_subscription_invoice(${pending.company_id},1,'${randomUUID()}');END IF;END $$;COMMIT;`);
  const activationDoc=(await success('/subscription_documents?company_id=eq.'+pending.company_id+'&installment_number=eq.1',service))[0];assert.ok(activationDoc);
  await success('/rpc/security_invoice_email_issue',service,'POST',{p_source:'subscription',p_document:activationDoc.id,p_actor:1});
@@ -303,7 +303,7 @@ try {
  assert.equal((await success('/rpc/security_invoice_checkout_paid',service,'POST',settled)).allocation,'allocated');await success('/rpc/security_invoice_checkout_paid',service,'POST',settled);
  assert.equal((await success('/subscription_payments?invoice_id=eq.'+activationDoc.id,service)).length,1);
  assert.equal((await appApi('/next_api/invoice-payment','POST',{token:payToken,action:'review'})).data.data.balance_cents,0);
- assert.equal((await onboardingApi('/next_api/company-portal/vehicles?company_id='+pending.company_id,'GET',undefined,onboardingCookie)).status,200);
+ assert.equal((await onboardingApi('/next_api/company-portal/staff?company_id='+pending.company_id,'GET',undefined,onboardingCookie)).status,200);
  assert.equal((await success('/subscription_documents?id=eq.'+activationDoc.id,service))[0].exchange_reference,null);
  checks.push('Native invoice payment capability exposes only one invoice, rejects tampering and browser settlement, preserves one receipt on retry, prevents competing bank payment and activates new service only after the first monthly invoice is fully paid');
  const archiveRequest={company_id:newCompanyId,action:'archive',request_id:randomUUID(),reason:'Synthetic archive acceptance'};assert.equal((await appApi('/next_api/company-lifecycle','POST',archiveRequest,adminCookie)).status,200);assert.ok((await success('/companies?id=eq.'+newCompanyId,service))[0].archived_at);assert.equal((await success('/subscription_billing_profiles?company_id=eq.'+newCompanyId,service))[0].enabled,false);assert.equal((await success('/subscription_documents?id=eq.'+subscriptionDoc.id,service)).length,1);
