@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {invoicePaymentState} from './invoice-payment-state';
 import {requestMiddleware,validateRequestBody} from './api-utils';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
@@ -15,7 +16,7 @@ export const manualInvoicesGET=requestMiddleware(async(request,context)=>{
  if(!context.payload?.isAdmin)return createErrorResponse({status:403,errorMessage:'Administrator required'});
  try{
   const client=createPostgrestClient(await generateAdminUserToken());const {offset,limit}=pageRange(request);const documentId=request.nextUrl.searchParams.get('document_id');
-  if(documentId){const n=Number(documentId);if(!Number.isSafeInteger(n)||n<1)return createErrorResponse({status:400,errorMessage:'Document required'});const r=await client.from('manual_invoices').select('*').eq('id',n).maybeSingle();if(r.error)throw r.error;if(!r.data)return createErrorResponse({status:404,errorMessage:'Document missing'});const d=r.data;const bytes=subscriptionPdf({...d,period_start:d.prepared_date,period_end:d.prepared_date,original_id:null,reason:null,tax_category:d.vat_bps?'S':'E'} as SubscriptionDocument);return new Response(new Uint8Array(bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`attachment; filename="${d.document_number}.pdf"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});}
+  if(documentId){const n=Number(documentId);if(!Number.isSafeInteger(n)||n<1)return createErrorResponse({status:400,errorMessage:'Document required'});const r=await client.from('manual_invoices').select('*').eq('id',n).maybeSingle();if(r.error)throw r.error;if(!r.data)return createErrorResponse({status:404,errorMessage:'Document missing'});const d=r.data;const bytes=subscriptionPdf({...d,period_start:d.prepared_date,period_end:d.prepared_date,original_id:null,reason:null,tax_category:d.vat_bps?'S':'E'} as SubscriptionDocument,await invoicePaymentState(client,d,'manual'));return new Response(new Uint8Array(bytes),{headers:{'Content-Type':'application/pdf','Content-Disposition':`attachment; filename="${d.document_number}.pdf"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});}
   let query=client.from('manual_invoice_summary').select('*',{count:'exact'}).order('id',{ascending:false}).range(offset,offset+limit-1);
   const company=request.nextUrl.searchParams.get('company_id'),state=request.nextUrl.searchParams.get('state');if(company){if(!/^\d+$/.test(company))return createErrorResponse({status:400,errorMessage:'Company required'});query=query.eq('company_id',Number(company));}if(state){if(!['prepared','issued','void'].includes(state))return createErrorResponse({status:400,errorMessage:'Invalid state'});query=query.eq('state',state);}
   const docs=await query;if(docs.error)throw docs.error;

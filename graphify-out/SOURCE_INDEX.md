@@ -1166,6 +1166,12 @@ Links target the working tree, so line positions can move after changes.
 - `stripe_company_lifecycle_guard` — [L194](../migrations/20261024_stripe_billing.sql#L194)
 - `stripe_contract_lifecycle_guard` — [L196](../migrations/20261024_stripe_billing.sql#L196)
 
+## [migrations/20261026_invoice_bank_qr.sql](../migrations/20261026_invoice_bank_qr.sql)
+
+- `20261026_invoice_bank_qr.sql` — [source](../migrations/20261026_invoice_bank_qr.sql#)
+- `"schema".security_snapshot_invoice_bank()` — [L8](../migrations/20261026_invoice_bank_qr.sql#L8)
+- `invoice_bank_snapshot` — [L26](../migrations/20261026_invoice_bank_qr.sql#L26)
+
 ## [migrations/20261026_manual_invoices.sql](../migrations/20261026_manual_invoices.sql)
 
 - `20261026_manual_invoices.sql` — [source](../migrations/20261026_manual_invoices.sql#)
@@ -4452,6 +4458,20 @@ Links target the working tree, so line positions can move after changes.
 - `shouldPublishFleetPoint()` — [L44](../src/lib/fleet-tracking.ts#L44)
 - `isFleetLocationVisible()` — [L50](../src/lib/fleet-tracking.ts#L50)
 
+## [src/lib/invoice-bank-payment.ts](../src/lib/invoice-bank-payment.ts)
+
+- `invoice-bank-payment.ts` — [L1](../src/lib/invoice-bank-payment.ts#L1)
+- `BankInstructions` — [L2](../src/lib/invoice-bank-payment.ts#L2)
+- `InvoicePaymentState` — [L3](../src/lib/invoice-bank-payment.ts#L3)
+- `validIban()` — [L4](../src/lib/invoice-bank-payment.ts#L4)
+- `bankPaymentPayload()` — [L10](../src/lib/invoice-bank-payment.ts#L10)
+- `invoiceBankPayload()` — [L19](../src/lib/invoice-bank-payment.ts#L19)
+
+## [src/lib/invoice-payment-state.ts](../src/lib/invoice-payment-state.ts)
+
+- `invoice-payment-state.ts` — [L1](../src/lib/invoice-payment-state.ts#L1)
+- `invoicePaymentState()` — [L4](../src/lib/invoice-payment-state.ts#L4)
+
 ## [src/lib/mail-policy.ts](../src/lib/mail-policy.ts)
 
 - `mail-policy.ts` — [L1](../src/lib/mail-policy.ts#L1)
@@ -4473,10 +4493,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/manual-invoices.ts](../src/lib/manual-invoices.ts)
 
 - `manual-invoices.ts` — [L1](../src/lib/manual-invoices.ts#L1)
-- `positive` — [L8](../src/lib/manual-invoices.ts#L8)
-- `command` — [L9](../src/lib/manual-invoices.ts#L9)
-- `manualInvoicesGET` — [L14](../src/lib/manual-invoices.ts#L14)
-- `manualInvoicesPOST` — [L26](../src/lib/manual-invoices.ts#L26)
+- `positive` — [L9](../src/lib/manual-invoices.ts#L9)
+- `command` — [L10](../src/lib/manual-invoices.ts#L10)
+- `manualInvoicesGET` — [L15](../src/lib/manual-invoices.ts#L15)
+- `manualInvoicesPOST` — [L27](../src/lib/manual-invoices.ts#L27)
 
 ## [src/lib/mapbox-route.ts](../src/lib/mapbox-route.ts)
 
@@ -4676,20 +4696,20 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/subscription-billing.ts](../src/lib/subscription-billing.ts)
 
 - `subscription-billing.ts` — [L1](../src/lib/subscription-billing.ts#L1)
-- `id` — [L14](../src/lib/subscription-billing.ts#L14)
-- `date` — [L15](../src/lib/subscription-billing.ts#L15)
-- `expected` — [L16](../src/lib/subscription-billing.ts#L16)
-- `profile` — [L17](../src/lib/subscription-billing.ts#L17)
-- `command` — [L32](../src/lib/subscription-billing.ts#L32)
-- `billingGET` — [L88](../src/lib/subscription-billing.ts#L88)
-- `billingPOST` — [L224](../src/lib/subscription-billing.ts#L224)
+- `id` — [L15](../src/lib/subscription-billing.ts#L15)
+- `date` — [L16](../src/lib/subscription-billing.ts#L16)
+- `expected` — [L17](../src/lib/subscription-billing.ts#L17)
+- `profile` — [L18](../src/lib/subscription-billing.ts#L18)
+- `command` — [L33](../src/lib/subscription-billing.ts#L33)
+- `billingGET` — [L89](../src/lib/subscription-billing.ts#L89)
+- `billingPOST` — [L225](../src/lib/subscription-billing.ts#L225)
 
 ## [src/lib/subscription-document.ts](../src/lib/subscription-document.ts)
 
 - `subscription-document.ts` — [L1](../src/lib/subscription-document.ts#L1)
-- `SubscriptionDocument` — [L3](../src/lib/subscription-document.ts#L3)
-- `euro()` — [L31](../src/lib/subscription-document.ts#L31)
-- `subscriptionPdf()` — [L35](../src/lib/subscription-document.ts#L35)
+- `SubscriptionDocument` — [L5](../src/lib/subscription-document.ts#L5)
+- `euro()` — [L35](../src/lib/subscription-document.ts#L35)
+- `subscriptionPdf()` — [L39](../src/lib/subscription-document.ts#L39)
 
 ## [src/lib/subscription-offer.ts](../src/lib/subscription-offer.ts)
 
