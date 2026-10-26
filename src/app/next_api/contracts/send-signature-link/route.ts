@@ -20,7 +20,12 @@ export const POST=requestMiddleware(async(request,context)=>{
   if(contract.signed_at||contract.contract_status!=='pending_signature')return createErrorResponse({status:409,errorMessage:'الدعوة متاحة فقط لعقد بانتظار توقيع صاحب الشركة'});
   const companyResult=await client.from('companies').select('id,name,email,subscription_status,archived_at').eq('id',contract.company_id).maybeSingle();
   if(companyResult.error)throw companyResult.error;
-  const company=companyResult.data;
+  let company=companyResult.data;
+  if(company&&!company.archived_at&&(company.subscription_status===null||company.subscription_status==='pending_contract')){
+   const approved=await client.rpc('security_confirm_admin_company',{p_company:company.id,p_actor:Number(context.payload.sub)});
+   if(approved.error) return createErrorResponse({status:409,errorMessage:'الشركة تحتاج مراجعة تسجيلها من الإدارة قبل التوقيع'});
+   company={...company,subscription_status:'active'};
+  }
   if(!company||company.archived_at||company.subscription_status!=='active')return createErrorResponse({status:409,errorMessage:'موافقة الإدارة على الشركة مطلوبة قبل دعوتها للتوقيع'});
   // Resolve the actual active owner identities; never send a signing invitation to an arbitrary billing contact.
   const memberships=await client.from('company_users').select('user_id').eq('company_id',company.id).eq('is_active',true).in('role',['owner','portal_owner']).limit(100);

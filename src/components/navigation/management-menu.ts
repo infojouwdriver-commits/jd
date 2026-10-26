@@ -1,7 +1,8 @@
-import { Building2, Users, Car, MapPin, Settings, Bell, MessageSquare, ShieldCheck, UserCog, CheckCircle, Shield, Megaphone, TestTube, RadioTower } from 'lucide-react';
+import { FileText, Building2, Users, Car, MapPin, Settings, Bell, MessageSquare, ShieldCheck, UserCog, CheckCircle, Shield, Megaphone, TestTube, RadioTower } from 'lucide-react';
 
 /** One route catalog shared by the workspace and dashboard. */
 export const managementMenu = [
+  {title:'الفواتير',description:'فواتير مستقلة للشركات وسجل الدفعات',icon:FileText,href:'/admin/invoices',group:'التشغيل'},
   {title:'تطبيق السائق',description:'شاشة الترحيب والصورة والحركة',icon:Car,href:'/admin/app-experience',group:'الإدارة'},
   {title:'مركز المتابعة',description:'الاشتراكات والطلبات وحالات التشغيل التي تحتاج مراجعة',icon:CheckCircle,href:'/admin/operations',group:'التشغيل'},
   { title: 'حسابي', description: 'البريد وكلمة المرور وأمان الجلسات', icon: UserCog, href: '/admin/account', group: 'الإدارة' },

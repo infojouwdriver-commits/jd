@@ -1166,6 +1166,13 @@ Links target the working tree, so line positions can move after changes.
 - `stripe_company_lifecycle_guard` — [L194](../migrations/20261024_stripe_billing.sql#L194)
 - `stripe_contract_lifecycle_guard` — [L196](../migrations/20261024_stripe_billing.sql#L196)
 
+## [migrations/20261026_manual_invoices.sql](../migrations/20261026_manual_invoices.sql)
+
+- `20261026_manual_invoices.sql` — [source](../migrations/20261026_manual_invoices.sql#)
+- `"schema".manual_invoices` — [L3](../migrations/20261026_manual_invoices.sql#L3)
+- `"schema".manual_invoice_payments` — [L11](../migrations/20261026_manual_invoices.sql#L11)
+- `manual_invoice_immutable` — [L83](../migrations/20261026_manual_invoices.sql#L83)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -1733,6 +1740,11 @@ Links target the working tree, so line positions can move after changes.
 - `gdpr/page.tsx` — [L1](../src/app/admin/gdpr/page.tsx#L1)
 - `metadata` — [L4](../src/app/admin/gdpr/page.tsx#L4)
 - `GdprAdminPage()` — [L8](../src/app/admin/gdpr/page.tsx#L8)
+
+## [src/app/admin/invoices/page.tsx](../src/app/admin/invoices/page.tsx)
+
+- `admin/invoices/page.tsx` — [L1](../src/app/admin/invoices/page.tsx#L1)
+- `Page()` — [L2](../src/app/admin/invoices/page.tsx#L2)
 
 ## [src/app/admin/layout.tsx](../src/app/admin/layout.tsx)
 
@@ -2515,6 +2527,10 @@ Links target the working tree, so line positions can move after changes.
 - `unavailable` — [L2](../src/app/next_api/invoices/view/route.ts#L2)
 - `GET` — [L3](../src/app/next_api/invoices/view/route.ts#L3)
 - `POST` — [L4](../src/app/next_api/invoices/view/route.ts#L4)
+
+## [src/app/next_api/manual-invoices/route.ts](../src/app/next_api/manual-invoices/route.ts)
+
+- `manual-invoices/route.ts` — [L1](../src/app/next_api/manual-invoices/route.ts#L1)
 
 ## [src/app/next_api/messages/driver/route.ts](../src/app/next_api/messages/driver/route.ts)
 
@@ -3398,6 +3414,17 @@ Links target the working tree, so line positions can move after changes.
 - `FleetRecordsTab.tsx` — [L1](../src/components/operations/FleetRecordsTab.tsx#L1)
 - `RecordRow` — [L10](../src/components/operations/FleetRecordsTab.tsx#L10)
 - `FleetRecordsTab()` — [L15](../src/components/operations/FleetRecordsTab.tsx#L15)
+
+## [src/components/operations/InvoiceWorkspace.tsx](../src/components/operations/InvoiceWorkspace.tsx)
+
+- `InvoiceWorkspace.tsx` — [L1](../src/components/operations/InvoiceWorkspace.tsx#L1)
+- `words` — [L13](../src/components/operations/InvoiceWorkspace.tsx#L13)
+- `Invoice` — [L14](../src/components/operations/InvoiceWorkspace.tsx#L14)
+- `Data` — [L15](../src/components/operations/InvoiceWorkspace.tsx#L15)
+- `Workspace()` — [L16](../src/components/operations/InvoiceWorkspace.tsx#L16)
+- `filter()` — [L23](../src/components/operations/InvoiceWorkspace.tsx#L23)
+- `download()` — [L25](../src/components/operations/InvoiceWorkspace.tsx#L25)
+- `InvoiceWorkspace()` — [L38](../src/components/operations/InvoiceWorkspace.tsx#L38)
 
 ## [src/components/operations/OperationForm.tsx](../src/components/operations/OperationForm.tsx)
 
@@ -4437,6 +4464,14 @@ Links target the working tree, so line positions can move after changes.
 - `MailMessage` — [L5](../src/lib/mail-service.ts#L5)
 - `MailResult` — [L6](../src/lib/mail-service.ts#L6)
 - `sendTransactionalMail()` — [L7](../src/lib/mail-service.ts#L7)
+
+## [src/lib/manual-invoices.ts](../src/lib/manual-invoices.ts)
+
+- `manual-invoices.ts` — [L1](../src/lib/manual-invoices.ts#L1)
+- `positive` — [L8](../src/lib/manual-invoices.ts#L8)
+- `command` — [L9](../src/lib/manual-invoices.ts#L9)
+- `manualInvoicesGET` — [L14](../src/lib/manual-invoices.ts#L14)
+- `manualInvoicesPOST` — [L26](../src/lib/manual-invoices.ts#L26)
 
 ## [src/lib/mapbox-route.ts](../src/lib/mapbox-route.ts)
 
