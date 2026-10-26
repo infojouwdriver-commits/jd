@@ -1,0 +1,41 @@
+name: Diagnose contract signature storage (read only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read contract constraints and eligibility counts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'cd /srv/jouw-driver/foundation && docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -Atq' <<'DIAGNOSE'
+          BEGIN READ ONLY;
+          SET LOCAL statement_timeout='10s';
+          SELECT json_build_object('constraints',coalesce(json_agg(json_build_object('table',c.relname,'name',k.conname,'definition',pg_get_constraintdef(k.oid))),'[]'::json)) FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN('contract_signatures','company_contracts','subscription_billing_profiles') AND k.contype='c';
+          SELECT json_build_object('pending_contracts',count(*),'billing_conflict',count(*) FILTER(WHERE p.company_id IS NOT NULL AND p.contract_id IS DISTINCT FROM k.id),'nonannual_dates',count(*) FILTER(WHERE k.contract_duration_months IS DISTINCT FROM 12 OR k.contract_end_date IS DISTINCT FROM (k.contract_start_date+interval '12 months')::date),'inactive_company',count(*) FILTER(WHERE c.subscription_status IS DISTINCT FROM 'active'),'missing_price',count(*) FILTER(WHERE coalesce(k.monthly_gross_cents,round(k.monthly_fee*100)::bigint) IS NULL)) FROM public.company_contracts k JOIN public.companies c ON c.id=k.company_id LEFT JOIN public.subscription_billing_profiles p ON p.company_id=c.id WHERE k.contract_status='pending_signature' AND k.signed_at IS NULL;
+          SELECT json_build_object('signature_columns',json_agg(json_build_object('column',column_name,'nullable',is_nullable,'type',data_type,'length',character_maximum_length))) FROM information_schema.columns WHERE table_schema='public' AND table_name='contract_signatures';
+          COMMIT;
+          DIAGNOSE
