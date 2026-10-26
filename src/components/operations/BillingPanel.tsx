@@ -1,11 +1,11 @@
 "use client";
 import ContractBillingPanel from "./ContractBillingPanel";
-import StripeBillingPanel from "./StripeBillingPanel";
+import InvoiceDeliveryActions,{invoicePaymentCopy} from "./InvoiceDeliveryActions";
 import {subscriptionOfferCopy} from "@/lib/subscription-offer";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
+import { Button,buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -43,6 +43,8 @@ interface BillingData {
     payment_method: "cash" | "bank_transfer" | "manual" | "stripe";
   }[];
   documents: Doc[];
+  payable?:Record<string,string>;
+  activation?:{contract_id:number|null;paid_at:string|null}|null;
   entries: {
     entry_id: string;
     entry_date: string;
@@ -380,10 +382,11 @@ export default function BillingPanel({
       <Button variant="outline" onClick={()=>setShowContracts(v=>!v)} aria-expanded={showContracts}>{offer.contracts}</Button>
       {showContracts&&<ContractBillingPanel key={companyId} companyId={companyId} admin={admin} linked={!!data?.profile?.contract_id} onChanged={reload}/>}
       {data?.profile?.contract_id&&<p className="rounded-xl border p-4 text-sm">{offer.linked} #{String(data.profile.contract_id)} · {offer.readonly}</p>}
-      {!archived&&<StripeBillingPanel companyId={companyId}/>}
+      <p className="rounded-xl border bg-card p-4 text-sm">{invoicePaymentCopy[language].intro}</p>
       <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
         {c.noSuspension}
       </p>
+      {data?.activation&&!data.activation.paid_at&&<p role="status" className="rounded-xl border border-primary/30 p-4">{invoicePaymentCopy[language].activation}</p>}
       {isTest && <p className="text-sm font-medium">{c.trial}</p>}
       {error && (
         <div role="alert" className="space-y-2 text-destructive">
@@ -508,6 +511,8 @@ export default function BillingPanel({
                   <Button variant="outline" onClick={() => download(d)}>
                     {c.download}
                   </Button>
+                  {!d.is_test&&d.kind==='invoice'&&d.state!=='void'&&admin&&<InvoiceDeliveryActions source="subscription" id={d.id} companyId={companyId} onChanged={reload}/>}
+                  {data.payable?.[d.id]&&<a className={buttonVariants()} href={data.payable[d.id]}>{invoicePaymentCopy[language].pay}</a>}
                   {admin && d.state === "prepared" && (
                     <>
                       <Button

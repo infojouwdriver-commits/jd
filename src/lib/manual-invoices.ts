@@ -1,3 +1,5 @@
+import {sendInvoiceEmail} from './invoice-email';
+import {closeInvoiceCheckout} from './invoice-checkout';
 import {z} from 'zod';
 import {invoicePaymentState} from './invoice-payment-state';
 import {requestMiddleware,validateRequestBody} from './api-utils';
@@ -10,6 +12,7 @@ const positive=z.number().int().positive();
 const command=z.discriminatedUnion('action',[
  z.object({action:z.literal('create'),request_id:z.string().uuid(),data:z.object({company_id:positive,issuer_company_id:positive,description:z.string().trim().min(1).max(2000),gross_cents:positive.max(100000000),vat_bps:z.number().int().min(0).max(10000),tax_reason:z.string().trim().max(1000).nullable(),due_date:z.iso.date()}).strict()}).strict(),
  z.object({action:z.enum(['issue','void']),request_id:z.string().uuid(),data:z.object({document_id:positive,reference:z.string().trim().max(256).optional()}).strict()}).strict(),
+ z.object({action:z.literal('send'),request_id:z.string().uuid(),data:z.object({document_id:positive}).strict()}).strict(),
  z.object({action:z.literal('payment'),request_id:z.string().uuid(),data:z.object({document_id:positive,amount_cents:positive.max(100000000),reference:z.string().trim().min(1).max(140),payment_method:z.enum(['cash','bank_transfer'])}).strict()}).strict()
 ]);
 export const manualInvoicesGET=requestMiddleware(async(request,context)=>{
@@ -26,5 +29,7 @@ export const manualInvoicesGET=requestMiddleware(async(request,context)=>{
 },true);
 export const manualInvoicesPOST=requestMiddleware(async(request,context)=>{
  if(!context.payload?.isAdmin)return createErrorResponse({status:403,errorMessage:'Administrator required'});
- try{const parsed=command.safeParse(await validateRequestBody(request));if(!parsed.success)return createErrorResponse({status:400,errorMessage:'راجع الحقول والمبلغ والتاريخ'});const v=parsed.data;const client=createPostgrestClient(await generateAdminUserToken());const r=await client.rpc('security_manual_invoice',{p_action:v.action,p_actor:Number(context.payload.sub),p_request:v.request_id,p_data:v.data});if(r.error)throw r.error;return createSuccessResponse(r.data);}catch(error){return operationFailure(error);}
+ try{const parsed=command.safeParse(await validateRequestBody(request));if(!parsed.success)return createErrorResponse({status:400,errorMessage:'راجع الحقول والمبلغ والتاريخ'});const v=parsed.data;const client=createPostgrestClient(await generateAdminUserToken());if(v.action==='send'){const sent=await sendInvoiceEmail(client,'manual',v.data.document_id,Number(context.payload.sub),'invoice:manual:'+v.data.document_id+':'+v.request_id);return createSuccessResponse(sent);}
+ if(v.action==='payment')await closeInvoiceCheckout(client,'manual',v.data.document_id);
+ const r=await client.rpc('security_manual_invoice',{p_action:v.action,p_actor:Number(context.payload.sub),p_request:v.request_id,p_data:v.data});if(r.error)throw r.error;return createSuccessResponse(r.data);}catch(error){return operationFailure(error);}
 },true);

@@ -16,6 +16,7 @@ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 const totpSecret=Array.from(randomBytes(32),n=>alphabet[n%32]).join('');
 const password=randomBytes(18).toString('base64url');
 const rows={users:[{id:1,email:'admin@example.invalid',password:await bcrypt.hash(password,4),user_type:'admin',is_active:true},{id:2,email:'driver@example.invalid',password:await bcrypt.hash(password,4),user_type:'driver',is_active:true}],sessions:[],refresh_tokens:[],trips:[{id:101,user_id:2,price:10,locked_after_completion:false},{id:102,user_id:3,price:20,locked_after_completion:false}],invoices:[]};
+rows.invoice_service_activation=[];rows.invoice_checkouts=[];rows.stripe_enrollments=[];
 rows.user_passcode=[];
 rows.app_experience_settings=[{id:1,...DEFAULT_WELCOME}];
 let welcomeWrites=0;

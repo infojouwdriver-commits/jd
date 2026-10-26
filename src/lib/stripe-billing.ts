@@ -1,11 +1,11 @@
-import {z} from 'zod';
+import {processInvoiceCheckout} from './invoice-checkout';
 import type Stripe from 'stripe';
-import {requestMiddleware,validateRequestBody} from './api-utils';
+import {requestMiddleware} from './api-utils';
 import {operationsAccess,operationFailure} from './operations-access';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {createSuccessResponse,createErrorResponse} from './create-response';
-import {stripeConfiguration,stripeClient,stripeEvents,stripeObjectId,finiteSchedule,verifiedStripeReceipt,StripePaymentReview,type StripeEnrollment} from './stripe-billing-core';
+import {stripeConfiguration,stripeClient,stripeEvents,stripeObjectId,verifiedStripeReceipt,StripePaymentReview,type StripeEnrollment} from './stripe-billing-core';
 
 type Client=ReturnType<typeof createPostgrestClient>;
 async function rpc(client:Client,name:string,params:Record<string,unknown>){const result=await client.rpc(name,params).abortSignal(AbortSignal.timeout(10000));if(result.error)throw result.error;return result.data;}
@@ -28,37 +28,7 @@ export const stripeBillingGET=requestMiddleware(async(request,context)=>{
   return createSuccessResponse({enabled,can_authorize:!admin&&membership.data.some(m=>['owner','portal_owner'].includes(m.role)),enrollments:r.data,receipts:receipts.data,contracts:contracts.data,recovery});
  }catch(e){return operationFailure(e);}
 },true);
-const start=z.object({contract_id:z.number().int().positive(),request_id:z.string().uuid(),consent:z.literal(true)}).strict();
-export const stripeBillingPOST=requestMiddleware(async(request,context)=>{
- try{
-  const {client,companyId,actor,admin}=await operationsAccess(request,context,'billing');
-  if(admin)return createErrorResponse({status:403,errorMessage:'Company owner authorization required'});
-  const v=start.parse(await validateRequestBody(request)),config=stripeConfiguration(),stripe=stripeClient(config);
-  let e=await rpc(client,'security_stripe_begin',{p_company:companyId,p_contract:v.contract_id,p_actor:actor,p_request:v.request_id,p_live:config.live,p_price:config.price,p_tax:config.tax}) as StripeEnrollment;
-  if(e.schedule_id)return createSuccessResponse({authorized:true});
-  // A lost response may be retried under the same Stripe idempotency key for 23 hours.
-  // Never silently recreate an external object after Stripe's idempotency retention window.
-  if(Date.now()-Date.parse(e.created_at)>23*3600000)throw Error('Collection enrollment requires review');
-  if(!e.customer_id){
-   const customer=await stripe.customers.create({email:e.email,metadata:{project:'jouw-driver',enrollment_id:e.id}},{idempotencyKey:'jd-customer-'+e.id});
-   if(customer.livemode!==config.live)throw Error('Payment environment mismatch');
-   e={...e,...await bind(client,e,{customer:customer.id})};
-  }
-  let session:Stripe.Checkout.Session;
-  if(e.session_id)session=await stripe.checkout.sessions.retrieve(e.session_id);
-  else{
-   // Stable integration identifier is required across idempotent retries.
-   const label='jouw_driver_'+e.id.replace(/[^a-f]/g,'').padEnd(8,'a').slice(0,8);
-   session=await stripe.checkout.sessions.create({mode:'setup',currency:'eur',customer:e.customer_id!,client_reference_id:e.id,metadata:{enrollment_id:e.id},setup_intent_data:{metadata:{enrollment_id:e.id}},integration_identifier:label,
-    custom_text:{submit:{message:`JOUW DRIVER: 50 EUR TTC (TVA 21%) par mois, 12 mensualités maximum, fin ${e.end_date}. Sans renouvellement automatique. Le premier prélèvement commence après cette autorisation.`}},
-    success_url:config.origin+'/company/dashboard?billing=stripe_pending',cancel_url:config.origin+'/company/dashboard?billing=stripe_cancelled',expires_at:Math.floor(Date.parse(e.created_at)/1000)+23*3600},{idempotencyKey:'jd-setup-'+e.id});
-   await bind(client,e,{session:session.id});
-  }
-  if(session.status==='complete')return createSuccessResponse({authorized:true});
-  if(session.status!=='open'||!session.url||new URL(session.url).hostname!=='checkout.stripe.com')throw Error('Checkout unavailable');
-  return createSuccessResponse({url:session.url});
- }catch(e){if(e instanceof z.ZodError)return createErrorResponse({status:400,errorMessage:'Review payment authorization'});return operationFailure(e);}
-},true);
+export const stripeBillingPOST=requestMiddleware(async()=>createErrorResponse({status:410,errorMessage:'Pay the issued invoice instead of authorizing automatic collection'}),true);
 
 async function completeSetup(stripe:Stripe,client:Client,id:string){
  const session=await stripe.checkout.sessions.retrieve(id,{expand:['setup_intent']});
@@ -68,13 +38,7 @@ async function completeSetup(stripe:Stripe,client:Client,id:string){
  if(!e)return;
  const intent=typeof session.setup_intent==='object'?session.setup_intent:null;
  if(session.mode!=='setup'||session.status!=='complete'||session.livemode!==e.livemode||stripeObjectId(session.customer)!==e.customer_id||!intent||intent.status!=='succeeded'||intent.livemode!==e.livemode||stripeObjectId(intent.customer)!==e.customer_id||!stripeObjectId(intent.payment_method))throw Error('Setup confirmation unavailable');
- const approved=await rpc(client,'security_stripe_authorize',{p_id:e.id}) as StripeEnrollment;
- if(!approved.schedule_id){
-  const schedule=await stripe.subscriptionSchedules.create(finiteSchedule(approved,stripeObjectId(intent.payment_method)!),{idempotencyKey:'jd-schedule-'+e.id});
-  const sub=stripeObjectId(schedule.subscription);
-  if(schedule.livemode!==e.livemode||!sub||schedule.end_behavior!=='cancel')throw Error('Finite subscription required');
-  e=await bind(client,e,{schedule:schedule.id,subscription:sub});
- }
+ if(!e.schedule_id){await client.from('stripe_enrollments').update({status:'review'}).eq('id',e.id).throwOnError();return;}
  if(e.subscription_id){const sub=await stripe.subscriptions.retrieve(e.subscription_id,{expand:['latest_invoice']});const invoice=typeof sub.latest_invoice==='object'?sub.latest_invoice:null;if(invoice?.status==='draft')await stripe.invoices.finalizeInvoice(invoice.id,{auto_advance:true},{idempotencyKey:'jd-first-invoice-'+e.id});}
 }
 async function mappedSubscription(stripe:Stripe,client:Client,subId:string){
@@ -91,6 +55,7 @@ async function mappedSubscription(stripe:Stripe,client:Client,subId:string){
  return {e,sub};
 }
 export async function processStripeEvent(stripe:Stripe,client:Client,event:Stripe.Event){
+ if(await processInvoiceCheckout(stripe,client,event))return;
  const object=event.data.object as {id:string};
  if(event.type==='checkout.session.completed'||event.type==='checkout.session.async_payment_succeeded'){await completeSetup(stripe,client,object.id);return;}
  if(event.type==='checkout.session.async_payment_failed')return;

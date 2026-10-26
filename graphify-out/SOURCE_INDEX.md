@@ -1172,6 +1172,33 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_snapshot_invoice_bank()` — [L8](../migrations/20261026_invoice_bank_qr.sql#L8)
 - `invoice_bank_snapshot` — [L26](../migrations/20261026_invoice_bank_qr.sql#L26)
 
+## [migrations/20261026_invoice_checkout.sql](../migrations/20261026_invoice_checkout.sql)
+
+- `20261026_invoice_checkout.sql` — [source](../migrations/20261026_invoice_checkout.sql#)
+- `"schema".invoice_checkouts` — [L4](../migrations/20261026_invoice_checkout.sql#L4)
+- `invoice_checkout_active` — [L12](../migrations/20261026_invoice_checkout.sql#L12)
+- `"schema".invoice_checkout_receipts` — [L13](../migrations/20261026_invoice_checkout.sql#L13)
+- `"schema".invoice_service_activation` — [L17](../migrations/20261026_invoice_checkout.sql#L17)
+- `"schema".invoice_email_rollout` — [L21](../migrations/20261026_invoice_checkout.sql#L21)
+- `"schema".security_invoice_company_begin()` — [L25](../migrations/20261026_invoice_checkout.sql#L25)
+- `invoice_company_begin` — [L30](../migrations/20261026_invoice_checkout.sql#L30)
+- `"schema".security_invoice_activation_begin()` — [L34](../migrations/20261026_invoice_checkout.sql#L34)
+- `invoice_activation_begin` — [L41](../migrations/20261026_invoice_checkout.sql#L41)
+- `"schema".security_invoice_document()` — [L42](../migrations/20261026_invoice_checkout.sql#L42)
+- `"schema".security_invoice_checkout_begin()` — [L51](../migrations/20261026_invoice_checkout.sql#L51)
+- `"schema".security_invoice_checkout_state()` — [L68](../migrations/20261026_invoice_checkout.sql#L68)
+- `"schema".security_invoice_checkout_paid()` — [L77](../migrations/20261026_invoice_checkout.sql#L77)
+- `"schema".security_invoice_payment_guard()` — [L106](../migrations/20261026_invoice_checkout.sql#L106)
+- `invoice_payment_guard` — [L116](../migrations/20261026_invoice_checkout.sql#L116)
+- `"schema".security_invoice_activation_paid()` — [L119](../migrations/20261026_invoice_checkout.sql#L119)
+- `invoice_activation_paid` — [L125](../migrations/20261026_invoice_checkout.sql#L125)
+- `"schema".security_invoice_receipt_immutable()` — [L127](../migrations/20261026_invoice_checkout.sql#L127)
+- `invoice_receipt_immutable` — [L129](../migrations/20261026_invoice_checkout.sql#L129)
+- `"schema".security_subscription_immutable()` — [L138](../migrations/20261026_invoice_checkout.sql#L138)
+- `"schema".security_manual_invoice_immutable()` — [L143](../migrations/20261026_invoice_checkout.sql#L143)
+- `"schema".security_invoice_email_issue()` — [L148](../migrations/20261026_invoice_checkout.sql#L148)
+- `invoice_service_guard` — [L221](../migrations/20261026_invoice_checkout.sql#L221)
+
 ## [migrations/20261026_manual_invoices.sql](../migrations/20261026_manual_invoices.sql)
 
 - `20261026_manual_invoices.sql` — [source](../migrations/20261026_manual_invoices.sql#)
@@ -2496,6 +2523,10 @@ Links target the working tree, so line positions can move after changes.
 - `PUT` — [L87](../src/app/next_api/homepage-ad-slots/route.ts#L87)
 - `DELETE` — [L118](../src/app/next_api/homepage-ad-slots/route.ts#L118)
 
+## [src/app/next_api/invoice-payment/route.ts](../src/app/next_api/invoice-payment/route.ts)
+
+- `invoice-payment/route.ts` — [L1](../src/app/next_api/invoice-payment/route.ts#L1)
+
 ## [src/app/next_api/invoices/generate-company-invoice/route.ts](../src/app/next_api/invoices/generate-company-invoice/route.ts)
 
 - `generate-company-invoice/route.ts` — [L1](../src/app/next_api/invoices/generate-company-invoice/route.ts#L1)
@@ -2743,6 +2774,13 @@ Links target the working tree, so line positions can move after changes.
 
 - `app/page.tsx` — [L1](../src/app/page.tsx#L1)
 - `HomePage()` — [L4](../src/app/page.tsx#L4)
+
+## [src/app/pay/invoice/page.tsx](../src/app/pay/invoice/page.tsx)
+
+- `invoice/page.tsx` — [L1](../src/app/pay/invoice/page.tsx#L1)
+- `words` — [L6](../src/app/pay/invoice/page.tsx#L6)
+- `InvoicePayment()` — [L7](../src/app/pay/invoice/page.tsx#L7)
+- `action()` — [L13](../src/app/pay/invoice/page.tsx#L13)
 
 ## [src/app/privacy-center/page.tsx](../src/app/privacy-center/page.tsx)
 
@@ -3377,11 +3415,11 @@ Links target the working tree, so line positions can move after changes.
 - `BillingPanel.tsx` — [L1](../src/components/operations/BillingPanel.tsx#L1)
 - `Doc` — [L20](../src/components/operations/BillingPanel.tsx#L20)
 - `BillingData` — [L36](../src/components/operations/BillingPanel.tsx#L36)
-- `cents()` — [L73](../src/components/operations/BillingPanel.tsx#L73)
-- `BillingPanel()` — [L79](../src/components/operations/BillingPanel.tsx#L79)
-- `open()` — [L115](../src/components/operations/BillingPanel.tsx#L115)
-- `submit()` — [L253](../src/components/operations/BillingPanel.tsx#L253)
-- `download()` — [L323](../src/components/operations/BillingPanel.tsx#L323)
+- `cents()` — [L75](../src/components/operations/BillingPanel.tsx#L75)
+- `BillingPanel()` — [L81](../src/components/operations/BillingPanel.tsx#L81)
+- `open()` — [L117](../src/components/operations/BillingPanel.tsx#L117)
+- `submit()` — [L255](../src/components/operations/BillingPanel.tsx#L255)
+- `download()` — [L325](../src/components/operations/BillingPanel.tsx#L325)
 
 ## [src/components/operations/CompanyChangesPanel.tsx](../src/components/operations/CompanyChangesPanel.tsx)
 
@@ -3426,16 +3464,22 @@ Links target the working tree, so line positions can move after changes.
 - `RecordRow` — [L10](../src/components/operations/FleetRecordsTab.tsx#L10)
 - `FleetRecordsTab()` — [L15](../src/components/operations/FleetRecordsTab.tsx#L15)
 
+## [src/components/operations/InvoiceDeliveryActions.tsx](../src/components/operations/InvoiceDeliveryActions.tsx)
+
+- `InvoiceDeliveryActions.tsx` — [L1](../src/components/operations/InvoiceDeliveryActions.tsx#L1)
+- `invoicePaymentCopy` — [L8](../src/components/operations/InvoiceDeliveryActions.tsx#L8)
+- `InvoiceDeliveryActions()` — [L9](../src/components/operations/InvoiceDeliveryActions.tsx#L9)
+
 ## [src/components/operations/InvoiceWorkspace.tsx](../src/components/operations/InvoiceWorkspace.tsx)
 
 - `InvoiceWorkspace.tsx` — [L1](../src/components/operations/InvoiceWorkspace.tsx#L1)
-- `words` — [L13](../src/components/operations/InvoiceWorkspace.tsx#L13)
-- `Invoice` — [L14](../src/components/operations/InvoiceWorkspace.tsx#L14)
-- `Data` — [L15](../src/components/operations/InvoiceWorkspace.tsx#L15)
-- `Workspace()` — [L16](../src/components/operations/InvoiceWorkspace.tsx#L16)
-- `filter()` — [L23](../src/components/operations/InvoiceWorkspace.tsx#L23)
-- `download()` — [L25](../src/components/operations/InvoiceWorkspace.tsx#L25)
-- `InvoiceWorkspace()` — [L38](../src/components/operations/InvoiceWorkspace.tsx#L38)
+- `words` — [L14](../src/components/operations/InvoiceWorkspace.tsx#L14)
+- `Invoice` — [L15](../src/components/operations/InvoiceWorkspace.tsx#L15)
+- `Data` — [L16](../src/components/operations/InvoiceWorkspace.tsx#L16)
+- `Workspace()` — [L17](../src/components/operations/InvoiceWorkspace.tsx#L17)
+- `filter()` — [L24](../src/components/operations/InvoiceWorkspace.tsx#L24)
+- `download()` — [L26](../src/components/operations/InvoiceWorkspace.tsx#L26)
+- `InvoiceWorkspace()` — [L39](../src/components/operations/InvoiceWorkspace.tsx#L39)
 
 ## [src/components/operations/OperationForm.tsx](../src/components/operations/OperationForm.tsx)
 
@@ -4467,6 +4511,40 @@ Links target the working tree, so line positions can move after changes.
 - `bankPaymentPayload()` — [L10](../src/lib/invoice-bank-payment.ts#L10)
 - `invoiceBankPayload()` — [L19](../src/lib/invoice-bank-payment.ts#L19)
 
+## [src/lib/invoice-checkout.ts](../src/lib/invoice-checkout.ts)
+
+- `invoice-checkout.ts` — [L1](../src/lib/invoice-checkout.ts#L1)
+- `InvoiceSource` — [L5](../src/lib/invoice-checkout.ts#L5)
+- `Client` — [L6](../src/lib/invoice-checkout.ts#L6)
+- `Checkout` — [L7](../src/lib/invoice-checkout.ts#L7)
+- `invoiceRpc()` — [L8](../src/lib/invoice-checkout.ts#L8)
+- `invoiceCheckout()` — [L9](../src/lib/invoice-checkout.ts#L9)
+- `closeInvoiceCheckout()` — [L33](../src/lib/invoice-checkout.ts#L33)
+- `processInvoiceCheckout()` — [L43](../src/lib/invoice-checkout.ts#L43)
+
+## [src/lib/invoice-email.ts](../src/lib/invoice-email.ts)
+
+- `invoice-email.ts` — [L1](../src/lib/invoice-email.ts#L1)
+- `esc()` — [L8](../src/lib/invoice-email.ts#L8)
+- `sendInvoiceEmail()` — [L9](../src/lib/invoice-email.ts#L9)
+- `deliverInvoiceEmail()` — [L13](../src/lib/invoice-email.ts#L13)
+
+## [src/lib/invoice-payment-handler.ts](../src/lib/invoice-payment-handler.ts)
+
+- `invoice-payment-handler.ts` — [L1](../src/lib/invoice-payment-handler.ts#L1)
+- `command` — [L10](../src/lib/invoice-payment-handler.ts#L10)
+- `invoicePaymentPOST` — [L11](../src/lib/invoice-payment-handler.ts#L11)
+
+## [src/lib/invoice-payment-link.ts](../src/lib/invoice-payment-link.ts)
+
+- `invoice-payment-link.ts` — [L1](../src/lib/invoice-payment-link.ts#L1)
+- `claims` — [L3](../src/lib/invoice-payment-link.ts#L3)
+- `InvoiceLink` — [L4](../src/lib/invoice-payment-link.ts#L4)
+- `mac()` — [L5](../src/lib/invoice-payment-link.ts#L5)
+- `signInvoiceLink()` — [L6](../src/lib/invoice-payment-link.ts#L6)
+- `readInvoiceLink()` — [L7](../src/lib/invoice-payment-link.ts#L7)
+- `invoicePaymentUrl()` — [L13](../src/lib/invoice-payment-link.ts#L13)
+
 ## [src/lib/invoice-payment-state.ts](../src/lib/invoice-payment-state.ts)
 
 - `invoice-payment-state.ts` — [L1](../src/lib/invoice-payment-state.ts#L1)
@@ -4493,10 +4571,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/manual-invoices.ts](../src/lib/manual-invoices.ts)
 
 - `manual-invoices.ts` — [L1](../src/lib/manual-invoices.ts#L1)
-- `positive` — [L9](../src/lib/manual-invoices.ts#L9)
-- `command` — [L10](../src/lib/manual-invoices.ts#L10)
-- `manualInvoicesGET` — [L15](../src/lib/manual-invoices.ts#L15)
-- `manualInvoicesPOST` — [L27](../src/lib/manual-invoices.ts#L27)
+- `positive` — [L11](../src/lib/manual-invoices.ts#L11)
+- `command` — [L12](../src/lib/manual-invoices.ts#L12)
+- `manualInvoicesGET` — [L18](../src/lib/manual-invoices.ts#L18)
+- `manualInvoicesPOST` — [L30](../src/lib/manual-invoices.ts#L30)
 
 ## [src/lib/mapbox-route.ts](../src/lib/mapbox-route.ts)
 
@@ -4686,23 +4764,22 @@ Links target the working tree, so line positions can move after changes.
 - `bind()` — [L12](../src/lib/stripe-billing.ts#L12)
 - `enrollment()` — [L15](../src/lib/stripe-billing.ts#L15)
 - `stripeBillingGET` — [L18](../src/lib/stripe-billing.ts#L18)
-- `start` — [L31](../src/lib/stripe-billing.ts#L31)
-- `stripeBillingPOST` — [L32](../src/lib/stripe-billing.ts#L32)
-- `completeSetup()` — [L63](../src/lib/stripe-billing.ts#L63)
-- `mappedSubscription()` — [L80](../src/lib/stripe-billing.ts#L80)
-- `processStripeEvent()` — [L93](../src/lib/stripe-billing.ts#L93)
-- `stripeWebhook()` — [L120](../src/lib/stripe-billing.ts#L120)
+- `stripeBillingPOST` — [L31](../src/lib/stripe-billing.ts#L31)
+- `completeSetup()` — [L33](../src/lib/stripe-billing.ts#L33)
+- `mappedSubscription()` — [L44](../src/lib/stripe-billing.ts#L44)
+- `processStripeEvent()` — [L57](../src/lib/stripe-billing.ts#L57)
+- `stripeWebhook()` — [L85](../src/lib/stripe-billing.ts#L85)
 
 ## [src/lib/subscription-billing.ts](../src/lib/subscription-billing.ts)
 
 - `subscription-billing.ts` — [L1](../src/lib/subscription-billing.ts#L1)
-- `id` — [L15](../src/lib/subscription-billing.ts#L15)
-- `date` — [L16](../src/lib/subscription-billing.ts#L16)
-- `expected` — [L17](../src/lib/subscription-billing.ts#L17)
-- `profile` — [L18](../src/lib/subscription-billing.ts#L18)
-- `command` — [L33](../src/lib/subscription-billing.ts#L33)
-- `billingGET` — [L89](../src/lib/subscription-billing.ts#L89)
-- `billingPOST` — [L225](../src/lib/subscription-billing.ts#L225)
+- `id` — [L18](../src/lib/subscription-billing.ts#L18)
+- `date` — [L19](../src/lib/subscription-billing.ts#L19)
+- `expected` — [L20](../src/lib/subscription-billing.ts#L20)
+- `profile` — [L21](../src/lib/subscription-billing.ts#L21)
+- `command` — [L36](../src/lib/subscription-billing.ts#L36)
+- `billingGET` — [L93](../src/lib/subscription-billing.ts#L93)
+- `billingPOST` — [L234](../src/lib/subscription-billing.ts#L234)
 
 ## [src/lib/subscription-document.ts](../src/lib/subscription-document.ts)
 
@@ -4720,9 +4797,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/subscription-scheduler.ts](../src/lib/subscription-scheduler.ts)
 
 - `subscription-scheduler.ts` — [L1](../src/lib/subscription-scheduler.ts#L1)
-- `escape()` — [L10](../src/lib/subscription-scheduler.ts#L10)
-- `subscriptionTick()` — [L18](../src/lib/subscription-scheduler.ts#L18)
-- `startSubscriptionScheduler()` — [L96](../src/lib/subscription-scheduler.ts#L96)
+- `subscriptionTick()` — [L6](../src/lib/subscription-scheduler.ts#L6)
+- `startSubscriptionScheduler()` — [L36](../src/lib/subscription-scheduler.ts#L36)
 
 ## [src/lib/totp.ts](../src/lib/totp.ts)
 

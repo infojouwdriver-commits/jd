@@ -1,3 +1,6 @@
+import {sendInvoiceEmail} from './invoice-email';
+import {invoicePaymentUrl} from './invoice-payment-link';
+import {closeInvoiceCheckout} from './invoice-checkout';
 import { z } from "zod";
 import { requestMiddleware, validateRequestBody } from "./api-utils";
 import {
@@ -31,6 +34,7 @@ const profile = z
   })
   .strict();
 const command = z.discriminatedUnion("action", [
+  z.object({action:z.literal("send"),document_id:id,request_id:z.string().uuid()}).strict(),
   z.object({ action: z.literal("demo_issue"), document_id: id }).strict(),
   z
     .object({
@@ -208,8 +212,13 @@ export const billingGET = requestMiddleware(async (request, context) => {
           .limit(250)
       : { data: [], error: null };
     if (payments.error) throw payments.error;
+    const activation=await client.from('invoice_service_activation').select('contract_id,paid_at').eq('company_id',companyId).maybeSingle();if(activation.error)throw activation.error;
+    const payable:Record<string,string>={};
+    for(const d of statement.data?.documents||[]){if(d.state==='issued'&&!d.is_test&&d.kind==='invoice'&&Number(d.balance_cents)>0){const payment=await invoicePaymentState(client,d,'subscription');if(payment.collection==='bank')payable[d.id]=invoicePaymentUrl('subscription',d,new URL(process.env.APP_ORIGIN||'http://localhost:3000').origin,process.env.JWT_SECRET||'');}}
     return createSuccessResponse({
       ...statement.data,
+      payable,
+      activation:activation.data,
       payments: payments.data,
       profile: profile.data,
       settings: settings.data,
@@ -255,6 +264,8 @@ export const billingPOST = requestMiddleware(async (request, context) => {
           errorMessage: "Document missing",
         });
     }
+    if(v.action==='send'){const sent=await sendInvoiceEmail(client,'subscription',v.document_id,actor,'invoice:subscription:'+v.document_id+':'+v.request_id);return createSuccessResponse(sent);}
+    if(v.action==='payment')await closeInvoiceCheckout(client,'subscription',v.document_id);
     const rpc =
       v.action === "demo_issue"
         ? [
