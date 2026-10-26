@@ -104,3 +104,32 @@ user password while revoking existing sessions in one transaction. Inactive and
 Google-only accounts stay unavailable; MFA and membership rules remain unchanged.
 Contract invitations keep the existing protected owner portal workflow and cannot
 sign or activate anything. No financial email is retried during verification.
+
+## Independent invoice workspace — 26 October 2026
+
+User-authorized scope: an administrator can prepare an invoice for a registered
+company independently of its contract or subscription. `/admin/invoices` owns this
+workflow and has its own navigation entry. The subscription view reuses BillingPanel;
+it never converts a manual invoice into an installment or initiates Stripe collection.
+Manual invoices use separate tables and counters. Integer EUR cents, immutable
+issuer/client snapshots, bounded payments and stable request identities remain required.
+Real issuance preserves the existing structured-exchange evidence requirement.
+PDF preparation does not claim issuance or electronic delivery.
+
+InvoiceWorkspace uses LanguageContext, semantic web theme tokens, OperationForm,
+authored Select, Button, Badge and useOperationData. Company/state/page/view filters
+are URL state; invoice forms and ambiguous retries remain in session memory. Natural
+page scrolling and internal horizontal table scrolling keep every action available.
+New, issue, payment and void operations reuse explicit dialogs and persistent feedback.
+The bilingual print layout uses the same snapshot renderer for independent and
+subscription documents, with repeated page footers and explicit preparatory labels.
+
+Administrator creation and approval are one database transaction. Existing companies
+with an unset state or `pending_contract`, no suspension flags, no distributor creator and no self-registration application are approved on the
+administrator's explicit invitation action. Pending/rejected registrations, suspended,
+expired, cancelled and archived companies cannot use this repair to become active.
+No historical company, signature, invoice or payment is bulk modified.
+
+Verification: tests/manual-invoices-database.test.mjs, tests/run-manual-invoices-ui.mjs,
+tests/contract-email-signing.test.mjs, tests/run-email-contract-ui.mjs and the existing
+subscription PDF, HTTP ownership and database-stack suites.

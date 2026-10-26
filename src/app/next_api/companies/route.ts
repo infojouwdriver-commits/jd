@@ -93,7 +93,7 @@ export const POST = requestMiddleware(async (request, context) => {
     const newCompany = await saveCompanyAccount(adminToken, null, {
       name, vat_number, kbo_number, address: address || null,
       email: email || null, phone: phone || null, logo_url: logo_url || null,
-    }, password);
+    }, password, Number(context.payload.sub));
 
     return createSuccessResponse(newCompany, 201);
   } catch (error: any) {

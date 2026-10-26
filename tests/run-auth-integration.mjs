@@ -202,6 +202,8 @@ try {
  await status('MFA admin approves via atomic review',request('/next_api/company-changes','PUT',{id:1,decision:'approved',notes:'Synthetic review'},refreshedToken),200);
  rows.company_change_requests.push({id:1,company_id:1,entity_type:'driver',summary:{full_name:'Pending Driver'},payload:{password:'PRIVATE-HASH'},before_data:{private:'SNAPSHOT'},status:'pending'});
  const list=await status('Owner can read own safe change summary',request('/next_api/company-portal/changes?company_id=1','GET',null,ownerToken),200);const safe=JSON.stringify(await list.json());assert.equal(safe.includes('PRIVATE-HASH'),false);assert.equal(safe.includes('SNAPSHOT'),false);
+ await status('Driver cannot read independent company invoices',request('/next_api/manual-invoices','GET',null,driverToken),403);
+ await status('Anonymous invoice creation is rejected',request('/next_api/manual-invoices','POST',{}),401);
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);
  await status('Driver cannot edit another driver trip',request('/next_api/trips?id=102','PUT',{price:40},driverToken),404);assert.equal(rows.trips[1].price,20);

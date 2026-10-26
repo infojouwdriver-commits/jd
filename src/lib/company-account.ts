@@ -7,7 +7,7 @@ const credentials = z.object({
  email: z.string().trim().toLowerCase().email(),
  password: z.string().min(12).refine(value => Buffer.byteLength(value, 'utf8') <= 72),
 });
-export async function saveCompanyAccount(token: string, id: number | null, company: Record<string, unknown>, password?: unknown) {
+export async function saveCompanyAccount(token: string, id: number | null, company: Record<string, unknown>, password?: unknown, adminActor?: number) {
  const account: Record<string, unknown> = {};
  if (password !== undefined && password !== '') {
   let loginEmail = company.email;
@@ -25,7 +25,8 @@ export async function saveCompanyAccount(token: string, id: number | null, compa
   account.password = await hashString(parsed.data.password);
   account.role = getAuthRoles().userRole;
  }
- const result = await createPostgrestClient(token).rpc('security_save_company_account', {p_company_id:id,p_company:company,p_account:account});
+ const client=createPostgrestClient(token);
+ const result = id===null&&adminActor ? await client.rpc('security_save_admin_company',{p_actor:adminActor,p_company:company,p_account:account}) : await client.rpc('security_save_company_account', {p_company_id:id,p_company:company,p_account:account});
  if (result.error || !result.data) {
   const status = result.error?.code === '23505' ? 409 : result.error?.code === 'P0002' ? 404 : ['22023','23503','23514'].includes(result.error?.code || '') ? 400 : 503;
   throw new Response(JSON.stringify({success:false,errorMessage:status === 409 ? 'البريد مستخدم بحساب آخر؛ لم تُحفظ أي تغييرات' : status === 400 ? 'راجع بيانات الشركة وحساب الدخول' : status === 404 ? 'الشركة أو حسابها غير موجود' : 'تعذر حفظ حساب الشركة'}),{status,headers:{'Content-Type':'application/json'}});
