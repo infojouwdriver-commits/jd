@@ -11,6 +11,7 @@ import {
   type SubscriptionDocument,
 } from "./subscription-document";
 import { mailConfiguration } from "./mail-policy";
+import {invoicePaymentState} from './invoice-payment-state';
 const id = z.number().int().positive(),
   date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   expected = z.string().datetime({ offset: true }).nullable();
@@ -112,7 +113,7 @@ export const billingGET = requestMiddleware(async (request, context) => {
           status: 404,
           errorMessage: "Document missing",
         });
-      const bytes = subscriptionPdf(doc.data as SubscriptionDocument);
+      const bytes = subscriptionPdf(doc.data as SubscriptionDocument,await invoicePaymentState(client,doc.data,'subscription'));
       return new Response(new Uint8Array(bytes), {
         headers: {
           "Content-Type": "application/pdf",
