@@ -55,7 +55,7 @@ jobs:
           console.log('::add-mask::'+i.collection_iban);
           const baseline='096d495e1075f71c524e3ede943f439809a36a98';
           if(process.env.GITHUB_REF!=='refs/heads/main')throw Error('Protected main source required');
-          const liveBaseline='78c8fadb60b02ee543f7208bf27e5794139a06d4';
+          const liveBaseline='7e88fac17285b1c1db74c13fa05fa6c7f7d51dcc';
           if(!/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/.test(i.image)||!/^[a-f0-9]{40}$/.test(i.revision))throw Error('Invalid immutable release');
           const api=async p=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+p,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Acceptance unavailable');return r.json();};
           const ancestry=await api('/compare/'+i.revision+'...main');
@@ -209,7 +209,9 @@ jobs:
           node --input-type=module <<'BEFORE'
           import fs from 'node:fs';
           const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          console.log(JSON.stringify({live_revision:s.revision,live_image:s.image}));
           if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.STRIPE_BASELINE)throw Error('Live release differs from the reviewed contract update baseline');
+          if(s.image!=='ghcr.io/infojouwdriver-commits/jd@sha256:c8db833eb7ea13850873f4c6048841423e2a992d7afc3ee2ee59e00eaba338df')throw Error('Live image differs from the reviewed invoice workspace release');
           if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.STRIPE_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover the live release');
           const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
           if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
