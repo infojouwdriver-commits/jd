@@ -13,7 +13,7 @@ test('email links are signed, purpose separated, expire and bind the owner, reci
 });
 const {PGlite}=await import(process.env.PGLITE_MODULE_PATH||'@electric-sql/pglite');
 const sql=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8').replaceAll(':"schema"','public').replaceAll(':"user_role"','browser').replaceAll(':"admin_role"','service');
-async function setup(){const db=new PGlite();await db.waitReady;await db.exec('CREATE ROLE browser;CREATE ROLE service;'+sql('schema/reconstructed-staging.sql'));for(const name of ['20261009_security','20261018_company_lifecycle','20261018_subscription_billing','20261013_mail_delivery','20261018_subscription_mail','20261018_company_staff','20261017_company_registration','20261018_operations_centre','20261010_driver_lifecycle','20261018_web_change_approvals','20261018_web_billing','20261018_contract_billing','20261024_contract_email_signing','20261012_accounts_messages','20261026_manual_invoices']){
+async function setup(){const db=new PGlite();await db.waitReady;await db.exec('CREATE ROLE browser;CREATE ROLE service;'+sql('schema/reconstructed-staging.sql'));for(const name of ['20261009_security','20261018_company_lifecycle','20261018_subscription_billing','20261013_mail_delivery','20261018_subscription_mail','20261018_company_staff','20261017_company_registration','20261018_operations_centre','20261010_driver_lifecycle','20261018_web_change_approvals','20261018_web_billing','20261018_contract_billing','20261024_contract_email_signing','20261012_accounts_messages','20261026_manual_invoices','20261026_signature_billing_conflict']){
  if(name==='20261018_company_lifecycle')await db.exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true');await db.exec(sql('migrations/'+name+'.sql'));}
  await db.exec("INSERT INTO users(id,email,is_active) VALUES(1000,'owner@example.invalid',true),(1001,'other@example.invalid',true);INSERT INTO companies(id,name,email,subscription_status) VALUES(3,'Synthetic Customer','billing@example.invalid','active'),(4,'Other company','other@example.invalid','active');INSERT INTO company_users(company_id,user_id,role,is_active) VALUES(3,1000,'owner',true),(4,1001,'owner',true)");
  const k=(await db.query("INSERT INTO company_contracts(company_id,contract_number,contract_start_date,contract_end_date,contract_duration_months,monthly_fee,annual_fee,contract_status,contract_html_template,contract_language,auto_renew,billing_model,monthly_gross_cents,vat_bps) VALUES(3,'SYN-EMAIL',current_date,(current_date+interval '12 months')::date,12,50,600,'pending_signature','Synthetic reviewed contract','fr',false,'gross_monthly_v1',5000,2100) RETURNING *")).rows[0];return {db,k};}
@@ -36,3 +36,22 @@ test('expired, changed, cross-company, revoked owner and recipient substitution 
 test('browser database role cannot execute email signing directly',async()=>{const {db,k}=await setup();try{await db.exec('SET ROLE browser');await assert.rejects(call(db,k),/permission denied/);}finally{await db.close();}});
 
 test('admin-added company can receive invitation and complete email signature without a registration review',async()=>{const {db,k}=await setup();try{await db.exec("UPDATE companies SET subscription_status='pending_contract' WHERE id=3");await db.query('SELECT security_confirm_admin_company(3,1000)');const reviewed=await call(db,k);assert.equal(reviewed.signed,false);const signed=await call(db,k,{action:'sign'});assert.equal(signed.signed,true);assert.equal(signed.evidence.signer_email,invitation.email);}finally{await db.close();}});
+
+for(const existing of ['manual','signed_contract'])test('email signature with existing '+existing+' billing saves once without changing the financial schedule',async()=>{const {db,k}=await setup();try{
+ if(existing==='signed_contract'){
+  const old=(await db.query("INSERT INTO company_contracts(company_id,contract_number,contract_start_date,contract_end_date,contract_duration_months,monthly_fee,annual_fee,contract_status,signed_at,contract_html_template,contract_language) VALUES(3,'SYN-PREVIOUS',current_date,(current_date+interval '12 months')::date,12,42,504,'active',clock_timestamp(),'Previous immutable document','fr') RETURNING id")).rows[0];
+  await db.query('SELECT security_activate_contract_billing(3,$1,1000)',[old.id]);
+ }else await db.exec("INSERT INTO subscription_billing_profiles(company_id,enabled,net_cents,vat_bps,tax_category,billing_day,next_invoice_date,due_days,reminder_days,billing_email,language,updated_by) VALUES(3,false,1000,2100,'S',1,current_date,14,7,'billing@example.invalid','fr',1000)");
+ const snapshot=async table=>(await db.query('SELECT to_jsonb(t) data FROM '+table+' t ORDER BY 1::text')).rows.map(r=>r.data);
+ const before=await snapshot('subscription_billing_profiles'),contracts=await snapshot('company_contracts');
+ assert.equal((await call(db,k)).signed,false);
+ const result=await call(db,k,{action:'sign'});assert.equal(result.signed,true);assert.equal(result.billing_status,'review_required');
+ assert.equal((await call(db,k,{action:'sign'})).billing_status,'review_required');assert.equal((await call(db,k)).billing_status,'review_required');
+ assert.deepEqual(await snapshot('subscription_billing_profiles'),before);
+ assert.equal((await db.query('SELECT count(*)::int n FROM contract_signatures')).rows[0].n,1);
+ assert.equal((await db.query("SELECT count(*)::int n FROM subscription_billing_events WHERE action='contract_billing_review_required'")).rows[0].n,1);
+ for(const table of ['subscription_documents','subscription_payments','mail_deliveries'])assert.equal((await db.query('SELECT count(*)::int n FROM '+table)).rows[0].n,0);
+ if(existing==='signed_contract')assert.deepEqual((await snapshot('company_contracts')).find(c=>c.id!==k.id),contracts.find(c=>c.id!==k.id));
+ await assert.rejects(call(db,k,{action:'sign',name:'Changed identity'}),/conflict/);
+ await db.exec(sql('migrations/20261026_signature_billing_conflict.sql'));assert.deepEqual(await snapshot('subscription_billing_profiles'),before);assert.equal((await call(db,k)).signed,true);
+ }finally{await db.close();}});
