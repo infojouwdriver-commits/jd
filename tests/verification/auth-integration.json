@@ -1,5 +1,5 @@
 {
-  "passed": 95,
+  "passed": 97,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -78,6 +78,8 @@
     "Password-only admin cannot approve company change",
     "MFA admin approves via atomic review",
     "Owner can read own safe change summary",
+    "Driver cannot read independent company invoices",
+    "Anonymous invoice creation is rejected",
     "Driver cannot enter admin company endpoint",
     "Client admin role claims do not grant platform authority",
     "Driver cannot edit another driver trip",

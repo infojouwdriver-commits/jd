@@ -38,6 +38,11 @@ export async function companyMembership(
       .is("archived_at", null)
       .maybeSingle();
     if (company.error) throw new Response(null, { status: 503 });
+    if(company.data&&['fleet','staff'].includes(capability)){
+      const activation=await client.from('invoice_service_activation').select('paid_at').eq('company_id',link.company_id).maybeSingle();
+      if(activation.error)throw new Response(null,{status:503});
+      if(activation.data&&!activation.data.paid_at)throw new Response('First subscription invoice payment required',{status:402});
+    }
     if (company.data) return { ...link, company: company.data };
   }
   throw new Response(null, { status: 403 });

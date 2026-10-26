@@ -26,3 +26,11 @@ test('PDF payment state reads canonical balance and suppresses bank transfers fo
  assert.deepEqual(JSON.parse(JSON.stringify(await invoicePaymentState(client,{id:7},'manual'))),{collection:'bank',balance_cents:3100});
  await assert.rejects(invoicePaymentState({...client,rpc:async()=>({error:Error('balance unavailable')})},{id:7},'subscription'),/unavailable/);
 });
+
+test('full annual subscription invoice with complete identities, period and QR fits one A4 page',()=>{
+ const d={id:1,company_id:3,document_number:'JDS-2026-00000001',kind:'invoice',state:'issued',is_test:false,currency:'EUR',period_start:'2026-10-26',period_end:'2026-11-25',prepared_date:'2026-10-26',issued_date:'2026-10-26',due_date:'2026-11-09',contract_number:'JD-11111111-1111-4111-a111-111111111111',installment_number:1,net_cents:4132,vat_cents:868,gross_cents:5000,vat_bps:2100,issuer:{name:'Synthetic Issuer Company',address:'Synthetic Avenue 123, 1000 Bruxelles, Belgique',vat_number:'BE0123456789',kbo_number:'0123456789',email:'issuer@example.invalid'},recipient:{name:'Synthetic Customer Transport Company',address:'Synthetic Street 456, 2000 Antwerpen, België',vat_number:'BE0987654321',kbo_number:'0987654321',email:'billing@example.invalid'},description:'JOUW DRIVER monthly platform subscription',bank_payment:{version:1,iban:'BE68539007547034',holder:'Synthetic Issuer Company',reference:'JDS-2026-00000001'}};
+ const bytes=subscriptionPdf(d,{collection:'bank',balance_cents:5000});
+ // jsPDF serializes the authoritative page tree count into the PDF, not a visual text guess.
+ assert.equal(bytes.toString('latin1').match(/\/Type \/Pages\s*\/Kids\s*\[[^\]]*\]\s*\/Count (\d+)/)?.[1],'1');
+ const dir=process.env.OPERATIONS_QA_DIR||'/tmp/jd-operations-qa';fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(path.join(dir,'annual-bank-invoice.pdf'),bytes);
+});

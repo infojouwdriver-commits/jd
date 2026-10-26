@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'geolocation=(self), camera=(), microphone=()');
   response.headers.set('Content-Security-Policy', csp);
   if (process.env.NODE_ENV === 'production') response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  if (api || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+  if (api || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print|pay)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   if (/^\/(documents|sign-contract)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   return response;
 }
