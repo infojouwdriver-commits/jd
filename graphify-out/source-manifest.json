@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "ac47ce340a1694bb09522b143a631d88989b7b52",
+  "source_commit_context": "00e34171426041d0da3294d52e7d1066138da402",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -28,7 +28,7 @@
     "deploy/update-customer-ui.sh": "21cdb9aa3afe3b95510bde0a05228062ef74cbb1b0d4b7638e9cf45811fda84c",
     "deploy/verify-private-owner.cjs": "620880e81187ee3418b9fa26086ad0ec2a23f8e1426dc250df6714a697c608e4",
     "driver-app/App.tsx": "676b02b35ebf9c379e3d5f7fcb3e87e8cfcd8e02dae6b5a966a7503c747e12b7",
-    "driver-app/app.config.js": "4ea97de30d7250bad05ab19c4deae5069cc28c4a6f134b04dd7c350bddf0fbe8",
+    "driver-app/app.config.js": "67b098f89468132552214667286c808aa64d024469fa3c41aa9f343202859c5c",
     "driver-app/package.json": "e2ac05d96abc4e44f16776967af30979497d45718e7114ef41c4d1a389c0f7cf",
     "driver-app/src/DriverMap.tsx": "8cfd082f8b86dbcd1e353277655d7c7439cd11af8c19542c46c8c30a9e18dbb5",
     "driver-app/src/FleetLocation.tsx": "f4376a21b1b37a6cdeb5d325304d30c9594a914f4ace53571187cf231324762b",
@@ -597,10 +597,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "health.json": "d06253b37a251c8bf6bad2afb4f84c7ba5a955c783ddeddeb7bcf19e1a4b267d",
-    "graph.json": "cb850d9ffc591918d5127aaf84cf01396bc52eea1a6b3f375291e16ffabbb965",
-    "GRAPH_REPORT.md": "a9af973eb012d93f52f535efaffa8a93b36ad2520b719227689ddc616ea6d2eb",
+    "GRAPH_REPORT.md": "8564c4c6ba0b229f808219dbdf336cccc5a50b846fe25ba95da6a9c749e4773d",
     "SOURCE_INDEX.md": "427d4bfd70733a42b13ef425ac0e9e724e0c6a802ac5b59518340476a66d3794",
+    "health.json": "d06253b37a251c8bf6bad2afb4f84c7ba5a955c783ddeddeb7bcf19e1a4b267d",
+    "graph.json": "dcb5836bdf8f91c1b09c646a6e3ec67257a41e13bb69ce6c7515167d73cc0995",
     "GRAPH_TREE.html": "b19c4e0d97de38d4eee334bd3c984fc3482c7c2a32257b7eb79b2c996f69940a"
   },
   "nodes": 3380,
