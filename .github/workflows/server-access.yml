@@ -101,7 +101,7 @@ jobs:
           const imagePattern=/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/;
           if(!imagePattern.test(state.image)||!/^[a-f0-9]{40}$/.test(state.revision))throw Error('Unexpected runtime metadata; values withheld');
           const report={readOnly:true,mode:state.mode==='public'?'public':'other',image:state.image,revision:state.revision,releaseAgreement:state.image===release.image&&state.revision===release.revision,composeImageAgreement:compose.includes(state.image),caddySha256:createHash('sha256').update(caddy).digest('hex'),configuredHosts:Object.fromEntries(['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com'].map(h=>[h,caddy.includes(h)])),appOrigin:known.includes(env.get('APP_ORIGIN'))?env.get('APP_ORIGIN'):'other-or-missing',requiredKeyPresence:Object.fromEntries(['JWT_SECRET','DATA_ENCRYPTION_KEY','HASH_SALT_KEY','RATE_LIMIT_SECRET','POSTGREST_URL'].map(k=>[k,Boolean(env.get(k))])),trustedOrigins:env.has('TRUSTED_ORIGINS')?'configured-values-withheld':'absent'};
-          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:15000}).trim();
+          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:35000}).trim();
           const ids=docker('ps','--quiet').split('\n').filter(Boolean);
           report.proxy=ids.map(id=>JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id))).filter(x=>/^caddy(?::|@)/.test(x));
           report.proxyMounts=[];
@@ -142,13 +142,13 @@ jobs:
           console.log(JSON.stringify(report,null,2));
           const all=docker('ps','--all','--quiet').split('\n').filter(Boolean).map(id=>JSON.parse(docker('inspect',id))[0]);
           console.log(JSON.stringify({services:all.map(i=>({service:i.Config.Labels?.['com.docker.compose.service'],status:i.State.Status,health:i.State.Health?.Status,restarts:i.RestartCount,oom:i.State.OOMKilled}))}));
+          const db=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='db'&&i.State.Running);
+          if(db){console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"BEGIN READ ONLY;SET LOCAL statement_timeout='5s';SELECT json_build_object('recovery',pg_is_in_recovery(),'readonly',current_setting('default_transaction_read_only'),'security_table',to_regclass('public.security_rate_limits') IS NOT NULL,'rate_function',to_regprocedure('public.security_rate_limit(text,integer)') IS NOT NULL);SELECT json_build_object('state',state,'wait',wait_event_type,'count',count(*)) FROM pg_stat_activity GROUP BY state,wait_event_type;COMMIT;"));}
           const app=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='app'&&i.State.Running);
           if(app){
             const probe=String.raw`const {createHmac}=await import('node:crypto');const e=process.env;const b=x=>Buffer.from(JSON.stringify(x)).toString('base64url');const now=Math.floor(Date.now()/1000);const unsigned=b({alg:'HS256',typ:'JWT'})+'.'+b({sub:'0',role:e.SCHEMA_ADMIN_USER,aud:'jouw-driver',iat:now,exp:now+60});const token=unsigned+'.'+createHmac('sha256',e.JWT_SECRET).update(unsigned).digest('base64url');for(const path of ['/?select=none','/security_rate_limits?select=bucket_key&limit=0']){try{const r=await fetch(e.POSTGREST_URL+path,{headers:{Authorization:'Bearer '+token,'Accept-Profile':e.POSTGREST_SCHEMA||'public'},signal:AbortSignal.timeout(10000)});let data;try{data=await r.json()}catch{}console.log(JSON.stringify({probe:path,status:r.status,code:data?.code,message:typeof data?.message==='string'?data.message.replace(/postgres(?:ql)?:\/\/[^ ]+/g,'[redacted]').slice(0,180):undefined}));}catch(err){console.log(JSON.stringify({probe:path,error:err.cause?.code||err.name}));}}`;
-            console.log(docker('exec',app.Id,'node','--input-type=module','-e',probe));
+            try{console.log(docker('exec',app.Id,'node','--input-type=module','-e',probe));}catch{console.log('Internal API probe timed out');}
           }
-          const db=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='db'&&i.State.Running);
-          if(db){console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"BEGIN READ ONLY;SET LOCAL statement_timeout='5s';SELECT json_build_object('recovery',pg_is_in_recovery(),'readonly',current_setting('default_transaction_read_only'),'security_table',to_regclass('public.security_rate_limits') IS NOT NULL,'rate_function',to_regprocedure('public.security_rate_limit(text,integer)') IS NOT NULL);SELECT json_build_object('state',state,'wait',wait_event_type,'count',count(*)) FROM pg_stat_activity GROUP BY state,wait_event_type;COMMIT;"));}
           DOMAIN_INVENTORY
           fi
           REMOTE
