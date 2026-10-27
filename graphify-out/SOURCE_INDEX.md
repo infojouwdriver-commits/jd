@@ -1211,6 +1211,10 @@ Links target the working tree, so line positions can move after changes.
 - `20261026_signature_billing_conflict.sql` — [source](../migrations/20261026_signature_billing_conflict.sql#)
 - `"schema".security_email_contract()` — [L5](../migrations/20261026_signature_billing_conflict.sql#L5)
 
+## [migrations/20261027_shift_conflict_retry.sql](../migrations/20261027_shift_conflict_retry.sql)
+
+- `20261027_shift_conflict_retry.sql` — [source](../migrations/20261027_shift_conflict_retry.sql#)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)

@@ -10,6 +10,14 @@ on:
         type: boolean
         default: false
         description: Release only an old aborted gateway transaction blocking other requests; preserve committed records
+      repair_shift_conflict_codes:
+        type: boolean
+        default: false
+        description: Apply the tested shift conflict SQL patch without changing business records
+      release_looping_shift_requests:
+        type: boolean
+        default: false
+        description: Stop only the ten observed looping shift request backends after applying the fix
       reclaim_reproducible_cache:
         type: boolean
         default: false
@@ -31,6 +39,8 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REPAIR_SHIFTS: ${{ inputs.repair_shift_conflict_codes }}
+          RELEASE_SHIFTS: ${{ inputs.release_looping_shift_requests }}
           RECOVER_ABORTED: ${{ inputs.recover_aborted_gateway_transaction }}
           RECLAIM_CACHE: ${{ inputs.reclaim_reproducible_cache }}
           INSPECT_DOMAIN: ${{ inputs.inspect_domain_runtime }}
@@ -47,7 +57,7 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
           [[ "$RECLAIM_CACHE" = true || "$RECLAIM_CACHE" = false ]]
           [[ "$INSPECT_DOMAIN" = true || "$INSPECT_DOMAIN" = false ]]
-          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE' '$INSPECT_DOMAIN' '$RECOVER_ABORTED'" <<'REMOTE'
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE' '$INSPECT_DOMAIN' '$RECOVER_ABORTED' '$REPAIR_SHIFTS' '$RELEASE_SHIFTS'" <<'REMOTE'
           set -euo pipefail
           printf 'SSH identity verified\n'
           uname -sr
@@ -93,7 +103,7 @@ jobs:
           test ! -e /srv/jouw-driver/.env || printf 'Server configuration already exists; preserve it\n'
           if test "$2" = true; then
             cd /srv/jouw-driver/foundation
-            node --input-type=module - "$3" <<'DOMAIN_INVENTORY'
+            node --input-type=module - "$3" "$4" "$5" <<'DOMAIN_INVENTORY'
           import fs from 'node:fs';
           import {createHash} from 'node:crypto';
           import {execFileSync} from 'node:child_process';
@@ -159,6 +169,21 @@ jobs:
               console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',fix));
             }
           }
+          if(process.argv[3]==='true'){
+            if(!db||state.revision!=='79a1ec6f6e14299778582b609b73340f644f43c3')throw Error('Shift repair live baseline mismatch');
+            const before=docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"SELECT pg_get_functiondef(p.oid) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN ('security_record_driver_shift','security_shift_status','security_guard_shift_work') ORDER BY p.proname;");
+            if(!before.includes('security_record_driver_shift')||!before.includes('security_shift_status')||!before.includes('security_guard_shift_work'))throw Error('Shift function baseline missing');
+            const backup='/srv/jouw-driver/shift-functions-before-'+Date.now()+'.sql';
+            fs.writeFileSync(backup,'BEGIN;\n'+before+'\nCOMMIT;\n',{mode:0o600,flag:'wx'});
+            console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',"-- Business conflicts must not trigger PostgREST's serialization retry loop.\n-- 23505 is already handled as HTTP 409 by the deployed shift endpoint.\n-- Replace only the three shift functions; preserve their owners and ACLs.\nBEGIN;\nSET LOCAL lock_timeout='5s';\nSET LOCAL statement_timeout='15s';\nSET LOCAL search_path=\"public\",pg_catalog;\nDO $$\nDECLARE f record; changed text;\nBEGIN\n FOR f IN SELECT p.oid,pg_get_functiondef(p.oid) definition\n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname=current_schema() AND p.proname IN\n ('security_record_driver_shift','security_shift_status','security_guard_shift_work')\n LOOP\n  changed=replace(f.definition,'''40001''','''23505''');\n  IF changed<>f.definition THEN EXECUTE changed; END IF;\n END LOOP;\nEND $$;\nNOTIFY pgrst,'reload schema';\nCOMMIT;\n"));
+            const check=docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"SELECT count(*)=3 AND bool_and(position(chr(39)||'40001'||chr(39) IN pg_get_functiondef(p.oid))=0) AND bool_and(position(chr(39)||'23505'||chr(39) IN pg_get_functiondef(p.oid))>0) AND bool_and(NOT has_function_privilege('jouw_app_user',p.oid,'EXECUTE')) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN ('security_record_driver_shift','security_shift_status','security_guard_shift_work');");
+            if(check!=='t')throw Error('Shift function verification failed; private rollback available');
+            console.log('Three shift functions patched; existing access controls preserved');
+            if(process.argv[4]==='true'){
+              const stop="SET statement_timeout='5s';SELECT json_build_object('stopped_looping_shift_pid',a.pid,'terminated',pg_terminate_backend(a.pid)) FROM pg_stat_activity a WHERE a.pid IN (511940,514276,526849,514571,514676,525867,514207,526890,514667,512730) AND a.datname='jouw_driver' AND a.usename='jouw_gateway' AND a.application_name='PostgREST 13.0.8' AND a.backend_start<'2026-10-27T17:08:28Z'::timestamptz AND a.query ILIKE '%security_record_driver_shift%';";
+              console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',stop));
+            }
+          } else if(process.argv[4]==='true'){throw Error('Loop recovery requires the conflict patch');}
           const app=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='app'&&i.State.Running);
           if(app){
             const probe=String.raw`const {createHmac}=await import('node:crypto');const e=process.env;const b=x=>Buffer.from(JSON.stringify(x)).toString('base64url');const now=Math.floor(Date.now()/1000);const unsigned=b({alg:'HS256',typ:'JWT'})+'.'+b({sub:'0',role:e.SCHEMA_ADMIN_USER,aud:'jouw-driver',iat:now,exp:now+60});const token=unsigned+'.'+createHmac('sha256',e.JWT_SECRET).update(unsigned).digest('base64url');for(const path of ['/?select=none','/security_rate_limits?select=bucket_key&limit=0']){try{const r=await fetch(e.POSTGREST_URL+path,{headers:{Authorization:'Bearer '+token,'Accept-Profile':e.POSTGREST_SCHEMA||'public'},signal:AbortSignal.timeout(10000)});let data;try{data=await r.json()}catch{}console.log(JSON.stringify({probe:path,status:r.status,code:data?.code,message:typeof data?.message==='string'?data.message.replace(/postgres(?:ql)?:\/\/[^ ]+/g,'[redacted]').slice(0,180):undefined}));}catch(err){console.log(JSON.stringify({probe:path,error:err.cause?.code||err.name}));}}`;
