@@ -1,5 +1,5 @@
 {
-  "node_count": 3303,
+  "node_count": 3304,
   "unverified_node_count": 0,
   "raw_edge_count": 11587,
   "non_object_edges": 0,
@@ -19,7 +19,7 @@
   "source_location_variant_groups": 98,
   "context_variant_groups": 4,
   "post_build_graph_type": "DiGraph",
-  "post_build_node_count": 3380,
+  "post_build_node_count": 3381,
   "post_build_edge_count": 11341,
   "post_build_error": "",
   "producer_suppression": {

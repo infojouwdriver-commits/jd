@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "ac47ce340a1694bb09522b143a631d88989b7b52",
+  "source_commit_context": "c69ccb60c41253ccc8ddfea631bd13d45b793485",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -139,6 +139,7 @@
     "migrations/20261026_invoice_checkout.sql": "054bbe39fbf0626b91f4f1d9347b267448b028c2a531b51ed32910df860f5919",
     "migrations/20261026_manual_invoices.sql": "cbce069066424698b447c0e4d31fc1467ce1f327f8caf97749cbb430119333c2",
     "migrations/20261026_signature_billing_conflict.sql": "0fbfb119b694a7aa79f692e9463ee9f362462068ef15811bf9242ebcce041803",
+    "migrations/20261027_shift_conflict_retry.sql": "89a489b5813821bed1b539a8bf9c98ade06408d5467a96c2587cf9b5e1f5aa36",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
     "mobile/package.json": "40aee03ff72ed5bafad1a679e6a019b22989dae4f215042703e794b2c7aa50d5",
     "mobile/plugins/background-geolocation/Package.swift": "856e9b12db8d9499d30a655955838104ec135fc809c772a31dd6d75b07923ec4",
@@ -155,7 +156,7 @@
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
     "package.json": "16261b3b9b1d1b74df83f15adccd6f92c7cce905229e2c9029e3533f43c2346a",
     "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
-    "scripts/apply-release.mjs": "16123d4fd7b0fe1e11a32285bead2e93467a4ce32b162469d8ad6eaa961d4049",
+    "scripts/apply-release.mjs": "ed4f0a23ab25000d2482fe18b64e826f2ef35a6fc7a8ab6d6e67ad6b97d024b7",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
     "scripts/code-map.py": "a4d5f75b9f7a0b2c7e9ea064a10d9664d5d976fee9fac63a1ecbab9aeb046837",
     "scripts/convert-database.mjs": "3e5a46b4690231100db6d318a1ba53d1c3daff8a96e00808ab47db64c697a4ca",
@@ -597,16 +598,16 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "health.json": "d06253b37a251c8bf6bad2afb4f84c7ba5a955c783ddeddeb7bcf19e1a4b267d",
-    "graph.json": "cb850d9ffc591918d5127aaf84cf01396bc52eea1a6b3f375291e16ffabbb965",
-    "GRAPH_REPORT.md": "a9af973eb012d93f52f535efaffa8a93b36ad2520b719227689ddc616ea6d2eb",
-    "SOURCE_INDEX.md": "427d4bfd70733a42b13ef425ac0e9e724e0c6a802ac5b59518340476a66d3794",
-    "GRAPH_TREE.html": "b19c4e0d97de38d4eee334bd3c984fc3482c7c2a32257b7eb79b2c996f69940a"
+    "health.json": "e19ac4e1661bc97284cf198a4b79f8d6e84cd3ef0961038310a048b3a41463e0",
+    "SOURCE_INDEX.md": "755bd880927189f1d6a8006e2a9d1921f46db8ca2a6d7b2b3416197802a24765",
+    "graph.json": "8fd5a46bc7c1d06d61ccbb929f4d5b27db1038df9b32c1e8c73f5c2b10fd8f82",
+    "GRAPH_REPORT.md": "19cc4f1c0e5be4f3414afef69b1c44cca92e4b7801de3c9601315555b24b67e6",
+    "GRAPH_TREE.html": "2eb7514878601cc7fc6cfa1e229da03dfe2bd91b6e62e07f33b63e83bbfda7bc"
   },
-  "nodes": 3380,
+  "nodes": 3381,
   "edges": 11341,
   "raw_edges": 11587,
-  "communities": 175,
+  "communities": 176,
   "confidence_counts": {
     "EXTRACTED": 11343,
     "INFERRED": 244

@@ -23,6 +23,7 @@ async function setup() {
   await db.exec(sql("migrations/20261010_trip_invoice.sql"));
   await db.exec(sql("migrations/20261019_driver_shifts.sql"));
   await db.exec(sql("migrations/20261019_shift_activity.sql"));
+  await db.exec(sql("migrations/20261027_shift_conflict_retry.sql"));
   await db.exec(
     `ALTER TABLE trips ADD COLUMN is_test boolean DEFAULT false;INSERT INTO companies(id,name) VALUES(1,'Synthetic');INSERT INTO vehicles(id,company_id,plate_number,status) VALUES(1,1,'TEST-1','active'),(2,1,'TEST-2','active');INSERT INTO drivers(id,user_id,company_id,current_vehicle_id,full_name,status) VALUES(1,10,1,1,'Synthetic Driver','active');`,
   );
@@ -76,7 +77,7 @@ test("pause/resume, all submitted trip sources, shift summaries and immutable ac
     );
     await assert.rejects(
       change(randomUUID(), 1, "available"),
-      (e) => e.code === "40001",
+      (e) => e.code === "23505",
     );
     await change(randomUUID(), 2, "available");
     await db.exec(
@@ -95,7 +96,7 @@ test("pause/resume, all submitted trip sources, shift summaries and immutable ac
     );
     await assert.rejects(
       change(randomUUID(), detail.shift.version, "break"),
-      (e) => e.code === "40001",
+      (e) => e.code === "23505",
     );
     await db.exec(
       "UPDATE trips SET status='completed',end_time=clock_timestamp(),price=25 WHERE id=1;UPDATE trips SET sync_error_message='retry' WHERE id=1;",
@@ -217,14 +218,14 @@ test("durable local meter status replays after reload, blocks break/closure and 
         randomUUID(),
         s.id,
       ]),
-      (e) => e.code === "40001",
+      (e) => e.code === "23505",
     );
     await assert.rejects(
       db.query(
         "SELECT security_record_driver_shift(10,$1,'end',$2,2,110,5,'available')",
         [randomUUID(), s.id],
       ),
-      (e) => e.code === "40001",
+      (e) => e.code === "23505",
     );
     await db.query(
       "INSERT INTO trips(user_id,driver_id,company_id,vehicle_id,status,start_time,end_time,price,completion_request_key) VALUES(10,1,1,1,'completed',clock_timestamp(),clock_timestamp(),25,$1)",

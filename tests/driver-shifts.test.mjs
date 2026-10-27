@@ -25,6 +25,7 @@ async function setup() {
       sql("schema/reconstructed-staging.sql"),
   );
   await db.exec(sql("migrations/20261019_driver_shifts.sql"));
+  await db.exec(sql("migrations/20261027_shift_conflict_retry.sql"));
   await db.exec(
     `INSERT INTO companies(id,name) VALUES(1,'Synthetic Company'),(2,'Other Company');INSERT INTO vehicles(id,company_id,plate_number,status) VALUES(1,1,'TEST-1','active'),(2,2,'TEST-2','active');INSERT INTO drivers(id,user_id,company_id,current_vehicle_id,full_name,status) VALUES(1,10,1,1,'Synthetic Driver','active'),(2,20,2,2,'Other Driver','active'),(3,30,1,1,'Second Driver','active');`,
   );
@@ -122,9 +123,9 @@ test("service stores explicit readings and timestamps; idempotency, ownership, c
     assert.equal(s.ended_at, null);
     await save(db, { id, request, odo: 100.1 });
     assert.equal((await read(db, 10, id)).events.length, 1);
-    await bad(save(db, { id, request, odo: 101 }), "40001");
-    await bad(save(db, { id: randomUUID() }), "40001");
-    await bad(save(db, { user: 30, id: randomUUID() }), "40001");
+    await bad(save(db, { id, request, odo: 101 }), "23505");
+    await bad(save(db, { id: randomUUID() }), "23505");
+    await bad(save(db, { user: 30, id: randomUUID() }), "23505");
     await bad(
       save(db, { user: 20, id, action: "record", version: 1, odo: 101 }),
       "42501",
@@ -152,14 +153,14 @@ test("service stores explicit readings and timestamps; idempotency, ownership, c
       );
     await bad(
       save(db, { id, action: "record", version: 1, odo: 120, passenger: 6 }),
-      "40001",
+      "23505",
     );
     await db.exec(
       "INSERT INTO trips(id,driver_id,status) VALUES(1,1,'in_progress')",
     );
     await bad(
       save(db, { id, action: "end", version: 2, odo: 120, passenger: 6 }),
-      "40001",
+      "23505",
     );
     await db.exec("UPDATE trips SET status='completed' WHERE id=1");
     const endRequest = randomUUID();
@@ -184,7 +185,7 @@ test("service stores explicit readings and timestamps; idempotency, ownership, c
     });
     await bad(
       save(db, { id, action: "record", version: 3, odo: 121, passenger: 11 }),
-      "40001",
+      "23505",
     );
     assert.equal((await read(db, 10)).active, null);
     const detail = await read(db, 10, id);
@@ -197,6 +198,7 @@ test("service stores explicit readings and timestamps; idempotency, ownership, c
     assert.equal((await read(db, 10)).shifts.length, 2);
     assert.equal((await read(db, 20)).shifts.length, 0);
     await db.exec(sql("migrations/20261019_driver_shifts.sql"));
+  await db.exec(sql("migrations/20261027_shift_conflict_retry.sql"));
     assert.equal((await read(db, 10, id)).events.length, 3);
     await db.exec("SET ROLE browser");
     await bad(db.query("SELECT * FROM driver_shifts"), "42501");

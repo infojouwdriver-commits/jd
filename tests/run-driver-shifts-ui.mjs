@@ -107,6 +107,7 @@ try {
         "migrations/20261010_trip_invoice.sql",
         "migrations/20261019_driver_shifts.sql",
         "migrations/20261019_shift_activity.sql",
+        "migrations/20261027_shift_conflict_retry.sql",
       ])
         await db.exec(sql(file));
       await db.exec(
@@ -210,7 +211,7 @@ try {
                 ).rows[0].v;
             } catch (e) {
               return route.fulfill({
-                status: e.code === "40001" ? 409 : 400,
+                status: e.code === "23505" ? 409 : 400,
                 contentType: "application/json",
                 body: JSON.stringify({
                   success: false,
