@@ -11,6 +11,10 @@ on:
         description: Build and probe the iOS simulator (deferred for Android-first delivery)
         type: boolean
         default: false
+      upload_testflight:
+        description: Build a signed iPhone release and upload to TestFlight
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -18,6 +22,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   android:
+    if: github.event_name != 'workflow_dispatch' || !inputs.upload_testflight
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -47,6 +52,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   visual-review:
+    if: github.event_name != 'workflow_dispatch' || !inputs.upload_testflight
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -132,3 +138,60 @@ jobs:
             driver-app/build/ios/native-crypto-result.json
           if-no-files-found: error
           retention-days: 14
+
+  ios-testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.upload_testflight
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: driver-app
+    env:
+      EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_NATIVE_PUBLIC_TOKEN || secrets.MAPBOX_PUBLIC_TOKEN }}
+      JD_IOS_MANUAL_SIGNING: '1'
+      JD_IOS_BUILD_NUMBER: 1.${{ github.run_number }}.${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: driver-app/package-lock.json
+      - run: npm ci
+      - name: Verify mobile source and dependencies
+        run: npm run lint && npm run typecheck && npm test && npx expo install --check
+        env:
+          JD_IOS_MANUAL_SIGNING: '0'
+      - name: Verify native Mapbox access
+        run: node scripts/check-mapbox-access.mjs
+      - name: Prepare isolated signing keychain and profile
+        run: python3 scripts/ios-signing.py prepare
+        env:
+          IOS_SIGNING_JSON: ${{ secrets.IOS_TESTFLIGHT_SIGNING_JSON }}
+      - run: npx expo prebuild --platform ios --no-install
+      - name: Install native dependencies
+        run: cd ios && pod install
+      - name: Archive signed iPhone application
+        run: >-
+          xcodebuild -quiet -workspace ios/JOUWDRIVER.xcworkspace -scheme JOUWDRIVER
+          -configuration Release -destination 'generic/platform=iOS'
+          -archivePath build/ios/JOUWDRIVER.xcarchive archive
+      - name: Export App Store application
+        run: >-
+          xcodebuild -exportArchive -archivePath build/ios/JOUWDRIVER.xcarchive
+          -exportOptionsPlist "$JD_IOS_SIGNING_DIR/ExportOptions.plist" -exportPath build/ios/export
+      - name: Upload signed application to TestFlight
+        run: >-
+          xcrun altool --upload-app --type ios --file build/ios/export/JOUWDRIVER.ipa
+          --apiKey "$JD_ASC_KEY_ID" --apiIssuer "$JD_ASC_ISSUER"
+      - name: Preserve signed iPhone package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: driver-ios-testflight-${{ github.sha }}
+          path: driver-app/build/ios/export/*.ipa
+          if-no-files-found: error
+          retention-days: 14
+      - name: Remove signing credentials from runner
+        if: always()
+        run: python3 scripts/ios-signing.py cleanup
