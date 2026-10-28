@@ -198,8 +198,8 @@ try {
  assert.equal((await receiptApi(docPath,'GET',undefined,cookie)).status,409,'Viewing a receipt cannot issue it');
  const issued=await receiptApi('/next_api/trips/generate-invoice?id='+finished.id+'&format=link','POST',{},cookie);assert.equal(issued.status,200);
  const receipt=await receiptApi(docPath,'GET',undefined,cookie);assert.equal(receipt.status,200);assert.equal(receipt.data.data.amount,22.55);
- const draft=await receiptApi('/next_api/trips/receipt-email?id='+finished.id+'&language=fr','GET',undefined,cookie);assert.equal(draft.status,200);assert.match(draft.data.data.message,/JOUW DRIVER/);
- const emailResult=await receiptApi('/next_api/trips/receipt-email?id='+finished.id,'POST',{request_id:randomUUID(),to:'receipt@example.invalid',subject:draft.data.data.subject,message:draft.data.data.message,language:'fr',settings_version:draft.data.data.settings_version},cookie);assert.equal(emailResult.status,200);assert.equal(emailResult.data.data.status,'not_configured');
+ const receiptDraft=await receiptApi('/next_api/trips/receipt-email?id='+finished.id+'&language=fr','GET',undefined,cookie);assert.equal(receiptDraft.status,200);assert.match(receiptDraft.data.data.message,/JOUW DRIVER/);
+ const emailResult=await receiptApi('/next_api/trips/receipt-email?id='+finished.id,'POST',{request_id:randomUUID(),to:'receipt@example.invalid',subject:receiptDraft.data.data.subject,message:receiptDraft.data.data.message,language:'fr',settings_version:receiptDraft.data.data.settings_version},cookie);assert.equal(emailResult.status,200);assert.equal(emailResult.data.data.status,'not_configured');
  assert.equal((await success('/invoices?trip_id=eq.'+finished.id,service)).length,1);
  await denied('/receipt_email_settings',browser);await denied('/receipt_mail_requests',browser);
  checks.push('Native optional driver receipt email reads an issued immutable invoice, never issues on view, preserves one invoice without mail configuration, denies browser tables and driver ad edits, and versions administrator settings');

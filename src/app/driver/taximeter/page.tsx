@@ -489,7 +489,6 @@ function TaximeterWorkspace() {
   const [completedTripId, setCompletedTripId] = useState<number | null>(null);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const invoiceFlight = useRef(false);
-  const [invoiceReady, setInvoiceReady] = useState(false);
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   const [dailyEarnings, setDailyEarnings] = useState(0);
@@ -523,7 +522,6 @@ function TaximeterWorkspace() {
         // Clear only after server acknowledgement. A failure leaves the queued
         // idempotent payload available so cleanup can be retried safely.
         await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
-        setInvoiceReady(false);
         setCompletedTripId(response.id);
         if (response.warning) toast.warning(response.warning);
       });
@@ -858,7 +856,6 @@ function TaximeterWorkspace() {
       const a = document.createElement('a'); a.href = url; a.download = `Factuur-Rit-${completedTripId}.pdf`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-      setInvoiceReady(true);
       receiptMemory?.remember(completedTripId);
       router.push('/driver/receipt?id='+completedTripId);
       toast.success(language === 'nl' ? 'Factuur gegenereerd' : language === 'ar' ? 'تم إنشاء الفاتورة' : 'Facture générée');
@@ -1003,7 +1000,6 @@ function TaximeterWorkspace() {
                 <p className="text-sm mb-6" style={{ color: 'rgba(240,200,124,0.8)' }}>
                   {language === 'nl' ? 'Wilt u een factuur genereren voor deze rit?' : language === 'ar' ? 'هل تريد إنشاء فاتورة لهذه الرحلة؟' : 'Voulez-vous générer une facture pour ce trajet?'}
                 </p>
-                {invoiceReady && <div className="receipt-printer" data-testid="receipt-printer" role="status"><div className="receipt-paper"><FileText aria-hidden="true" size={28}/><strong>JOUW DRIVER</strong><span>{language === "ar" ? "تم إنشاء الفاتورة" : language === "fr" ? "Facture générée" : "Factuur gegenereerd"}</span><span>#{completedTripId}</span></div></div>}
                 <div className="flex gap-3">
                   <button disabled={generatingInvoice} onClick={() => { setCompletedTripId(null); router.push('/driver/trips'); }}
                     className="flex-1 h-12 rounded-2xl font-bold text-sm transition-all"

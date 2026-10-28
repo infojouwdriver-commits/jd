@@ -54,7 +54,7 @@ BEGIN
  OR EXISTS(SELECT FROM jsonb_each(p_data->'text') t WHERE t.key NOT IN('ar','fr','nl') OR jsonb_typeof(t.value)<>'string' OR length(trim(t.value#>>'{}')) NOT BETWEEN 1 AND 500)
  OR p_data->>'url' IS NULL OR length(p_data->>'url')>500 OR p_data->>'url' !~ '^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[^[:space:]]*)?$' THEN RAISE EXCEPTION 'Invalid advertisement' USING ERRCODE='22023';END IF;
  SELECT * INTO STRICT s FROM receipt_email_settings WHERE id=1 FOR UPDATE;
- IF s.version IS DISTINCT FROM p_expected THEN RAISE EXCEPTION 'Configuration changed' USING ERRCODE='40001';END IF;
+ IF s.version IS DISTINCT FROM p_expected THEN RAISE EXCEPTION 'Configuration changed' USING ERRCODE='PT409';END IF;
  UPDATE receipt_email_settings SET version=version+1,enabled=(p_data->>'enabled')::boolean,text=p_data->'text',url=p_data->>'url',updated_by=p_actor,updated_at=clock_timestamp() WHERE id=1 RETURNING * INTO s;
  RETURN to_jsonb(s)-'id'-'updated_by'-'updated_at';
 END $$;
@@ -67,11 +67,11 @@ BEGIN
  PERFORM pg_advisory_xact_lock(hashtextextended(p_request::text,0));
  SELECT * INTO prior FROM receipt_mail_requests WHERE request_id=p_request;
  IF FOUND THEN
-  IF prior.actor_id<>p_actor OR prior.invoice_id<>p_invoice OR prior.payload_digest<>p_digest OR prior.settings_version<>p_version THEN RAISE EXCEPTION 'Request conflict' USING ERRCODE='40001';END IF;
+  IF prior.actor_id<>p_actor OR prior.invoice_id<>p_invoice OR prior.payload_digest<>p_digest OR prior.settings_version<>p_version THEN RAISE EXCEPTION 'Request conflict' USING ERRCODE='PT409';END IF;
   RETURN false;
  END IF;
  SELECT version INTO v FROM receipt_email_settings WHERE id=1 FOR SHARE;
- IF v IS DISTINCT FROM p_version THEN RAISE EXCEPTION 'Advertisement changed; review draft' USING ERRCODE='40001';END IF;
+ IF v IS DISTINCT FROM p_version THEN RAISE EXCEPTION 'Advertisement changed; review draft' USING ERRCODE='PT409';END IF;
  INSERT INTO receipt_mail_requests(request_id,actor_id,invoice_id,payload_digest,settings_version) VALUES(p_request,p_actor,p_invoice,p_digest,p_version);
  RETURN true;
 END $$;
