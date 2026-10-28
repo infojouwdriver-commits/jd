@@ -6,7 +6,7 @@ const workflow=fs.readFileSync(new URL('../../.github/workflows/publish-driver-w
 const gate=workflow.split("node --input-type=module <<'GATE'\n")[1].split('\n          GATE')[0];
 function scope(files,ref='refs/heads/main') {
   return spawnSync(process.execPath,['--input-type=module'],{
-    input:`globalThis.fetch=async()=>({ok:true,json:async()=>({status:'ahead',files:${JSON.stringify(files)}})});\n`+gate,
+    input:`globalThis.fetch=async url=>({ok:true,json:async()=>({status:'ahead',files:String(url).includes('/compare/6560324')?${JSON.stringify(['.github/workflows/publish-marketing-seo-once.yml','docs/MARKETING_SEO_AR.md','graphify-out/GRAPH_REPORT.md','graphify-out/SOURCE_INDEX.md','graphify-out/graph.json','graphify-out/source-manifest.json','src/middleware.ts','tests/marketing-seo.test.mjs'].map(filename=>({filename,status:'modified'})))}:${JSON.stringify(files)}})});\n`+gate,
     encoding:'utf8',env:{PATH:process.env.PATH,GITHUB_REF:ref,GITHUB_SHA:'a'.repeat(40),EXPECTED_BASELINE:'b'.repeat(40),GITHUB_REPOSITORY:'fixture/jd',GH_TOKEN:'synthetic'},
   });
 }

@@ -116,7 +116,7 @@ try {
       const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
         serviceWorkers: "block",
-        reducedMotion: "reduce",
+        reducedMotion: lang === "ar" && theme === "dark" ? "no-preference" : "reduce",
       });
       await context.addInitScript(
         ({ lang, theme }) => {
@@ -137,6 +137,7 @@ try {
         },
         { lang, theme },
       );
+      let releaseStart;
       let failAfterCommit = lang === "fr" && theme === "dark",
         writes = [];
       await context.route("**/*", async (route) => {
@@ -220,6 +221,7 @@ try {
                 }),
               });
             }
+            if (b.action === "start" && lang === "ar" && theme === "dark") await new Promise(resolve => { releaseStart = resolve; });
             if (failAfterCommit) {
               failAfterCommit = false;
               return route.fulfill({
@@ -263,8 +265,18 @@ try {
           fullPage: true,
         });
       assert.equal(await page.getByRole("dialog").count(),0,"Start reading is inline in the shift card");
+      await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
+      assert.equal(writes.length,0,"An explicit odometer is mandatory");
+      assert.equal(await page.locator("#operation-odometer").evaluate(el => el === document.activeElement),true);
       await page.locator("#operation-odometer").fill("100.10");
       await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
+      if (lang === "ar" && theme === "dark") {
+        for(let i=0;i<100&&!releaseStart;i++) await new Promise(resolve=>setTimeout(resolve,10));
+        assert.ok(releaseStart);
+        assert.ok(page.url().endsWith("/driver/home"),"No navigation before server acknowledgement");
+        assert.equal(await page.locator(".driver-cockpit").getAttribute("data-engine"),"off");
+        releaseStart();
+      }
       if (lang === "fr" && theme === "dark") {
         const startForm=page.getByRole("form",{name:c.start,exact:true});
         await startForm.getByRole("alert").waitFor();

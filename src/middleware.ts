@@ -12,7 +12,11 @@ export function middleware(request: NextRequest) {
   // Referral parameters can be inserted by third-party chat or campaign apps.
   // Strip them on public marketing routes so visitors only see our own clean URL.
   // Never touch login, payment, signed-document or application URLs.
-  const marketingHost = hostname === 'jouww.com' || hostname === 'www.jouww.com';
+  // Standalone Next.js uses its internal listen host in nextUrl. Caddy preserves
+  // the original Host header. Only these explicit public hosts may redirect;
+  // forwarded-host input must never choose a redirect destination.
+  const publicHost = (request.headers.get('host') || hostname).toLowerCase().replace(/:443$/, '');
+  const marketingHost = publicHost === 'jouww.com' || publicHost === 'www.jouww.com';
   const publicMarketingPath = request.nextUrl.pathname === '/' ||
     /^\/(fr|nl|ar)\/solutions(?:\/|$)/.test(request.nextUrl.pathname) ||
     request.nextUrl.pathname === '/privacy-policy';
@@ -22,6 +26,9 @@ export function middleware(request: NextRequest) {
       /^utm_/i.test(key) || /^(fbclid|gclid|gbraid|wbraid|msclkid|mc_cid|mc_eid|ref_src)$/i.test(key));
     if (trackingKeys.length > 0) {
       for (const key of trackingKeys) cleanUrl.searchParams.delete(key);
+      cleanUrl.protocol = 'https:';
+      cleanUrl.hostname = publicHost;
+      cleanUrl.port = '';
       const redirect = NextResponse.redirect(cleanUrl, 307);
       redirect.headers.set('Referrer-Policy', 'no-referrer');
       redirect.headers.set('Cache-Control', 'no-store');

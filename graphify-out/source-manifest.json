@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "d5009ba57f8ccc2a39202fdaa1d2ba73a5df6ac7",
+  "source_commit_context": "c90d1a9cb9b8e06a4e8d2b6551902877678825d9",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -602,16 +602,16 @@
     "src/lib/utils.ts": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
     "src/locales/driver.ts": "0120c45bb91cc13b62bca82233e544dc7e798863ecb076818a06ea4a2795271c",
     "src/locales/landing.ts": "cf1fa3f7b7c92089235e481bd2686c22a26073f2636c71273f16abfa58add1f4",
-    "src/middleware.ts": "b75cc1fa78a4cc30733c7b811130f53c09a7778942aaf14dc1f604204a3c3634",
+    "src/middleware.ts": "bf6cfe5dc19820b86228e361135d77e95b6298395ffa7b9e679f1d31802b99f7",
     "src/types/auth.ts": "3e62eddb3c136fc971aa71630cdec514e70bda0692f838bfa2e2fd298cb45361",
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "1d16a175cc3067dd0c66da2ce8548786f579e44630cf9eb04d92c09e9ea491d2",
-    "SOURCE_INDEX.md": "b0d3adb8702c567baac9f231f9d34779889b600f38891ace442383f8ca3a6869",
+    "graph.json": "c8e059ee0c0a27b369efa7553311b6f31157c0e91533049d9beeae03d8725bc9",
+    "SOURCE_INDEX.md": "92babe54bdce425ffe8be44db1e37c57ced5e513295b067a7bc372e356ea5291",
     "GRAPH_TREE.html": "52b90a033b7b5456c566b0f469edb3f49e7cbdbb711172196d68111c26a36616",
     "health.json": "bd89fcd951b3d6c92101142d60d42626e59db78a8a0fea41e97cdae1ee84bc5b",
-    "GRAPH_REPORT.md": "ebc0ac90a22452ac2bfe0f04bc6bf6bea18ae37694bd41a988cf1031b3355341"
+    "GRAPH_REPORT.md": "0afc37fe192a37cf4494296544a4dfb1a5aa29c13c8a61d1da63a82da9b1d8bb"
   },
   "nodes": 3426,
   "edges": 11475,
