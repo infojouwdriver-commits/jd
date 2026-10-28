@@ -1,9 +1,12 @@
 
 'use client';
 
+import Link from "next/link";
 import DocumentQr from '@/components/driver/DocumentQr';
+import ReceiptEmailDialog from "@/components/driver/ReceiptEmailDialog";
+import {receiptEmailWords} from "@/lib/receipt-email-model";
 import {Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription} from '@/components/ui/dialog';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,6 +22,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { AppLanguage } from '@/contexts/LanguageContext';
 
 interface Trip {
+  invoice?: {receipt_snapshot?:unknown}|null;
   id: number; start_time: string; end_time: string; start_address: string; end_address: string;
   distance_km: number | null; duration_minutes: number | null; price: number | null; status: string;
   ritnummer: string | null; chiron_sync_attempts: number; passenger_name: string | null;
@@ -133,6 +137,7 @@ export default function DriverTripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
+  const invoiceFlights=useRef(new Set<number>());
   const [generatingInvoice, setGeneratingInvoice] = useState<number | null>(null);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
@@ -141,7 +146,9 @@ export default function DriverTripsPage() {
   const [summaryPlatform, setSummaryPlatform] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-  const [receiptDocument,setReceiptDocument]=useState<{url:string;reference:string}|null>(null);
+  const [receiptDocument,setReceiptDocument]=useState<{url:string;reference:string;tripId:number}|null>(null);
+  const [emailTrip,setEmailTrip]=useState<number|null>(null);
+  const [issuedIds,setIssuedIds]=useState<Set<number>>(new Set());
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
   useEffect(() => { if (!isLoading && !user) router.push('/driver-login'); }, [user, isLoading, router]);
@@ -214,6 +221,8 @@ export default function DriverTripsPage() {
     } catch(error) {if(!(error instanceof DOMException&&error.name==='AbortError'))toast.error(t.invoiceError);}
   }
   const generateInvoice = async (tripId: number) => {
+    if(invoiceFlights.current.has(tripId))return;
+    invoiceFlights.current.add(tripId);
     setGeneratingInvoice(tripId);
     toast.loading(t.invoiceGenerating, { id: 'invoice-generation' });
     try {
@@ -221,7 +230,7 @@ export default function DriverTripsPage() {
       if(documentResponse.ok){
         const result=await documentResponse.json();
         if(!result.success||!/^https:\/\/app\.jouww\.com\/documents\/receipts\/[1-9][0-9]{0,15}\.[A-Za-z0-9_-]{43}$/.test(result.data?.url))throw new Error(t.invoiceError);
-        setReceiptDocument(result.data);toast.success(t.invoiceSuccess,{id:'invoice-generation'});return;
+        setReceiptDocument({...result.data,tripId});setIssuedIds(prev=>new Set([...prev,tripId]));toast.success(t.invoiceSuccess,{id:'invoice-generation'});return;
       }
       if(documentResponse.status!==409)throw new Error(t.invoiceError);
       const response = await fetch(
@@ -243,7 +252,7 @@ export default function DriverTripsPage() {
       setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
       toast.success(t.invoiceSuccess, { id: 'invoice-generation' });
     } catch (error: any) { toast.error(error.message || t.invoiceError, { id: 'invoice-generation' }); }
-    finally { setGeneratingInvoice(null); }
+    finally { invoiceFlights.current.delete(tripId);setGeneratingInvoice(null); }
   };
 
   const openInGoogleMaps = (trip: Trip) => {
@@ -663,6 +672,8 @@ export default function DriverTripsPage() {
                   </div>
                 )}
 
+                {(trip.invoice?.receipt_snapshot || issuedIds.has(trip.id)) && <Link className="dp-btn-secondary w-full mb-2 min-h-12 rounded-2xl flex items-center justify-center" href={'/driver/receipt?id='+trip.id}>{language==='ar'?'عرض الإيصال':language==='fr'?'Voir le reçu':'Bon bekijken'}</Link>}
+                {(trip.invoice?.receipt_snapshot || issuedIds.has(trip.id)) && <button className="dp-btn-secondary w-full mb-2 min-h-12 rounded-2xl" onClick={()=>setEmailTrip(trip.id)}>{receiptEmailWords[language].send}</button>}
                 {/* Invoice Button */}
                 <button
                   onClick={() => generateInvoice(trip.id)}
@@ -678,10 +689,11 @@ export default function DriverTripsPage() {
           ))
         )}
       </div>
+      {emailTrip!==null&&<ReceiptEmailDialog tripId={emailTrip} onClose={()=>setEmailTrip(null)}/>}
       <Dialog open={!!receiptDocument} onOpenChange={open=>{if(!open)setReceiptDocument(null);}}>
         <DialogContent className="dp-card sm:max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader><DialogTitle>{receiptDocument?.reference}</DialogTitle><DialogDescription>{language==='ar'?'رابط دائم لهذه الفاتورة. من يملك الرابط يستطيع عرضها.':language==='nl'?'Vaste link naar dit vervoerbewijs. Iedereen met de link kan het bekijken.':'Lien permanent vers ce reçu. Toute personne disposant du lien peut le consulter.'}</DialogDescription></DialogHeader>
-          {receiptDocument&&<><DocumentQr url={receiptDocument.url} label={language==='ar'?'عرض الفاتورة':language==='nl'?'Vervoerbewijs bekijken':'Voir le reçu'}/><a className="dp-btn-primary flex items-center justify-center p-4 rounded-2xl" href={receiptDocument.url} target="_blank" rel="noreferrer">PDF</a><button className="dp-btn-secondary p-4 rounded-2xl" onClick={()=>void shareDocument()}>{language==='ar'?'مشاركة الرابط':language==='nl'?'Link delen':'Partager le lien'}</button></>}
+          {receiptDocument&&<><DocumentQr url={receiptDocument.url} label={language==='ar'?'عرض الفاتورة':language==='nl'?'Vervoerbewijs bekijken':'Voir le reçu'}/><a className="dp-btn-primary flex items-center justify-center p-4 rounded-2xl" href={receiptDocument.url} target="_blank" rel="noreferrer">PDF</a><button className="dp-btn-secondary p-4 rounded-2xl" onClick={()=>void shareDocument()}>{language==='ar'?'مشاركة الرابط':language==='nl'?'Link delen':'Partager le lien'}</button><button className="dp-btn-secondary p-4 rounded-2xl" onClick={()=>{setEmailTrip(receiptDocument.tripId);setReceiptDocument(null);}}>{receiptEmailWords[language].send}</button></>}
         </DialogContent>
       </Dialog>
     </div>

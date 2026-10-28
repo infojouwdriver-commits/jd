@@ -2,7 +2,7 @@ import {brevoProviderId,brevoIdempotencyKey} from './brevo-mail';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {mailConfiguration,mailEventKey} from './mail-policy';
-export interface MailMessage {to:string;subject:string;html:string;text:string;purpose:'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder';event:string;attachments?:{filename:string;content:Buffer}[];}
+export interface MailMessage {to:string;subject:string;html:string;text:string;purpose:'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder'|'driver_receipt';event:string;attachments?:{filename:string;content:Buffer}[];}
 export interface MailResult {accepted:boolean;status:string;delivery_id?:number;}
 export async function sendTransactionalMail(message:MailMessage):Promise<MailResult> {
  const config=mailConfiguration(process.env);

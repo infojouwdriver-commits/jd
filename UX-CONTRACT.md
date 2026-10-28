@@ -373,3 +373,21 @@ No animation commits a shift, prices a trip, proves GPS sharing, or issues a bil
 Taximeter entry without a confirmed shift offers Home while retaining local trip
 recovery. Active/unsent local trips block shift declarations and closure.
 The shared fleet runtime stays mounted through portal navigation.
+
+### Approved reference and optional receipt email · 28 October 2026
+
+Source: owner-approved uploaded three-screen reference; existing trip invoice
+snapshot and mail-delivery contracts. DriverExperience is presentation only.
+No opening of a tab, receipt, email draft or PDF reissues an invoice.
+`/driver/receipt?id=<trip>` reads an existing owned receipt and animates its paper.
+Trips and the receipt offer the same optional email dialog. The user chooses the
+recipient/language and edits the complete message, including the visible ad,
+before explicit send. PDF attachment rendering uses the existing frozen snapshot
+and invoice number, without an invoice creation RPC or any invoice update.
+
+`receipt_email_settings` is administrator-only and versioned; localized footer
+text and HTTPS link can be disabled or edited. Driver access is limited to owned
+trip receipts. Ambiguous retries retain the exact recipient/message/request in
+session memory and recheck the same delivery event; definitive failures permit
+correction and a fresh explicit attempt. No automatic second send is offered for
+an uncertain request. Provider acceptance never claims confirmed delivery.

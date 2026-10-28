@@ -57,6 +57,7 @@ try {
         if(request.method()==='POST'){fleetWrites.push(request.postDataJSON());data=request.postDataJSON();}
         else data={shift_active:false,sharing_enabled:false};
       }
+      if(url.pathname==='/next_api/trips/receipt')data={trip_id:401,invoice_id:1,reference:'TRIP-401',date:'2026-10-28T12:00:00Z',company:'Synthetic company',amount:25,currency:'EUR',distanceKm:1,durationMinutes:1,payment:'cash',pdfUrl:base+'/synthetic.pdf'};
       if(url.pathname==='/next_api/trips/end')data={id:401};
       if(url.pathname==='/next_api/trips/generate-invoice'){
         invoiceWrites++;
@@ -123,10 +124,11 @@ try {
     assert.equal(await invoice.isDisabled(),true);
     const download=await downloadPromise;
     assert.equal(download.suggestedFilename(),'Factuur-Rit-401.pdf');
+    await page.waitForURL(base+'/driver/receipt?id=401');
     await page.getByTestId('receipt-printer').waitFor();
     assert.equal(invoiceWrites,2,'One failed request and one explicit retry');
-    assert.ok(page.url().endsWith('/driver/taximeter'),'Receipt feedback stays visible');
-    if(viewport.width===390)assert.equal(await page.locator('.receipt-paper').evaluate(el=>getComputedStyle(el).animationName),'none');
+    assert.ok(page.url().endsWith('/driver/receipt?id=401'),'Issued receipt opens its printer artboard');
+    if(viewport.width===390)assert.equal(await page.locator('.jd-paper').evaluate(el=>getComputedStyle(el).animationName),'none');
     console.log('Passed: receipt generation failure/success, duplicate guard, reduced motion and local shift protection; automatic disclosed fleet sharing starts without buttons, stops/clears on logout and resumes on login/reload; Mapbox failure and active trip map restore on '+viewport.width+'px');
     await context.close();
   }

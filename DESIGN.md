@@ -306,3 +306,28 @@ After a successful invoice download, a paper feed animation confirms generation
 and the driver can continue to trip history. Failure never animates a receipt.
 All new motion is finite and respects reduced motion. GPS remains mounted in
 the shared shell independently of service controls. Native apps are unchanged.
+
+## Approved web driver reference · 28 October 2026
+
+The owner approved the three navy/gold artboards rendered from
+`jouw-driver-complete-ui(1).zip`: cockpit, digital meter and receipt printer.
+`src/components/driver/DriverExperience.tsx` owns the shared frame, responsive
+SVG gauge ticks, needle motion and paper feed. `driver-experience.css` preserves
+the supplied navy surfaces, gold gradients, circular instruments and serrated
+paper; it adapts existing OperationForm controls inside that scope only.
+Global management, marketing and native app tokens remain unchanged.
+
+Home alone owns shift mutations. Server-confirmed odometer and service state
+replace sample instrument readings; unavailable RPM stays a dash. The meter
+receives the existing agreed fare/GPS distance and elapsed time. There is no
+new fare model or unsupported trip-pause action. Existing trip setup, navigation,
+confirmation, Chiron and encrypted journal remain owned by the meter page.
+After explicit invoice creation succeeds, the dedicated receipt artboard loads
+only the issued invoice snapshot. Its PDF action uses the existing receipt URL.
+All new movement is finite and respects system reduced motion.
+
+Receipt email uses the shared Dialog, Input, Textarea and Select owners. It is
+an independent optional action, with editable localized copy, explicit recipient,
+provider acceptance distinct from delivery, stable retry identity, and no message
+or recipient persistence in the new database tables. Administrator ad controls
+reuse the management shell and optimistic settings version.

@@ -30,7 +30,7 @@ export function operationFailure(error: unknown) {
   const status =
     code === "P0002"
       ? 404
-      : code === "40001" || code === "23505"
+      : code === "40001" || code === "PT409" || code === "23505"
         ? 409
         : code === "42501"
           ? 403

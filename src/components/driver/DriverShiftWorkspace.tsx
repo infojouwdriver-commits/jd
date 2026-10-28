@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { OperationForm } from "@/components/operations/OperationForm";
 import { operationsCopy } from "@/components/operations/operations-copy";
 import { shiftCopy } from "./shift-copy";
+import {DriverReceiptContext,DriverShiftContext} from "./DriverShiftContext";
+import {ExperienceFrame,HomeInstruments,experienceWords} from "./DriverExperience";
 import { Power, Gauge } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { DriverShift, ShiftList } from "@/lib/driver-shifts";
@@ -29,6 +31,7 @@ export default function DriverShiftWorkspace({
   const [ignition, setIgnition] = useState<"on" | "off" | null>(null);
   const [form, setForm] = useState<{ action: "record" | "end"; shift: DriverShift } | null>(null);
   useEffect(() => () => { if (transitionTimer.current) clearTimeout(transitionTimer.current); }, []);
+  const [lastReceiptTrip,setLastReceiptTrip]=useState<number|null>(null);
   const [data, setData] = useState<ShiftList | null>(null);
   const [startPending, setStartPending] = useState(false);
   const [localActive, setLocalActive] = useState(false);
@@ -116,23 +119,16 @@ export default function DriverShiftWorkspace({
   const needsStart =
     pathname === "/driver/taximeter" && !active && !localActive;
   return (
-    <>
+    <DriverReceiptContext.Provider value={{tripId:lastReceiptTrip,remember:setLastReceiptTrip}}><DriverShiftContext.Provider value={active||null}>
       {pathname === "/driver/home" && (
-        <section
-          className="shift-controls dp-card driver-cockpit mx-4 mt-4 space-y-5 p-5"
+        <ExperienceFrame screen="home" on={!!active} ignition={ignition}><section
+          className="shift-controls driver-cockpit jd-panel space-y-5"
           data-engine={ignition || (active ? "on" : "off")}
-          style={{ borderColor: "var(--dp-accent)" }}
           aria-label={c.title}
         >
-          <div className="cockpit-brand"><span>JOUW DRIVER</span><Power aria-hidden="true" size={20}/></div>
-          <h1 className="text-2xl font-bold">{language === "ar" ? "لوحة القيادة" : language === "fr" ? "Tableau de bord" : "Dashboard"}</h1>
-          <div className="cockpit-instruments" aria-live="polite">
-            <div className="cockpit-dial" aria-hidden="true"><Gauge size={40}/><motion.span className="cockpit-needle" initial={false} animate={{ rotate: active ? 50 : -50 }} transition={{duration: reduceMotion ? 0 : .7}}/></div>
-            <div className="cockpit-readout"><span>{c.odometer}</span><strong dir="ltr">{active ? Number(active.odometer).toLocaleString(language, {maximumFractionDigits:2}) : "—"}</strong><small>km</small></div>
-            <div className="cockpit-engine"><Power aria-hidden="true"/><strong>{data ? (active ? c[active.work_status] : c.closed) : operationsCopy[language].loading}</strong></div>
-          </div>
+          <HomeInstruments active={!!active} odometer={active?.odometer} status={active?c[active.work_status]:experienceWords[language].ready}/>
           {ignition && <p role="status">{c.saved}</p>}
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          {active && <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="dp-text text-lg font-bold">
                 {active ? `${c.title} · ${c[active.work_status]}` : c.start}
@@ -143,7 +139,7 @@ export default function DriverShiftWorkspace({
                   : c.firstStep}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="jd-service-actions">
               {data &&
                 (!active ? (
                   null
@@ -167,13 +163,13 @@ export default function DriverShiftWorkspace({
                 <Button variant="outline" disabled={busy || !!blocked || !!ignition} onClick={() => setForm({action:"end", shift:active})}><Power size={16}/>{c.end}</Button>
               </>}
               <Link
-                className="dp-text underline underline-offset-4 py-2 text-sm"
+                className="jd-sub underline underline-offset-4 py-2 text-sm"
                 href="/driver/shifts"
               >
                 {c.open}
               </Link>
             </div>
-          </div>
+          </div>}
           {blocked && <p role="status">{c.endNotice}</p>}
           {data && (!active || startPending) && !localActive && !ignition && (
         <OperationForm inline
@@ -240,8 +236,9 @@ export default function DriverShiftWorkspace({
               </Button>
             </div>
           )}
-          {active && <Link className="cockpit-meter-link" href="/driver/taximeter"><Gauge size={20}/>{language === "ar" ? "فتح التاكسيميتر" : language === "fr" ? "Ouvrir le taximètre" : "Taximeter openen"}</Link>}
-        </section>
+          {!active && <Link className="jd-sub underline block text-center" href="/driver/shifts">{c.open}</Link>}
+          {active && <Link className="jd-btn jd-gold flex items-center justify-center gap-2" href="/driver/taximeter"><Gauge size={20}/>{language === "ar" ? "فتح التاكسيميتر" : language === "fr" ? "Ouvrir le taximètre" : "Taximeter openen"}</Link>}
+        </section></ExperienceFrame>
       )}
       {needsStart && <section className="dp-card m-4 space-y-3 p-5" role="status"><p>{error || (data ? c.firstStep : operationsCopy[language].loading)}</p><Link className="dp-text underline" href="/driver/home">{c.start}</Link></section>}
       <div hidden={needsStart}>{children}</div>
@@ -271,6 +268,6 @@ export default function DriverShiftWorkspace({
         }}
       />}
 
-    </>
+    </DriverShiftContext.Provider></DriverReceiptContext.Provider>
   );
 }

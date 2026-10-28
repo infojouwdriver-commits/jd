@@ -1,7 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import {useDriverReceipt,useDriverShift} from '@/components/driver/DriverShiftContext';
+import {ExperienceFrame,ReferenceMeter} from '@/components/driver/DriverExperience';
+import {useState, useEffect, useCallback, useRef} from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -84,11 +86,9 @@ function GlassCard({ children, className = '', style = {} }: { children: React.R
     <div
       className={`rounded-3xl ${className}`}
       style={{
-        background: 'var(--dp-card)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(52,211,153,0.15)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
         ...style,
+        background: 'var(--jd-panel-bg,var(--dp-card))',
+        border: '1px solid var(--jd-panel-border,var(--dp-border))',
       }}
     >
       {children}
@@ -100,15 +100,15 @@ function DriverActionButton({ onClick, disabled, children, variant = 'primary', 
   onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: 'primary' | 'danger' | 'outline'; className?: string;
 }) {
   const styles = {
-    primary: { background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 8px 24px rgba(52,211,153,0.4)' },
-    danger: { background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', color: '#FFFFFF', boxShadow: '0 8px 24px rgba(239,68,68,0.4)' },
-    outline: { background: 'rgba(52,211,153,0.1)', color: 'rgba(52,211,153,0.9)', border: '1px solid rgba(52,211,153,0.3)' },
+    primary: { background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 8px 24px rgba(240,200,124,0.4)' },
+    danger: { background: '#57313c', color: '#ffe1e3', border:'1px solid #9c5d67' },
+    outline: { background: 'rgba(240,200,124,0.1)', color: 'rgba(240,200,124,0.9)', border: '1px solid rgba(240,200,124,0.3)' },
   };
   return (
     <motion.button
       onClick={onClick}
       disabled={disabled}
-      whileHover={{ scale: disabled ? 1 : 1.02, boxShadow: disabled ? undefined : '0 12px 32px rgba(52,211,153,0.6)' }}
+      whileHover={{ scale: disabled ? 1 : 1.02, boxShadow: disabled ? undefined : '0 12px 32px rgba(240,200,124,0.6)' }}
       whileTap={{ scale: disabled ? 1 : 0.98 }}
       className={`relative w-full h-14 rounded-2xl text-base font-bold overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       style={styles[variant]}
@@ -173,7 +173,7 @@ function MapPickerSheet({
               className="w-full rounded-t-3xl"
               style={{
                 background: 'var(--dp-card)',
-                border: '1px solid rgba(52,211,153,0.25)',
+                border: '1px solid rgba(240,200,124,0.25)',
                 borderBottom: 'none',
                 backdropFilter: 'blur(32px)',
                 boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
@@ -181,11 +181,11 @@ function MapPickerSheet({
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1.5 rounded-full" style={{ background: 'rgba(52,211,153,0.4)' }} />
+                <div className="w-10 h-1.5 rounded-full" style={{ background: 'rgba(240,200,124,0.4)' }} />
               </div>
 
               {/* Header */}
-              <div className="px-5 pt-2 pb-4 flex items-center justify-between border-b" style={{ borderColor: 'rgba(52,211,153,0.15)' }}>
+              <div className="px-5 pt-2 pb-4 flex items-center justify-between border-b" style={{ borderColor: 'rgba(240,200,124,0.15)' }}>
                 <div>
                   <h3 className="text-lg font-bold" style={{ color: 'var(--dp-accent)' }}>
                     {t.chooseNavigationApp}
@@ -197,7 +197,7 @@ function MapPickerSheet({
                 <button
                   onClick={onClose}
                   className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                  style={{ background: 'rgba(52,211,153,0.15)', color: 'rgba(52,211,153,0.9)' }}
+                  style={{ background: 'rgba(240,200,124,0.15)', color: 'rgba(240,200,124,0.9)' }}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -400,7 +400,7 @@ function BottomSheetModal({
               className="w-full rounded-t-3xl flex flex-col"
               style={{
                 background: 'var(--dp-card)',
-                border: '1px solid rgba(52,211,153,0.2)',
+                border: '1px solid rgba(240,200,124,0.2)',
                 borderBottom: 'none',
                 backdropFilter: 'blur(32px)',
                 maxHeight: `calc(100dvh - ${BOTTOM_NAV_HEIGHT}px - 20px)`,
@@ -409,16 +409,16 @@ function BottomSheetModal({
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1.5 rounded-full" style={{ background: 'rgba(52,211,153,0.4)' }} />
+                <div className="w-10 h-1.5 rounded-full" style={{ background: 'rgba(240,200,124,0.4)' }} />
               </div>
 
               {/* Header */}
-              <div className="px-5 pt-2 pb-3 flex-shrink-0 flex items-center justify-between border-b" style={{ borderColor: 'rgba(52,211,153,0.1)' }}>
+              <div className="px-5 pt-2 pb-3 flex-shrink-0 flex items-center justify-between border-b" style={{ borderColor: 'rgba(240,200,124,0.1)' }}>
                 <div style={{ color: titleColor }}>{title}</div>
                 <button
                   onClick={onClose}
                   className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                  style={{ background: 'rgba(52,211,153,0.12)', color: 'rgba(255,255,255,0.8)' }}
+                  style={{ background: 'rgba(240,200,124,0.12)', color: 'rgba(255,255,255,0.8)' }}
                 >
                   ✕
                 </button>
@@ -436,7 +436,7 @@ function BottomSheetModal({
               <div
                 className="flex gap-3 px-5 pt-3 pb-4 flex-shrink-0"
                 style={{
-                  borderTop: '1px solid rgba(52,211,153,0.15)',
+                  borderTop: '1px solid rgba(240,200,124,0.15)',
                   background: 'var(--dp-card)',
                 }}
               >
@@ -455,6 +455,8 @@ export default function TaximeterPage() {
 }
 
 function TaximeterWorkspace() {
+  const serviceShift=useDriverShift();
+  const receiptMemory=useDriverReceipt();
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { language } = useLanguage();
@@ -487,12 +489,13 @@ function TaximeterWorkspace() {
   const [completedTripId, setCompletedTripId] = useState<number | null>(null);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const invoiceFlight = useRef(false);
-  const [invoiceReady, setInvoiceReady] = useState(false);
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   const [dailyEarnings, setDailyEarnings] = useState(0);
   const [locationHistory, setLocationHistory] = useState<LocationPoint[]>([]);
   const [actualTripDistance, setActualTripDistance] = useState(0);
+  const [elapsedSeconds,setElapsedSeconds] = useState(0);
+  useEffect(()=>{if(!tripActive||!tripData?.startTime){setElapsedSeconds(0);return;}const update=()=>setElapsedSeconds(Math.max(0,Math.floor((Date.now()-Date.parse(tripData.startTime))/1000)));update();const timer=setInterval(update,1000);return()=>clearInterval(timer);},[tripActive,tripData?.startTime]);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [routeCoords, setRouteCoords] = useState<RouteCoords | null>(null);
   const [showMap, setShowMap] = useState(true);
@@ -519,7 +522,6 @@ function TaximeterWorkspace() {
         // Clear only after server acknowledgement. A failure leaves the queued
         // idempotent payload available so cleanup can be retried safely.
         await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
-        setInvoiceReady(false);
         setCompletedTripId(response.id);
         if (response.warning) toast.warning(response.warning);
       });
@@ -854,7 +856,8 @@ function TaximeterWorkspace() {
       const a = document.createElement('a'); a.href = url; a.download = `Factuur-Rit-${completedTripId}.pdf`;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-      setInvoiceReady(true);
+      receiptMemory?.remember(completedTripId);
+      router.push('/driver/receipt?id='+completedTripId);
       toast.success(language === 'nl' ? 'Factuur gegenereerd' : language === 'ar' ? 'تم إنشاء الفاتورة' : 'Facture générée');
     } catch (error: any) {
       toast.error(language === 'nl' ? 'Factuur genereren mislukt' : language === 'ar' ? 'فشل إنشاء الفاتورة' : 'Échec de la génération de la facture');
@@ -923,14 +926,14 @@ function TaximeterWorkspace() {
 
   const inputStyle = {
     background: 'var(--dp-card-2)',
-    border: '1px solid rgba(52,211,153,0.2)',
+    border: '1px solid rgba(240,200,124,0.2)',
     color: 'var(--dp-text)',
     borderRadius: '1rem',
     height: '52px',
   };
 
   const labelStyle = {
-    color: 'rgba(52,211,153,0.85)',
+    color: 'rgba(240,200,124,0.85)',
     fontSize: '0.75rem',
     fontWeight: '600',
     textTransform: 'uppercase' as const,
@@ -938,7 +941,7 @@ function TaximeterWorkspace() {
   };
 
   return (
-    <div className="web-taximeter container mx-auto px-4 py-6 max-w-2xl">
+    <ExperienceFrame screen="meter" on={!!serviceShift}><div className="web-taximeter">
 
       {(pendingTrips > 0 || storageError) && (
         <div role="status" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-950/40 p-4 text-amber-100">
@@ -951,29 +954,7 @@ function TaximeterWorkspace() {
         </div>
       )}
 
-      {/* Daily Earnings Card */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, type: 'spring' }}>
-        <GlassCard className="p-6 mb-6 overflow-hidden relative" style={{ border: '1px solid rgba(52,211,153,0.25)' }}>
-          <motion.div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl" style={{ background: 'rgba(52,211,153,0.1)', marginRight: '-5rem', marginTop: '-5rem' }} animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 4, repeat: Infinity }} />
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                <TrendingUp className="w-5 h-5" style={{ color: 'var(--dp-accent)' }} />
-              </motion.div>
-              <span className="text-sm font-semibold" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.dailyEarnings}</span>
-              <Sparkles className="w-4 h-4 ml-auto animate-pulse" style={{ color: '#ffd700' }} />
-            </div>
-            <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 0.2, type: 'spring' }}
-              className="text-5xl font-black mb-1 tracking-tight"
-              style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-            >
-              €{dailyEarnings.toFixed(2)}
-            </motion.div>
-            <p className="text-sm font-medium" style={{ color: 'rgba(52,211,153,0.75)' }}>{t.today}</p>
-          </div>
-        </GlassCard>
-      </motion.div>
-
+      {!tripActive && <section className="jd-panel jd-standby"><ReferenceMeter fare={null} distanceKm={0} durationSeconds={0} running={false}/></section>}
       {/* Alerts */}
       <AnimatePresence>
         {(!isOnline || (gpsError && !isExternalRide)) && (
@@ -1016,14 +997,13 @@ function TaximeterWorkspace() {
                   <FileText className="w-8 h-8 text-green-400" />
                 </motion.div>
                 <h3 className="text-xl font-bold text-white mb-2">{t.tripCompleted}</h3>
-                <p className="text-sm mb-6" style={{ color: 'rgba(52,211,153,0.8)' }}>
+                <p className="text-sm mb-6" style={{ color: 'rgba(240,200,124,0.8)' }}>
                   {language === 'nl' ? 'Wilt u een factuur genereren voor deze rit?' : language === 'ar' ? 'هل تريد إنشاء فاتورة لهذه الرحلة؟' : 'Voulez-vous générer une facture pour ce trajet?'}
                 </p>
-                {invoiceReady && <div className="receipt-printer" data-testid="receipt-printer" role="status"><div className="receipt-paper"><FileText aria-hidden="true" size={28}/><strong>JOUW DRIVER</strong><span>{language === "ar" ? "تم إنشاء الفاتورة" : language === "fr" ? "Facture générée" : "Factuur gegenereerd"}</span><span>#{completedTripId}</span></div></div>}
                 <div className="flex gap-3">
                   <button disabled={generatingInvoice} onClick={() => { setCompletedTripId(null); router.push('/driver/trips'); }}
                     className="flex-1 h-12 rounded-2xl font-bold text-sm transition-all"
-                    style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgba(52,211,153,0.9)' }}
+                    style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.25)', color: 'rgba(240,200,124,0.9)' }}
                   >{t.later}</button>
                   <button onClick={generateInvoice} disabled={generatingInvoice}
                     className="flex-1 h-12 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
@@ -1050,15 +1030,15 @@ function TaximeterWorkspace() {
                   <motion.button key={type} onClick={() => setSelectedRideType(type)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                     className="p-4 rounded-2xl transition-all"
                     style={selectedRideType === type
-                      ? { background: 'linear-gradient(135deg, rgba(52,211,153,0.22), rgba(184,142,4,0.18))', border: '1px solid rgba(52,211,153,0.45)', boxShadow: '0 0 20px rgba(52,211,153,0.2)' }
-                      : { background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.12)' }
+                      ? { background: 'linear-gradient(135deg, rgba(240,200,124,0.22), rgba(184,142,4,0.18))', border: '1px solid rgba(240,200,124,0.45)', boxShadow: '0 0 20px rgba(240,200,124,0.2)' }
+                      : { background: 'var(--dp-card)', border: '1px solid rgba(240,200,124,0.12)' }
                     }
                   >
                     <div className="mb-2 flex items-center justify-center">{getRideTypeIcon(type)}</div>
                     <div className="font-bold text-sm" style={{ color: selectedRideType === type ? '#ffd700' : 'rgba(255,255,255,0.85)' }}>
                       {type === 'INTERNAL' ? t.taxi : type.charAt(0) + type.slice(1).toLowerCase()}
                     </div>
-                    <div className="text-xs mt-1" style={{ color: selectedRideType === type ? 'rgba(52,211,153,0.8)' : 'rgba(255,255,255,0.55)' }}>
+                    <div className="text-xs mt-1" style={{ color: selectedRideType === type ? 'rgba(240,200,124,0.8)' : 'rgba(255,255,255,0.55)' }}>
                       {type === 'INTERNAL' ? t.internalRide : t.externalRide}
                     </div>
                   </motion.button>
@@ -1082,7 +1062,7 @@ function TaximeterWorkspace() {
                     </div>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(52,211,153,0.6)' }} />
+                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(240,200,124,0.6)' }} />
                         {(startSearch.isSearching || isReverseGeocoding) && <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 animate-spin" />}
                         <input value={startAddress} onChange={(e) => { setStartAddress(e.target.value); setSelectedStartCoords(null); startSearch.search(e.target.value); setShowStartSuggestions(true); }}
                           onFocus={() => setShowStartSuggestions(true)} onBlur={() => setTimeout(() => setShowStartSuggestions(false), 200)}
@@ -1096,7 +1076,7 @@ function TaximeterWorkspace() {
                       {showStartSuggestions && startSearch.suggestions.length > 0 && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                           className="absolute z-10 w-full mt-2 rounded-2xl overflow-hidden max-h-60 overflow-y-auto"
-                          style={{ background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.25)', backdropFilter: 'blur(20px)' }}
+                          style={{ background: 'var(--dp-card)', border: '1px solid rgba(240,200,124,0.25)', backdropFilter: 'blur(20px)' }}
                         >
                           {startSearch.suggestions.map((addr, idx) => (
                             <button key={idx} onMouseDown={() => { setStartAddress(addr.display_name); setSelectedStartCoords({ lat: Number(addr.lat), lon: Number(addr.lon) }); startSearch.clear(); setShowStartSuggestions(false); }}
@@ -1105,7 +1085,7 @@ function TaximeterWorkspace() {
                             >
                               <div className="flex justify-between items-center gap-2">
                                 <span className="flex-1 truncate">{addr.display_name}</span>
-                                {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(52,211,153,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
+                                {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(240,200,124,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
                               </div>
                             </button>
                           ))}
@@ -1131,7 +1111,7 @@ function TaximeterWorkspace() {
                       {showEndSuggestions && endSearch.suggestions.length > 0 && (
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                           className="absolute z-10 w-full mt-2 rounded-2xl overflow-hidden max-h-60 overflow-y-auto"
-                          style={{ background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.25)', backdropFilter: 'blur(20px)' }}
+                          style={{ background: 'var(--dp-card)', border: '1px solid rgba(240,200,124,0.25)', backdropFilter: 'blur(20px)' }}
                         >
                           {endSearch.suggestions.map((addr, idx) => (
                             <button key={idx} onMouseDown={() => { setEndAddress(addr.display_name); setSelectedEndCoords({ lat: Number(addr.lat), lon: Number(addr.lon) }); endSearch.clear(); setShowEndSuggestions(false); }}
@@ -1140,7 +1120,7 @@ function TaximeterWorkspace() {
                             >
                               <div className="flex justify-between items-center gap-2">
                                 <span className="flex-1 truncate">{addr.display_name}</span>
-                                {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(52,211,153,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
+                                {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(240,200,124,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
                               </div>
                             </button>
                           ))}
@@ -1153,7 +1133,7 @@ function TaximeterWorkspace() {
                 <div>
                   <label className="block mb-2" style={labelStyle}>{t.passengerName}</label>
                   <div className="relative">
-                    <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(52,211,153,0.6)' }} />
+                    <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(240,200,124,0.6)' }} />
                     <input value={passengerName} onChange={(e) => setPassengerName(e.target.value)} placeholder={t.enterPassengerName}
                       className="w-full pr-10 pl-4 text-sm outline-none" style={{ ...inputStyle, color: 'var(--dp-text)' }}
                     />
@@ -1164,7 +1144,7 @@ function TaximeterWorkspace() {
                   <div>
                     <label className="block mb-2" style={labelStyle}>{t.externalRideNumber}</label>
                     <div className="relative">
-                      <FileText className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(52,211,153,0.6)' }} />
+                      <FileText className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(240,200,124,0.6)' }} />
                       <input value={externalRideNumber} onChange={(e) => setExternalRideNumber(e.target.value)} placeholder={t.enterExternalRideNumber}
                         className="w-full pr-10 pl-4 text-sm outline-none" style={{ ...inputStyle, color: 'var(--dp-text)' }}
                       />
@@ -1176,13 +1156,13 @@ function TaximeterWorkspace() {
                   <div>
                     <label className="block mb-2" style={labelStyle}>{t.paymentMethod}</label>
                     <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="rounded-2xl h-13 border-0" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(52,211,153,0.2)', height: '52px', color: 'var(--dp-text)' }}>
+                      <SelectTrigger className="rounded-2xl h-13 border-0" style={{ background: 'var(--dp-card-2)', border: '1px solid rgba(240,200,124,0.2)', height: '52px', color: 'var(--dp-text)' }}>
                         <div className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" style={{ color: 'rgba(52,211,153,0.7)' }} />
+                          <CreditCard className="w-4 h-4" style={{ color: 'rgba(240,200,124,0.7)' }} />
                           <SelectValue placeholder={t.selectPaymentMethod} />
                         </div>
                       </SelectTrigger>
-                      <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                      <SelectContent style={{ background: 'var(--dp-card)', border: '1px solid rgba(240,200,124,0.25)' }}>
                         <SelectItem value="cash" style={{ color: 'var(--dp-text)' }}>{t.cash}</SelectItem>
                         <SelectItem value="card" style={{ color: 'var(--dp-text)' }}>{t.card}</SelectItem>
                         <SelectItem value="bancontact" style={{ color: 'var(--dp-text)' }}>{t.bancontact}</SelectItem>
@@ -1218,7 +1198,7 @@ function TaximeterWorkspace() {
                 <button
                   onClick={() => setShowPriceProposal(false)}
                   className="flex-1 h-14 rounded-2xl font-bold text-sm transition-all"
-                  style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgba(52,211,153,0.9)' }}
+                  style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.25)', color: 'rgba(240,200,124,0.9)' }}
                 >
                   {t.cancel}
                 </button>
@@ -1248,7 +1228,7 @@ function TaximeterWorkspace() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
                     <Map className="w-3.5 h-3.5" style={{ color: 'var(--dp-accent)' }} />
-                    <span className="text-xs font-semibold" style={{ color: 'rgba(52,211,153,0.85)' }}>
+                    <span className="text-xs font-semibold" style={{ color: 'rgba(240,200,124,0.85)' }}>
                       {language === 'nl' ? 'Routekaart' : language === 'ar' ? 'خريطة المسار' : 'Carte du trajet'}
                     </span>
                   </div>
@@ -1294,19 +1274,19 @@ function TaximeterWorkspace() {
                   </p>
                 )}
                 {!routeUnavailable && <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                    <span className="text-xs block mb-1" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.estimatedDistance}</span>
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.2)' }}>
+                    <span className="text-xs block mb-1" style={{ color: 'rgba(240,200,124,0.85)' }}>{t.estimatedDistance}</span>
                     <span className="font-bold text-base text-white">{estimatedDistance.toFixed(1)} {t.km}</span>
                   </div>
-                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                    <span className="text-xs block mb-1" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.estimatedDuration}</span>
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.2)' }}>
+                    <span className="text-xs block mb-1" style={{ color: 'rgba(240,200,124,0.85)' }}>{t.estimatedDuration}</span>
                     <span className="font-bold text-base text-white">{estimatedDuration} {t.min}</span>
                   </div>
                 </div>}
                 <div>
-                  <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(52,211,153,0.85)' }}>{routeUnavailable ? (language === 'nl' ? 'Overeengekomen prijs' : language === 'ar' ? 'السعر المتفق عليه' : 'Prix convenu') : t.proposedPrice} (€)</label>
+                  <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(240,200,124,0.85)' }}>{routeUnavailable ? (language === 'nl' ? 'Overeengekomen prijs' : language === 'ar' ? 'السعر المتفق عليه' : 'Prix convenu') : t.proposedPrice} (€)</label>
                   <div className="relative">
-                    <Edit2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(52,211,153,0.6)' }} />
+                    <Edit2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(240,200,124,0.6)' }} />
                     <input
                       type="number"
                       step="0.01"
@@ -1338,10 +1318,10 @@ function TaximeterWorkspace() {
 
             {isExternalRide && (
               <div className="py-4 text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(240,200,124,0.12)', border: '1px solid rgba(240,200,124,0.25)' }}>
                   <Play className="w-8 h-8" style={{ color: 'var(--dp-accent)' }} />
                 </div>
-                <p className="text-sm font-medium" style={{ color: 'rgba(52,211,153,0.85)' }}>
+                <p className="text-sm font-medium" style={{ color: 'rgba(240,200,124,0.85)' }}>
                   {language === 'nl' ? 'Klaar om de rit te starten' : language === 'ar' ? 'جاهز لبدء الرحلة' : 'Prêt à démarrer le trajet'}
                 </p>
               </div>
@@ -1352,47 +1332,10 @@ function TaximeterWorkspace() {
         <>
           {/* Active Trip Card */}
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
-            <GlassCard className="p-8 mb-6 overflow-hidden relative" style={{ border: '1px solid rgba(52,211,153,0.3)' }}>
+            <GlassCard className="p-8 mb-6 overflow-hidden relative" style={{ border: '1px solid rgba(240,200,124,0.3)' }}>
 
-              <div className="relative z-10 text-center mb-6">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <motion.div initial={{opacity:.3}} animate={{opacity:1}} transition={{duration:.5}} className="w-3 h-3 rounded-full" style={{ background: 'var(--dp-accent)', boxShadow: '0 0 8px rgba(52,211,153,1)' }} />
-                  <span className="text-sm font-bold" style={{ color: 'rgba(52,211,153,0.9)' }}>{t.tripActive}</span>
-                  <span className="flex items-center justify-center">{getRideTypeIcon(selectedRideType)}</span>
-                </div>
-                {selectedRideType === 'INTERNAL' ? (
-                  <motion.p initial={{opacity:.6}} animate={{opacity:1}} transition={{ duration:.25 }}
-                    className="meter-display text-6xl font-black mb-4 tracking-tight"
-                    style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
-                  >
-                    €{tripData?.proposedPrice.toFixed(2) || '0.00'}
-                  </motion.p>
-                ) : (
-                  <motion.p initial={{opacity:.6}} animate={{opacity:1}} transition={{ duration:.25 }} className="text-4xl font-black mb-4 tracking-tight text-white">
-                    {selectedRideType}
-                  </motion.p>
-                )}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {selectedRideType === 'INTERNAL' && (
-                    <>
-                      <div className="flex items-center justify-center gap-2 rounded-2xl p-3" style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)' }}>
-                        <Navigation className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />
-                        <span className="font-bold text-white">{actualTripDistance.toFixed(2)} {t.km}</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 rounded-2xl p-3" style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)' }}>
-                        <Clock className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />
-                        <span className="font-bold text-white">{tripData?.duration || 0} {t.min}</span>
-                      </div>
-                    </>
-                  )}
-                  {selectedRideType !== 'INTERNAL' && (
-                    <div className="col-span-2 flex items-center justify-center gap-2 rounded-2xl p-3" style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)' }}>
-                      <Clock className="w-4 h-4" style={{ color: 'var(--dp-accent)' }} />
-                      <span className="font-bold text-white">{tripData?.duration || 0} {t.min}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ReferenceMeter fare={selectedRideType === 'INTERNAL' ? tripData?.proposedPrice ?? null : null} distanceKm={actualTripDistance} durationSeconds={elapsedSeconds} running={tripActive} source={selectedRideType === 'INTERNAL'?undefined:selectedRideType}/>
+              <button className="jd-btn jd-secondary jd-map-button" onClick={()=>document.querySelector('[data-testid="active-trip-map"]')?.scrollIntoView({behavior:'smooth',block:'center'})}>{language==='ar'?'عرض الخريطة':language==='fr'?'Voir la carte':'Kaart bekijken'}</button>
 
               {selectedRideType === 'INTERNAL' && tripData?.endAddress && (
                 <motion.div
@@ -1437,7 +1380,7 @@ function TaximeterWorkspace() {
               onClick={() => setShowEndTripDialog(false)}
               disabled={loading}
               className="flex-1 h-14 rounded-2xl font-bold text-sm transition-all disabled:opacity-50"
-              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgba(52,211,153,0.9)' }}
+              style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.25)', color: 'rgba(240,200,124,0.9)' }}
             >
               {t.cancel}
             </button>
@@ -1447,7 +1390,7 @@ function TaximeterWorkspace() {
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.97 }}
               className="flex-1 h-14 rounded-2xl font-bold text-base flex items-center justify-center gap-2 disabled:opacity-50 relative overflow-hidden"
-              style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 6px 20px rgba(52,211,153,0.5)' }}
+              style={{ background: 'var(--dp-action)', color: 'var(--dp-action-text)', boxShadow: '0 6px 20px rgba(240,200,124,0.5)' }}
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
@@ -1465,18 +1408,18 @@ function TaximeterWorkspace() {
         <div className="space-y-4">
           {selectedRideType === 'INTERNAL' && (
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-2xl" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                <span className="text-xs block mb-1" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.traveledDistance}</span>
+              <div className="p-3 rounded-2xl" style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.2)' }}>
+                <span className="text-xs block mb-1" style={{ color: 'rgba(240,200,124,0.85)' }}>{t.traveledDistance}</span>
                 <span className="font-bold text-base text-white">{actualTripDistance.toFixed(2)} {t.km}</span>
               </div>
-              <div className="p-3 rounded-2xl" style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                <span className="text-xs block mb-1" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.duration}</span>
+              <div className="p-3 rounded-2xl" style={{ background: 'rgba(240,200,124,0.1)', border: '1px solid rgba(240,200,124,0.2)' }}>
+                <span className="text-xs block mb-1" style={{ color: 'rgba(240,200,124,0.85)' }}>{t.duration}</span>
                 <span className="font-bold text-base text-white">{tripData?.duration} {t.min}</span>
               </div>
             </div>
           )}
           <div>
-            <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(52,211,153,0.85)' }}>{t.finalPrice} (€)</label>
+            <label className="block mb-2 text-xs font-bold" style={{ color: 'rgba(240,200,124,0.85)' }}>{t.finalPrice} (€)</label>
             <input
               type="number"
               step="0.01"
@@ -1494,7 +1437,7 @@ function TaximeterWorkspace() {
       {pricingConfig && selectedRideType === 'INTERNAL' && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <GlassCard className="p-5 mt-5">
-            <h3 className="text-xs font-bold mb-4" style={{ color: 'rgba(52,211,153,0.85)', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <h3 className="text-xs font-bold mb-4" style={{ color: 'rgba(240,200,124,0.85)', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {t.pricingInfo} — {pricingConfig.company_name}
             </h3>
             <div className="space-y-2 text-sm">
@@ -1505,7 +1448,7 @@ function TaximeterWorkspace() {
                 { label: t.minimumFare, value: pricingConfig.pricing.minimum_fare },
               ].map((item, i) => (
                 <div key={i} className="flex justify-between p-2 rounded-xl transition-colors hover:bg-yellow-500/5">
-                  <span style={{ color: 'rgba(52,211,153,0.75)' }}>{item.label}</span>
+                  <span style={{ color: 'rgba(240,200,124,0.75)' }}>{item.label}</span>
                   <span className="font-bold text-white">€{item.value.toFixed(2)}</span>
                 </div>
               ))}
@@ -1513,6 +1456,6 @@ function TaximeterWorkspace() {
           </GlassCard>
         </motion.div>
       )}
-    </div>
+    </div></ExperienceFrame>
   );
 }

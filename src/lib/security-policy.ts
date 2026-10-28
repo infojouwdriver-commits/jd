@@ -24,6 +24,8 @@ export function memberEndpoint(path: string, method: string, userType: string): 
   if (['manager', 'company', 'owner'].includes(userType)) return ['/next_api/company-portal', '/next_api/company-portal/drivers', '/next_api/company-portal/vehicles', '/next_api/company-portal/directory', '/next_api/company-portal/billing', '/next_api/company-portal/staff', '/next_api/company-portal/changes', '/next_api/company-portal/contracts'].includes(path) || (path === '/next_api/fleet' && method === 'GET');
   if (userType === 'distributor') return method === 'GET' && ['/next_api/distributors/my-companies','/next_api/invoices/my-invoices'].includes(path);
   if (userType !== 'driver') return false;
+  if(path==='/next_api/trips/receipt')return method==='GET';
+  if(path==='/next_api/trips/receipt-email')return method==='GET'||method==='POST';
   if(path==='/next_api/drivers/shifts/pdf')return method==='GET';
   if(path==='/next_api/drivers/shifts')return method==='GET'||method==='POST';
   if(path==='/next_api/drivers/billing-notice')return method==='GET';

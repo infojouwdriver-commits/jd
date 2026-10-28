@@ -2,6 +2,7 @@ import { FileText, Building2, Users, Car, MapPin, Settings, Bell, MessageSquare,
 
 /** One route catalog shared by the workspace and dashboard. */
 export const managementMenu = [
+  {title:"بريد فواتير الرحلات",description:"تشغيل الإعلان وتعديل نصه ورابطه",icon:MessageSquare,href:"/admin/receipt-email",group:"الإدارة"},
   {title:'الفواتير',description:'فواتير مستقلة للشركات وسجل الدفعات',icon:FileText,href:'/admin/invoices',group:'التشغيل'},
   {title:'تطبيق السائق',description:'شاشة الترحيب والصورة والحركة',icon:Car,href:'/admin/app-experience',group:'الإدارة'},
   {title:'مركز المتابعة',description:'الاشتراكات والطلبات وحالات التشغيل التي تحتاج مراجعة',icon:CheckCircle,href:'/admin/operations',group:'التشغيل'},
