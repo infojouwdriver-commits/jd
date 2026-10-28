@@ -63,7 +63,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const storageLanguage = normalizeLanguage(
       typeof window !== "undefined" ? localStorage.getItem(LANGUAGE_STORAGE_KEY) : null
     );
-    const initialLanguage = cookieLanguage || storageLanguage || detectBrowserLanguage();
+    // Editorial search pages have a fixed URL language; do not override it
+    // with a stored preference after hydration.
+    const pathLanguage = typeof window === 'undefined'
+      ? null
+      : normalizeLanguage(window.location.pathname.match(/^\/(fr|nl|ar)\/solutions(?:\/|$)/)?.[1]);
+    const initialLanguage = pathLanguage || cookieLanguage || storageLanguage || detectBrowserLanguage();
 
     setLanguageState(initialLanguage);
     setDocumentDirection(initialLanguage);
