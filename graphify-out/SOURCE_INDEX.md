@@ -2809,7 +2809,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/privacy-center/page.tsx](../src/app/privacy-center/page.tsx)
 
 - `privacy-center/page.tsx` — [L1](../src/app/privacy-center/page.tsx#L1)
-- `PrivacyCenter()` — [L6](../src/app/privacy-center/page.tsx#L6)
+- `PrivacyCenter()` — [L7](../src/app/privacy-center/page.tsx#L7)
 
 ## [src/app/privacy-policy/page.tsx](../src/app/privacy-policy/page.tsx)
 

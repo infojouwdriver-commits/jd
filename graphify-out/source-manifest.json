@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "3f5cddfb2f5ff95e683caa37f10e18dea5746a37",
+  "source_commit_context": "ca6cc05b7b3aac084a2817a443447d025913bd0b",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -349,7 +349,7 @@
     "src/app/next_api/zoer_health/route.ts": "bf74c5b35b8619b2bbe027e4b718ec3619487996b733faae0e7c27e28128b350",
     "src/app/page.tsx": "6c48f9009b1bc6a4f4347c918ca65705208522dc018f9627e666fb69b30a0b5b",
     "src/app/pay/invoice/page.tsx": "5754f125f1f52c910ff50a778980a872374e668fb6a6da43c1e134236f677ba6",
-    "src/app/privacy-center/page.tsx": "546bf662bd7e098693d7cfa89b2711dd525aa0b1eaf1df919d8a5c1f3a091217",
+    "src/app/privacy-center/page.tsx": "a03dc33f5097fa847c9fef787807936f8aa4d9de066c82968949ef23df4a5025",
     "src/app/privacy-policy/page.tsx": "857aec3f1a7e2693f0ef5cf5524af60029095bcd6b67ad52d427f32ac1104fb5",
     "src/app/register-company/page.tsx": "b6e54b6bd4df8d06ecc1395ed235e7df6cefa8d99fa6e311bdeb0e9b4278a55f",
     "src/app/robots.ts": "a6b6f2900ef84f757539733e3a0604421d9b8d75372fb27cdf3831e979dbeee5",
@@ -605,11 +605,11 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "SOURCE_INDEX.md": "4010d41daaba23f56ddce96bad77d0cd95cd9d1df897df08af1586d73058a32e",
-    "health.json": "a0d06271cc7807cde8086373d79b2e13bfd45f52d83ab85c88345c92afae60dc",
+    "SOURCE_INDEX.md": "ad4afdb186c5ce0468302e8fdd3c77007c06f0bdb10506b74e5bf71fa6935d9b",
     "GRAPH_TREE.html": "93b834028eb8681530718826942de53262dfe96014c978b532a7c22ae8cc828e",
-    "GRAPH_REPORT.md": "4e8bce7a70dfb29942db60da5c96878d1b8a36988df46c4f1ac0046ed49d039b",
-    "graph.json": "0980e5f9e24af2d3bb7d56950766cb104834d898e9ebc6cbbed238fd14377e8c"
+    "graph.json": "fb0c86b931257fbf45a9865ffa8063d7925b4191d49bdd92cf61db354af256e3",
+    "health.json": "a0d06271cc7807cde8086373d79b2e13bfd45f52d83ab85c88345c92afae60dc",
+    "GRAPH_REPORT.md": "415ee552c43d746f40d038ace60010d7c41785333aac7ee3b79dd3771eff7827"
   },
   "nodes": 3423,
   "edges": 11470,
