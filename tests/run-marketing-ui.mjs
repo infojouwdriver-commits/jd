@@ -158,7 +158,7 @@ try {
     if (name === "taxi") {
       await page
         .locator(".jd-scene")
-        .screenshot({ path: output + "/poster.png" });
+        .screenshot({ path: output + "/poster.png", style: ".jd-motion, .jd-scene-label { visibility: hidden !important; }" });
       const require = createRequire(import.meta.url);
       const sharp = require(
         require.resolve("sharp", {
@@ -196,6 +196,16 @@ try {
       const response = await p.goto(base + "/" + lang);
       assert.equal(response.status(), 200);
       await p.waitForSelector(".jd-static");
+      await p.waitForFunction(() => {
+        const image = document.querySelector(".jd-poster img");
+        return image?.complete && image.naturalWidth > 0;
+      });
+      const fallbackOverlap = await p.evaluate(() => {
+        const a = document.querySelector(".jd-poster p").getBoundingClientRect();
+        const b = document.querySelector(".jd-scene-label").getBoundingClientRect();
+        return a.right > b.left + 1 && b.right > a.left + 1 && a.bottom > b.top + 1 && b.bottom > a.top + 1;
+      });
+      assert.equal(fallbackOverlap, false, "Fallback caption and scene label remain separate");
       assert.equal(await p.locator(".jd").getAttribute("lang"), lang);
       assert.equal(
         await p.locator("html").getAttribute("dir"),
@@ -258,6 +268,11 @@ try {
           await p.locator('script[type="application/ld+json"]').textContent()
         ).includes("FAQPage"),
       );
+      const structured = JSON.parse(await p.locator('script[type="application/ld+json"]').textContent());
+      const logo = structured["@graph"].find((entry) => entry["@type"] === "Organization").logo;
+      const logoResponse = await p.request.get(base + new URL(logo).pathname);
+      assert.equal(logoResponse.status(), 200, "Organization logo resolves publicly");
+      assert.ok(logoResponse.headers()["content-type"].startsWith("image/"));
       for (const href of await p
         .locator('.jd a[href^="#"]')
         .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href"))))

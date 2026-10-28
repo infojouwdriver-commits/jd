@@ -3501,7 +3501,7 @@ Links target the working tree, so line positions can move after changes.
 - `createCar()` — [L101](../src/components/landing/cinematic/models.ts#L101)
 - `createPhone()` — [L452](../src/components/landing/cinematic/models.ts#L452)
 - `update()` — [L479](../src/components/landing/cinematic/models.ts#L479)
-- `createPrinter()` — [L611](../src/components/landing/cinematic/models.ts#L611)
+- `createPrinter()` — [L615](../src/components/landing/cinematic/models.ts#L615)
 
 ## [src/components/landing/cinematic/seo.ts](../src/components/landing/cinematic/seo.ts)
 

@@ -243,10 +243,10 @@ jobs:
           const sites=['https://jouww.com','https://app.jouww.com','https://jouw-driver.duckdns.org'];
           const get=async(url)=>fetch(url,{redirect:'error',signal:AbortSignal.timeout(20000)});
           const marketing=sites[0];
-          for(const path of ['/','/fr','/nl','/ar','/cinematic/poster.webp','/fr/solutions','/nl/solutions','/ar/solutions','/fr/solutions/gestion-entreprise-taxi','/robots.txt','/sitemap.xml']){
+          for(const path of ['/','/fr','/nl','/ar','/cinematic/poster.webp','/cinematic/logo.png','/fr/solutions','/nl/solutions','/ar/solutions','/fr/solutions/gestion-entreprise-taxi','/robots.txt','/sitemap.xml']){
             const r=await get(marketing+path);
             if(r.status!==200)throw Error('Marketing SEO route did not respond successfully: '+path);
-            if(path.endsWith('.webp')){if(!r.headers.get('content-type')?.includes('image/webp'))throw Error('Cinematic poster missing');continue;}
+            if(/\.(webp|png)$/.test(path)){if(!r.headers.get('content-type')?.startsWith('image/'))throw Error('Cinematic public asset missing');continue;}
             const body=await r.text();
             if(['/','/fr','/nl','/ar'].includes(path)&&(!body.includes('jd-cinema')||!body.includes('application/ld+json')))throw Error('Cinematic homepage missing');
             if(path==='/sitemap.xml'&&!body.includes('/fr/solutions'))throw Error('SEO sitemap missing public content');

@@ -548,11 +548,13 @@ export function createPhone(t: CinematicText, rtl: boolean) {
     ctx.stroke();
     ctx.fillStyle = "#F3F5F7";
     ctx.font = "bold 63px monospace";
+    ctx.direction = "ltr";
     ctx.fillText(
       mode === "start" || mode === "active" ? "128 640" : "€ " + value,
       256,
       435,
     );
+    ctx.direction = rtl ? "rtl" : "ltr";
     ctx.font = "23px system-ui";
     ctx.fillStyle = "#A6B8C9";
     ctx.fillText(
@@ -562,7 +564,9 @@ export function createPhone(t: CinematicText, rtl: boolean) {
       445,
     );
     ctx.font = "25px monospace";
+    ctx.direction = "ltr";
     ctx.fillText("8.4 km   ·   18:00", 256, 664);
+    ctx.direction = rtl ? "rtl" : "ltr";
     ctx.fillStyle = "#14283D";
     ctx.fillRect(28, 717, 456, 70);
     ctx.fillStyle = "#A9D8F2";

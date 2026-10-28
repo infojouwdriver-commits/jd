@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "aae353897d4aecf89398730656602d01d6feef01",
+  "source_commit_context": "57b389d55389f3b7b1cb344e6b22e40c7149bffe",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -436,11 +436,11 @@
     "src/components/landing/PlatformLanding.tsx": "d28723ec86438e3876ccc51698fafc85a1196f796a28df300c2f2aeee33ebb2e",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
-    "src/components/landing/cinematic/cinematic.css": "26a74b750cbb4e8340ee2954e19fd74ac3b5af3d3cfb4aadf57908a994051b36",
+    "src/components/landing/cinematic/cinematic.css": "58b769c8696b4c7616e0fbcf82adad6bf215684dff900907b9c802280fa0dc1a",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
     "src/components/landing/cinematic/engine.ts": "473dcb8b238f4584dbca300a98b352097a9794f1111ec97535c898486bd4cff0",
-    "src/components/landing/cinematic/models.ts": "b9cb102e93dc771e7aefbf26e05a0a827aa9299bf6696872f18303035012daa5",
-    "src/components/landing/cinematic/seo.ts": "97d83eb10a32dddcf00528a063a937c6d4f8f6fe6a57df33c74997ed73c1a73a",
+    "src/components/landing/cinematic/models.ts": "a9e99a4b8fe9151ccbcf5661d21a2252776f59533b52b2c8688c7bf83a271188",
+    "src/components/landing/cinematic/seo.ts": "e3dd50813196777c6cc9e53b0426148ffdda946c8a6768890f23768a2cfe7d2a",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
     "src/components/landing/features/InvoicesFeaturePage.tsx": "60b4b99347605ab2d82c9939c43f4e4e7e99a9bceb4c6adb682d66f5af4e32ea",
@@ -626,10 +626,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "9922b4606bba1ce2e5c3194b814fcc5e7d837c77880520aae6cd0647638a89ce",
-    "SOURCE_INDEX.md": "0439a365ebf8ff0b86b00c326ed1db6bc1dc9d051951f089f5358acf056a540e",
+    "graph.json": "6a1f8ecc0ba4c361b1058c36419be259be8dc4a65ba78e680868d284ecc7a747",
+    "SOURCE_INDEX.md": "75c5acd9fca28b104933dfa5c8175aff16bdf50aa2ccac0b93a486f72738fca8",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "9c8a34ff362b779f7929885ea3ed41af86c779e006bcb728e6b83cdc74cb43bf",
+    "GRAPH_REPORT.md": "9a191f16826ddfad59372e3397ff5e6098c25f94823ebe2888d090e5849477e6",
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,

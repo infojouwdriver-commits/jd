@@ -20,3 +20,7 @@ and WebGL failure. The interface textures reproduce the navy/gold hierarchy of
 the approved driver cockpit, with explicitly fictional odometer and fare values.
 The printer illustrates paper output; it does not assert hardware or Bluetooth
 support. No external textures, fonts, HDR downloads or video assets are loaded.
+
+`logo.png` is an unchanged copy of the existing JOUW DRIVER branded app icon
+from `public/app-brand/app-icon.png`, exposed under the approved public cinematic
+asset path for Organization structured data. It introduces no new third-party art.

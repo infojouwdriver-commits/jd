@@ -38,7 +38,7 @@ html:has(.jd) {
   color: inherit;
 }
 .jd button {
-  font: inherit;
+  font-family: inherit;
 }
 .jd a:focus-visible,
 .jd button:focus-visible,
@@ -1221,4 +1221,11 @@ html:has(.jd), body:has(.jd) { background-color: #060b12; }
   .jd-narrative .jd-button { margin-top: 8px; }
   .jd-skip { top: calc(52% - 49px); }
   .jd-static .jd-stage { grid-template-rows: auto 390px; }
+}
+
+@media (max-width: 700px) {
+  .jd-header-register { font-size: 12px; }
+  .jd-static .jd-visual { padding-bottom: 52px; }
+  .jd-static .jd-scene-label { bottom: 16px; }
+  .jd-static .jd-poster p { margin-top: 12px; line-height: 1.5; text-align: center; }
 }
