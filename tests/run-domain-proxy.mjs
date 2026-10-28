@@ -32,7 +32,7 @@ try {
   assert.ok(ready,logs);
   let count=0;
   for(const host of ['jouww.com','www.jouww.com']) {
-    for(const path of ['/','/privacy-policy','/privacy-center','/features/security','/_next/static/example.js']) {assert.equal((await request(host,path)).status,200);count++;}
+    for(const path of ['/','/privacy-policy','/privacy-center','/features/security','/_next/static/example.js','/robots.txt','/sitemap.xml','/fr/solutions','/fr/solutions/gestion-entreprise-taxi','/nl/solutions','/ar/solutions']) {assert.equal((await request(host,path)).status,200);count++;}
     for(const path of ['/next_api','/next_api/auth/login','/api/webhook','/admin-setup']) {const before=requests.length;assert.equal((await request(host,path)).status,404,`${host}${path} must be blocked`);assert.equal(requests.length,before);count++;}
     for(const path of ['/','/register-company','/next_api/auth/login','/next_api/webhooks/brevo']) {const before=requests.length;const res=await request(host,path,'POST');assert.equal(res.status,405);assert.equal(res.headers.get('location'),null);assert.equal(requests.length,before);count++;}
     for(const path of ['/login?portal=company','/register-company?lang=nl','/company/dashboard','/sign-contract/test?x=1','/login?next=https://evil.test']) {const before=requests.length;const res=await request(host,path);assert.equal(res.status,302);assert.equal(res.headers.get('location'),'https://app.jouww.com'+path);assert.equal(res.headers.get('cache-control'),'no-store');assert.equal(requests.length,before);count++;}
