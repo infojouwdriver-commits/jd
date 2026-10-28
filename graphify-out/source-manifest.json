@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "3fb010d2b9d6f5a1fc12e45a720ae9eb9579bb7c",
+  "source_commit_context": "b3a5db83887b2e9a919795147e95d575c91a333e",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -436,7 +436,7 @@
     "src/components/landing/PlatformLanding.tsx": "d28723ec86438e3876ccc51698fafc85a1196f796a28df300c2f2aeee33ebb2e",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
-    "src/components/landing/cinematic/cinematic.css": "58b769c8696b4c7616e0fbcf82adad6bf215684dff900907b9c802280fa0dc1a",
+    "src/components/landing/cinematic/cinematic.css": "c32615e08f08bc5b2d46135aad49048b5e0bfff29bafdf1610947991a745b3ce",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
     "src/components/landing/cinematic/engine.ts": "8bf05eb1e7ab2e8f7caa93de1642764fd1de4b68082bcf68b79820e62f941a03",
     "src/components/landing/cinematic/models.ts": "a9e99a4b8fe9151ccbcf5661d21a2252776f59533b52b2c8688c7bf83a271188",
@@ -626,10 +626,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "a6d08c9bda391d964aad37f173b83b15223767cb65411559ae8f9692b001b02f",
+    "graph.json": "df5fe947d58bda020c2e7f60ecba3ded3a4611e5ac10e5ba443381af3a65c59f",
     "SOURCE_INDEX.md": "29d99836bd0d0233e736b4351d2953b1e513a98b15b6e0e94482504f52c3f9f1",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "db75a80dc2d2a0d72f2d3fcfd6c09dec2d4d344ac3566cee2d2a22fed84c0387",
+    "GRAPH_REPORT.md": "3664c8f8833c80b5daeaa27b4473ffbac84cd8c7d10f7a6b2806fa11a7efba37",
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,
