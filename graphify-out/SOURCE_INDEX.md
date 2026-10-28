@@ -3483,11 +3483,11 @@ Links target the working tree, so line positions can move after changes.
 - `engine.ts` — [L1](../src/components/landing/cinematic/engine.ts#L1)
 - `Pose` — [L10](../src/components/landing/cinematic/engine.ts#L10)
 - `poses` — [L11](../src/components/landing/cinematic/engine.ts#L11)
-- `range()` — [L21](../src/components/landing/cinematic/engine.ts#L21)
-- `optimize()` — [L23](../src/components/landing/cinematic/engine.ts#L23)
-- `mountCinema()` — [L52](../src/components/landing/cinematic/engine.ts#L52)
-- `render()` — [L150](../src/components/landing/cinematic/engine.ts#L150)
-- `resize()` — [L206](../src/components/landing/cinematic/engine.ts#L206)
+- `range()` — [L22](../src/components/landing/cinematic/engine.ts#L22)
+- `optimize()` — [L24](../src/components/landing/cinematic/engine.ts#L24)
+- `mountCinema()` — [L53](../src/components/landing/cinematic/engine.ts#L53)
+- `render()` — [L152](../src/components/landing/cinematic/engine.ts#L152)
+- `resize()` — [L218](../src/components/landing/cinematic/engine.ts#L218)
 
 ## [src/components/landing/cinematic/models.ts](../src/components/landing/cinematic/models.ts)
 
@@ -3500,8 +3500,8 @@ Links target the working tree, so line positions can move after changes.
 - `textTexture()` — [L77](../src/components/landing/cinematic/models.ts#L77)
 - `createCar()` — [L99](../src/components/landing/cinematic/models.ts#L99)
 - `createPhone()` — [L440](../src/components/landing/cinematic/models.ts#L440)
-- `update()` — [L466](../src/components/landing/cinematic/models.ts#L466)
-- `createPrinter()` — [L575](../src/components/landing/cinematic/models.ts#L575)
+- `update()` — [L467](../src/components/landing/cinematic/models.ts#L467)
+- `createPrinter()` — [L599](../src/components/landing/cinematic/models.ts#L599)
 
 ## [src/components/landing/cinematic/seo.ts](../src/components/landing/cinematic/seo.ts)
 

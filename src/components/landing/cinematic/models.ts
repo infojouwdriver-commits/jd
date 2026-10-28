@@ -462,16 +462,19 @@ export function createPhone(t: CinematicText, rtl: boolean) {
     0.015,
   );
   box(group, [0.018, 0.15, 0.025], [0.39, 0.25, 0], body, 0.008);
+  let receiptCanvas: HTMLCanvasElement | undefined;
   let last = "";
   function update(p: number) {
     const mode =
-      p < 0.16
-        ? "start"
-        : p < 0.56
-          ? "active"
-          : p < 0.72
-            ? "meter"
-            : "complete";
+      p > 0.94
+        ? "receipt"
+        : p < 0.16
+          ? "start"
+          : p < 0.56
+            ? "active"
+            : p < 0.72
+              ? "meter"
+              : "complete";
     const fare = 12.4 + Math.min(1, Math.max(0, (p - 0.56) / 0.16)) * 12.4;
     const value = mode === "meter" ? fare.toFixed(2) : "24.80";
     const key = mode + value + (p > 0.12 && p < 0.2 ? p.toFixed(3) : "");
@@ -479,6 +482,20 @@ export function createPhone(t: CinematicText, rtl: boolean) {
     last = key;
     ctx.fillStyle = "#0B1929";
     ctx.fillRect(0, 0, 512, 1024);
+    if (mode === "receipt" && receiptCanvas) {
+      ctx.drawImage(receiptCanvas, 28, 68, 456, 790);
+      ctx.fillStyle = "#EAC080";
+      ctx.beginPath();
+      ctx.roundRect(28, 880, 456, 80, 24);
+      ctx.fill();
+      ctx.fillStyle = "#0B1929";
+      ctx.font = "bold 26px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(t.email, 256, 931, 430);
+      texture.needsUpdate = true;
+      return;
+    }
+
     ctx.textAlign = "center";
     ctx.direction = rtl ? "rtl" : "ltr";
     ctx.fillStyle = "#A6B8C9";
@@ -570,7 +587,14 @@ export function createPhone(t: CinematicText, rtl: boolean) {
     texture.needsUpdate = true;
   }
   update(0);
-  return { group, update };
+  return {
+    group,
+    update,
+    setReceipt: (canvas: HTMLCanvasElement) => {
+      receiptCanvas = canvas;
+      last = "";
+    },
+  };
 }
 export function createPrinter(t: CinematicText, qr: HTMLCanvasElement) {
   const group = new T.Group();
@@ -660,5 +684,5 @@ export function createPrinter(t: CinematicText, qr: HTMLCanvasElement) {
     [0, 0.58, 0.48],
   );
   branding.rotation.x = -0.1;
-  return { group, paper, indicator, roller };
+  return { group, paper, indicator, roller, receipt: canvas };
 }

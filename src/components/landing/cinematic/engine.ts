@@ -12,7 +12,8 @@ const poses: Pose[] = [
   { p: 0, camera: [0.15, 1.65, 5.4], target: [0, 1.5, 0] },
   { p: 0.15, camera: [0, 1.6, 3.9], target: [0, 1.5, 0] },
   { p: 0.35, camera: [-5.9, 3.05, 6.1], target: [0, 0.95, 0] },
-  { p: 0.52, camera: [-4.6, 2.35, 5.3], target: [-0.15, 1.05, 0] },
+  { p: 0.45, camera: [0.8, 2.55, 7.1], target: [-0.15, 1.05, 0] },
+  { p: 0.54, camera: [3.4, 2.25, 4.8], target: [-0.15, 1.05, 0] },
   { p: 0.65, camera: [0.42, 1.45, 0.38], target: [-0.88, 1.2, 0.1] },
   { p: 0.73, camera: [0.25, 1.4, 0.36], target: [-0.86, 1.2, 0.12] },
   { p: 0.84, camera: [1.6, 1.8, 3.5], target: [0.1, 1.15, 0] },
@@ -142,6 +143,7 @@ export async function mountCinema(
     errorCorrectionLevel: "M",
   });
   const printer = createPrinter(t, qr);
+  phone.setReceipt(printer.receipt);
   optimize(printer.group);
   scene.add(printer.group);
   const state = { p: 0 };
@@ -184,13 +186,23 @@ export async function mountCinema(
     );
     phone.group.rotation.y = T.MathUtils.lerp(-0.1, Math.PI / 2, dock);
     phone.group.scale.setScalar(T.MathUtils.lerp(1, 0.24, dock));
-    phone.group.visible = p < 0.78;
+    phone.group.visible = p < 0.78 || p > 0.94;
+    const digital = range(p, 0.94, 1);
+    if (p > 0.94) {
+      phone.group.position.set(1.05, 1.45, 0.2);
+      phone.group.rotation.y = -0.15;
+      phone.group.scale.setScalar(0.82 * digital);
+    }
     phone.update(p);
     const reveal = range(p, 0.76, 0.84);
     printer.group.visible = p > 0.76;
-    printer.group.position.set(0, 0.18, -1.4 * (1 - reveal));
+    printer.group.position.set(
+      -0.6 * range(p, 0.94, 1),
+      0.18,
+      -1.4 * (1 - reveal),
+    );
     printer.group.rotation.y = -0.25 + 0.4 * range(p, 0.84, 1);
-    printer.group.scale.setScalar(0.8 + 0.2 * reveal);
+    printer.group.scale.setScalar(0.8 + 0.2 * reveal - 0.2 * range(p, 0.94, 1));
     printer.paper.scale.y = Math.max(0.001, range(p, 0.84, 0.98));
     printer.indicator.emissiveIntensity = range(p, 0.81, 0.86) * 2;
     printer.roller.rotation.x = range(p, 0.84, 0.98) * Math.PI * 5;
@@ -237,6 +249,9 @@ export async function mountCinema(
     onUpdate: render,
     scrollTrigger: {
       trigger: section,
+      pin: section.querySelector<HTMLElement>(".jd-stage"),
+      pinType: "fixed",
+      pinSpacing: false,
       start: "top top+=76",
       end: "bottom bottom",
       scrub: 0.55,

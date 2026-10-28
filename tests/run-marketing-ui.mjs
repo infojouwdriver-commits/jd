@@ -98,13 +98,46 @@ try {
     ["reverse-phone", 0],
   ]) {
     await page.evaluate((y) => scrollTo(0, y), travel * p);
-    await page.waitForFunction(
-      (p) =>
-        Math.abs(
-          Number(document.querySelector(".jd-scene").dataset.progress) - p,
-        ) < 0.015,
-      p,
-    );
+    console.log("Scene", name, p);
+    try {
+      await page.waitForFunction(
+        (p) =>
+          Math.abs(
+            Number(document.querySelector(".jd-scene").dataset.progress) - p,
+          ) < 0.015,
+        p,
+      );
+    } catch (error) {
+      await page.screenshot({ path: output + "/failed-" + name + ".png" });
+      fs.writeFileSync(
+        output + "/failed-state.json",
+        JSON.stringify(
+          await page.evaluate(() => ({
+            scrollY,
+            innerHeight,
+            progress: document.querySelector(".jd-scene").dataset.progress,
+            ancestors: [
+              document.documentElement,
+              document.body,
+              document.querySelector(".jd"),
+              document.querySelector("main"),
+              document.querySelector("#experience"),
+              document.querySelector(".jd-stage"),
+            ].map((e) => ({
+              tag: e.tagName,
+              cls: e.className,
+              rect: e.getBoundingClientRect().toJSON(),
+              overflow: getComputedStyle(e).overflow,
+              position: getComputedStyle(e).position,
+              transform: getComputedStyle(e).transform,
+            })),
+          })),
+          null,
+          2,
+        ),
+      );
+      throw error;
+    }
     await page.waitForTimeout(300);
     await page.screenshot({ path: output + "/" + name + ".png" });
     assert.ok(
@@ -150,6 +183,14 @@ try {
         serviceWorkers: "block",
       });
       await consent(context);
+      if (portal)
+        await context.route(portal + "/**", (route) => {
+          assert.equal(route.request().method(), "GET");
+          return route.fulfill({
+            contentType: "text/html",
+            body: "<h1>Isolated registration handoff</h1>",
+          });
+        });
       const p = await context.newPage();
       const failures = [];
       p.on("pageerror", (e) => failures.push(e.message));

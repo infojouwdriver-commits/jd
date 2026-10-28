@@ -1104,3 +1104,64 @@ html:has(.jd) {
     min-width: 28px;
   }
 }
+
+@media (max-width: 700px) {
+  .jd-header {
+    padding-inline: 16px;
+    gap: 6px;
+  }
+  .jd-header .jd-brand {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+  }
+  .jd-header .jd-brand svg {
+    display: none;
+  }
+}
+
+/* ScrollTrigger owns pinning; explicit fixed chrome avoids shared-shell overflow ancestry. */
+.jd {
+  overflow: visible;
+}
+.jd-header {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+}
+.jd main {
+  padding-top: 76px;
+}
+.jd-stage {
+  position: relative;
+  top: 0;
+}
+@media (max-width: 700px) {
+  .jd main {
+    padding-top: 68px;
+  }
+  .jd-stage {
+    top: 0;
+  }
+}
+.jd ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.jd ::-webkit-scrollbar-thumb {
+  background: #4c6278;
+  border-radius: 8px;
+}
+.jd ::-webkit-scrollbar-track {
+  background: #060b12;
+}
+html:has(.jd)::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html:has(.jd)::-webkit-scrollbar-thumb {
+  background: #4c6278;
+  border-radius: 8px;
+}
+html:has(.jd)::-webkit-scrollbar-track {
+  background: #060b12;
+}

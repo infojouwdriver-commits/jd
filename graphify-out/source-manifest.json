@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "89a0c8772736f944bb1a52e15400c59071422c3d",
+  "source_commit_context": "a6d21317e63c9372234bd12d15071b757940bded",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -436,10 +436,10 @@
     "src/components/landing/PlatformLanding.tsx": "3c0a489df6bd7d7e32051502fe380dd83a5256de819bb4e3563c980d882b0fe0",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
-    "src/components/landing/cinematic/cinematic.css": "31c34f0823ecf6ab37628474565d1a08b337742eb75301eb0f2f30c771573ee7",
+    "src/components/landing/cinematic/cinematic.css": "a269701709234681798ff9f19e16495d9d9314ecc0cc45ad60cad5ea52f816e6",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
-    "src/components/landing/cinematic/engine.ts": "036658a4d73b328eb246d0c9a51d68ab9230c105e280de452a1fc2115ceabd64",
-    "src/components/landing/cinematic/models.ts": "15828ec3f79cd7c2ce58d08ae4ba1474baed847a73c2986787c921c9b1885c16",
+    "src/components/landing/cinematic/engine.ts": "ef21e721bd1d36a2129e79be215ac7da0c594ce2778170e5f18ee2c9c375d101",
+    "src/components/landing/cinematic/models.ts": "8559274bf7b57a8ee8821b5f1ab60fe070d75b0eb1f8ce122488b56d6e4b41c9",
     "src/components/landing/cinematic/seo.ts": "2f3a142f3a786437c372be5a447243ec467db7149b18121f2847934863cd27d7",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
@@ -627,10 +627,10 @@
   },
   "artifacts": {
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851",
-    "SOURCE_INDEX.md": "4a001ff0441e2c502ab06b2a2dbee99a92ca1676e443b6d445bc00f4aad1ea8e",
+    "SOURCE_INDEX.md": "c4e94bedf9657019a1d8f0b352fde8e9cfb164f83bccdf52bd472a95a95f19b6",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "graph.json": "e78ee874a69d9ca66aad59e845d24ff6320b02dfe51a9b9007d90e0a82bab4a0",
-    "GRAPH_REPORT.md": "edc2028f46ed5f58aaa37cae32c952bbfc5a37125fd94dd62d0d917c920db746"
+    "graph.json": "14dda1fabff7f92abdfb44993278b4f816073dfe1e679f85bf4c1e36f3076723",
+    "GRAPH_REPORT.md": "acf5acd46cff1b97e1744b64d3e525b872432cd98a4ef7c895011b58f7964048"
   },
   "nodes": 3515,
   "edges": 11852,
