@@ -287,3 +287,22 @@ and under OS/user reduced motion. No GIF light sweeps, fake driving or progress.
 `welcome-preview.css`. Static raster replacement and motion enable/disable are
 remote settings; the installed icon remains a build-time asset. Videos/GIFs are
 not accepted as administrator uploads in this implementation.
+
+## Web service cockpit · 28 October 2026
+
+DriverShiftWorkspace owns shift entry, declarations, pause/resume and closing on
+`/driver/home` only. DriverShifts is a read-only service history and Dutch PDF
+workspace. The web cockpit uses existing `--dp-*` semantic tokens and system
+fonts; tabular odometer and meter values use system monospace. Its instrument
+needle and light change only after the existing shift API confirms success;
+they are a service-state illustration, never RPM, vehicle speed or GPS data.
+Start retains the shared OperationForm retry identity and opens the taximeter
+after confirmation. Closing requests explicit final odometer and cumulative
+passenger kilometres, preserves the server version contract, and dims the
+instruments after success. Local active or unsent trips block closing.
+
+Taximeter presentation keeps actual price, distance, time and invoice endpoints.
+After a successful invoice download, a paper feed animation confirms generation
+and the driver can continue to trip history. Failure never animates a receipt.
+All new motion is finite and respects reduced motion. GPS remains mounted in
+the shared shell independently of service controls. Native apps are unchanged.

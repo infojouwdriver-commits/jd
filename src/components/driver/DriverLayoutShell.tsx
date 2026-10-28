@@ -217,7 +217,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
 
   const mainTabs = [
     {
-      href: "/driver/taximeter",
+      href: "/driver/home",
       icon: MapPin,
       label:
         language === "ar" ? "الرئيسية" : language === "fr" ? "Accueil" : "Home",
@@ -365,7 +365,6 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </div>
-        <Link href="/driver/shifts" className="dp-surface-2 dp-text mx-4 mb-2 block rounded-xl px-3 py-3 text-sm font-semibold">{language === "ar" ? "كشف الوردية" : language === "fr" ? "Feuille de service" : "Dienststaat"}</Link>
         <DriverFleetShift language={language} />
       </header>
 

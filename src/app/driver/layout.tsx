@@ -1,4 +1,5 @@
 
+import "./cockpit.css";
 import { DriverLayoutShell } from "@/components/driver/DriverLayoutShell";
 
 export default function DriverLayout({

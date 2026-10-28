@@ -15,7 +15,7 @@ import {
 import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { AppLanguage } from '@/contexts/LanguageContext';
 import { driverTranslations } from '@/locales/driver';
@@ -451,6 +451,10 @@ function BottomSheetModal({
 }
 
 export default function TaximeterPage() {
+  return <MotionConfig reducedMotion="user"><TaximeterWorkspace/></MotionConfig>;
+}
+
+function TaximeterWorkspace() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const { language } = useLanguage();
@@ -482,6 +486,8 @@ export default function TaximeterPage() {
   const [showEndTripDialog, setShowEndTripDialog] = useState(false);
   const [completedTripId, setCompletedTripId] = useState<number | null>(null);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const invoiceFlight = useRef(false);
+  const [invoiceReady, setInvoiceReady] = useState(false);
   const [estimatedDistance, setEstimatedDistance] = useState(0);
   const [estimatedDuration, setEstimatedDuration] = useState(0);
   const [dailyEarnings, setDailyEarnings] = useState(0);
@@ -513,6 +519,7 @@ export default function TaximeterPage() {
         // Clear only after server acknowledgement. A failure leaves the queued
         // idempotent payload available so cleanup can be retried safely.
         await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
+        setInvoiceReady(false);
         setCompletedTripId(response.id);
         if (response.warning) toast.warning(response.warning);
       });
@@ -836,7 +843,8 @@ export default function TaximeterPage() {
   };
 
   const generateInvoice = async () => {
-    if (!completedTripId) return;
+    if (!completedTripId || invoiceFlight.current) return;
+    invoiceFlight.current = true;
     setGeneratingInvoice(true);
     try {
       const response = await fetch(`/next_api/trips/generate-invoice?id=${completedTripId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
@@ -844,13 +852,14 @@ export default function TaximeterPage() {
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `Factuur-Rit-${completedTripId}.pdf`;
-      document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); document.body.removeChild(a);
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      setInvoiceReady(true);
       toast.success(language === 'nl' ? 'Factuur gegenereerd' : language === 'ar' ? 'تم إنشاء الفاتورة' : 'Facture générée');
-      router.push('/driver/trips');
     } catch (error: any) {
       toast.error(language === 'nl' ? 'Factuur genereren mislukt' : language === 'ar' ? 'فشل إنشاء الفاتورة' : 'Échec de la génération de la facture');
     }
-    finally { setGeneratingInvoice(false); }
+    finally { invoiceFlight.current = false; setGeneratingInvoice(false); }
   };
 
   useEffect(() => {
@@ -929,7 +938,7 @@ export default function TaximeterPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
+    <div className="web-taximeter container mx-auto px-4 py-6 max-w-2xl">
 
       {(pendingTrips > 0 || storageError) && (
         <div role="status" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-950/40 p-4 text-amber-100">
@@ -1010,8 +1019,9 @@ export default function TaximeterPage() {
                 <p className="text-sm mb-6" style={{ color: 'rgba(52,211,153,0.8)' }}>
                   {language === 'nl' ? 'Wilt u een factuur genereren voor deze rit?' : language === 'ar' ? 'هل تريد إنشاء فاتورة لهذه الرحلة؟' : 'Voulez-vous générer une facture pour ce trajet?'}
                 </p>
+                {invoiceReady && <div className="receipt-printer" data-testid="receipt-printer" role="status"><div className="receipt-paper"><FileText aria-hidden="true" size={28}/><strong>JOUW DRIVER</strong><span>{language === "ar" ? "تم إنشاء الفاتورة" : language === "fr" ? "Facture générée" : "Factuur gegenereerd"}</span><span>#{completedTripId}</span></div></div>}
                 <div className="flex gap-3">
-                  <button onClick={() => { setCompletedTripId(null); router.push('/driver/trips'); }}
+                  <button disabled={generatingInvoice} onClick={() => { setCompletedTripId(null); router.push('/driver/trips'); }}
                     className="flex-1 h-12 rounded-2xl font-bold text-sm transition-all"
                     style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', color: 'rgba(52,211,153,0.9)' }}
                   >{t.later}</button>
@@ -1343,22 +1353,22 @@ export default function TaximeterPage() {
           {/* Active Trip Card */}
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
             <GlassCard className="p-8 mb-6 overflow-hidden relative" style={{ border: '1px solid rgba(52,211,153,0.3)' }}>
-              <motion.div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style={{ background: 'rgba(52,211,153,0.12)', marginRight: '-6rem', marginTop: '-6rem' }} animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 3, repeat: Infinity }} />
+
               <div className="relative z-10 text-center mb-6">
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-3 h-3 rounded-full" style={{ background: 'var(--dp-accent)', boxShadow: '0 0 8px rgba(52,211,153,1)' }} />
+                  <motion.div initial={{opacity:.3}} animate={{opacity:1}} transition={{duration:.5}} className="w-3 h-3 rounded-full" style={{ background: 'var(--dp-accent)', boxShadow: '0 0 8px rgba(52,211,153,1)' }} />
                   <span className="text-sm font-bold" style={{ color: 'rgba(52,211,153,0.9)' }}>{t.tripActive}</span>
                   <span className="flex items-center justify-center">{getRideTypeIcon(selectedRideType)}</span>
                 </div>
                 {selectedRideType === 'INTERNAL' ? (
-                  <motion.p animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 2, repeat: Infinity }}
-                    className="text-6xl font-black mb-4 tracking-tight"
+                  <motion.p initial={{opacity:.6}} animate={{opacity:1}} transition={{ duration:.25 }}
+                    className="meter-display text-6xl font-black mb-4 tracking-tight"
                     style={{ background: 'var(--dp-accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                   >
                     €{tripData?.proposedPrice.toFixed(2) || '0.00'}
                   </motion.p>
                 ) : (
-                  <motion.p animate={{ scale: [1, 1.03, 1] }} transition={{ duration: 2, repeat: Infinity }} className="text-4xl font-black mb-4 tracking-tight text-white">
+                  <motion.p initial={{opacity:.6}} animate={{opacity:1}} transition={{ duration:.25 }} className="text-4xl font-black mb-4 tracking-tight text-white">
                     {selectedRideType}
                   </motion.p>
                 )}

@@ -1,0 +1,21 @@
+/* Web cockpit: operational data uses the portal's existing semantic tokens. */
+.driver-cockpit { background: var(--dp-card); color: var(--dp-text); overflow: hidden; }
+.cockpit-brand { display:flex; justify-content:space-between; align-items:center; color:var(--dp-accent); font-size:.75rem; font-weight:700; letter-spacing:.1em; }
+.cockpit-instruments { display:grid; grid-template-columns:1fr 1.5fr 1fr; gap:12px; align-items:center; padding:24px 8px; border-block:1px solid var(--dp-border); }
+.cockpit-dial { position:relative; aspect-ratio:1; max-width:140px; border:4px solid var(--dp-border); border-radius:50%; display:grid; place-items:center; color:var(--dp-text-soft); transition:color .7s,border-color .7s,box-shadow .7s; }
+.cockpit-needle { position:absolute; width:3px; height:32%; bottom:50%; transform-origin:bottom; background:currentColor; border-radius:4px; }
+.cockpit-readout { display:flex; flex-direction:column; text-align:center; gap:8px; font-size:.75rem; color:var(--dp-text-soft); }
+.cockpit-readout strong { color:var(--dp-text); font:700 clamp(1.4rem,5vw,2.8rem)/1.2 ui-monospace,monospace; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.cockpit-engine { display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; font-size:.75rem; color:var(--dp-text-soft); transition:color .7s; }
+[data-engine="on"] .cockpit-dial { border-color:var(--dp-accent); color:var(--dp-accent); box-shadow:inset 0 0 20px color-mix(in srgb,var(--dp-accent) 14%,transparent); }
+[data-engine="on"] .cockpit-engine { color:var(--dp-accent); }
+.cockpit-meter-link { display:flex; align-items:center; justify-content:center; gap:10px; min-height:54px; border-radius:16px; background:var(--dp-action); color:var(--dp-action-text); font-weight:700; }
+.driver-cockpit a:hover { filter:brightness(1.1); }
+.driver-cockpit a:focus-visible { outline:2px solid var(--dp-accent); outline-offset:4px; }
+.web-taximeter .meter-display { font-variant-numeric:tabular-nums; font-family:ui-monospace,monospace; }
+.web-taximeter .meter-display::after { content:""; display:block; height:3px; width:60%; margin:16px auto; background:var(--dp-accent); transform:scaleX(1); animation:meter-light .5s ease-out; }
+.receipt-printer { overflow:hidden; max-width:280px; margin:16px auto; border-top:6px solid var(--dp-border); perspective:600px; }
+.receipt-paper { margin:0 12px 12px; padding:20px; color:#142238; background:#fffdf7; border-bottom:2px dashed #8b8373; animation:receipt-feed .8s ease-out both; display:flex; flex-direction:column; align-items:center; gap:8px; }
+@keyframes receipt-feed { from {transform:translateY(-105%);opacity:0} to {transform:translateY(0);opacity:1} }
+@keyframes meter-light { from {transform:scaleX(.05);opacity:.3} to {transform:scaleX(1);opacity:1} }
+@media(prefers-reduced-motion:reduce) { .driver-cockpit *, .web-taximeter * { animation:none!important; transition:none!important; } }

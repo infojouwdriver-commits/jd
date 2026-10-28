@@ -57,6 +57,8 @@ jobs:
         env:
           NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: pk_test
         run: pnpm build
+      - name: Production public host and secure route redirect regression
+        run: node tests/run-public-host.mjs
       - name: Install browser for portal regression checks
         run: |
           npm install --prefix "$RUNNER_TEMP/portal-ui" --no-audit --no-fund --ignore-scripts playwright@1.56.1

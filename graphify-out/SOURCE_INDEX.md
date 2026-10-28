@@ -1900,10 +1900,19 @@ Links target the working tree, so line positions can move after changes.
 - `driver-login/page.tsx` — [L1](../src/app/driver-login/page.tsx#L1)
 - `DriverLoginPage()` — [L4](../src/app/driver-login/page.tsx#L4)
 
+## [src/app/driver/cockpit.css](../src/app/driver/cockpit.css)
+
+- Tracked source; no structural symbols extracted.
+
+## [src/app/driver/home/page.tsx](../src/app/driver/home/page.tsx)
+
+- `home/page.tsx` — [L1](../src/app/driver/home/page.tsx#L1)
+- `DriverHomePage()` — [L6](../src/app/driver/home/page.tsx#L6)
+
 ## [src/app/driver/layout.tsx](../src/app/driver/layout.tsx)
 
 - `driver/layout.tsx` — [L1](../src/app/driver/layout.tsx#L1)
-- `DriverLayout()` — [L4](../src/app/driver/layout.tsx#L4)
+- `DriverLayout()` — [L5](../src/app/driver/layout.tsx#L5)
 
 ## [src/app/driver/messages/page.tsx](../src/app/driver/messages/page.tsx)
 
@@ -1962,6 +1971,7 @@ Links target the working tree, so line positions can move after changes.
 - `NavigateButton()` — [L296](../src/app/driver/taximeter/page.tsx#L296)
 - `BottomSheetModal()` — [L362](../src/app/driver/taximeter/page.tsx#L362)
 - `TaximeterPage()` — [L453](../src/app/driver/taximeter/page.tsx#L453)
+- `TaximeterWorkspace()` — [L457](../src/app/driver/taximeter/page.tsx#L457)
 
 ## [src/app/driver/test/page.tsx](../src/app/driver/test/page.tsx)
 
@@ -3183,7 +3193,7 @@ Links target the working tree, so line positions can move after changes.
 - `VehicleData` — [L49](../src/components/driver/DriverLayoutShell.tsx#L49)
 - `TabItem()` — [L60](../src/components/driver/DriverLayoutShell.tsx#L60)
 - `DriverLayoutContent()` — [L95](../src/components/driver/DriverLayoutShell.tsx#L95)
-- `DriverLayoutShell()` — [L395](../src/components/driver/DriverLayoutShell.tsx#L395)
+- `DriverLayoutShell()` — [L394](../src/components/driver/DriverLayoutShell.tsx#L394)
 
 ## [src/components/driver/DriverLoginClient.tsx](../src/components/driver/DriverLoginClient.tsx)
 
@@ -3208,16 +3218,15 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/driver/DriverShiftWorkspace.tsx](../src/components/driver/DriverShiftWorkspace.tsx)
 
 - `DriverShiftWorkspace.tsx` — [L1](../src/components/driver/DriverShiftWorkspace.tsx#L1)
-- `DriverShiftWorkspace()` — [L15](../src/components/driver/DriverShiftWorkspace.tsx#L15)
-- `toggle()` — [L69](../src/components/driver/DriverShiftWorkspace.tsx#L69)
+- `DriverShiftWorkspace()` — [L17](../src/components/driver/DriverShiftWorkspace.tsx#L17)
+- `toggle()` — [L78](../src/components/driver/DriverShiftWorkspace.tsx#L78)
 
 ## [src/components/driver/DriverShifts.tsx](../src/components/driver/DriverShifts.tsx)
 
 - `DriverShifts.tsx` — [L1](../src/components/driver/DriverShifts.tsx#L1)
-- `statuses` — [L23](../src/components/driver/DriverShifts.tsx#L23)
-- `DriverShifts()` — [L29](../src/components/driver/DriverShifts.tsx#L29)
-- `downloadPdf()` — [L85](../src/components/driver/DriverShifts.tsx#L85)
-- `begin()` — [L109](../src/components/driver/DriverShifts.tsx#L109)
+- `statuses` — [L20](../src/components/driver/DriverShifts.tsx#L20)
+- `DriverShifts()` — [L21](../src/components/driver/DriverShifts.tsx#L21)
+- `downloadPdf()` — [L69](../src/components/driver/DriverShifts.tsx#L69)
 
 ## [src/components/driver/shift-copy.ts](../src/components/driver/shift-copy.ts)
 
@@ -4936,7 +4945,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `middleware.ts` — [L1](../src/middleware.ts#L1)
 - `middleware()` — [L4](../src/middleware.ts#L4)
-- `config` — [L66](../src/middleware.ts#L66)
+- `config` — [L73](../src/middleware.ts#L73)
 
 ## [src/types/auth.ts](../src/types/auth.ts)
 

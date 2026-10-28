@@ -20,13 +20,13 @@ try {
   assert.ok(ready);
   browser=await chromium.launch({headless:true});
   for(const viewport of [{width:1280,height:900},{width:390,height:844}]) {
-    const context=await browser.newContext({viewport,locale:'fr-BE',permissions:['geolocation'],geolocation:{latitude:50.85,longitude:4.35,accuracy:5},serviceWorkers:'block'});
+    const context=await browser.newContext({viewport,locale:'fr-BE',reducedMotion:viewport.width===390?'reduce':'no-preference',permissions:['geolocation'],geolocation:{latitude:50.85,longitude:4.35,accuracy:5},serviceWorkers:'block'});
     await context.addInitScript(()=>{
       localStorage.setItem('driver_language','fr');
       localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));
     });
     await context.addInitScript(syntheticGPS);
-    let mapboxCalls=0, tripWrites=0, loggedIn=true;const fleetWrites=[];
+    let mapboxCalls=0, tripWrites=0, loggedIn=true, invoiceWrites=0, invoiceFail=true;const fleetWrites=[];
     const handleRoute=async route=>{
       const request=route.request(),url=new URL(request.url());
       if(url.hostname==='api.mapbox.com'){
@@ -57,11 +57,17 @@ try {
         if(request.method()==='POST'){fleetWrites.push(request.postDataJSON());data=request.postDataJSON();}
         else data={shift_active:false,sharing_enabled:false};
       }
+      if(url.pathname==='/next_api/trips/end')data={id:401};
+      if(url.pathname==='/next_api/trips/generate-invoice'){
+        invoiceWrites++;
+        await new Promise(r=>setTimeout(r,200));
+        return route.fulfill({status:invoiceFail?503:200,contentType:invoiceFail?'application/json':'application/pdf',body:invoiceFail?JSON.stringify({success:false}):'%PDF-1.4\nSynthetic receipt\n%%EOF'});
+      }
       if(url.pathname.startsWith('/next_api/trips') && request.method()==='POST')tripWrites++;
       return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
     };
     await context.route('**/*',handleRoute);
-    const logoutContext=await browser.newContext({viewport,locale:'fr-BE',permissions:['geolocation'],geolocation:{latitude:50.85,longitude:4.35,accuracy:5},serviceWorkers:'block'});
+    const logoutContext=await browser.newContext({viewport,locale:'fr-BE',reducedMotion:viewport.width===390?'reduce':'no-preference',permissions:['geolocation'],geolocation:{latitude:50.85,longitude:4.35,accuracy:5},serviceWorkers:'block'});
     await logoutContext.addInitScript(()=>{localStorage.setItem('driver_language','fr');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
     await logoutContext.addInitScript(syntheticGPS);
     await logoutContext.route('**/*',handleRoute);
@@ -95,12 +101,33 @@ try {
     await page.getByTestId('active-trip-map').getByRole('button',{name:'Suivre la position',exact:true}).click();
     await page.evaluate(()=>window.__setSyntheticPosition({latitude:50.851,longitude:4.352,accuracy:5}));
     await page.locator('[data-map-point="driver"][data-lat="50.851"]').waitFor();
-    await page.reload();
-    await page.getByRole('button',{name:'Terminer Course',exact:true}).waitFor();
+    await page.goto(base+'/driver/home');
+    await page.getByRole('button',{name:'Terminer le service',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Terminer le service',exact:true}).isDisabled(),true,'Local active trip blocks ending the shift');
+    await page.goto(base+'/driver/taximeter');
+    await page.getByRole('button',{name:'Terminer Course' ,exact:true}).waitFor();
     await page.getByText('Position partagée avec votre société et l’administration',{exact:true}).waitFor();
     await page.getByTestId('active-trip-map').locator('.leaflet-container').waitFor();
     assert.equal(tripWrites,0,'Starting and restoring the synthetic trip must not submit a completed trip');
-    console.log('Passed: automatic disclosed fleet sharing starts without buttons, stops/clears on logout and resumes on login/reload; Mapbox failure and active trip map restore on '+viewport.width+'px');
+    assert.equal(await page.locator('.shift-controls').count(),0);
+    await page.getByRole('button',{name:'Terminer Course',exact:true}).click();
+    await page.getByRole('button',{name:'Envoyer à Chiron',exact:true}).click();
+    const invoice=page.getByRole('button',{name:'Générer la facture',exact:true});
+    await invoice.waitFor();
+    await invoice.click();
+    await page.getByText('Échec de la génération de la facture',{exact:true}).waitFor();
+    assert.equal(await page.getByTestId('receipt-printer').count(),0,'No receipt animation on server failure');
+    invoiceFail=false;
+    const downloadPromise=page.waitForEvent('download');
+    await invoice.click();
+    assert.equal(await invoice.isDisabled(),true);
+    const download=await downloadPromise;
+    assert.equal(download.suggestedFilename(),'Factuur-Rit-401.pdf');
+    await page.getByTestId('receipt-printer').waitFor();
+    assert.equal(invoiceWrites,2,'One failed request and one explicit retry');
+    assert.ok(page.url().endsWith('/driver/taximeter'),'Receipt feedback stays visible');
+    if(viewport.width===390)assert.equal(await page.locator('.receipt-paper').evaluate(el=>getComputedStyle(el).animationName),'none');
+    console.log('Passed: receipt generation failure/success, duplicate guard, reduced motion and local shift protection; automatic disclosed fleet sharing starts without buttons, stops/clears on logout and resumes on login/reload; Mapbox failure and active trip map restore on '+viewport.width+'px');
     await context.close();
   }
 } finally {await browser?.close();server.kill('SIGTERM');}
