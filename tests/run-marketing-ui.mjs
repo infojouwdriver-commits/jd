@@ -207,12 +207,38 @@ try {
         0,
         "Reduced motion loads no WebGL",
       );
-      assert.ok(
-        await p.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth + 1,
-        ),
-        "No horizontal overflow",
+      const fits = await p.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
       );
+      if (!fits) {
+        await p.screenshot({
+          path: output + "/overflow-" + lang + "-" + width + ".png",
+          fullPage: true,
+        });
+        fs.writeFileSync(
+          output + "/overflow.json",
+          JSON.stringify(
+            await p.evaluate(() => ({
+              width: innerWidth,
+              scrollWidth: document.documentElement.scrollWidth,
+              nodes: [...document.querySelectorAll("body *")]
+                .map((e) => ({
+                  tag: e.tagName,
+                  cls: e.className,
+                  rect: e.getBoundingClientRect().toJSON(),
+                }))
+                .filter(
+                  (e) => e.rect.right > innerWidth + 1 || e.rect.left < -1,
+                )
+                .slice(0, 50),
+            })),
+            null,
+            2,
+          ),
+        );
+      }
+      assert.ok(fits, "No horizontal overflow");
+
       assert.equal(await p.locator("h1").count(), 1);
       assert.equal(
         await p.locator("link[rel=canonical]").getAttribute("href"),

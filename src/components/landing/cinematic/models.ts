@@ -85,8 +85,10 @@ export function textTexture(
   canvas.width = w;
   canvas.height = h;
   const c = canvas.getContext("2d")!;
-  c.fillStyle = background;
-  c.fillRect(0, 0, w, h);
+  if (background) {
+    c.fillStyle = background;
+    c.fillRect(0, 0, w, h);
+  }
   c.fillStyle = foreground;
   c.textAlign = "center";
   c.textBaseline = "middle";
@@ -101,7 +103,11 @@ export function createCar(low: boolean) {
   group.name = "JD Aster concept sedan";
   const paint = metal("#536777", 0.23),
     chrome = metal("#b5c0cb", 0.2),
-    dark = metal("#080e16", 0.4, 0.35),
+    dark = new T.MeshStandardMaterial({
+      color: "#070d13",
+      roughness: 0.88,
+      metalness: 0.05,
+    }),
     rubber = new T.MeshStandardMaterial({ color: "#10151b", roughness: 0.92 });
   const glass = new T.MeshPhysicalMaterial({
     color: "#0b2637",
@@ -134,7 +140,8 @@ export function createCar(low: boolean) {
     const row: number[][] = [];
     for (let j = 0; j <= 20; j++) {
       const z = (-1 + j / 10) * width;
-      row.push([x, y + 0.11 * (1 - (z / width) ** 2), z]);
+      const interior = x > -1.43 && x < 1.35 && Math.abs(z) < 0.81;
+      row.push([x, interior ? 0.4 : y + 0.11 * (1 - (z / width) ** 2), z]);
     }
     top.push(row);
     const arch = Math.max(
@@ -169,14 +176,16 @@ export function createCar(low: boolean) {
   for (let i = 0; i <= 32; i++) {
     const t = i / 32,
       x = -1.52 + t * 2.95;
-    const y = 1.16 + 0.72 * Math.sin(Math.PI * t) ** 0.72;
-    const w = 0.82 - 0.16 * Math.sin(Math.PI * t);
+    const y = 1.17 + 0.66 * Math.min(1, Math.min(t / 0.29, (1 - t) / 0.25));
+    const w = 0.82;
     const row: number[][] = [];
     for (let j = 0; j <= 24; j++) {
       const q = -1 + j / 12;
       row.push([
         x,
-        1.17 + (y - 1.17) * Math.cos((q * Math.PI) / 2) ** 0.4,
+        Math.abs(q) < 0.75
+          ? y - 0.035 * (q / 0.75) ** 2
+          : 1.17 + ((y - 1.205) * (1 - Math.abs(q))) / 0.25,
         w * q,
       ]);
     }
@@ -189,7 +198,8 @@ export function createCar(low: boolean) {
       [
         [-1.52, 1.17, s * 0.82],
         [-0.85, 1.76, s * 0.61],
-        [0.2, 1.88, s * 0.62],
+        [-0.55, 1.8, s * 0.62],
+        [0.55, 1.8, s * 0.62],
         [1.43, 1.17, s * 0.82],
       ],
       chrome,
@@ -211,7 +221,7 @@ export function createCar(low: boolean) {
       [
         [0.2, 1.19, s * 0.82],
         [0.18, 1.55, s * 0.76],
-        [0.15, 1.86, s * 0.65],
+        [0.15, 1.81, s * 0.62],
       ],
       dark,
       0.035,
@@ -239,7 +249,9 @@ export function createCar(low: boolean) {
     const brand = mesh(
       new T.PlaneGeometry(0.78, 0.14),
       new T.MeshBasicMaterial({
-        map: textTexture("JOUW DRIVER", "#EAC080", "#536777"),
+        map: textTexture("JOUW DRIVER", "#EAC080", ""),
+        transparent: true,
+        toneMapped: false,
         side: T.DoubleSide,
       }),
       group,
@@ -358,12 +370,12 @@ export function createCar(low: boolean) {
     emissive: "#EAC080",
     emissiveIntensity: 0,
   });
-  box(cabin, [0.62, 0.22, 0.3], [0.08, 2.01, 0], taxiMaterial, 0.06);
+  box(cabin, [0.62, 0.22, 0.3], [0.08, 1.94, 0], taxiMaterial, 0.06);
   const taxi = mesh(
     new T.PlaneGeometry(0.48, 0.15),
     new T.MeshBasicMaterial({ map: textTexture("TAXI", "#141e2a", "#EAC080") }),
     cabin,
-    [0.08, 2.01, 0.155],
+    [0.08, 1.94, 0.155],
   );
   taxi.name = "TAXI";
   // Cabin: dashboard, console, instrument cluster, steering wheel and stitched seats.
@@ -450,7 +462,7 @@ export function createPhone(t: CinematicText, rtl: boolean) {
   texture.colorSpace = T.SRGBColorSpace;
   mesh(
     new T.PlaneGeometry(0.68, 1.36),
-    new T.MeshBasicMaterial({ map: texture }),
+    new T.MeshBasicMaterial({ map: texture, toneMapped: false }),
     group,
     [0, 0, 0.063],
   );
@@ -667,10 +679,10 @@ export function createPrinter(t: CinematicText, qr: HTMLCanvasElement) {
   group.add(paper);
   const sheet = mesh(
     new T.PlaneGeometry(0.94, 1.65, 1, 24),
-    new T.MeshStandardMaterial({
+    new T.MeshBasicMaterial({
       map: texture,
       side: T.DoubleSide,
-      roughness: 0.9,
+      toneMapped: false,
     }),
     paper,
     [0, 0.825, 0],

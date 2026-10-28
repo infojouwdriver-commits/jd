@@ -11,13 +11,13 @@ type Pose = { p: number; camera: number[]; target: number[] };
 const poses: Pose[] = [
   { p: 0, camera: [0.15, 1.65, 5.4], target: [0, 1.5, 0] },
   { p: 0.15, camera: [0, 1.6, 3.9], target: [0, 1.5, 0] },
-  { p: 0.35, camera: [-5.9, 3.05, 6.1], target: [0, 0.95, 0] },
-  { p: 0.45, camera: [0.8, 2.55, 7.1], target: [-0.15, 1.05, 0] },
-  { p: 0.54, camera: [3.4, 2.25, 4.8], target: [-0.15, 1.05, 0] },
-  { p: 0.65, camera: [0.42, 1.45, 0.38], target: [-0.88, 1.2, 0.1] },
-  { p: 0.73, camera: [0.25, 1.4, 0.36], target: [-0.86, 1.2, 0.12] },
+  { p: 0.35, camera: [-9.4, 4.1, 10.5], target: [0, 0.95, 0] },
+  { p: 0.45, camera: [1.4, 3.6, 12], target: [-0.15, 1.05, 0] },
+  { p: 0.54, camera: [7, 3.2, 8.5], target: [-0.15, 1.05, 0] },
+  { p: 0.65, camera: [0.55, 1.55, 0.45], target: [-0.85, 1.36, 0] },
+  { p: 0.73, camera: [0.5, 1.55, 0.42], target: [-0.85, 1.36, 0] },
   { p: 0.84, camera: [1.6, 1.8, 3.5], target: [0.1, 1.15, 0] },
-  { p: 1, camera: [0.35, 1.9, 4.3], target: [0, 1.45, 0] },
+  { p: 1, camera: [0.5, 2, 5.2], target: [0.15, 1.3, 0] },
 ];
 export const range = (p: number, a: number, b: number) =>
   T.MathUtils.smoothstep(p, a, b);
@@ -83,11 +83,12 @@ export async function mountCinema(
   const room = new RoomEnvironment();
   const environment = pmrem.fromScene(room, 0.05);
   scene.environment = environment.texture;
+  scene.environmentIntensity = 0.6;
   room.dispose();
   pmrem.dispose();
-  const ambient = new T.HemisphereLight("#bde5ff", "#14202c", 2);
+  const ambient = new T.HemisphereLight("#bde5ff", "#14202c", 0.7);
   scene.add(ambient);
-  const key = new T.DirectionalLight("#c6e7ff", 6);
+  const key = new T.DirectionalLight("#c6e7ff", 2.5);
   key.position.set(-3, 7, 5);
   key.castShadow = !low;
   key.shadow.mapSize.set(1024, 1024);
@@ -105,12 +106,7 @@ export async function mountCinema(
   scene.add(fill);
   const floor = new T.Mesh(
     new T.CircleGeometry(12, 80),
-    new T.MeshStandardMaterial({
-      color: "#060b12",
-      roughness: 1,
-      metalness: 0,
-      envMapIntensity: 0,
-    }),
+    new T.MeshBasicMaterial({ color: "#08121e", toneMapped: false }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -0.015;
@@ -193,7 +189,7 @@ export async function mountCinema(
     const dock = range(p, 0.34, 0.59);
     phone.group.position.set(
       T.MathUtils.lerp(0, -0.72, dock),
-      T.MathUtils.lerp(1.5, 1.26, dock),
+      T.MathUtils.lerp(1.5, 1.4, dock),
       T.MathUtils.lerp(0.1, 0.02, dock),
     );
     phone.group.rotation.y = T.MathUtils.lerp(-0.1, Math.PI / 2, dock);

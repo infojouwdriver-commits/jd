@@ -1165,3 +1165,17 @@ html:has(.jd)::-webkit-scrollbar-thumb {
 html:has(.jd)::-webkit-scrollbar-track {
   background: #060b12;
 }
+
+.jd {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+.jd section,
+.jd article,
+.jd-section-intro,
+.jd-feature-list,
+.jd-company-network > *,
+.jd-price {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

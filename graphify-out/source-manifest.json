@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "86143d74a8ec167dd5f29fb76fbef8e40f25ab0f",
+  "source_commit_context": "a91625084f36afe302131480f982b500592d950c",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -436,10 +436,10 @@
     "src/components/landing/PlatformLanding.tsx": "3c0a489df6bd7d7e32051502fe380dd83a5256de819bb4e3563c980d882b0fe0",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
-    "src/components/landing/cinematic/cinematic.css": "200fdc4f059cb514b35bf1631253d9e50a949eec9768556127595294c2ef1766",
+    "src/components/landing/cinematic/cinematic.css": "2936944d6fd66296f92cc9fbd18f2810ce69f4716fac987960f1d05c264ba346",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
-    "src/components/landing/cinematic/engine.ts": "33e75ee84d62cd917a1cca56a56cf69b5e66914f7ee1971ac1aecf0acd23d561",
-    "src/components/landing/cinematic/models.ts": "84684f3fe5ce65814e24bb66338398c206d9e9672c85c3422b07373aafd2aa8b",
+    "src/components/landing/cinematic/engine.ts": "06f7ed6de19d7ec57d32de79ef352cd8db512551ea94dbfecc1061083b6dd191",
+    "src/components/landing/cinematic/models.ts": "57c25bca5c125d03719bb0cd0f6d0a9751d70f62260a2debf5b09342915e9e83",
     "src/components/landing/cinematic/seo.ts": "2f3a142f3a786437c372be5a447243ec467db7149b18121f2847934863cd27d7",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
@@ -626,11 +626,11 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851",
-    "SOURCE_INDEX.md": "633ba18f4905c4808559fef5e8e040dcfa22b37d03d92d367e46f58d2932a3c5",
+    "graph.json": "e0f9a77889afb34d068c186b4214993d82e1e46e90c24ecaa6f432a1e198fa37",
+    "SOURCE_INDEX.md": "0439a365ebf8ff0b86b00c326ed1db6bc1dc9d051951f089f5358acf056a540e",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "graph.json": "cbc4c6fafa8e2b83cebbae7f191807c458575735476259ce6a6cf90636c67109",
-    "GRAPH_REPORT.md": "ed994cd63799851a6a311c6cc4f82afc5c193f9bdb0098911be18718fe56e4a4"
+    "GRAPH_REPORT.md": "238eeb50345239f29711b85ef28a62ab5f824a406970be9c0e3a5d946a2733a7",
+    "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,
   "edges": 11852,
