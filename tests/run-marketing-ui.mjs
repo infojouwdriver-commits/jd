@@ -84,7 +84,7 @@ try {
   await page.waitForSelector(".jd-scene[data-ready=true]", { timeout: 60000 });
   const travel = await page
     .locator("#experience")
-    .evaluate((e) => e.offsetHeight - innerHeight + 76);
+    .evaluate((e) => e.offsetHeight - innerHeight + document.querySelector(".jd-header").getBoundingClientRect().height);
   for (const [name, p] of [
     ["ignition", 0],
     ["shift", 0.18],
@@ -318,7 +318,7 @@ try {
     const p = await context.newPage();
     await p.goto(base + "/" + lang);
     await p.waitForSelector(".jd-scene[data-ready=true]");
-    const distance = await p.locator("#experience").evaluate((e) => e.offsetHeight - innerHeight + 76);
+    const distance = await p.locator("#experience").evaluate((e) => e.offsetHeight - innerHeight + document.querySelector(".jd-header").getBoundingClientRect().height);
     for (const [stage, progress] of [["phone", 0], ["taxi", .43], ["cockpit", .68], ["printer", .85], ["receipt", .99], ["reverse-cockpit", .68], ["reverse-taxi", .43], ["reverse-phone", 0]]) {
       await p.evaluate((y) => scrollTo(0, y), distance * progress);
       await p.waitForFunction((value) => Math.abs(Number(document.querySelector(".jd-scene").dataset.progress) - value) < .015, progress);
@@ -328,6 +328,14 @@ try {
         return a.right > b.left + 1 && b.right > a.left + 1 && a.bottom > b.top + 1 && b.bottom > a.top + 1;
       });
       assert.equal(overlaps, false, "Mobile narrative stays outside scene");
+      const textOverScene = await p.evaluate(() => {
+        const scene = document.querySelector(".jd-scene").getBoundingClientRect();
+        return [...document.querySelectorAll(".jd-narrative h1, .jd-narrative h2, .jd-lead, .jd-narrative .jd-button, .jd-skip")].some((e) => {
+          const r = e.getBoundingClientRect();
+          return r.right > scene.left + 1 && scene.right > r.left + 1 && r.bottom > scene.top + 1 && scene.bottom > r.top + 1;
+        });
+      });
+      assert.equal(textOverScene, false, "Copy and actions never cover the model");
       if (!stage.startsWith("reverse")) await p.screenshot({ path: output + "/animated-" + lang + "-" + width + "-" + stage + ".png" });
     }
     assert.ok(

@@ -353,3 +353,7 @@ story. Navigation and registration remain usable independently of the scene.
 AR/FR/NL home URLs supplement all existing editorial and authentication routes.
 The subscription stays 50€ including 21% VAT, 12 months / 600€, no auto-renewal.
 Asset provenance and commercial-use permission are in public/cinematic/ASSETS.md.
+
+On phones the marketing header uses two 44px rows within 112px: brand/languages,
+then fully labelled registration/login. The playhead reads the actual header
+height when refreshing its pin start; no desktop offset is assumed on phones.

@@ -256,7 +256,7 @@ export async function mountCinema(
     pin: section.querySelector<HTMLElement>(".jd-stage"),
     pinType: "fixed",
     pinSpacing: false,
-    start: "top top+=76",
+    start: () => `top top+=${section.closest(".jd")?.querySelector(".jd-header")?.getBoundingClientRect().height || 76}`,
     end: "bottom bottom",
     invalidateOnRefresh: true,
     onUpdate: (self) => {

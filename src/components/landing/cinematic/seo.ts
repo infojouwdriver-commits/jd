@@ -56,7 +56,7 @@ export function homepageSchema(locale: AppLanguage) {
         "@id": marketingOrigin + "/#organization",
         name: "JOUW DRIVER",
         url: marketingOrigin,
-        logo: marketingOrigin + "/app-brand/app-icon.png",
+        logo: marketingOrigin + "/favicon.ico",
       },
       {
         "@type": "SoftwareApplication",

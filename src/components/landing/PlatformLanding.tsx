@@ -116,7 +116,7 @@ export default function PlatformLanding({
           <span>{t.register}</span>
           <ArrowUpRight size={18} />
         </button>
-        <a className="jd-login" href={portalHref("/login", configuredPortal)}>
+        <a className="jd-login" aria-label={t.login} href={portalHref("/login", configuredPortal)}>
           {t.login}
           <ArrowUpRight size={15} />
         </a>

@@ -1179,3 +1179,46 @@ html:has(.jd)::-webkit-scrollbar-track {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Small screens retain the full registration and login labels in a second row. */
+@media (max-width: 700px) {
+  .jd-header {
+    height: 112px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 44px 44px;
+    padding: 12px 16px;
+    gap: 0 12px;
+  }
+  .jd-header .jd-brand { grid-column: 1; grid-row: 1; }
+  .jd-languages { grid-column: 2; grid-row: 1; margin: 0; }
+  .jd-header-register {
+    grid-column: 1; grid-row: 2; justify-self: start;
+    width: auto; max-width: 100%; padding: 7px 10px; gap: 6px;
+    white-space: normal; font-size: 11px; text-align: start;
+  }
+  .jd-header-register span { display: inline; }
+  .jd-header-register svg { flex-shrink: 0; }
+  .jd-login {
+    grid-column: 2; grid-row: 2; justify-self: end;
+    font-size: 11px; gap: 5px;
+  }
+  .jd-login svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .jd main { padding-top: 112px; }
+  .jd-stage { height: calc(100svh - 112px); }
+  .jd-static .jd-stage { height: auto; }
+  .jd-cinema { scroll-margin-top: 112px; }
+  .jd-section { scroll-margin-top: 130px; }
+}
+html:has(.jd), body:has(.jd) { background-color: #060b12; }
+
+@media (max-width: 700px) {
+  .jd-stage { grid-template-rows: 52% 48%; }
+  .jd-narrative, .jd[dir="rtl"] .jd-narrative { padding-top: 16px; }
+  .jd h1, .jd-narrative h2 { font-size: clamp(23px, 6vw, 28px); }
+  .jd-chapter-copy, .jd[dir="rtl"] .jd-chapter-copy { margin-top: 10px; }
+  .jd-lead { margin-top: 8px !important; font-size: 12px; line-height: 1.6; }
+  .jd-narrative .jd-button { margin-top: 8px; }
+  .jd-skip { top: calc(52% - 49px); }
+  .jd-static .jd-stage { grid-template-rows: auto 390px; }
+}
