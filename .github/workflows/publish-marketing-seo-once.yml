@@ -51,14 +51,56 @@ jobs:
           console.log('Production update limited to reviewed multilingual SEO and backup workflow reuse.');
           GATE
 
-  checks:
+  inspect:
     needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read existing production revision without changing services
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /srv/jouw-driver/foundation
+          node --input-type=module <<'INSPECT'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          console.log('Production read-only diagnosis:',JSON.stringify({
+            mode:s.mode,
+            runtimeRevision:s.revision,
+            releaseRevision:r.revision,
+            imagesConsistent:s.image===r.image,
+            revisionsConsistent:s.revision===r.revision,
+            deployedAt:s.deployedAt,
+          }));
+          INSPECT
+          REMOTE
+          echo 'Diagnostic only: no publication until live revision has been reviewed.'
+          exit 1
+
+  checks:
+    needs: inspect
     uses: ./.github/workflows/ci.yml
     with:
       force_native_db: true
 
   domain:
-    needs: scope
+    needs: inspect
     uses: ./.github/workflows/domain-candidate.yml
 
   build:
