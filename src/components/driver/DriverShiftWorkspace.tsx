@@ -105,7 +105,7 @@ export default function DriverShiftWorkspace({
     pathname === "/driver/taximeter" && !active && !localActive;
   return (
     <>
-      {!isSheet && (
+      {pathname === "/driver/taximeter" && (
         <section
           className="shift-controls dp-card mx-4 mt-4 space-y-5 p-5"
           style={{ borderColor: "var(--dp-accent)" }}
