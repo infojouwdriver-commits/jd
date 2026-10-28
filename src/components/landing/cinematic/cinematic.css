@@ -1230,8 +1230,8 @@ html:has(.jd), body:has(.jd) { background-color: #060b12; }
   .jd-static .jd-poster p { margin-top: 12px; line-height: 1.5; text-align: center; }
 }
 
-/* Preserve every registration step number in the existing narrow dialog. */
-@media (max-width: 700px) {
+/* Match the registration dialog breakpoint so desktop step labels retain their width. */
+@media (max-width: 640px) {
   body:has(.jd) .cr-steps { padding-inline: 12px; gap: 5px; }
   body:has(.jd) .cr-steps li { flex: 0 0 24px; }
   body:has(.jd) .cr-steps li[aria-current="step"] { flex: 1 1 auto; }
