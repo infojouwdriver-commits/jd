@@ -59,7 +59,7 @@ test('marketing pages use server-rendered content and accessible links back to h
   assert.match(editorial, /<h2/);
   assert.match(editorial, /<details/);
   assert.match(editorial, /<Link href="\/"/);
-  assert.match(home, /<MarketingExplore \/>/);
+  assert.match(home, /<MarketingExplore locale=\{language\}\//);
   assert.match(read('src/components/landing/MarketingExplore.tsx'), /solutionHref\(language, topic\)/);
 });
 

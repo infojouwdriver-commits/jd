@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage, type AppLanguage } from '@/contexts/LanguageContext';
 import {
   marketingCopy, marketingTopics, hubHref, solutionHref,
 } from '@/lib/marketing-content';
 
 // Internal links make the new editorial pages discoverable from the main site.
-export default function MarketingExplore() {
-  const { language } = useLanguage();
+export default function MarketingExplore({ locale }: { locale?: AppLanguage } = {}) {
+  const context = useLanguage();
+  const language = locale || context.language;
   const copy = marketingCopy[language];
   return (
     <section className="pm-section" aria-labelledby="pm-solutions-title" id="solutions">

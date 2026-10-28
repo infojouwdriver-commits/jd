@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (host !== 'jouww.com' && host !== 'www.jouww.com' && host !== 'localhost') return [];
   return [
     { url: marketingOrigin + '/', changeFrequency: 'weekly', priority: 1 },
+    ...marketingLocales.map((locale) => ({ url: marketingOrigin + '/' + locale, changeFrequency: 'weekly' as const, priority: 0.9 })),
     ...marketingLocales.map((locale) => ({
       url: marketingOrigin + hubHref(locale), changeFrequency: 'monthly' as const, priority: 0.8,
     })),
