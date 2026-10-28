@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Gauge, ClipboardList, Power, CarFront } from "lucide-react";
+import { Gauge, ClipboardList, Power } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DriverHomePage() {
