@@ -21,6 +21,7 @@
 | الميزة | ملفات البداية | ما يجب مراجعته معها |
 | --- | --- | --- |
 | صفحة الموقع الإعلاني | [page.tsx](../src/app/page.tsx)، [LandingPage](../src/components/landing/LandingPage.tsx)، [PlatformLanding](../src/components/landing/PlatformLanding.tsx) | `platform.css` و`onboarding-copy.ts` في مجلد landing، واللغات الثلاث |
+| صفحات SEO والحلول التسويقية | `src/app/[locale]/solutions/`، `src/components/landing/MarketingEditorial.tsx`، `src/lib/marketing-content.ts` | `src/app/sitemap.ts` و`robots.ts` و`src/middleware.ts` لعزل فهرسة الإدارة و`docs/MARKETING_SEO_AR.md` للخطة والاختبار |
 | نموذج تسجيل الشركة | [CompanyRegistrationDialog](../src/components/registration/CompanyRegistrationDialog.tsx)، [الحقول والتحقق](../src/lib/company-registration.ts) | `copy.ts` و`registration.css` في registration، والتحقق على الخادم |
 | حفظ التسجيل ومراجعته | [واجهة التسجيل](../src/app/next_api/company-registrations/route.ts)، [معاملات قاعدة البيانات](../migrations/20261017_company_registration.sql) | التشفير، عدم تكرار الطلب، عزل الشركة وحالة الحسابات |
 | طلبات تعديل الشركة على الموقع | `src/lib/company-changes.ts`، `src/components/operations/CompanyChangesPanel.tsx`، `migrations/20261018_web_change_approvals.sql` | عزل الشركة، بيانات الطلب الآمنة، مراجعة ذرية دون تفعيل قبل الموافقة |
