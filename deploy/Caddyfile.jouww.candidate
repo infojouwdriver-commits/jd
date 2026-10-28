@@ -47,7 +47,7 @@ jouww.com, www.jouww.com {
   }
   # Only these public pages/assets stay on the marketing host. All other safe
   # navigations preserve path/query on the fixed portal host (never user input).
-  @public path / /landing /faq /privacy-policy /privacy-center /features/* /_next/* /marketing-driver.jpg /manifest.json /sw.js /favicon.ico
+  @public path / /landing /faq /privacy-policy /privacy-center /features/* /_next/* /marketing-driver.jpg /manifest.json /sw.js /favicon.ico /robots.txt /sitemap.xml /fr/solutions /fr/solutions/* /nl/solutions /nl/solutions/* /ar/solutions /ar/solutions/*
   handle @public {
     import jouww_proxy
   }
