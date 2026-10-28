@@ -8,8 +8,9 @@ import { portalHref } from '@/lib/portal-origin';
 
 const navLink = 'rounded-full border border-[#64748b] px-4 py-2 text-sm text-[#f5f2e9] transition-colors hover:border-[#e0bd5b] hover:text-[#e0bd5b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]';
 
-function SiteShell({ locale, children }: { locale: MarketingLocale; children: ReactNode }) {
+function SiteShell({ locale, topic, children }: { locale: MarketingLocale; topic?: MarketingTopic; children: ReactNode }) {
   const t = marketingCopy[locale];
+  const localeLink = (language: MarketingLocale) => topic ? solutionHref(language, topic) : hubHref(language);
   const signup = portalHref('/register-company?lang=' + locale, process.env.NEXT_PUBLIC_PORTAL_ORIGIN);
   return (
     <div lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen bg-[#0d1727] text-[#f5f2e9]">
@@ -19,9 +20,9 @@ function SiteShell({ locale, children }: { locale: MarketingLocale; children: Re
             JOUW <span className="text-[#e0bd5b]">DRIVER</span>
           </Link>
           <nav aria-label="Languages" className="flex flex-wrap items-center gap-3">
-            <Link href={hubHref('fr')} hrefLang="fr-BE" className={locale === 'fr' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>FR</Link>
-            <Link href={hubHref('nl')} hrefLang="nl-BE" className={locale === 'nl' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>NL</Link>
-            <Link href={hubHref('ar')} hrefLang="ar" className={locale === 'ar' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>AR</Link>
+            <Link href={localeLink('fr')} hrefLang="fr-BE" className={locale === 'fr' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>FR</Link>
+            <Link href={localeLink('nl')} hrefLang="nl-BE" className={locale === 'nl' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>NL</Link>
+            <Link href={localeLink('ar')} hrefLang="ar" className={locale === 'ar' ? 'font-bold text-[#e0bd5b]' : 'text-[#d9e2ed] hover:text-[#e0bd5b]'}>AR</Link>
             <Link href="/" className={navLink}>{t.homeLabel}</Link>
           </nav>
         </div>
@@ -78,7 +79,7 @@ export function MarketingSolution({ locale, topic }: { locale: MarketingLocale; 
   const t = marketingCopy[locale];
   const s = t.solutions[topic];
   return (
-    <SiteShell locale={locale}>
+    <SiteShell locale={locale} topic={topic}>
       <nav aria-label="Breadcrumb" className="mb-9 text-sm text-[#c1cbd8]">
         <Link href="/" className="underline underline-offset-4">{t.homeLabel}</Link>
         <span aria-hidden="true"> / </span>
