@@ -2774,9 +2774,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/receipt-email/route.ts](../src/app/next_api/trips/receipt-email/route.ts)
 
 - `receipt-email/route.ts` — [L1](../src/app/next_api/trips/receipt-email/route.ts#L1)
-- `esc()` — [L11](../src/app/next_api/trips/receipt-email/route.ts#L11)
-- `GET` — [L12](../src/app/next_api/trips/receipt-email/route.ts#L12)
-- `POST` — [L19](../src/app/next_api/trips/receipt-email/route.ts#L19)
+- `esc()` — [L12](../src/app/next_api/trips/receipt-email/route.ts#L12)
+- `GET` — [L13](../src/app/next_api/trips/receipt-email/route.ts#L13)
+- `POST` — [L20](../src/app/next_api/trips/receipt-email/route.ts#L20)
 
 ## [src/app/next_api/trips/receipt/route.ts](../src/app/next_api/trips/receipt/route.ts)
 

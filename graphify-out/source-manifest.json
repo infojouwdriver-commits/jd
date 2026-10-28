@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "9cf1e5e4f0a7aa6703032b6db157c8c3b193e1e4",
+  "source_commit_context": "9219d415dc96c727f31b3bdf0c4a74a9ececbc7a",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -344,7 +344,7 @@
     "src/app/next_api/trips/end/route.ts": "df93fafb8f4f85a28175894c93a414d6991cae6720867d54e3375441ba23c4ca",
     "src/app/next_api/trips/export-pdf/route.ts": "f60e0e762cef4dd8373b960d176f012f996b0d6049b5b90b994840cadc6c355e",
     "src/app/next_api/trips/generate-invoice/route.ts": "f684dd99c569226bb10e8f37ced68843066ac211ac10073494e7622756cade99",
-    "src/app/next_api/trips/receipt-email/route.ts": "f42de0a888427852cfc428f5a8b67a0b05a4fbc6e6aa8d195d7db4bc76b96b6f",
+    "src/app/next_api/trips/receipt-email/route.ts": "5cd01491a4859f034724657db5d44948a8c4e44cc620f3388695750a444daa21",
     "src/app/next_api/trips/receipt/route.ts": "b2e73ec730ac61df7e7539edde5f8c5b19ca5023532b56765e3d08a6db112568",
     "src/app/next_api/trips/retry-sync/route.ts": "0d08826738b4f55baa569cd91cc61a85456fd4fed1b953abd3683bd54761a69c",
     "src/app/next_api/trips/route.ts": "ba942987edea07f3f73ab8c096ffe6347f4811f25b1b9306775a979be71eff4d",
@@ -619,18 +619,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "health.json": "aa80a0f583949c40953df3fd9d23609f968f64ba3ec750a51273913909a3a51c",
-    "SOURCE_INDEX.md": "303eb445f776f858b40f108fcff43d1377443576db66bf9aa2c9914ff6f711fd",
+    "health.json": "232682179112b5b321878d2c9d01a0075e23d4c142a5ad2b657267299b72a62f",
+    "SOURCE_INDEX.md": "845fdffdd013e8168e127469b5a19f525339f463db90f9ec03b2a71b19c4f1a6",
     "GRAPH_TREE.html": "b7c1b529074cd65e79a5a328e000f1308de75a429efc78e1b7dfa5d35cb9b943",
-    "graph.json": "8a136cb7c20c38aeb2fe7f063db14ce58b062eb1f350b291c7ba911bd19222d7",
-    "GRAPH_REPORT.md": "b668f62a8e2bdaf5cbe357d625a2fda19f979b051905cb426a3634e5e1e0ffb2"
+    "graph.json": "7472d329ec1c533e4ef42bce1fa05741ca5509a541e7be885c69758f97514450",
+    "GRAPH_REPORT.md": "f5ca73389212189be65443b567039ff1c6ecb706deab068497ced588b8451176"
   },
   "nodes": 3480,
-  "edges": 11753,
-  "raw_edges": 12010,
-  "communities": 174,
+  "edges": 11754,
+  "raw_edges": 12011,
+  "communities": 178,
   "confidence_counts": {
-    "EXTRACTED": 11765,
+    "EXTRACTED": 11766,
     "INFERRED": 245
   }
 }

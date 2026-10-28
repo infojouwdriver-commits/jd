@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {requestMiddleware,validateRequestBody} from '@/lib/api-utils';
 import {createSuccessResponse,createErrorResponse} from '@/lib/create-response';
 import {generateAdminUserToken} from '@/lib/auth';
@@ -22,7 +23,7 @@ export const POST=requestMiddleware(async(request,context)=>{
  if(r.isTest)return createErrorResponse({status:409,errorMessage:'Test trips cannot send real customer email'});
  const limited=await consumeRateLimit('receipt-email:'+actor,10);if(limited)return limited;
  const data=v.data,config=mailConfiguration(process.env);if(!config.ready)return createSuccessResponse({accepted:false,status:'not_configured'});
- const digest=mailEventKey(JSON.stringify({invoice:r.receipt.invoice_id,to:data.to.toLowerCase(),subject:data.subject,message:data.message,language:data.language,settings_version:data.settings_version}),config.metadataKey);
+ const digest=mailEventKey(createHash('sha256').update(JSON.stringify({invoice:r.receipt.invoice_id,to:data.to.toLowerCase(),subject:data.subject,message:data.message,language:data.language,settings_version:data.settings_version})).digest('hex'),config.metadataKey);
  const claimed=await client.rpc('security_claim_receipt_mail',{p_actor:actor,p_invoice:r.receipt.invoice_id,p_request:data.request_id,p_digest:digest,p_version:data.settings_version});if(claimed.error)throw claimed.error;
  const result=await sendTransactionalMail({to:data.to,subject:data.subject,text:data.message,html:`<!doctype html><html lang="${data.language}" dir="${data.language==='ar'?'rtl':'ltr'}"><head><title>${esc(data.subject)}</title></head><body style="font-family:Arial,sans-serif;line-height:1.7;white-space:pre-wrap">${receiptEmailHtml(data.message)}</body></html>`,purpose:'driver_receipt',event:`driver-receipt:${actor}:${r.receipt.invoice_id}:${data.request_id}:${digest}`,attachments:[{filename:r.receipt.reference+'.pdf',content:r.pdf()}]});
  return createSuccessResponse(result);
