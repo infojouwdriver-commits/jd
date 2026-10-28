@@ -26,6 +26,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import DriverShiftWorkspace from "@/components/driver/DriverShiftWorkspace";
+import DriverFleetShift from "@/components/driver/DriverFleetShift";
 
 const LOGO_URL =
   "https://cdn.chat2db-ai.com/app/avatar/custom/16eda623-2b94-41ea-8390-395dcb708494_737955.png";
@@ -216,7 +217,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
 
   const mainTabs = [
     {
-      href: "/driver/taximeter",
+      href: "/driver/home",
       icon: MapPin,
       label:
         language === "ar" ? "الرئيسية" : language === "fr" ? "Accueil" : "Home",
@@ -364,6 +365,7 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </div>
+        <DriverFleetShift language={language} />
         <Link href="/driver/shifts" className="dp-surface-2 dp-text mx-4 mb-2 block rounded-xl px-3 py-3 text-sm font-semibold">{language === "ar" ? "كشف الوردية" : language === "fr" ? "Feuille de service" : "Dienststaat"}</Link>
       </header>
 
