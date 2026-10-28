@@ -43,9 +43,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const nonce = (await headers()).get("x-nonce") || undefined;
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") || undefined;
+  const marketingLocale = requestHeaders.get("x-marketing-locale");
+  const host = (requestHeaders.get("host") || "").split(":")[0].toLowerCase();
+  const pageLanguage = marketingLocale || (host === "jouww.com" || host === "www.jouww.com" ? "fr" : "nl");
   return (
-    <html lang="nl" suppressHydrationWarning>
+    <html lang={pageLanguage} dir={pageLanguage === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="mobile-web-app-capable" content="yes" />
