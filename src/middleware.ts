@@ -9,6 +9,26 @@ export function middleware(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
   const hostname = request.nextUrl.hostname.toLowerCase();
   const marketingLocale = request.nextUrl.pathname.match(/^\/(fr|nl|ar)\/solutions(?:\/|$)/)?.[1];
+  // Referral parameters can be inserted by third-party chat or campaign apps.
+  // Strip them on public marketing routes so visitors only see our own clean URL.
+  // Never touch login, payment, signed-document or application URLs.
+  const marketingHost = hostname === 'jouww.com' || hostname === 'www.jouww.com';
+  const publicMarketingPath = request.nextUrl.pathname === '/' ||
+    /^\/(fr|nl|ar)\/solutions(?:\/|$)/.test(request.nextUrl.pathname) ||
+    request.nextUrl.pathname === '/privacy-policy';
+  if (marketingHost && publicMarketingPath && (request.method === 'GET' || request.method === 'HEAD')) {
+    const cleanUrl = request.nextUrl.clone();
+    const trackingKeys = Array.from(cleanUrl.searchParams.keys()).filter((key) =>
+      /^utm_/i.test(key) || /^(fbclid|gclid|gbraid|wbraid|msclkid|mc_cid|mc_eid|ref_src)$/i.test(key));
+    if (trackingKeys.length > 0) {
+      for (const key of trackingKeys) cleanUrl.searchParams.delete(key);
+      const redirect = NextResponse.redirect(cleanUrl, 307);
+      redirect.headers.set('Referrer-Policy', 'no-referrer');
+      redirect.headers.set('Cache-Control', 'no-store');
+      return redirect;
+    }
+  }
+
   const csp = "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.mapbox.com https://nominatim.openstreetmap.org https://api.bigdatacloud.net; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
   const forwarded = new Headers(request.headers);
   forwarded.delete('x-marketing-locale');
