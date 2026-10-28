@@ -1688,10 +1688,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/[locale]/page.tsx](../src/app/%5Blocale%5D/page.tsx)
 
 - `[locale]/page.tsx` — [L1](../src/app/%5Blocale%5D/page.tsx#L1)
-- `Props` — [L7](../src/app/%5Blocale%5D/page.tsx#L7)
-- `generateStaticParams()` — [L8](../src/app/%5Blocale%5D/page.tsx#L8)
-- `generateMetadata()` — [L9](../src/app/%5Blocale%5D/page.tsx#L9)
-- `LocalizedHome()` — [L10](../src/app/%5Blocale%5D/page.tsx#L10)
+- `Props` — [L10](../src/app/%5Blocale%5D/page.tsx#L10)
+- `generateStaticParams()` — [L11](../src/app/%5Blocale%5D/page.tsx#L11)
+- `generateMetadata()` — [L14](../src/app/%5Blocale%5D/page.tsx#L14)
+- `LocalizedHome()` — [L20](../src/app/%5Blocale%5D/page.tsx#L20)
 
 ## [src/app/[locale]/solutions/[slug]/page.tsx](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx)
 
@@ -2862,8 +2862,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/page.tsx](../src/app/page.tsx)
 
 - `app/page.tsx` — [L1](../src/app/page.tsx#L1)
-- `metadata` — [L5](../src/app/page.tsx#L5)
-- `HomePage()` — [L6](../src/app/page.tsx#L6)
+- `metadata` — [L8](../src/app/page.tsx#L8)
+- `HomePage()` — [L9](../src/app/page.tsx#L9)
 
 ## [src/app/pay/invoice/page.tsx](../src/app/pay/invoice/page.tsx)
 
@@ -3453,9 +3453,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/PlatformLanding.tsx](../src/components/landing/PlatformLanding.tsx)
 
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
-- `PlatformLanding()` — [L16](../src/components/landing/PlatformLanding.tsx#L16)
-- `openRegistration()` — [L21](../src/components/landing/PlatformLanding.tsx#L21)
-- `closeRegistration()` — [L22](../src/components/landing/PlatformLanding.tsx#L22)
+- `PlatformLanding()` — [L23](../src/components/landing/PlatformLanding.tsx#L23)
+- `openRegistration()` — [L59](../src/components/landing/PlatformLanding.tsx#L59)
+- `closeRegistration()` — [L73](../src/components/landing/PlatformLanding.tsx#L73)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 
@@ -3476,7 +3476,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `cinematic/copy.ts` — [L1](../src/components/landing/cinematic/copy.ts#L1)
 - `cinematicCopy` — [L2](../src/components/landing/cinematic/copy.ts#L2)
-- `CinematicText` — [L30](../src/components/landing/cinematic/copy.ts#L30)
+- `CinematicText` — [L357](../src/components/landing/cinematic/copy.ts#L357)
 
 ## [src/components/landing/cinematic/engine.ts](../src/components/landing/cinematic/engine.ts)
 
@@ -3484,31 +3484,31 @@ Links target the working tree, so line positions can move after changes.
 - `Pose` — [L10](../src/components/landing/cinematic/engine.ts#L10)
 - `poses` — [L11](../src/components/landing/cinematic/engine.ts#L11)
 - `range()` — [L21](../src/components/landing/cinematic/engine.ts#L21)
-- `optimize()` — [L22](../src/components/landing/cinematic/engine.ts#L22)
-- `mountCinema()` — [L27](../src/components/landing/cinematic/engine.ts#L27)
-- `render()` — [L47](../src/components/landing/cinematic/engine.ts#L47)
-- `resize()` — [L59](../src/components/landing/cinematic/engine.ts#L59)
+- `optimize()` — [L23](../src/components/landing/cinematic/engine.ts#L23)
+- `mountCinema()` — [L52](../src/components/landing/cinematic/engine.ts#L52)
+- `render()` — [L150](../src/components/landing/cinematic/engine.ts#L150)
+- `resize()` — [L206](../src/components/landing/cinematic/engine.ts#L206)
 
 ## [src/components/landing/cinematic/models.ts](../src/components/landing/cinematic/models.ts)
 
 - `models.ts` — [L1](../src/components/landing/cinematic/models.ts#L1)
 - `metal()` — [L6](../src/components/landing/cinematic/models.ts#L6)
-- `mesh()` — [L7](../src/components/landing/cinematic/models.ts#L7)
-- `box()` — [L10](../src/components/landing/cinematic/models.ts#L10)
-- `tube()` — [L13](../src/components/landing/cinematic/models.ts#L13)
-- `surface()` — [L16](../src/components/landing/cinematic/models.ts#L16)
-- `textTexture()` — [L22](../src/components/landing/cinematic/models.ts#L22)
-- `createCar()` — [L25](../src/components/landing/cinematic/models.ts#L25)
-- `createPhone()` — [L80](../src/components/landing/cinematic/models.ts#L80)
-- `update()` — [L84](../src/components/landing/cinematic/models.ts#L84)
-- `createPrinter()` — [L93](../src/components/landing/cinematic/models.ts#L93)
+- `mesh()` — [L14](../src/components/landing/cinematic/models.ts#L14)
+- `box()` — [L27](../src/components/landing/cinematic/models.ts#L27)
+- `tube()` — [L41](../src/components/landing/cinematic/models.ts#L41)
+- `surface()` — [L61](../src/components/landing/cinematic/models.ts#L61)
+- `textTexture()` — [L77](../src/components/landing/cinematic/models.ts#L77)
+- `createCar()` — [L99](../src/components/landing/cinematic/models.ts#L99)
+- `createPhone()` — [L440](../src/components/landing/cinematic/models.ts#L440)
+- `update()` — [L466](../src/components/landing/cinematic/models.ts#L466)
+- `createPrinter()` — [L575](../src/components/landing/cinematic/models.ts#L575)
 
 ## [src/components/landing/cinematic/seo.ts](../src/components/landing/cinematic/seo.ts)
 
 - `seo.ts` — [L1](../src/components/landing/cinematic/seo.ts#L1)
 - `homeAlternates` — [L5](../src/components/landing/cinematic/seo.ts#L5)
-- `homepageMetadata()` — [L6](../src/components/landing/cinematic/seo.ts#L6)
-- `homepageSchema()` — [L10](../src/components/landing/cinematic/seo.ts#L10)
+- `homepageMetadata()` — [L11](../src/components/landing/cinematic/seo.ts#L11)
+- `homepageSchema()` — [L49](../src/components/landing/cinematic/seo.ts#L49)
 
 ## [src/components/landing/features/FeatureDetailCard.tsx](../src/components/landing/features/FeatureDetailCard.tsx)
 

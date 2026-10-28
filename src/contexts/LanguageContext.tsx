@@ -67,7 +67,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // with a stored preference after hydration.
     const pathLanguage = typeof window === 'undefined'
       ? null
-      : normalizeLanguage(window.location.pathname.match(/^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/)?.[1]);
+      : window.location.pathname === '/' ? 'fr' : normalizeLanguage(window.location.pathname.match(/^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/)?.[1]);
     const initialLanguage = pathLanguage || cookieLanguage || storageLanguage || detectBrowserLanguage();
 
     setLanguageState(initialLanguage);
