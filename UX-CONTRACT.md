@@ -363,3 +363,13 @@ continues through the existing authenticated portals.
 Business source: docs/STRIPE_BILLING_AR.md. A signed 12-month contract defines the installments; each issued invoice is paid explicitly through hosted Stripe Checkout or its frozen bank QR. No new automatic debit enrollment. The existing BillingPanel and InvoiceWorkspace reuse InvoiceDeliveryActions, OperationForm, Button, LanguageContext and API retry identities. Send states distinguish provider acceptance from delivery. Issuing an email PDF is separately recorded from actual structured exchange evidence. First-invoice activation applies only to new eligible companies; existing operations and ongoing trips remain available.
 
 The public /pay/invoice page grants review/pay only for the signed invoice capability. It shows invoice number, current balance, pending/error/settled state, explicit one-time Stripe payment and a refresh action. Fragment tokens stay out of history after opening, and are never persisted in browser storage. The page does not authenticate the visitor, mark payment on a return URL or automatically launch a financial action. Locale is Arabic/French/Dutch and shared theme/control ownership stays unchanged. A paid or legacy automatically collected invoice cannot start another payment. Direct bank transfer still requires bank evidence.
+
+### Web shift home and receipt · 28 October 2026
+
+Source: driver-shifts API/declaration schema and trip-journal persistence contract.
+DriverShiftWorkspace owns mutations on Home; DriverShifts owns history/PDF only.
+OperationForm remains the canonical validation, modal and uncertain-retry owner.
+No animation commits a shift, prices a trip, proves GPS sharing, or issues a bill.
+Taximeter entry without a confirmed shift offers Home while retaining local trip
+recovery. Active/unsent local trips block shift declarations and closure.
+The shared fleet runtime stays mounted through portal navigation.

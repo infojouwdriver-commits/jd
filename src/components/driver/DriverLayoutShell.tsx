@@ -366,7 +366,6 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <DriverFleetShift language={language} />
-        <Link href="/driver/shifts" className="dp-surface-2 dp-text mx-4 mb-2 block rounded-xl px-3 py-3 text-sm font-semibold">{language === "ar" ? "كشف الوردية" : language === "fr" ? "Feuille de service" : "Dienststaat"}</Link>
       </header>
 
       <main className="dp-content-with-tabbar dp-fade-in"><DriverShiftWorkspace>{children}</DriverShiftWorkspace></main>

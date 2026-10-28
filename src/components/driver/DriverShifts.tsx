@@ -1,12 +1,11 @@
 "use client";
 import {shiftReference, shiftDocumentUrl} from "@/lib/shift-document";
+import Link from "next/link";
 import DocumentQr from "./DocumentQr";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { ApiError, api } from "@/lib/api-client";
+import { api } from "@/lib/api-client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { OperationForm } from "@/components/operations/OperationForm";
 import { operationsCopy } from "@/components/operations/operations-copy";
 import { shiftCopy } from "./shift-copy";
 import {
@@ -15,36 +14,21 @@ import {
   shiftTime,
 } from "@/lib/driver-shifts";
 import type {
-  DriverShift,
   ShiftList,
   ShiftDetail,
-  ShiftStatus,
 } from "@/lib/driver-shifts";
-const statuses: ShiftStatus[] = [
-  "available",
-  "driving_empty",
-  "with_passenger",
-  "break",
-];
+const statuses = ["available", "driving_empty", "with_passenger", "break"] as const;
 export default function DriverShifts() {
   const { language, isRtl } = useLanguage(),
     c = shiftCopy[language];
-  const { user } = useAuth();
   const [list, setList] = useState<ShiftList | null>(null),
     [detail, setDetail] = useState<ShiftDetail | null>(null),
     [offset, setOffset] = useState(0);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [saved, setSaved] = useState(false);
-  const [form, setForm] = useState<{
-    action: "start" | "record" | "end";
-    shift: DriverShift | null;
-    id: string;
-  } | null>(null);
+    [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
   const downloadFlight = useRef(false);
-  const generation = useRef(0),
-    flight = useRef(false);
+  const generation = useRef(0);
   const load = useCallback(
     async (page = 0, id?: string) => {
       const gen = ++generation.current;
@@ -106,14 +90,6 @@ export default function DriverShifts() {
       setDownloading(false);
     }
   }
-  function begin(action: "start" | "record" | "end") {
-    setSaved(false);
-    setForm({
-      action,
-      shift: active || null,
-      id: active?.id || crypto.randomUUID(),
-    });
-  }
   return (
     <div
       className="dp-text mx-auto max-w-3xl space-y-5 p-4"
@@ -130,7 +106,6 @@ export default function DriverShifts() {
           {c.refresh}
         </Button>
         {error && <p role="alert">{error}</p>}
-        {saved && <p role="status">{c.saved}</p>}
         {busy && <p role="status">{operationsCopy[language].loading}</p>}
         {list && (
           <section className="dp-card space-y-3 p-4">
@@ -139,26 +114,7 @@ export default function DriverShifts() {
                 ? `${c.active} · ${active.plate_number} · ${c[active.work_status]}`
                 : c.empty}
             </p>
-            <div className="flex flex-wrap gap-3">
-              {!active ? (
-                <Button disabled={busy} onClick={() => begin("start")}>
-                  {c.start}
-                </Button>
-              ) : (
-                <>
-                  <Button disabled={busy} onClick={() => begin("record")}>
-                    {c.record}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() => begin("end")}
-                  >
-                    {c.end}
-                  </Button>
-                </>
-              )}
-            </div>
+            <Link href="/driver/home" className="dp-text underline">{c.start} / {c.end}</Link>
           </section>
         )}
         <section className="dp-card space-y-3 p-4">
@@ -318,83 +274,6 @@ export default function DriverShifts() {
             {downloading ? c.downloading : c.print}
           </Button>
         </article>
-      )}
-      {form && (
-        <OperationForm
-          title={c[form.action]}
-          description={form.action === "end" ? c.endNotice : c.intro}
-          c={operationsCopy[language]}
-          submitLabel={c[form.action]}
-          intentKey={`driver-shift-${user?.sub}-${form.action}-${form.shift?.id || "start"}`}
-          fields={[
-            {
-              key: "odometer",
-              label: c.odometer,
-              type: "number",
-              min: Number(form.shift?.odometer || 0),
-              max: 9999999.99,
-              step: 0.01,
-            },
-            ...(form.action === "start"
-              ? []
-              : [
-                  {
-                    key: "passenger_km",
-                    label: c.passenger,
-                    type: "number" as const,
-                    min: Number(form.shift?.passenger_km || 0),
-                    max: 9999999.99,
-                    step: 0.01,
-                  },
-                ]),
-            {
-              key: "work_status",
-              label: c.status,
-              options: statuses.map((value) => ({ value, label: c[value] })),
-            },
-          ]}
-          initial={{
-            _shift_id: form.id,
-            _version: String(form.shift?.version || 0),
-            odometer:
-              form.action === "start" ? "" : String(form.shift?.odometer || 0),
-            passenger_km:
-              form.action === "start"
-                ? "0"
-                : String(form.shift?.passenger_km || 0),
-            work_status: form.shift?.work_status || "available",
-          }}
-          errorMessage={(error) =>
-            error instanceof ApiError && error.status === 409
-              ? c.conflict
-              : error instanceof ApiError && error.status === 400
-                ? c.invalid
-                : operationsCopy[language].failure
-          }
-          onClose={() => setForm(null)}
-          onSubmit={async (values, requestId) => {
-            if (flight.current) return;
-            flight.current = true;
-            try {
-              const s = await api.post<DriverShift>("/drivers/shifts", {
-                request_id: requestId,
-                shift_id:
-                  form.action === "start" ? requestId : values._shift_id,
-                action: form.action,
-                expected_version:
-                  form.action === "start" ? 0 : Number(values._version),
-                odometer: Number(values.odometer),
-                passenger_km: Number(values.passenger_km),
-                work_status: values.work_status || "available",
-              });
-              window.dispatchEvent(new Event("driver-shift-updated"));
-              setSaved(true);
-              await load(0, s.id);
-            } finally {
-              flight.current = false;
-            }
-          }}
-        />
       )}
     </div>
   );

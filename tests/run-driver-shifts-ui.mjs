@@ -250,8 +250,13 @@ try {
         errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
       const c = copy[lang];
+      console.log("Testing shift cockpit",lang,theme);
+      page.setDefaultTimeout(15000);
       await page.goto(base + "/driver/taximeter");
-      await page.getByRole("heading", { name: c.start, exact: true }).waitFor();
+      await page.getByRole("link", {name:c.start,exact:true}).waitFor();
+      assert.equal(await page.locator("#operation-odometer").count(),0);
+      await page.getByRole("link", {name:c.start,exact:true}).click();
+      await page.getByRole("form", {name:c.start,exact:true}).waitFor();
       if (lang === "ar" && theme === "light")
         await page.screenshot({
           path: path.join(qa, "shift-first-start-ar.png"),
@@ -267,13 +272,18 @@ try {
         // Ambiguous inline submission keeps the exact original identity and readings.
         await startForm.getByRole("button", {name:/Réessayer/}).click();
       }
-      await page.locator("#operation-odometer").waitFor({state:"hidden"});
+      console.log("Shift start confirmed", lang, theme);
+      await page.waitForURL(base + "/driver/taximeter");
+      assert.equal(await page.locator(".shift-controls").count(),0,"No shift controls above taximeter");
+      assert.equal(await page.getByTestId("fleet-sharing-indicator").count(),1,"GPS sharing stays mounted");
       assert.equal(
         (await db.query("SELECT count(*) n FROM driver_shift_events")).rows[0]
           .n,
         1,
       );
       await page.goto(base + "/driver/trips");
+      assert.equal(await page.locator(".shift-controls").count(),0);
+      await page.goto(base + "/driver/home");
       const pause = { ar: "استراحة", fr: "Pause", nl: "Pauze" }[lang];
       const resume = {
         ar: "استئناف العمل",
@@ -302,7 +312,7 @@ try {
         ),
         100.1,
       );
-      await page.goto(base + "/driver/shifts");
+      await page.goto(base + "/driver/home");
       await page.getByRole("button", { name: c.record, exact: true }).click();
       await page.locator("#operation-odometer").fill("110.50");
       await page.locator("#operation-passenger_km").fill("5.25");
@@ -323,6 +333,9 @@ try {
         .getByRole("button", { name: c.end, exact: true })
         .click();
       await page.getByRole("dialog").waitFor({ state: "hidden" });
+      await page.goto(base + "/driver/shifts");
+      assert.equal(await page.getByRole("button", {name:c.end,exact:true}).count(),0);
+      await page.getByRole("button", {name:c.open,exact:true}).first().click();
       await page
         .locator(".shift-print-sheet")
         .getByText(c.closed, { exact: false })
@@ -330,9 +343,7 @@ try {
       await page.getByText("20.25 km", { exact: true }).waitFor();
       await page.getByText("10.00 km", { exact: true }).waitFor();
       assert.equal(
-        (await db.query("SELECT count(*) n FROM driver_shift_events")).rows[0]
-          .n,
-        3,
+        (await db.query("SELECT count(*) n FROM driver_shift_events")).rows[0].n, 3,
       );
       assert.equal(
         await page.locator("html").getAttribute("dir"),
