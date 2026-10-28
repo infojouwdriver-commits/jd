@@ -1,0 +1,278 @@
+name: Publish verified cinematic marketing experience
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-cinematic-marketing.yml']
+permissions:
+  contents: read
+concurrency:
+  group: cinematic-marketing-release
+  cancel-in-progress: false
+
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+    steps:
+      - name: Confirm reviewed scope and exact main release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_BASELINE: 63e0eb862b500642213c21808b869af534856cb3
+        run: |
+          node --input-type=module <<'GATE'
+          const baseline=process.env.EXPECTED_BASELINE;
+          if(process.env.GITHUB_REF!=='refs/heads/main')throw Error('Main branch required');
+          if(!/^[a-f0-9]{40}$/.test(process.env.GITHUB_SHA))throw Error('Invalid source revision');
+          const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN};
+          const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+baseline+'...'+process.env.GITHUB_SHA,{headers,signal:AbortSignal.timeout(20000)});
+          if(!r.ok)throw Error('Cannot verify reviewed file scope');
+          const c=await r.json();
+          const allowed=new Set([".github/workflows/publish-cinematic-marketing.yml", ".github/workflows/cinematic-acceptance.yml", "DESIGN.md", "package.json", "pnpm-lock.yaml", "deploy/Caddyfile.jouww.candidate", "docs/CINEMATIC_MARKETING_AR.md", "src/app/page.tsx", "src/app/[locale]/page.tsx", "src/app/sitemap.ts", "src/middleware.ts", "src/contexts/LanguageContext.tsx", "src/components/landing/MarketingExplore.tsx", "src/components/landing/PlatformLanding.tsx", "tests/run-marketing-ui.mjs", "tests/run-company-registration-ui.mjs", "tests/marketing-seo.test.mjs"]);
+          if(c.status!=='ahead'||!c.files?.length||c.files.length>50||c.files.some(f=>(!allowed.has(f.filename)&&!f.filename.startsWith('src/components/landing/cinematic/')&&!f.filename.startsWith('public/cinematic/')&&!f.filename.startsWith('graphify-out/'))||f.status==='removed'))throw Error('Unreviewed change in cinematic marketing release');
+          console.log('Marketing-only scope verified; no native, driver, admin, API, SQL or billing source changes.');
+          GATE
+
+  inspect:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read existing production revision without changing services
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /srv/jouw-driver/foundation
+          node --input-type=module <<'INSPECT'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          console.log('Production read-only diagnosis:',JSON.stringify({
+            mode:s.mode,
+            runtimeRevision:s.revision,
+            releaseRevision:r.revision,
+            imagesConsistent:s.image===r.image,
+            revisionsConsistent:s.revision===r.revision,
+            deployedAt:s.deployedAt,
+          }));
+          if(s.mode!=='public'||s.revision!=='63e0eb862b500642213c21808b869af534856cb3'||r.revision!==s.revision||r.image!==s.image)throw Error('Live release changed or state inconsistent; publication blocked');
+          INSPECT
+          REMOTE
+          echo 'Reviewed live baseline verified; protected tests and backup may proceed.'
+
+  checks:
+    needs: inspect
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+
+  cinema:
+    needs: inspect
+    uses: ./.github/workflows/cinematic-acceptance.yml
+
+  domain:
+    needs: inspect
+    uses: ./.github/workflows/domain-candidate.yml
+
+  build:
+    needs: [scope, checks, domain, cinema]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Build and publish immutable reviewed website image
+        id: image
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$MAPBOX_PUBLIC_TOKEN"
+          image=ghcr.io/infojouwdriver-commits/jd
+          tag="cinematic-$GITHUB_SHA-$GITHUB_RUN_ID"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build \
+            --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            -t "$image:$tag" .
+          docker push "$image:$tag" >/dev/null
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+          printf 'Verified immutable marketing image: %s\n' "$digest" >> "$GITHUB_STEP_SUMMARY"
+
+  backup:
+    needs: build
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [scope, checks, domain, cinema, build, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Publish website image with protected rollback and no database migrations
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+          REVISION: ${{ github.sha }}
+          BASELINE: 63e0eb862b500642213c21808b869af534856cb3
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export MARKETING_IMAGE=$1 MARKETING_REVISION=$2 MARKETING_BASELINE=$3 MARKETING_BACKUP=$4
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$MARKETING_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$MARKETING_IMAGE")" = "$MARKETING_REVISION"
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              cat "$work/Caddyfile" > Caddyfile
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+              edge=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml ps -q edge)
+              if test -n "$edge"; then docker exec "$edge" caddy validate --config /etc/caddy/Caddyfile && docker exec "$edge" caddy reload --config /etc/caddy/Caddyfile || printf 'Caddy rollback requires operator recovery\n' >&2; fi
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.MARKETING_BASELINE)throw Error('Live release differs from reviewed SEO baseline; refusing to deploy');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.MARKETING_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover existing live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          const old=fs.readFileSync('Caddyfile','utf8');
+          const matcher='  @public path / /landing /faq /privacy-policy /privacy-center /features/* /_next/* /marketing-driver.jpg /manifest.json /sw.js /favicon.ico';
+          if(old.split(matcher).length!==2||!old.includes(' /fr/solutions /fr/solutions/* ')||!old.includes(' /robots.txt /sitemap.xml ')||!old.includes('@api path /next_api')||!old.includes('redir https://app.jouww.com{uri} 302'))throw Error('Marketing proxy differs from approved host policy');
+          BEFORE
+          work=$(mktemp -d .marketing-seo.XXXXXX)
+          cp private-app.yaml runtime-mode.json Caddyfile "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env compose.yaml > "$work/preserved.sha256"
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.MARKETING_IMAGE),{mode:0o600});
+          const proxy=fs.readFileSync('Caddyfile','utf8');
+          const marker=' /ar/solutions/*';
+          if(proxy.split(marker).length!==2||proxy.includes(' /cinematic/*'))throw Error('Unexpected public marketing route baseline');
+          fs.writeFileSync('Caddyfile',proxy.replace(marker,marker+' /fr /nl /ar /cinematic/*'));
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$MARKETING_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          edge=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml ps -q edge)
+          test -n "$edge"
+          docker exec "$edge" caddy validate --config /etc/caddy/Caddyfile
+          docker exec "$edge" caddy reload --config /etc/caddy/Caddyfile
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const sites=['https://jouww.com','https://app.jouww.com','https://jouw-driver.duckdns.org'];
+          const get=async(url)=>fetch(url,{redirect:'error',signal:AbortSignal.timeout(20000)});
+          const marketing=sites[0];
+          for(const path of ['/','/fr','/nl','/ar','/cinematic/poster.webp','/cinematic/logo.png','/fr/solutions','/nl/solutions','/ar/solutions','/fr/solutions/gestion-entreprise-taxi','/robots.txt','/sitemap.xml']){
+            const r=await get(marketing+path);
+            if(r.status!==200)throw Error('Marketing SEO route did not respond successfully: '+path);
+            if(/\.(webp|png)$/.test(path)){if(!r.headers.get('content-type')?.startsWith('image/'))throw Error('Cinematic public asset missing');continue;}
+            const body=await r.text();
+            if(['/','/fr','/nl','/ar'].includes(path)&&(!body.includes('jd-cinema')||!body.includes('application/ld+json')))throw Error('Cinematic homepage missing');
+            if(path==='/sitemap.xml'&&!body.includes('/fr/solutions'))throw Error('SEO sitemap missing public content');
+            if(path==='/robots.txt'&&!body.includes('Sitemap: https://jouww.com/sitemap.xml'))throw Error('Public robots sitemap absent');
+            if(path==='/fr/solutions'&&!body.includes('https://jouww.com/fr/solutions'))throw Error('SEO canonical missing');
+          }
+          const redirected=await fetch(marketing+'/fr/solutions?utm_source=chatgpt.com&utm_campaign=demo&view=all',{redirect:'manual',signal:AbortSignal.timeout(15000)});
+          if(redirected.status!==307||redirected.headers.get('location')!==marketing+'/fr/solutions?view=all')throw Error('Public referral URL was not cleaned safely');
+          for(const base of sites.slice(1)){
+            const login=await get(base+'/login');
+            if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login accessibility or indexing guard failed');
+            const robots=await get(base+'/robots.txt');
+            if(robots.status!==200||(await robots.text()).indexOf('Disallow: /')<0)throw Error('Portal crawler exclusion failed');
+          }
+          for(const path of ['/next_api/auth/user','/next_api/trips','/next_api/companies']){
+            const r=await get(sites[2]+path);
+            if(r.status!==401)throw Error('API authorization guard changed');
+          }
+          console.log('Website SEO, canonical, sitemap, private origin and authentication smoke checks passed.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.MARKETING_IMAGE,revision:process.env.MARKETING_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.MARKETING_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Cinematic marketing image and public Caddy routes deployed; database, billing, driver shifts, mail and TLS settings preserved.\n'
+          REMOTE

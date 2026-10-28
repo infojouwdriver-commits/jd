@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const allowed = originAllowed(origin, appOrigin, process.env.TRUSTED_ORIGINS);
   const nonce = btoa(crypto.randomUUID());
   const hostname = request.nextUrl.hostname.toLowerCase();
-  const marketingLocale = request.nextUrl.pathname.match(/^\/(fr|nl|ar)\/solutions(?:\/|$)/)?.[1];
+  const marketingLocale = request.nextUrl.pathname.match(/^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/)?.[1];
   // Referral parameters can be inserted by third-party chat or campaign apps.
   // Strip them on public marketing routes so visitors only see our own clean URL.
   // Never touch login, payment, signed-document or application URLs.
@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
   const publicHost = (request.headers.get('host') || hostname).toLowerCase().replace(/:443$/, '');
   const marketingHost = publicHost === 'jouww.com' || publicHost === 'www.jouww.com';
   const publicMarketingPath = request.nextUrl.pathname === '/' ||
-    /^\/(fr|nl|ar)\/solutions(?:\/|$)/.test(request.nextUrl.pathname) ||
+    /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
     request.nextUrl.pathname === '/privacy-policy';
   if (marketingHost && publicMarketingPath && (request.method === 'GET' || request.method === 'HEAD')) {
     const cleanUrl = request.nextUrl.clone();
@@ -63,7 +63,7 @@ export function middleware(request: NextRequest) {
   // Never index authenticated workflows, tokenized documents or the
   // legacy/application hosts even if a crawler ignores robots.txt.
   const publicMarketingRoute = request.nextUrl.pathname === '/' ||
-    /^\/(fr|nl|ar)\/solutions(?:\/|$)/.test(request.nextUrl.pathname) ||
+    /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
     request.nextUrl.pathname === '/privacy-policy';
   if (!publicMarketingRoute || hostname === 'app.jouww.com' || hostname === 'jouw-driver.duckdns.org') {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');

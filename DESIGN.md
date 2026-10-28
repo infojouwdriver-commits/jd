@@ -331,3 +331,29 @@ an independent optional action, with editable localized copy, explicit recipient
 provider acceptance distinct from delivery, stable retry identity, and no message
 or recipient persistence in the new database tables. Administrator ad controls
 reuse the management shell and optimistic settings version.
+
+## Marketing cinematic experience · 28 October 2026
+
+The requested automotive direction supersedes the botanical marketing composition
+for the homepage only. The signature is a single reversible scroll sequence:
+phone ignition → original ASTER sedan → cabin meter → thermal receipt.
+`cinematic/cinematic.css` owns scoped `--jd-*` tokens: background #060B12,
+navy #0B1929, surface #14283D, champagne #EAC080, ice #A9D8F2,
+text #F3F5F7 and muted #A6B8C9. These do not replace native, driver or admin
+palettes. Display uses Avenir Next / Segoe UI / system sans; instruments use
+system monospace. Arabic has no tracking and an independent line-height.
+
+Text and the WebGL viewport occupy distinct columns, stacked on phones.
+`engine.ts` owns the GSAP scrub playhead, camera, light and model transforms.
+There is no autonomous driving timer. Rendering is demanded by scroll/resize,
+paused offscreen and on hidden documents, with capped device pixel ratio.
+Reduced motion and WebGL failure use a locally rendered poster and full HTML
+story. Navigation and registration remain usable independently of the scene.
+`PlatformLanding` reuses CompanyRegistrationDialog and portal-origin routing.
+AR/FR/NL home URLs supplement all existing editorial and authentication routes.
+The subscription stays 50€ including 21% VAT, 12 months / 600€, no auto-renewal.
+Asset provenance and commercial-use permission are in public/cinematic/ASSETS.md.
+
+On phones the marketing header uses two 44px rows within 112px: brand/languages,
+then fully labelled registration/login. The playhead reads the actual header
+height when refreshing its pin start; no desktop offset is assumed on phones.
