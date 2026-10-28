@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `30b88447`
+- Built from commit: `aae35389`
 - Source hashes are authoritative: run `python3 scripts/code-map.py --check`.
 - Rebuild using the pinned environment: `python scripts/code-map.py` (local AST only).
 

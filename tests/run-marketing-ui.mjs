@@ -97,7 +97,7 @@ try {
     ["reverse-taxi", 0.43],
     ["reverse-phone", 0],
   ]) {
-    await page.evaluate((y) => scrollTo(0, y), travel * p);
+    await page.evaluate((y) => scrollTo({ top: y, behavior: "instant" }), travel * p);
     console.log("Scene", name, p);
     try {
       await page.waitForFunction(
@@ -138,7 +138,7 @@ try {
       );
       throw error;
     }
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(450);
     await page.screenshot({ path: output + "/" + name + ".png" });
     assert.ok(
       await page.locator(".jd-scene canvas").isVisible(),
@@ -293,6 +293,12 @@ try {
         const dialog = p.getByRole("dialog");
         await dialog.waitFor({ state: "visible" });
         assert.ok(await dialog.locator("input").count());
+        const bounds = await dialog.evaluate((e) => {
+          const r = e.getBoundingClientRect();
+          return r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1 && e.scrollWidth <= e.clientWidth + 1;
+        });
+        assert.ok(bounds, "Registration fits the mobile viewport");
+        await p.screenshot({ path: output + "/registration-" + lang + "-" + width + ".png" });
         await p.keyboard.press("Escape");
         await dialog.waitFor({ state: "hidden" });
         await p.waitForFunction(
@@ -320,8 +326,9 @@ try {
     await p.waitForSelector(".jd-scene[data-ready=true]");
     const distance = await p.locator("#experience").evaluate((e) => e.offsetHeight - innerHeight + document.querySelector(".jd-header").getBoundingClientRect().height);
     for (const [stage, progress] of [["phone", 0], ["taxi", .43], ["cockpit", .68], ["printer", .85], ["receipt", .99], ["reverse-cockpit", .68], ["reverse-taxi", .43], ["reverse-phone", 0]]) {
-      await p.evaluate((y) => scrollTo(0, y), distance * progress);
+      await p.evaluate((y) => scrollTo({ top: y, behavior: "instant" }), distance * progress);
       await p.waitForFunction((value) => Math.abs(Number(document.querySelector(".jd-scene").dataset.progress) - value) < .015, progress);
+      await p.waitForTimeout(450);
       const overlaps = await p.evaluate(() => {
         const a = document.querySelector(".jd-narrative").getBoundingClientRect();
         const b = document.querySelector(".jd-scene").getBoundingClientRect();
