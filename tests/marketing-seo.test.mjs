@@ -82,3 +82,15 @@ test('content avoids claiming official Chiron acceptance and never turns shifts 
   assert.match(data, /هل كشف الوردية بديل تلقائي/);
   assert.doesNotMatch(data, /garantit une conformité totale|volledige compliance|توافق مضمون/);
 });
+
+test('public marketing drops referral query names but preserves secure user links', () => {
+  const middleware = read('src/middleware.ts');
+  assert.match(middleware, /marketingHost && publicMarketingPath/);
+  assert.match(middleware, /trackingKeys/);
+  assert.match(middleware, /utm_/);
+  assert.match(middleware, /fbclid/);
+  assert.match(middleware, /cleanUrl\.searchParams\.delete/);
+  assert.match(middleware, /NextResponse\.redirect\(cleanUrl, 307\)/);
+  assert.match(middleware, /request\.method === 'GET'/);
+  assert.match(middleware, /request\.method === 'HEAD'/);
+});

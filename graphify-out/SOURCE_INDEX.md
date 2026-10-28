@@ -4936,7 +4936,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `middleware.ts` — [L1](../src/middleware.ts#L1)
 - `middleware()` — [L4](../src/middleware.ts#L4)
-- `config` — [L46](../src/middleware.ts#L46)
+- `config` — [L66](../src/middleware.ts#L66)
 
 ## [src/types/auth.ts](../src/types/auth.ts)
 
