@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { tripJournal } from "@/lib/trip-journal";
 import { api, ApiError } from "@/lib/api-client";
@@ -21,6 +21,7 @@ export default function DriverShiftWorkspace({
     c = shiftCopy[language];
   const { user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [data, setData] = useState<ShiftList | null>(null);
   const [localActive, setLocalActive] = useState(false);
   const [error, setError] = useState("");
@@ -105,7 +106,7 @@ export default function DriverShiftWorkspace({
     pathname === "/driver/taximeter" && !active && !localActive;
   return (
     <>
-      {pathname === "/driver/taximeter" && (
+      {pathname === "/driver/home" && (
         <section
           className="shift-controls dp-card mx-4 mt-4 space-y-5 p-5"
           style={{ borderColor: "var(--dp-accent)" }}
@@ -184,6 +185,7 @@ export default function DriverShiftWorkspace({
             retry.current = null;
             setData({ active: shift, shifts: [shift] });
             window.dispatchEvent(new Event("driver-shift-updated"));
+            window.setTimeout(() => router.push("/driver/taximeter"), 1600);
           }}
         />
       )}
