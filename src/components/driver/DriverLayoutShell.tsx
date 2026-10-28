@@ -26,7 +26,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import DriverShiftWorkspace from "@/components/driver/DriverShiftWorkspace";
-import DriverFleetShift from "@/components/driver/DriverFleetShift";
 
 const LOGO_URL =
   "https://cdn.chat2db-ai.com/app/avatar/custom/16eda623-2b94-41ea-8390-395dcb708494_737955.png";
@@ -366,7 +365,6 @@ function DriverLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <Link href="/driver/shifts" className="dp-surface-2 dp-text mx-4 mb-2 block rounded-xl px-3 py-3 text-sm font-semibold">{language === "ar" ? "كشف الوردية" : language === "fr" ? "Feuille de service" : "Dienststaat"}</Link>
-        <DriverFleetShift language={language} />
       </header>
 
       <main className="dp-content-with-tabbar dp-fade-in"><DriverShiftWorkspace>{children}</DriverShiftWorkspace></main>
