@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "57b389d55389f3b7b1cb344e6b22e40c7149bffe",
+  "source_commit_context": "3fb010d2b9d6f5a1fc12e45a720ae9eb9579bb7c",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -438,7 +438,7 @@
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
     "src/components/landing/cinematic/cinematic.css": "58b769c8696b4c7616e0fbcf82adad6bf215684dff900907b9c802280fa0dc1a",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
-    "src/components/landing/cinematic/engine.ts": "473dcb8b238f4584dbca300a98b352097a9794f1111ec97535c898486bd4cff0",
+    "src/components/landing/cinematic/engine.ts": "8bf05eb1e7ab2e8f7caa93de1642764fd1de4b68082bcf68b79820e62f941a03",
     "src/components/landing/cinematic/models.ts": "a9e99a4b8fe9151ccbcf5661d21a2252776f59533b52b2c8688c7bf83a271188",
     "src/components/landing/cinematic/seo.ts": "e3dd50813196777c6cc9e53b0426148ffdda946c8a6768890f23768a2cfe7d2a",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
@@ -626,10 +626,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "6a1f8ecc0ba4c361b1058c36419be259be8dc4a65ba78e680868d284ecc7a747",
-    "SOURCE_INDEX.md": "75c5acd9fca28b104933dfa5c8175aff16bdf50aa2ccac0b93a486f72738fca8",
+    "graph.json": "a6d08c9bda391d964aad37f173b83b15223767cb65411559ae8f9692b001b02f",
+    "SOURCE_INDEX.md": "29d99836bd0d0233e736b4351d2953b1e513a98b15b6e0e94482504f52c3f9f1",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "9a191f16826ddfad59372e3397ff5e6098c25f94823ebe2888d090e5849477e6",
+    "GRAPH_REPORT.md": "db75a80dc2d2a0d72f2d3fcfd6c09dec2d4d344ac3566cee2d2a22fed84c0387",
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,

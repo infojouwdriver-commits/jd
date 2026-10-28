@@ -3487,7 +3487,7 @@ Links target the working tree, so line positions can move after changes.
 - `optimize()` — [L24](../src/components/landing/cinematic/engine.ts#L24)
 - `mountCinema()` — [L53](../src/components/landing/cinematic/engine.ts#L53)
 - `render()` — [L148](../src/components/landing/cinematic/engine.ts#L148)
-- `resize()` — [L226](../src/components/landing/cinematic/engine.ts#L226)
+- `resize()` — [L227](../src/components/landing/cinematic/engine.ts#L227)
 
 ## [src/components/landing/cinematic/models.ts](../src/components/landing/cinematic/models.ts)
 

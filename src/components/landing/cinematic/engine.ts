@@ -156,7 +156,6 @@ export async function mountCinema(
       lastProgress = p;
     }
     if (!visible || document.hidden) return;
-    const mobile = host.clientWidth < 600;
     let a = poses[0],
       b = poses[1];
     for (let i = 1; i < poses.length; i++) {
@@ -173,10 +172,12 @@ export async function mountCinema(
     target
       .fromArray(a.target)
       .lerp(new T.Vector3(...(b.target as [number, number, number])), u);
-    if (mobile)
-      camera.position.multiplyScalar(
-        1 + 0.32 * range(p, 0.18, 0.26) * (1 - range(p, 0.54, 0.62)),
-      );
+    // Frame wide objects against the actual scene aspect, including the narrow
+    // side-by-side tablet column. Move around the look target, not world origin.
+    const exterior = range(p, 0.18, 0.26) * (1 - range(p, 0.54, 0.62));
+    const paperStage = range(p, 0.76, 0.84);
+    const framing = 1 + (Math.max(1, 0.82 / camera.aspect) - 1) * Math.max(exterior, paperStage);
+    camera.position.sub(target).multiplyScalar(framing).add(target);
     camera.lookAt(target);
     const entry = range(p, 0.2, 0.37);
     car.group.position.x = 8 * (1 - entry);
