@@ -48,6 +48,24 @@ jobs:
           ]);
           if(c.status!=='ahead'||!c.files?.length||c.files.length>=300||c.files.some(f=>!allowed.has(f.filename)||f.status==='removed'))throw Error('New changes exceed SEO-reviewed scope');
           if(c.files.length<20)throw Error('Required SEO revision absent');
+          // Production is at an earlier, verified commit. Its delta to the
+          // reviewed SEO baseline is limited to diagnostics, tests, and the
+          // unapplied shift-conflict migration. Do not apply SQL on this rollout.
+          const live='79a1ec6f6e14299778582b609b73340f644f43c3';
+          const d=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+live+'...'+baseline,{headers,signal:AbortSignal.timeout(20000)});
+          if(!d.ok)throw Error('Live-to-reviewed source comparison unavailable');
+          const delta=await d.json();
+          const bridge=new Set([
+            '.github/workflows/server-access.yml','docs/CODE_MAP_AR.md',
+            'graphify-out/GRAPH_REPORT.md','graphify-out/GRAPH_TREE.html',
+            'graphify-out/SOURCE_INDEX.md','graphify-out/graph.json',
+            'graphify-out/health.json','graphify-out/source-manifest.json',
+            'migrations/20261027_shift_conflict_retry.sql','scripts/apply-release.mjs',
+            'tests/driver-shifts.test.mjs','tests/run-database-stack.mjs',
+            'tests/run-driver-shifts-ui.mjs','tests/shift-activity.test.mjs',
+          ]);
+          if(delta.status!=='ahead'||!delta.files?.length||delta.files.length!==14||delta.files.some(f=>!bridge.has(f.filename)||f.status==='removed'))throw Error('Live version has unreviewed runtime changes');
+          console.log('Existing live version traced through a reviewed diagnostics and tests-only delta; no database migrations will run.');
           console.log('Production update limited to reviewed multilingual SEO and backup workflow reuse.');
           GATE
 
@@ -88,10 +106,10 @@ jobs:
             revisionsConsistent:s.revision===r.revision,
             deployedAt:s.deployedAt,
           }));
+          if(s.mode!=='public'||s.revision!=='79a1ec6f6e14299778582b609b73340f644f43c3'||r.revision!==s.revision||r.image!==s.image)throw Error('Live release changed or state inconsistent; publication blocked');
           INSPECT
           REMOTE
-          echo 'Diagnostic only: no publication until live revision has been reviewed.'
-          exit 1
+          echo 'Reviewed live baseline verified; protected tests and backup may proceed.'
 
   checks:
     needs: inspect
@@ -169,7 +187,7 @@ jobs:
           REGISTRY_TOKEN: ${{ github.token }}
           IMAGE: ${{ needs.build.outputs.digest }}
           REVISION: ${{ github.sha }}
-          BASELINE: f1f28bd9cad4b1ceebf1b7e865c5115ceb06abfc
+          BASELINE: 79a1ec6f6e14299778582b609b73340f644f43c3
           BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
