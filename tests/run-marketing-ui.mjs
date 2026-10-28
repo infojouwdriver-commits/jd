@@ -195,6 +195,9 @@ try {
       p.on("pageerror", (e) => failures.push(e.message));
       const response = await p.goto(base + "/" + lang);
       assert.equal(response.status(), 200);
+      const initialHtml = await response.text();
+      assert.ok(initialHtml.includes('class="jd-cinema '), "Localized homepage content is rendered before hydration");
+      assert.ok(initialHtml.includes('type="application/ld+json"'), "Structured data is rendered before hydration");
       await p.waitForSelector(".jd-static");
       await p.waitForFunction(() => {
         const image = document.querySelector(".jd-poster img");

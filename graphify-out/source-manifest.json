@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "2d4a65fc9c61fa489ebf9de320a48f55391cf805",
+  "source_commit_context": "9a28a7a2f2b0d46fb4bde58ab3720a8c73919a3f",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -388,7 +388,7 @@
     "src/components/app-experience/copy.ts": "6be39057b577b8b2dfcb431cab61563f356ed2a7da438c648e08e15718a757a5",
     "src/components/app-experience/prepare-image.ts": "d4e0748bde4c29174cde96f3dc8f9ab26dc3e962e841df099267a7f8fc823298",
     "src/components/app-experience/welcome-preview.css": "a3423422ea0602c4f3e8ffed618c6ed25f0a091e4dfb77ac7714c963571f7541",
-    "src/components/auth/AuthProvider.tsx": "37d62b2dc29fef8483dccb6b929090759f3a73a235212acaa62ae05715874944",
+    "src/components/auth/AuthProvider.tsx": "69b50a8b61714abd9eb78ffcb835f6f6d1af98d42387e607d985242119caf34e",
     "src/components/auth/CompanyLoginForm.tsx": "547e1513282019a4976174e67dce4af73982172ad72effecb90b31dae44a69f2",
     "src/components/auth/DriverRegisterForm.tsx": "e1bb53691c99406898af705f70fe693f30448fcaa046fce71d0918248e4da379",
     "src/components/auth/GoogleLoginButton.tsx": "912d2568d3f630000b3afb75d74acb6f357e9ae8b44db42018fdcd190b6a4dce",
@@ -626,10 +626,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "1ed535d6673eb6b7233dba190cc3b52d05a20cc1c6abd0d530e78ace86bf6cc9",
+    "graph.json": "e316c9316950b012b6e9a4650f3ba51e1e1c32ed67b3a4d3b22c82e0d40e9970",
     "SOURCE_INDEX.md": "29d99836bd0d0233e736b4351d2953b1e513a98b15b6e0e94482504f52c3f9f1",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "5205cf760e022d13a7e86fd7d5d6fa2c391c6daf7c41ec87b6101eb88b34de0f",
+    "GRAPH_REPORT.md": "dfff11f7c598fdd60b5bd8858594abcf2aab523d1c17a92a341536097aaac640",
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,

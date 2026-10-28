@@ -169,7 +169,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshUser();
   }, [refreshUser]);
 
-  if (isLoading && !['/', '/login', '/driver-login', '/privacy-policy'].includes(pathname)) {
+  // Public localized homepages must expose their content before client hydration.
+  // This controls the loading presentation only; server/API authorization is unchanged.
+  if (isLoading && !['/', '/fr', '/nl', '/ar', '/login', '/driver-login', '/privacy-policy'].includes(pathname)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white"></div>
