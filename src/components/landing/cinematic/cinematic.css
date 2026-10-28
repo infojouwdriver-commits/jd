@@ -1,9 +1,9 @@
 /* A body overflow:auto creates a non-scrolling sticky ancestor in the shared app shell. */
-body:has(.jd) {
-  overflow: visible;
+body:has(.jd):not([data-scroll-locked]) {
+  overflow: visible !important;
 }
 html:has(.jd) {
-  overflow-x: clip;
+  overflow-x: clip !important;
   scrollbar-color: #4c6278 #060b12;
   scrollbar-gutter: stable;
 }

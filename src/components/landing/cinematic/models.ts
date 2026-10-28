@@ -435,7 +435,7 @@ export function createCar(low: boolean) {
           0.003,
         );
     }
-  return { group, wheels, cabin, taxiMaterial };
+  return { group, wheels, cabin, taxiMaterial, glass };
 }
 export function createPhone(t: CinematicText, rtl: boolean) {
   const group = new T.Group();

@@ -107,9 +107,9 @@ export async function mountCinema(
     new T.CircleGeometry(12, 80),
     new T.MeshStandardMaterial({
       color: "#060b12",
-      roughness: 0.72,
-      metalness: 0.18,
-      envMapIntensity: 0.35,
+      roughness: 1,
+      metalness: 0,
+      envMapIntensity: 0,
     }),
   );
   floor.rotation.x = -Math.PI / 2;
@@ -150,8 +150,16 @@ export async function mountCinema(
   const target = new T.Vector3();
   let lastProgress = -1;
   function render() {
-    if (disposed || !visible || document.hidden) return;
+    if (disposed) return;
     const p = state.p;
+    host.dataset.progress = p.toFixed(4);
+    host.dataset.visible = String(visible);
+    host.dataset.hidden = String(document.hidden);
+    if (Math.abs(lastProgress - p) > 0.001) {
+      onProgress(p);
+      lastProgress = p;
+    }
+    if (!visible || document.hidden) return;
     const mobile = host.clientWidth < 600;
     let a = poses[0],
       b = poses[1];
@@ -169,7 +177,10 @@ export async function mountCinema(
     target
       .fromArray(a.target)
       .lerp(new T.Vector3(...(b.target as [number, number, number])), u);
-    if (mobile && p > 0.22 && p < 0.58) camera.position.multiplyScalar(1.32);
+    if (mobile)
+      camera.position.multiplyScalar(
+        1 + 0.32 * range(p, 0.18, 0.26) * (1 - range(p, 0.54, 0.62)),
+      );
     camera.lookAt(target);
     const entry = range(p, 0.2, 0.37);
     car.group.position.x = 8 * (1 - entry);
@@ -177,7 +188,8 @@ export async function mountCinema(
     car.group.rotation.y = -0.12 + range(p, 0.35, 0.54) * 0.25;
     car.wheels.forEach((w) => (w.rotation.z = (8 * entry) / 0.47));
     car.taxiMaterial.emissiveIntensity = range(p, 0.32, 0.46) * 2;
-    car.cabin.visible = p < 0.595; // Remove glazing at the windshield crossing so the cabin remains legible.
+    car.glass.opacity = 0.86 * (1 - range(p, 0.6, 0.65));
+    car.cabin.visible = p < 0.65; // Remove glazing at the windshield crossing so the cabin remains legible.
     const dock = range(p, 0.34, 0.59);
     phone.group.position.set(
       T.MathUtils.lerp(0, -0.72, dock),
@@ -207,7 +219,7 @@ export async function mountCinema(
     printer.indicator.emissiveIntensity = range(p, 0.81, 0.86) * 2;
     printer.roller.rotation.x = range(p, 0.84, 0.98) * Math.PI * 5;
     warm.intensity = 25 + range(p, 0.2, 0.48) * 55;
-    key.color.set(p < 0.35 ? "#c6e7ff" : "#ffe3b2");
+    key.color.set("#c6e7ff").lerp(new T.Color("#ffe3b2"), range(p, 0.25, 0.5));
     renderer.render(scene, camera);
     host.dataset.progress = p.toFixed(4);
     if (Math.abs(lastProgress - p) > 0.001) {
@@ -233,7 +245,7 @@ export async function mountCinema(
     },
     { rootMargin: "100px" },
   );
-  observer.observe(host);
+  observer.observe(section);
   const lost = (event: Event) => {
     event.preventDefault();
     onFail();
@@ -243,27 +255,25 @@ export async function mountCinema(
     if (!document.hidden) render();
   };
   document.addEventListener("visibilitychange", visibility);
-  const tween = gsap.to(state, {
-    p: 1,
-    ease: "none",
-    onUpdate: render,
-    scrollTrigger: {
-      trigger: section,
-      pin: section.querySelector<HTMLElement>(".jd-stage"),
-      pinType: "fixed",
-      pinSpacing: false,
-      start: "top top+=76",
-      end: "bottom bottom",
-      scrub: 0.55,
-      invalidateOnRefresh: true,
+  const controller = ScrollTrigger.create({
+    trigger: section,
+    pin: section.querySelector<HTMLElement>(".jd-stage"),
+    pinType: "fixed",
+    pinSpacing: false,
+    start: "top top+=76",
+    end: "bottom bottom",
+    invalidateOnRefresh: true,
+    onUpdate: (self) => {
+      state.p = self.progress;
+      render();
     },
   });
+  state.p = controller.progress;
   resize();
   host.dataset.ready = "true";
   return () => {
     disposed = true;
-    tween.scrollTrigger?.kill();
-    tween.kill();
+    controller.kill();
     observer.disconnect();
     resizeObserver.disconnect();
     document.removeEventListener("visibilitychange", visibility);
@@ -287,6 +297,7 @@ export async function mountCinema(
     });
     geometries.forEach((g) => g.dispose());
     textures.forEach((t) => t.dispose());
+    key.shadow.map?.dispose();
     environment.dispose();
     renderer.dispose();
     renderer.domElement.remove();
