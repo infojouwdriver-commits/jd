@@ -1215,6 +1215,14 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261027_shift_conflict_retry.sql` — [source](../migrations/20261027_shift_conflict_retry.sql#)
 
+## [migrations/20261028_receipt_email.sql](../migrations/20261028_receipt_email.sql)
+
+- `20261028_receipt_email.sql` — [source](../migrations/20261028_receipt_email.sql#)
+- `"schema".security_reserve_mail()` — [L6](../migrations/20261028_receipt_email.sql#L6)
+- `"schema".receipt_email_settings` — [L24](../migrations/20261028_receipt_email.sql#L24)
+- `"schema".receipt_mail_requests` — [L31](../migrations/20261028_receipt_email.sql#L31)
+- `"schema".security_save_receipt_email_settings()` — [L45](../migrations/20261028_receipt_email.sql#L45)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -1834,6 +1842,12 @@ Links target the working tree, so line positions can move after changes.
 - `operations/page.tsx` — [L1](../src/app/admin/operations/page.tsx#L1)
 - `Page()` — [L2](../src/app/admin/operations/page.tsx#L2)
 
+## [src/app/admin/receipt-email/page.tsx](../src/app/admin/receipt-email/page.tsx)
+
+- `receipt-email/page.tsx` — [L1](../src/app/admin/receipt-email/page.tsx#L1)
+- `ReceiptEmailSettings()` — [L11](../src/app/admin/receipt-email/page.tsx#L11)
+- `save()` — [L14](../src/app/admin/receipt-email/page.tsx#L14)
+
 ## [src/app/admin/test-trips/page.tsx](../src/app/admin/test-trips/page.tsx)
 
 - `test-trips/page.tsx` — [L1](../src/app/admin/test-trips/page.tsx#L1)
@@ -1904,15 +1918,19 @@ Links target the working tree, so line positions can move after changes.
 
 - Tracked source; no structural symbols extracted.
 
+## [src/app/driver/driver-experience.css](../src/app/driver/driver-experience.css)
+
+- Tracked source; no structural symbols extracted.
+
 ## [src/app/driver/home/page.tsx](../src/app/driver/home/page.tsx)
 
 - `home/page.tsx` — [L1](../src/app/driver/home/page.tsx#L1)
-- `DriverHomePage()` — [L6](../src/app/driver/home/page.tsx#L6)
+- `DriverHomePage()` — [L3](../src/app/driver/home/page.tsx#L3)
 
 ## [src/app/driver/layout.tsx](../src/app/driver/layout.tsx)
 
 - `driver/layout.tsx` — [L1](../src/app/driver/layout.tsx#L1)
-- `DriverLayout()` — [L5](../src/app/driver/layout.tsx#L5)
+- `DriverLayout()` — [L6](../src/app/driver/layout.tsx#L6)
 
 ## [src/app/driver/messages/page.tsx](../src/app/driver/messages/page.tsx)
 
@@ -1936,6 +1954,12 @@ Links target the working tree, so line positions can move after changes.
 - `profile/page.tsx` — [L1](../src/app/driver/profile/page.tsx#L1)
 - `DriverProfileRoute()` — [L5](../src/app/driver/profile/page.tsx#L5)
 
+## [src/app/driver/receipt/page.tsx](../src/app/driver/receipt/page.tsx)
+
+- `receipt/page.tsx` — [L1](../src/app/driver/receipt/page.tsx#L1)
+- `ReceiptPage()` — [L11](../src/app/driver/receipt/page.tsx#L11)
+- `ReceiptWorkspace()` — [L12](../src/app/driver/receipt/page.tsx#L12)
+
 ## [src/app/driver/shifts/page.tsx](../src/app/driver/shifts/page.tsx)
 
 - `shifts/page.tsx` — [L1](../src/app/driver/shifts/page.tsx#L1)
@@ -1955,17 +1979,17 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/driver/taximeter/page.tsx](../src/app/driver/taximeter/page.tsx)
 
 - `driver/taximeter/page.tsx` — [L1](../src/app/driver/taximeter/page.tsx#L1)
-- `PricingConfig` — [L33](../src/app/driver/taximeter/page.tsx#L33)
-- `TripData` — [L38](../src/app/driver/taximeter/page.tsx#L38)
-- `SavedTrip` — [L47](../src/app/driver/taximeter/page.tsx#L47)
-- `LocationPoint` — [L48](../src/app/driver/taximeter/page.tsx#L48)
-- `RouteCoords` — [L49](../src/app/driver/taximeter/page.tsx#L49)
-- `RideType` — [L56](../src/app/driver/taximeter/page.tsx#L56)
-- `calculateDistance()` — [L58](../src/app/driver/taximeter/page.tsx#L58)
-- `calculateActualDistance()` — [L65](../src/app/driver/taximeter/page.tsx#L65)
-- `buildWazeUrl()` — [L72](../src/app/driver/taximeter/page.tsx#L72)
-- `buildGoogleMapsUrl()` — [L77](../src/app/driver/taximeter/page.tsx#L77)
-- `GlassCard()` — [L82](../src/app/driver/taximeter/page.tsx#L82)
+- `PricingConfig` — [L35](../src/app/driver/taximeter/page.tsx#L35)
+- `TripData` — [L40](../src/app/driver/taximeter/page.tsx#L40)
+- `SavedTrip` — [L49](../src/app/driver/taximeter/page.tsx#L49)
+- `LocationPoint` — [L50](../src/app/driver/taximeter/page.tsx#L50)
+- `RouteCoords` — [L51](../src/app/driver/taximeter/page.tsx#L51)
+- `RideType` — [L58](../src/app/driver/taximeter/page.tsx#L58)
+- `calculateDistance()` — [L60](../src/app/driver/taximeter/page.tsx#L60)
+- `calculateActualDistance()` — [L67](../src/app/driver/taximeter/page.tsx#L67)
+- `buildWazeUrl()` — [L74](../src/app/driver/taximeter/page.tsx#L74)
+- `buildGoogleMapsUrl()` — [L79](../src/app/driver/taximeter/page.tsx#L79)
+- `GlassCard()` — [L84](../src/app/driver/taximeter/page.tsx#L84)
 - `DriverActionButton()` — [L99](../src/app/driver/taximeter/page.tsx#L99)
 - `MapPickerSheet()` — [L129](../src/app/driver/taximeter/page.tsx#L129)
 - `NavigateButton()` — [L296](../src/app/driver/taximeter/page.tsx#L296)
@@ -1984,15 +2008,15 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/driver/trips/page.tsx](../src/app/driver/trips/page.tsx)
 
 - `driver/trips/page.tsx` — [L1](../src/app/driver/trips/page.tsx#L1)
-- `Trip` — [L21](../src/app/driver/trips/page.tsx#L21)
-- `Summary` — [L30](../src/app/driver/trips/page.tsx#L30)
-- `TranslationKeys` — [L39](../src/app/driver/trips/page.tsx#L39)
-- `translations` — [L56](../src/app/driver/trips/page.tsx#L56)
-- `platformLogos` — [L107](../src/app/driver/trips/page.tsx#L107)
-- `glassCard` — [L113](../src/app/driver/trips/page.tsx#L113)
-- `labelStyle` — [L120](../src/app/driver/trips/page.tsx#L120)
-- `DriverTripsPage()` — [L128](../src/app/driver/trips/page.tsx#L128)
-- `shareDocument()` — [L209](../src/app/driver/trips/page.tsx#L209)
+- `Trip` — [L24](../src/app/driver/trips/page.tsx#L24)
+- `Summary` — [L34](../src/app/driver/trips/page.tsx#L34)
+- `TranslationKeys` — [L43](../src/app/driver/trips/page.tsx#L43)
+- `translations` — [L60](../src/app/driver/trips/page.tsx#L60)
+- `platformLogos` — [L111](../src/app/driver/trips/page.tsx#L111)
+- `glassCard` — [L117](../src/app/driver/trips/page.tsx#L117)
+- `labelStyle` — [L124](../src/app/driver/trips/page.tsx#L124)
+- `DriverTripsPage()` — [L132](../src/app/driver/trips/page.tsx#L132)
+- `shareDocument()` — [L216](../src/app/driver/trips/page.tsx#L216)
 
 ## [src/app/drivers/page.tsx](../src/app/drivers/page.tsx)
 
@@ -2680,13 +2704,19 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/app/next_api/push/receipt/route.ts](../src/app/next_api/push/receipt/route.ts)
 
-- `receipt/route.ts` — [L1](../src/app/next_api/push/receipt/route.ts#L1)
+- `push/receipt/route.ts` — [L1](../src/app/next_api/push/receipt/route.ts#L1)
 - `POST` — [L5](../src/app/next_api/push/receipt/route.ts#L5)
 
 ## [src/app/next_api/push/test/route.ts](../src/app/next_api/push/test/route.ts)
 
 - `test/route.ts` — [L1](../src/app/next_api/push/test/route.ts#L1)
 - `POST` — [L5](../src/app/next_api/push/test/route.ts#L5)
+
+## [src/app/next_api/receipt-email-settings/route.ts](../src/app/next_api/receipt-email-settings/route.ts)
+
+- `receipt-email-settings/route.ts` — [L1](../src/app/next_api/receipt-email-settings/route.ts#L1)
+- `GET` — [L7](../src/app/next_api/receipt-email-settings/route.ts#L7)
+- `PUT` — [L12](../src/app/next_api/receipt-email-settings/route.ts#L12)
 
 ## [src/app/next_api/stats/route.ts](../src/app/next_api/stats/route.ts)
 
@@ -2740,6 +2770,18 @@ Links target the working tree, so line positions can move after changes.
 
 - `generate-invoice/route.ts` — [L1](../src/app/next_api/trips/generate-invoice/route.ts#L1)
 - `POST` — [L13](../src/app/next_api/trips/generate-invoice/route.ts#L13)
+
+## [src/app/next_api/trips/receipt-email/route.ts](../src/app/next_api/trips/receipt-email/route.ts)
+
+- `receipt-email/route.ts` — [L1](../src/app/next_api/trips/receipt-email/route.ts#L1)
+- `esc()` — [L11](../src/app/next_api/trips/receipt-email/route.ts#L11)
+- `GET` — [L12](../src/app/next_api/trips/receipt-email/route.ts#L12)
+- `POST` — [L19](../src/app/next_api/trips/receipt-email/route.ts#L19)
+
+## [src/app/next_api/trips/receipt/route.ts](../src/app/next_api/trips/receipt/route.ts)
+
+- `trips/receipt/route.ts` — [L1](../src/app/next_api/trips/receipt/route.ts#L1)
+- `GET` — [L7](../src/app/next_api/trips/receipt/route.ts#L7)
 
 ## [src/app/next_api/trips/retry-sync/route.ts](../src/app/next_api/trips/retry-sync/route.ts)
 
@@ -3180,6 +3222,16 @@ Links target the working tree, so line positions can move after changes.
 - `AccountTab()` — [L254](../src/components/driver/DriverDashboard.tsx#L254)
 - `DriverDashboard()` — [L258](../src/components/driver/DriverDashboard.tsx#L258)
 
+## [src/components/driver/DriverExperience.tsx](../src/components/driver/DriverExperience.tsx)
+
+- `DriverExperience.tsx` — [L1](../src/components/driver/DriverExperience.tsx#L1)
+- `experienceWords` — [L10](../src/components/driver/DriverExperience.tsx#L10)
+- `ExperienceFrame()` — [L11](../src/components/driver/DriverExperience.tsx#L11)
+- `ExperienceGauge()` — [L15](../src/components/driver/DriverExperience.tsx#L15)
+- `HomeInstruments()` — [L19](../src/components/driver/DriverExperience.tsx#L19)
+- `ReferenceMeter()` — [L20](../src/components/driver/DriverExperience.tsx#L20)
+- `ReceiptPrinter()` — [L21](../src/components/driver/DriverExperience.tsx#L21)
+
 ## [src/components/driver/DriverFleetShift.tsx](../src/components/driver/DriverFleetShift.tsx)
 
 - `DriverFleetShift.tsx` — [L1](../src/components/driver/DriverFleetShift.tsx#L1)
@@ -3215,11 +3267,19 @@ Links target the working tree, so line positions can move after changes.
 - `VehicleCard()` — [L130](../src/components/driver/DriverProfilePage.tsx#L130)
 - `DriverProfilePage()` — [L202](../src/components/driver/DriverProfilePage.tsx#L202)
 
+## [src/components/driver/DriverShiftContext.tsx](../src/components/driver/DriverShiftContext.tsx)
+
+- `DriverShiftContext.tsx` — [L1](../src/components/driver/DriverShiftContext.tsx#L1)
+- `DriverShiftContext` — [L4](../src/components/driver/DriverShiftContext.tsx#L4)
+- `useDriverShift()` — [L5](../src/components/driver/DriverShiftContext.tsx#L5)
+- `DriverReceiptContext` — [L7](../src/components/driver/DriverShiftContext.tsx#L7)
+- `useDriverReceipt()` — [L8](../src/components/driver/DriverShiftContext.tsx#L8)
+
 ## [src/components/driver/DriverShiftWorkspace.tsx](../src/components/driver/DriverShiftWorkspace.tsx)
 
 - `DriverShiftWorkspace.tsx` — [L1](../src/components/driver/DriverShiftWorkspace.tsx#L1)
-- `DriverShiftWorkspace()` — [L17](../src/components/driver/DriverShiftWorkspace.tsx#L17)
-- `toggle()` — [L78](../src/components/driver/DriverShiftWorkspace.tsx#L78)
+- `DriverShiftWorkspace()` — [L19](../src/components/driver/DriverShiftWorkspace.tsx#L19)
+- `toggle()` — [L81](../src/components/driver/DriverShiftWorkspace.tsx#L81)
 
 ## [src/components/driver/DriverShifts.tsx](../src/components/driver/DriverShifts.tsx)
 
@@ -3227,6 +3287,14 @@ Links target the working tree, so line positions can move after changes.
 - `statuses` — [L20](../src/components/driver/DriverShifts.tsx#L20)
 - `DriverShifts()` — [L21](../src/components/driver/DriverShifts.tsx#L21)
 - `downloadPdf()` — [L69](../src/components/driver/DriverShifts.tsx#L69)
+
+## [src/components/driver/ReceiptEmailDialog.tsx](../src/components/driver/ReceiptEmailDialog.tsx)
+
+- `ReceiptEmailDialog.tsx` — [L1](../src/components/driver/ReceiptEmailDialog.tsx#L1)
+- `Draft` — [L13](../src/components/driver/ReceiptEmailDialog.tsx#L13)
+- `Pending` — [L14](../src/components/driver/ReceiptEmailDialog.tsx#L14)
+- `ReceiptEmailDialog()` — [L16](../src/components/driver/ReceiptEmailDialog.tsx#L16)
+- `send()` — [L23](../src/components/driver/ReceiptEmailDialog.tsx#L23)
 
 ## [src/components/driver/shift-copy.ts](../src/components/driver/shift-copy.ts)
 
@@ -4607,6 +4675,11 @@ Links target the working tree, so line positions can move after changes.
 - `invoice-payment-state.ts` — [L1](../src/lib/invoice-payment-state.ts#L1)
 - `invoicePaymentState()` — [L4](../src/lib/invoice-payment-state.ts#L4)
 
+## [src/lib/issued-receipt.ts](../src/lib/issued-receipt.ts)
+
+- `issued-receipt.ts` — [L1](../src/lib/issued-receipt.ts#L1)
+- `existingReceipt()` — [L5](../src/lib/issued-receipt.ts#L5)
+
 ## [src/lib/mail-policy.ts](../src/lib/mail-policy.ts)
 
 - `mail-policy.ts` — [L1](../src/lib/mail-policy.ts#L1)
@@ -4762,6 +4835,19 @@ Links target the working tree, so line positions can move after changes.
 - `rateLimit()` — [L6](../src/lib/rate-limit.ts#L6)
 - `consumeRateLimit()` — [L12](../src/lib/rate-limit.ts#L12)
 
+## [src/lib/receipt-email-model.ts](../src/lib/receipt-email-model.ts)
+
+- `receipt-email-model.ts` — [L1](../src/lib/receipt-email-model.ts#L1)
+- `ReceiptLanguage` — [L2](../src/lib/receipt-email-model.ts#L2)
+- `receiptEmailWords` — [L3](../src/lib/receipt-email-model.ts#L3)
+- `localized` — [L8](../src/lib/receipt-email-model.ts#L8)
+- `receiptAdSchema` — [L9](../src/lib/receipt-email-model.ts#L9)
+- `ReceiptAd` — [L10](../src/lib/receipt-email-model.ts#L10)
+- `receiptSendSchema` — [L11](../src/lib/receipt-email-model.ts#L11)
+- `receiptMessage()` — [L12](../src/lib/receipt-email-model.ts#L12)
+- `IssuedReceipt` — [L16](../src/lib/receipt-email-model.ts#L16)
+- `receiptEmailHtml()` — [L17](../src/lib/receipt-email-model.ts#L17)
+
 ## [src/lib/sanitize-html.ts](../src/lib/sanitize-html.ts)
 
 - `sanitize-html.ts` — [L1](../src/lib/sanitize-html.ts#L1)
@@ -4789,10 +4875,10 @@ Links target the working tree, so line positions can move after changes.
 - `publicEndpoint()` — [L15](../src/lib/security-policy.ts#L15)
 - `disabledEndpoint()` — [L19](../src/lib/security-policy.ts#L19)
 - `memberEndpoint()` — [L22](../src/lib/security-policy.ts#L22)
-- `ownsRecord()` — [L36](../src/lib/security-policy.ts#L36)
-- `calendarMonthDeadline()` — [L39](../src/lib/security-policy.ts#L39)
-- `safeChironUrl()` — [L48](../src/lib/security-policy.ts#L48)
-- `stripSecrets()` — [L54](../src/lib/security-policy.ts#L54)
+- `ownsRecord()` — [L38](../src/lib/security-policy.ts#L38)
+- `calendarMonthDeadline()` — [L41](../src/lib/security-policy.ts#L41)
+- `safeChironUrl()` — [L50](../src/lib/security-policy.ts#L50)
+- `stripSecrets()` — [L56](../src/lib/security-policy.ts#L56)
 
 ## [src/lib/security-session.ts](../src/lib/security-session.ts)
 
