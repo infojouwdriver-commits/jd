@@ -20,6 +20,7 @@ import CompanyRegistrationDialog from "@/components/registration/CompanyRegistra
 import { registrationCopy } from "@/components/registration/copy";
 import { onboardingMarketingCopy } from "./onboarding-copy";
 import CookiePreferencesButton from "@/components/gdpr/CookiePreferencesButton";
+import MarketingExplore from "./MarketingExplore";
 import { portalHref, registrationHandoff } from "@/lib/portal-origin";
 
 const configuredPortal = process.env.NEXT_PUBLIC_PORTAL_ORIGIN;
@@ -705,6 +706,7 @@ export default function PlatformLanding({
             })}
           </div>
         </section>
+        <MarketingExplore />
         <section id="integrations" className="pm-section">
           <div className="pm-heading">
             <p className="pm-eyebrow">04 / {t.nav[3]}</p>

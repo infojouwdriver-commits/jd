@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-html-link-for-pages -- This is an authenticated JSON download endpoint, not an application page; preserve native browser downloads. */
 import {useAuth} from '@/components/auth/AuthProvider';
 import DriverGdprSection from '@/components/gdpr/DriverGdprSection';
 import Link from 'next/link';

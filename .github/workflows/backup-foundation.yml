@@ -6,6 +6,12 @@ on:
         description: Include the official age executable for offline recovery verification
         type: boolean
         default: true
+  workflow_call:
+    inputs:
+      include_restore_tool:
+        description: Include the official age executable for offline recovery verification
+        type: boolean
+        default: true
   schedule:
     - cron: '23 1 * * *'
 permissions:

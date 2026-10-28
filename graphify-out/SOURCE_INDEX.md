@@ -1671,6 +1671,24 @@ Links target the working tree, so line positions can move after changes.
 - `jwt()` — [L9](../scripts/push-worker.mjs#L9)
 - `rpc()` — [L10](../scripts/push-worker.mjs#L10)
 
+## [src/app/[locale]/solutions/[slug]/page.tsx](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx)
+
+- `[slug]/page.tsx` — [L1](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L1)
+- `Props` — [L10](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L10)
+- `dynamicParams` — [L12](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L12)
+- `generateStaticParams()` — [L14](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L14)
+- `generateMetadata()` — [L20](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L20)
+- `SolutionPage()` — [L45](../src/app/%5Blocale%5D/solutions/%5Bslug%5D/page.tsx#L45)
+
+## [src/app/[locale]/solutions/page.tsx](../src/app/%5Blocale%5D/solutions/page.tsx)
+
+- `solutions/page.tsx` — [L1](../src/app/%5Blocale%5D/solutions/page.tsx#L1)
+- `Props` — [L10](../src/app/%5Blocale%5D/solutions/page.tsx#L10)
+- `dynamicParams` — [L12](../src/app/%5Blocale%5D/solutions/page.tsx#L12)
+- `generateStaticParams()` — [L14](../src/app/%5Blocale%5D/solutions/page.tsx#L14)
+- `generateMetadata()` — [L18](../src/app/%5Blocale%5D/solutions/page.tsx#L18)
+- `SolutionsPage()` — [L41](../src/app/%5Blocale%5D/solutions/page.tsx#L41)
+
 ## [src/app/admin/account/page.tsx](../src/app/admin/account/page.tsx)
 
 - `account/page.tsx` — [L1](../src/app/admin/account/page.tsx#L1)
@@ -2040,7 +2058,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/landing/page.tsx](../src/app/landing/page.tsx)
 
 - `landing/page.tsx` — [L1](../src/app/landing/page.tsx#L1)
-- `LandingPageRoute()` — [L4](../src/app/landing/page.tsx#L4)
+- `metadata` — [L6](../src/app/landing/page.tsx#L6)
+- `LandingPageRoute()` — [L12](../src/app/landing/page.tsx#L12)
 
 ## [src/app/layout.tsx](../src/app/layout.tsx)
 
@@ -2777,7 +2796,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/page.tsx](../src/app/page.tsx)
 
 - `app/page.tsx` — [L1](../src/app/page.tsx#L1)
-- `HomePage()` — [L4](../src/app/page.tsx#L4)
+- `metadata` — [L9](../src/app/page.tsx#L9)
+- `HomePage()` — [L27](../src/app/page.tsx#L27)
 
 ## [src/app/pay/invoice/page.tsx](../src/app/pay/invoice/page.tsx)
 
@@ -2789,7 +2809,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/privacy-center/page.tsx](../src/app/privacy-center/page.tsx)
 
 - `privacy-center/page.tsx` — [L1](../src/app/privacy-center/page.tsx#L1)
-- `PrivacyCenter()` — [L6](../src/app/privacy-center/page.tsx#L6)
+- `PrivacyCenter()` — [L7](../src/app/privacy-center/page.tsx#L7)
 
 ## [src/app/privacy-policy/page.tsx](../src/app/privacy-policy/page.tsx)
 
@@ -2803,11 +2823,21 @@ Links target the working tree, so line positions can move after changes.
 - `metadata` — [L2](../src/app/register-company/page.tsx#L2)
 - `RegistrationPage()` — [L3](../src/app/register-company/page.tsx#L3)
 
+## [src/app/robots.ts](../src/app/robots.ts)
+
+- `robots.ts` — [L1](../src/app/robots.ts#L1)
+- `robots()` — [L6](../src/app/robots.ts#L6)
+
 ## [src/app/sign-contract/[token]/page.tsx](../src/app/sign-contract/%5Btoken%5D/page.tsx)
 
 - `sign-contract/[token]/page.tsx` — [L1](../src/app/sign-contract/%5Btoken%5D/page.tsx#L1)
 - `ContractReview` — [L10](../src/app/sign-contract/%5Btoken%5D/page.tsx#L10)
 - `SignContractPage()` — [L15](../src/app/sign-contract/%5Btoken%5D/page.tsx#L15)
+
+## [src/app/sitemap.ts](../src/app/sitemap.ts)
+
+- `sitemap.ts` — [L1](../src/app/sitemap.ts#L1)
+- `sitemap()` — [L7](../src/app/sitemap.ts#L7)
 
 ## [src/app/taximeter/page.tsx](../src/app/taximeter/page.tsx)
 
@@ -3309,6 +3339,20 @@ Links target the working tree, so line positions can move after changes.
 - `LoginModalProps` — [L21](../src/components/landing/LoginModal.tsx#L21)
 - `LoginModal()` — [L28](../src/components/landing/LoginModal.tsx#L28)
 
+## [src/components/landing/MarketingEditorial.tsx](../src/components/landing/MarketingEditorial.tsx)
+
+- `MarketingEditorial.tsx` — [L1](../src/components/landing/MarketingEditorial.tsx#L1)
+- `SiteShell()` — [L11](../src/components/landing/MarketingEditorial.tsx#L11)
+- `TopicCard()` — [L45](../src/components/landing/MarketingEditorial.tsx#L45)
+- `Caution()` — [L58](../src/components/landing/MarketingEditorial.tsx#L58)
+- `MarketingHub()` — [L62](../src/components/landing/MarketingEditorial.tsx#L62)
+- `MarketingSolution()` — [L78](../src/components/landing/MarketingEditorial.tsx#L78)
+
+## [src/components/landing/MarketingExplore.tsx](../src/components/landing/MarketingExplore.tsx)
+
+- `MarketingExplore.tsx` — [L1](../src/components/landing/MarketingExplore.tsx#L1)
+- `MarketingExplore()` — [L10](../src/components/landing/MarketingExplore.tsx#L10)
+
 ## [src/components/landing/ParallaxSection.tsx](../src/components/landing/ParallaxSection.tsx)
 
 - `ParallaxSection.tsx` — [L1](../src/components/landing/ParallaxSection.tsx#L1)
@@ -3318,13 +3362,13 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/PlatformLanding.tsx](../src/components/landing/PlatformLanding.tsx)
 
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
-- `translations` — [L27](../src/components/landing/PlatformLanding.tsx#L27)
-- `ButtonStart()` — [L289](../src/components/landing/PlatformLanding.tsx#L289)
-- `Route()` — [L303](../src/components/landing/PlatformLanding.tsx#L303)
-- `PlatformLanding()` — [L323](../src/components/landing/PlatformLanding.tsx#L323)
-- `openRegistration()` — [L367](../src/components/landing/PlatformLanding.tsx#L367)
-- `closeRegistration()` — [L376](../src/components/landing/PlatformLanding.tsx#L376)
-- `tabKey()` — [L380](../src/components/landing/PlatformLanding.tsx#L380)
+- `translations` — [L28](../src/components/landing/PlatformLanding.tsx#L28)
+- `ButtonStart()` — [L290](../src/components/landing/PlatformLanding.tsx#L290)
+- `Route()` — [L304](../src/components/landing/PlatformLanding.tsx#L304)
+- `PlatformLanding()` — [L324](../src/components/landing/PlatformLanding.tsx#L324)
+- `openRegistration()` — [L368](../src/components/landing/PlatformLanding.tsx#L368)
+- `closeRegistration()` — [L377](../src/components/landing/PlatformLanding.tsx#L377)
+- `tabKey()` — [L381](../src/components/landing/PlatformLanding.tsx#L381)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 
@@ -4030,7 +4074,7 @@ Links target the working tree, so line positions can move after changes.
 - `setLanguageCookie()` — [L47](../src/contexts/LanguageContext.tsx#L47)
 - `setDocumentDirection()` — [L52](../src/contexts/LanguageContext.tsx#L52)
 - `LanguageProvider()` — [L58](../src/contexts/LanguageContext.tsx#L58)
-- `useLanguage()` — [L93](../src/contexts/LanguageContext.tsx#L93)
+- `useLanguage()` — [L98](../src/contexts/LanguageContext.tsx#L98)
 
 ## [src/hooks/use-mobile.tsx](../src/hooks/use-mobile.tsx)
 
@@ -4591,6 +4635,25 @@ Links target the working tree, so line positions can move after changes.
 - `inFlight` — [L67](../src/lib/mapbox-route.ts#L67)
 - `getDrivingRoute()` — [L69](../src/lib/mapbox-route.ts#L69)
 
+## [src/lib/marketing-content.ts](../src/lib/marketing-content.ts)
+
+- `marketing-content.ts` — [L1](../src/lib/marketing-content.ts#L1)
+- `marketingOrigin` — [L1](../src/lib/marketing-content.ts#L1)
+- `marketingLocales` — [L2](../src/lib/marketing-content.ts#L2)
+- `marketingTopics` — [L3](../src/lib/marketing-content.ts#L3)
+- `MarketingLocale` — [L5](../src/lib/marketing-content.ts#L5)
+- `MarketingTopic` — [L6](../src/lib/marketing-content.ts#L6)
+- `Benefit` — [L8](../src/lib/marketing-content.ts#L8)
+- `Question` — [L9](../src/lib/marketing-content.ts#L9)
+- `SolutionCopy` — [L10](../src/lib/marketing-content.ts#L10)
+- `LocaleCopy` — [L20](../src/lib/marketing-content.ts#L20)
+- `marketingCopy` — [L36](../src/lib/marketing-content.ts#L36)
+- `isMarketingLocale()` — [L240](../src/lib/marketing-content.ts#L240)
+- `solutionHref()` — [L244](../src/lib/marketing-content.ts#L244)
+- `hubHref()` — [L248](../src/lib/marketing-content.ts#L248)
+- `findSolution()` — [L252](../src/lib/marketing-content.ts#L252)
+- `languageAlternates()` — [L256](../src/lib/marketing-content.ts#L256)
+
 ## [src/lib/message-access.ts](../src/lib/message-access.ts)
 
 - `message-access.ts` — [L1](../src/lib/message-access.ts#L1)
@@ -4873,7 +4936,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `middleware.ts` — [L1](../src/middleware.ts#L1)
 - `middleware()` — [L4](../src/middleware.ts#L4)
-- `config` — [L35](../src/middleware.ts#L35)
+- `config` — [L46](../src/middleware.ts#L46)
 
 ## [src/types/auth.ts](../src/types/auth.ts)
 
