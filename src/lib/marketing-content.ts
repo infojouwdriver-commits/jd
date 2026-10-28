@@ -259,6 +259,6 @@ export function languageAlternates(topic?: MarketingTopic): Record<string, strin
     'fr-BE': path('fr'),
     'nl-BE': path('nl'),
     'ar': path('ar'),
-    'x-default': '/',
+    ...(topic ? {} : { 'x-default': '/' }),
   };
 }
