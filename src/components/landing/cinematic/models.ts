@@ -423,7 +423,7 @@ export function createCar(low: boolean) {
     chrome,
     0.016,
   );
-  for (const x of [0.35, 1.15])
+  for (const x of [0.05, 0.8])
     for (const z of [-0.46, 0.46]) {
       box(interior, [0.65, 0.18, 0.61], [x, 0.55, z], dark, 0.1);
       const seat = box(
@@ -434,7 +434,7 @@ export function createCar(low: boolean) {
         0.09,
       );
       seat.rotation.z = 0.1;
-      box(interior, [0.14, 0.22, 0.3], [x + 0.29, 1.42, z], dark, 0.05);
+      box(interior, [0.14, 0.22, 0.3], [x + 0.29, x > 0.5 ? 1.32 : 1.42, z], dark, 0.05);
       for (const dz of [-0.18, 0.18])
         tube(
           interior,

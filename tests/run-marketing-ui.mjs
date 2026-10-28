@@ -68,7 +68,7 @@ try {
       "--enable-unsafe-swiftshader",
     ],
   });
-  // Render the original scene into its lightweight reduced-motion poster first.
+  // Capture a poster candidate for visual review without mutating release sources.
   const moving = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
     reducedMotion: "no-preference",
@@ -168,8 +168,7 @@ try {
       await sharp(output + "/poster.png")
         .resize(1200, 1000, { fit: "contain", background: "#060B12" })
         .webp({ quality: 88 })
-        .toFile("public/cinematic/poster.webp");
-      fs.copyFileSync("public/cinematic/poster.webp", output + "/poster.webp");
+        .toFile(output + "/poster.webp");
     }
     report.push({ stage: name, progress: p, pass: true });
   }
@@ -238,7 +237,16 @@ try {
         );
       }
       assert.ok(fits, "No horizontal overflow");
+      // Clipping an ancestor must never conceal an overflowing control or label.
+      const clipped = await p.locator(".jd-header a, .jd-header button, .jd-button, .jd-faq summary").evaluateAll((nodes) =>
+        nodes.filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && (r.left < -1 || r.right > innerWidth + 1 || e.scrollWidth > e.clientWidth + 1);
+        }).map((e) => ({ text: e.textContent, rect: e.getBoundingClientRect().toJSON(), scroll: e.scrollWidth, client: e.clientWidth })),
+      );
+      assert.deepEqual(clipped, [], "Controls and labels fit without clipping");
 
+      await p.screenshot({ path: output + "/header-" + lang + "-" + width + ".png" });
       assert.equal(await p.locator("h1").count(), 1);
       assert.equal(
         await p.locator("link[rel=canonical]").getAttribute("href"),
@@ -287,9 +295,9 @@ try {
         assert.ok(await dialog.locator("input").count());
         await p.keyboard.press("Escape");
         await dialog.waitFor({ state: "hidden" });
-        assert.ok(
-          await register.evaluate((e) => document.activeElement === e),
-          "Focus restored",
+        await p.waitForFunction(
+          (button) => document.activeElement === button,
+          await register.elementHandle(),
         );
       }
       assert.deepEqual(failures, []);
@@ -300,23 +308,34 @@ try {
       report.push({ locale: lang, width, reducedMotion: true, pass: true });
       await context.close();
     }
-  for (const width of [390, 768]) {
+  for (const lang of ["ar", "fr", "nl"])
+  for (const width of [320, 390, 768, 1440]) {
     const context = await browser.newContext({
       viewport: { width, height: 900 },
       reducedMotion: "no-preference",
     });
     await consent(context);
     const p = await context.newPage();
-    await p.goto(base + "/ar");
+    await p.goto(base + "/" + lang);
     await p.waitForSelector(".jd-scene[data-ready=true]");
-    await p.locator("#chapter-1").evaluate((e) => e.scrollIntoView());
-    await p.waitForTimeout(1000);
+    const distance = await p.locator("#experience").evaluate((e) => e.offsetHeight - innerHeight + 76);
+    for (const [stage, progress] of [["phone", 0], ["taxi", .43], ["cockpit", .68], ["printer", .85], ["receipt", .99], ["reverse-cockpit", .68], ["reverse-taxi", .43], ["reverse-phone", 0]]) {
+      await p.evaluate((y) => scrollTo(0, y), distance * progress);
+      await p.waitForFunction((value) => Math.abs(Number(document.querySelector(".jd-scene").dataset.progress) - value) < .015, progress);
+      const overlaps = await p.evaluate(() => {
+        const a = document.querySelector(".jd-narrative").getBoundingClientRect();
+        const b = document.querySelector(".jd-scene").getBoundingClientRect();
+        return a.right > b.left + 1 && b.right > a.left + 1 && a.bottom > b.top + 1 && b.bottom > a.top + 1;
+      });
+      assert.equal(overlaps, false, "Mobile narrative stays outside scene");
+      if (!stage.startsWith("reverse")) await p.screenshot({ path: output + "/animated-" + lang + "-" + width + "-" + stage + ".png" });
+    }
     assert.ok(
       await p.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth + 1,
       ),
     );
-    await p.screenshot({ path: output + "/animated-" + width + ".png" });
+    await p.screenshot({ path: output + "/animated-" + lang + "-" + width + ".png" });
     await p.locator(".jd-motion").click();
     await p.waitForSelector(".jd-static");
     assert.equal(
@@ -325,7 +344,7 @@ try {
       "Toggle disposes canvas",
     );
     await context.close();
-    report.push({ width, animated: true, toggle: true, pass: true });
+    report.push({ locale: lang, width, animated: true, reverse: true, toggle: true, pass: true });
   }
   const fail = await browser.newContext();
   await fail.addInitScript(() => {
@@ -345,6 +364,7 @@ try {
     "PASS cinematic stages, reverse scroll, 3 locales × 4 widths, keyboard, registration, SEO, reduced motion, WebGL fallback",
   );
 } finally {
+  fs.writeFileSync(output + "/report.json", JSON.stringify(report, null, 2));
   await browser?.close();
   server.kill("SIGTERM");
 }

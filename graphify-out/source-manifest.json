@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "a91625084f36afe302131480f982b500592d950c",
+  "source_commit_context": "c9b27d1d4a662f8e3d71f19953f7e012ad458436",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -439,7 +439,7 @@
     "src/components/landing/cinematic/cinematic.css": "2936944d6fd66296f92cc9fbd18f2810ce69f4716fac987960f1d05c264ba346",
     "src/components/landing/cinematic/copy.ts": "714371afc9e61bdc4146f8c1c12443604bc40c2aa97755e448fe144ba990b942",
     "src/components/landing/cinematic/engine.ts": "06f7ed6de19d7ec57d32de79ef352cd8db512551ea94dbfecc1061083b6dd191",
-    "src/components/landing/cinematic/models.ts": "57c25bca5c125d03719bb0cd0f6d0a9751d70f62260a2debf5b09342915e9e83",
+    "src/components/landing/cinematic/models.ts": "bb23d3fc10ed1e910320bdc148419c2302e51e5a860d7d23ae803d29cd0e8f3d",
     "src/components/landing/cinematic/seo.ts": "2f3a142f3a786437c372be5a447243ec467db7149b18121f2847934863cd27d7",
     "src/components/landing/features/FeatureDetailCard.tsx": "1787998451cad09de10e6b4beb5dccce856a3c4f5879abbf383773aeca83120e",
     "src/components/landing/features/FeaturePageLayout.tsx": "ca82fb8f3ba7d3d361649a77b1f148cb811fa900e8fffd6aafa19cdfbfa7fc8d",
@@ -626,10 +626,10 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "e0f9a77889afb34d068c186b4214993d82e1e46e90c24ecaa6f432a1e198fa37",
+    "graph.json": "7e6ca234dcf0477d1c6e522f96f43abd9ad552e01e860915d0d56bb26eff8c3c",
     "SOURCE_INDEX.md": "0439a365ebf8ff0b86b00c326ed1db6bc1dc9d051951f089f5358acf056a540e",
     "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "238eeb50345239f29711b85ef28a62ab5f824a406970be9c0e3a5d946a2733a7",
+    "GRAPH_REPORT.md": "f7691f2897871e7fe24ba09c6a52e4e426d02b1200174a3d271e1a8a9c625e86",
     "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
   },
   "nodes": 3515,
