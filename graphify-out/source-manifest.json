@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "ce8ae5ce5d0358736d8690268f3a6fb4a8183b93",
+  "source_commit_context": "45a8a01398208f1f2c645dd62843cf8c1f629c27",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -390,7 +390,7 @@
     "src/components/app-experience/copy.ts": "6be39057b577b8b2dfcb431cab61563f356ed2a7da438c648e08e15718a757a5",
     "src/components/app-experience/prepare-image.ts": "d4e0748bde4c29174cde96f3dc8f9ab26dc3e962e841df099267a7f8fc823298",
     "src/components/app-experience/welcome-preview.css": "a3423422ea0602c4f3e8ffed618c6ed25f0a091e4dfb77ac7714c963571f7541",
-    "src/components/auth/AuthProvider.tsx": "69b50a8b61714abd9eb78ffcb835f6f6d1af98d42387e607d985242119caf34e",
+    "src/components/auth/AuthProvider.tsx": "5aea52bd5f6921047d044ac32cd91389472088cdae58fce913f1b7408359e2b0",
     "src/components/auth/CompanyLoginForm.tsx": "547e1513282019a4976174e67dce4af73982172ad72effecb90b31dae44a69f2",
     "src/components/auth/DriverRegisterForm.tsx": "e1bb53691c99406898af705f70fe693f30448fcaa046fce71d0918248e4da379",
     "src/components/auth/GoogleLoginButton.tsx": "912d2568d3f630000b3afb75d74acb6f357e9ae8b44db42018fdcd190b6a4dce",
@@ -629,8 +629,8 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_REPORT.md": "570d30da070672963a755ed4c6625b6263661fe7fa334aac78c8bf4242f12a08",
-    "graph.json": "3aa7a4dd47fd47be5549e8670c4aa008a4a4bf251bfc9fe502cd15c199a49604",
+    "GRAPH_REPORT.md": "075a1d814035cf321f60dce2aad7c2418335614909c66d8a7baa934896040b99",
+    "graph.json": "a6cd545aaa6574d12b0c33151bee150d1d87ee10eab9c8aa17a7195dcafe10ff",
     "SOURCE_INDEX.md": "52ec9b92aba4c01c86836507632b8da695aac16f17acf070e085d29b0aa9f9d7",
     "health.json": "5bb10a7666e9743247993d033e38b0f7a0f76b9f22cb13aee804955c4fed5803",
     "GRAPH_TREE.html": "b9c3b57a1f7fbf0ec4c91f94a17adf3150643a5bb578038fd4339de114b4e838"
