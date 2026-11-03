@@ -18,6 +18,12 @@ try {
    assert.ok(r.body.includes('class="jd-cinema '),'Public homepage HTML contains the scene before hydration: '+host+path);
    assert.ok(r.body.includes('type="application/ld+json"'),'Public homepage HTML contains structured data: '+host+path);
   }
+  for(const path of ['/about','/contact','/privacy-policy']) {
+   const r=await send(path,host);
+   assert.equal(r.status,200);
+   for(const locale of ['fr','nl','en','ar']) assert.ok(r.body.includes('value="'+locale+'"'),'Locale available on '+host+path);
+   for(const link of ['/about','/contact','/privacy-policy']) assert.ok(r.body.includes('href="'+link+'"'),'Navigation available on '+host+path);
+  }
   const r=await send('/fr/solutions?utm_source=test&view=all',host,{'x-forwarded-proto':'https'});
   assert.equal(r.status,307);assert.equal(r.headers.get('location'),'https://'+host+'/fr/solutions?view=all');
   assert.equal(r.headers.get('cache-control'),'no-store');
@@ -30,5 +36,5 @@ try {
   const r=await send(route,'jouww.com');
   assert.equal(r.headers.get('location'),null,'Secure route query must not be rewritten');
  }
- console.log('Passed 8 initial homepage HTML cases and 8 production middleware proxy-host and secure-route cases');
+ console.log('Passed public homepage and information HTML, proxy-host and secure-route cases');
 }finally{p.kill('SIGTERM')}

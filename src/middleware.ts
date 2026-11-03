@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
   const marketingHost = publicHost === 'jouww.com' || publicHost === 'www.jouww.com';
   const publicMarketingPath = request.nextUrl.pathname === '/' ||
     /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
-    request.nextUrl.pathname === '/privacy-policy';
+    ['/about', '/contact', '/privacy-policy'].includes(request.nextUrl.pathname);
   if (marketingHost && publicMarketingPath && (request.method === 'GET' || request.method === 'HEAD')) {
     const cleanUrl = request.nextUrl.clone();
     const trackingKeys = Array.from(cleanUrl.searchParams.keys()).filter((key) =>
@@ -64,7 +64,7 @@ export function middleware(request: NextRequest) {
   // legacy/application hosts even if a crawler ignores robots.txt.
   const publicMarketingRoute = request.nextUrl.pathname === '/' ||
     /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
-    request.nextUrl.pathname === '/privacy-policy';
+    ['/about', '/contact', '/privacy-policy'].includes(request.nextUrl.pathname);
   if (!publicMarketingRoute || hostname === 'app.jouww.com' || hostname === 'jouw-driver.duckdns.org') {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }

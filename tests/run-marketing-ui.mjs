@@ -385,6 +385,47 @@ try {
     await context.close();
     report.push({ locale: lang, width, animated: true, reverse: true, toggle: true, pass: true });
   }
+  for (const width of [390, 1440]) {
+    const context = await browser.newContext({viewport: {width, height: 900}});
+    await consent(context);
+    const page = await context.newPage();
+    for (const route of ['/about', '/contact', '/privacy-policy']) {
+      const response = await page.goto(base + route);
+      assert.equal(response.status(), 200);
+      const language = page.getByRole('combobox', {name: 'Language'});
+      const main = page.locator('main').first();
+      const heading = main.getByRole('heading', {level: 1});
+      assert.ok(await heading.isVisible());
+      const navigation = main.getByRole('navigation', {name: 'Pages'});
+      const about = navigation.locator('a[href="/about"]');
+      const labels = new Set();
+      for (const locale of ['nl', 'en', 'ar', 'fr']) {
+        const previous = await about.textContent();
+        await language.selectOption(locale);
+        await page.waitForFunction(
+          (old) => document.querySelector('main nav a[href="/about"]').textContent !== old,
+          previous,
+        );
+        labels.add(await about.textContent());
+        assert.equal(await main.getAttribute('dir'), locale === 'ar' ? 'rtl' : 'ltr');
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+        if (route !== '/about') {
+          const topic = main.getByRole('button', {pressed: false}).first();
+          const topicName = (await topic.textContent()).trim();
+          await topic.click();
+          assert.equal(await main.getByRole('button', {name: topicName, exact: true}).getAttribute('aria-pressed'), 'true');
+        }
+      }
+      assert.equal(labels.size, 4);
+      assert.equal(await main.locator('form').count(), 0);
+      await Promise.all([
+        page.waitForURL(base + '/about'),
+        main.getByRole('navigation', {name: 'Pages'}).getByRole('link', {name: 'À propos'}).click(),
+      ]);
+      report.push({publicInfo: route, width, locales: 4, pass: true});
+    }
+    await context.close();
+  }
   const fail = await browser.newContext();
   await fail.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;

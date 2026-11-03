@@ -1711,6 +1711,12 @@ Links target the working tree, so line positions can move after changes.
 - `generateMetadata()` — [L18](../src/app/%5Blocale%5D/solutions/page.tsx#L18)
 - `SolutionsPage()` — [L41](../src/app/%5Blocale%5D/solutions/page.tsx#L41)
 
+## [src/app/about/page.tsx](../src/app/about/page.tsx)
+
+- `about/page.tsx` — [L1](../src/app/about/page.tsx#L1)
+- `metadata` — [L2](../src/app/about/page.tsx#L2)
+- `Page()` — [L3](../src/app/about/page.tsx#L3)
+
 ## [src/app/admin/account/page.tsx](../src/app/admin/account/page.tsx)
 
 - `account/page.tsx` — [L1](../src/app/admin/account/page.tsx#L1)
@@ -1893,6 +1899,12 @@ Links target the working tree, so line positions can move after changes.
 
 - `company/dashboard/page.tsx` — [L1](../src/app/company/dashboard/page.tsx#L1)
 - `CompanyDashboardPage()` — [L4](../src/app/company/dashboard/page.tsx#L4)
+
+## [src/app/contact/page.tsx](../src/app/contact/page.tsx)
+
+- `contact/page.tsx` — [L1](../src/app/contact/page.tsx#L1)
+- `metadata` — [L2](../src/app/contact/page.tsx#L2)
+- `Page()` — [L3](../src/app/contact/page.tsx#L3)
 
 ## [src/app/contract-print/[id]/page.tsx](../src/app/contract-print/%5Bid%5D/page.tsx)
 
@@ -2880,8 +2892,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/privacy-policy/page.tsx](../src/app/privacy-policy/page.tsx)
 
 - `privacy-policy/page.tsx` — [L1](../src/app/privacy-policy/page.tsx#L1)
-- `metadata` — [L2](../src/app/privacy-policy/page.tsx#L2)
-- `PrivacyPolicyPage()` — [L3](../src/app/privacy-policy/page.tsx#L3)
+- `metadata` — [L3](../src/app/privacy-policy/page.tsx#L3)
+- `PrivacyPolicyPage()` — [L4](../src/app/privacy-policy/page.tsx#L4)
 
 ## [src/app/register-company/page.tsx](../src/app/register-company/page.tsx)
 
@@ -3714,6 +3726,13 @@ Links target the working tree, so line positions can move after changes.
 
 - `useOperationData.ts` — [L1](../src/components/operations/useOperationData.ts#L1)
 - `useOperationData()` — [L4](../src/components/operations/useOperationData.ts#L4)
+
+## [src/components/public/PublicInfo.tsx](../src/components/public/PublicInfo.tsx)
+
+- `PublicInfo.tsx` — [L1](../src/components/public/PublicInfo.tsx#L1)
+- `Locale` — [L4](../src/components/public/PublicInfo.tsx#L4)
+- `translations` — [L5](../src/components/public/PublicInfo.tsx#L5)
+- `PublicInfo()` — [L11](../src/components/public/PublicInfo.tsx#L11)
 
 ## [src/components/registration/CompanyRegistrationApprovals.tsx](../src/components/registration/CompanyRegistrationApprovals.tsx)
 
