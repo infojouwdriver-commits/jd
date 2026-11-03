@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "5636abbf7ab3080038b8b8f78d38182292e78397",
+  "source_commit_context": "ce8ae5ce5d0358736d8690268f3a6fb4a8183b93",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -173,6 +173,7 @@
     "src/app/[locale]/page.tsx": "f6f189e485cf93c76052b8260cf1e30e9c677282785c8c3416db69cd6d4ddc01",
     "src/app/[locale]/solutions/[slug]/page.tsx": "140206cf15ee2413c764827bc9e6b0e9c72973f7e1cd87471e9af4d4ddca3dc9",
     "src/app/[locale]/solutions/page.tsx": "bf3c053666866f42948435e88821990815d3133c091cf78469aeef54640956cc",
+    "src/app/about/page.tsx": "20f59e1b5d615e1a93bdb58df9a267b4946a104a3e43828593f9f3b4f288738a",
     "src/app/admin/account/page.tsx": "d61f2f0a17dd305251ca8bb0db21eb67910c95985d6ce29c6fbefcaf65e8ac0d",
     "src/app/admin/ad-slots/page.tsx": "31469c697c56eaf62d5046c6e3869bdd0cc8b498ee435e2af94972b793ca7bc2",
     "src/app/admin/app-experience/page.tsx": "23a56479319d032d5a0f6132894ce876272b7ff4a19ad8a7bdc8e19bd58d3cbe",
@@ -201,6 +202,7 @@
     "src/app/admin/users/page.tsx": "e744d3bbe73b63ffec253d1dc2a77f341fa987f118ff82fd6c869ae02f0afc8f",
     "src/app/admin/vehicles/page.tsx": "8a11fc6a7fe03c8ab70d636535b2647febe0decccdd9594231140d3a861935cf",
     "src/app/company/dashboard/page.tsx": "9f7079f8c5804bba2876ee5d079fca71cb8c32775c9e6daec8029b2b2a16cad6",
+    "src/app/contact/page.tsx": "e80810a4e8d15e0e3237695d323ad44ae93b07f858718da51ace3d86daf2258b",
     "src/app/contract-print/[id]/page.tsx": "655df7a294177646afd898a1fa0f005cba7f2598debf585d40718ea85c070164",
     "src/app/dashboard/page.tsx": "1196c16a38b6497b857ffbd48d22988c4e55bee2936a4de9f8494cdd9ac0049c",
     "src/app/distributor/dashboard/page.tsx": "bd22a304137a3dded588e80707e6e33ea40870f47a3c3964ff9fa6d8b76ebb0f",
@@ -360,7 +362,7 @@
     "src/app/page.tsx": "d999b2b31edc237a71fe2dc71abcea23b3796daab00188be8f2d7f279ca4b874",
     "src/app/pay/invoice/page.tsx": "5754f125f1f52c910ff50a778980a872374e668fb6a6da43c1e134236f677ba6",
     "src/app/privacy-center/page.tsx": "a03dc33f5097fa847c9fef787807936f8aa4d9de066c82968949ef23df4a5025",
-    "src/app/privacy-policy/page.tsx": "857aec3f1a7e2693f0ef5cf5524af60029095bcd6b67ad52d427f32ac1104fb5",
+    "src/app/privacy-policy/page.tsx": "a5ec7a1b2a764fb2b3224dae7e069ceba2640dcbad969c025f2049030295fbb0",
     "src/app/register-company/page.tsx": "b6e54b6bd4df8d06ecc1395ed235e7df6cefa8d99fa6e311bdeb0e9b4278a55f",
     "src/app/robots.ts": "a6b6f2900ef84f757539733e3a0604421d9b8d75372fb27cdf3831e979dbeee5",
     "src/app/sign-contract/[token]/page.tsx": "d6c028c317b5b3421b884ea9e2a2f1aa71ab61fa5010189d876fbfefb8f52d17",
@@ -470,6 +472,7 @@
     "src/components/operations/operations-copy.ts": "6e54c3232cd3f2787dc17846bb9a18de72f50bc2ad572de3ce8edc96d8b496fd",
     "src/components/operations/useCompanyDirectory.ts": "69e4f17d1706e322c803f2099bec4307517d937b90fa02191d7f1c7be54eda4d",
     "src/components/operations/useOperationData.ts": "9454e0f03ea390c3969aea1b242c877408638413078b7426e24886b941b31529",
+    "src/components/public/PublicInfo.tsx": "343a2b35a06eda12be29960498d96b1ff524d2afd5d2ad72e0741627cdb8895c",
     "src/components/registration/CompanyRegistrationApprovals.tsx": "0d5f1d6dfc44919059cc120b3d3ce15ebd4bf3166c909e2792b3e4cae7de56be",
     "src/components/registration/CompanyRegistrationDialog.tsx": "e3710ab85b1ecba8494878d10c8c065320e98a51d1c163820cbd05fad6ea5d91",
     "src/components/registration/copy.ts": "8cf30987787a7112621169c40c17d70db0ccbf37fd5989932a245d0acba059b1",
@@ -621,23 +624,23 @@
     "src/lib/utils.ts": "7c8c3dfc0cdd370d44932828eb067ef771c8fe7996693221d5d4b90af6d54f2d",
     "src/locales/driver.ts": "0120c45bb91cc13b62bca82233e544dc7e798863ecb076818a06ea4a2795271c",
     "src/locales/landing.ts": "cf1fa3f7b7c92089235e481bd2686c22a26073f2636c71273f16abfa58add1f4",
-    "src/middleware.ts": "150675ac28285b04a66e1877d0bb848311fbf82bee806165715bcf6a5b6f69af",
+    "src/middleware.ts": "115475e2877af3df45fb755966adb64b5d6f8eb8289a0108457372ccabe924f5",
     "src/types/auth.ts": "3e62eddb3c136fc971aa71630cdec514e70bda0692f838bfa2e2fd298cb45361",
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "05145c20f50874ede10d9dd6099d7a4d7c6f33a2cc793d26f3fb8521ca905d57",
-    "SOURCE_INDEX.md": "29d99836bd0d0233e736b4351d2953b1e513a98b15b6e0e94482504f52c3f9f1",
-    "GRAPH_TREE.html": "a7560740d6a765fa372c852ffb617b0d9eb1a0ef39dee8c19f8ef9d3c0dec2ae",
-    "GRAPH_REPORT.md": "49831502f120a355e2df02aa1325567e396abc048b3cf29e89397c6d131c4ba1",
-    "health.json": "0d61dcb7ab5b18d4dfa609a0f262c05b70b9bfe13166a87023892c9227679851"
+    "GRAPH_REPORT.md": "570d30da070672963a755ed4c6625b6263661fe7fa334aac78c8bf4242f12a08",
+    "graph.json": "3aa7a4dd47fd47be5549e8670c4aa008a4a4bf251bfc9fe502cd15c199a49604",
+    "SOURCE_INDEX.md": "52ec9b92aba4c01c86836507632b8da695aac16f17acf070e085d29b0aa9f9d7",
+    "health.json": "5bb10a7666e9743247993d033e38b0f7a0f76b9f22cb13aee804955c4fed5803",
+    "GRAPH_TREE.html": "b9c3b57a1f7fbf0ec4c91f94a17adf3150643a5bb578038fd4339de114b4e838"
   },
-  "nodes": 3515,
-  "edges": 11852,
-  "raw_edges": 12116,
-  "communities": 171,
+  "nodes": 3525,
+  "edges": 11870,
+  "raw_edges": 12134,
+  "communities": 188,
   "confidence_counts": {
-    "EXTRACTED": 11870,
+    "EXTRACTED": 11888,
     "INFERRED": 246
   }
 }
