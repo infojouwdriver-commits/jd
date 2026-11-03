@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import PublicInfo from '@/components/public/PublicInfo';
 export const metadata = {title:'Privacy / Confidentialité — JOUW DRIVER'};
 export default function PrivacyPolicyPage() {
  const name=process.env.PRIVACY_CONTROLLER_NAME || 'JOUW DRIVER';
  const email=process.env.PRIVACY_CONTACT_EMAIL;
- return <main className="mx-auto max-w-3xl p-8 space-y-6 text-slate-900 bg-white min-h-screen">
+ return <><PublicInfo kind="privacy"/><main className="mx-auto max-w-3xl p-8 space-y-6 text-slate-900 bg-white min-h-screen">
   <h1 className="text-3xl font-bold">Confidentialité · الخصوصية</h1>
   <p>Mise à jour du 24 octobre 2026. Cette notice décrit les fonctions du portail et les conditions d’activation du paiement en ligne.</p>
   <section><h2 className="text-xl font-bold">Responsable et contact</h2><p>{name} — {process.env.PRIVACY_CONTROLLER_ADDRESS || 'Adresse à compléter avant publication'}.</p><p>{email || 'Contact de confidentialité à compléter avant publication.'}</p></section>
@@ -14,5 +15,5 @@ export default function PrivacyPolicyPage() {
   <section><h2 className="text-xl font-bold">Vos droits</h2><p>Vous pouvez demander accès, rectification, effacement, limitation, opposition et portabilité lorsque ces droits s’appliquent. Certaines données doivent être conservées pour les obligations légales ou les droits en justice. Une réponse est normalement apportée dans un mois; toute extension doit être motivée et communiquée conformément au RGPD.</p><Link href="/privacy-center" className="underline">Demandes et export des données / طلبات وتصدير البيانات</Link><p>Réclamation : <a href="https://www.autoriteprotectiondonnees.be" className="underline">Autorité de protection des données belge</a>.</p></section>
   <section><h2 className="text-xl font-bold">Cookies et fonctionnalités externes</h2><p>Les cookies de session nécessaires sont utilisés pour l’authentification. Les catégories facultatives sont désactivées par défaut. Les préférences sont accessibles depuis Mon compte, le centre de confidentialité et le pied de page du site; elles permettent de changer ou retirer les choix. Les intégrations IA et Google ainsi que les liens publics non explicitement autorisés sont désactivés dans cette version en attente de revue.</p></section>
   <p dir="rtl">يستضيف OVHcloud الخادم وقاعدة البيانات في فرنسا، وتُحفظ نسخ مشفّرة في GitHub لمدة 30 يوماً. إرسال الرحلات إلى Chiron والبريد الآلي غير مفعّل حالياً. يمكنك التواصل مع الشركة لطلب الوصول إلى بياناتك أو تصحيحها أو حذفها وفق القواعد المطبّقة.</p>
- </main>;
+ </main></>;
 }
