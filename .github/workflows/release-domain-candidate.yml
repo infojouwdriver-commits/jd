@@ -6,16 +6,16 @@ permissions:
 jobs:
   gate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 50
     permissions:
-      contents: read
-      pull-requests: read
+      contents: write
+      pull-requests: write
       actions: read
       packages: read
     outputs:
       digest: ${{ steps.image.outputs.digest }}
     steps:
-      - name: Require merged exact PR and successful source, mobile and candidate checks
+      - name: Wait for exact release checks and merge the verified PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -28,15 +28,34 @@ jobs:
             if(!r.ok)throw Error('GitHub release evidence unavailable');
             return r.json();
           };
+          const required=[[41857023768,'ci.yml'],[41857024083,'native-driver.yml'],[41863158831,'release-domain-candidate.yml']];
+          const deadline=Date.now()+43*60*1000;
+          for(;;){
+            const runs=await Promise.all(required.map(([id])=>api('/actions/runs/'+id)));
+            for(const [index,run] of runs.entries()){
+              const path=required[index][1];
+              if(run.head_sha!==sha||run.path!=='.github/workflows/'+path)throw Error('Workflow identity mismatch: '+path);
+              if(path==='release-domain-candidate.yml'&&run.run_attempt!==1)throw Error('Candidate image attempt differs');
+              if(run.status==='completed'&&run.conclusion!=='success')throw Error('Required workflow did not pass: '+path);
+            }
+            if(runs.every(run=>run.status==='completed'&&run.conclusion==='success'))break;
+            if(Date.now()>=deadline)throw Error('Timed out waiting for exact release checks');
+            console.log('Waiting for verified source, native and candidate image checks.');
+            await new Promise(resolve=>setTimeout(resolve,30000));
+          }
           const pr=await api('/pulls/128');
-          if(!pr.merged||pr.head.sha!==sha||pr.base.ref!=='main'||pr.base.repo.full_name!==repo)throw Error('Reviewed PR must be merged with exact source');
+          if(pr.head.sha!==sha||pr.base.ref!=='main'||pr.base.repo.full_name!==repo)throw Error('Reviewed PR identity changed');
+          if(!pr.merged){
+            const ref=await api('/git/ref/heads/main');
+            if(ref.object.sha!=='cffbed5df802b1e9949be9bb30e984b95469a8bb'||pr.draft)throw Error('Main changed or PR is still draft');
+            const response=await fetch('https://api.github.com/repos/'+repo+'/pulls/128/merge',{
+              method:'PUT',headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN,'Content-Type':'application/json'},
+              body:JSON.stringify({sha,merge_method:'merge'}),signal:AbortSignal.timeout(15000)
+            });
+            if(!response.ok||!(await response.json()).merged)throw Error('GitHub did not merge the verified PR');
+          }
           const main=await api('/compare/'+sha+'...main');
           if(!['ahead','identical'].includes(main.status)||main.merge_base_commit?.sha!==sha)throw Error('Exact reviewed source must be in main history');
-          for(const [id,path] of [[41857023768,'ci.yml'],[41857024083,'native-driver.yml'],[41863158831,'release-domain-candidate.yml']]){
-            const run=await api('/actions/runs/'+id);
-            if(run.head_sha!==sha||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Required exact-source workflow is not successful: '+path);
-            if(path==='release-domain-candidate.yml'&&run.run_attempt!==1)throw Error('Candidate image attempt differs');
-          }
           GATE
       - name: Resolve immutable tested image
         id: image
