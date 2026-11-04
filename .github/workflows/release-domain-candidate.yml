@@ -1,50 +1,265 @@
-name: Verified jouww candidate image (no deployment)
+name: Publish verified company tariffs
 on:
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: jouww-candidate-${{ github.ref }}
-  cancel-in-progress: false
 jobs:
-  checks:
-    uses: ./.github/workflows/ci.yml
-    with:
-      force_native_db: true
-  domain:
-    uses: ./.github/workflows/domain-candidate.yml
-  publish:
-    needs: [checks, domain]
-    runs-on: ubuntu-latest
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+      packages: read
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - name: Require merged exact PR and successful source, mobile and candidate checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          const repo='infojouwdriver-commits/jd';
+          const sha='fe7121455455a140e24c1c63a69686820829028c';
+          if(process.env.GITHUB_REPOSITORY!==repo||process.env.GITHUB_REF!=='refs/heads/ops/company-tariffs-production-128')throw Error('Wrong deployment workflow ref');
+          const api=async path=>{
+            const r=await fetch('https://api.github.com/repos/'+repo+path,{headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(15000)});
+            if(!r.ok)throw Error('GitHub release evidence unavailable');
+            return r.json();
+          };
+          const pr=await api('/pulls/128');
+          if(!pr.merged||pr.head.sha!==sha||pr.base.ref!=='main'||pr.base.repo.full_name!==repo)throw Error('Reviewed PR must be merged with exact source');
+          const main=await api('/compare/'+sha+'...main');
+          if(!['ahead','identical'].includes(main.status)||main.merge_base_commit?.sha!==sha)throw Error('Exact reviewed source must be in main history');
+          for(const [id,path] of [[41857023768,'ci.yml'],[41857024083,'native-driver.yml'],[41863158831,'release-domain-candidate.yml']]){
+            const run=await api('/actions/runs/'+id);
+            if(run.head_sha!==sha||run.conclusion!=='success'||run.path!=='.github/workflows/'+path)throw Error('Required exact-source workflow is not successful: '+path);
+            if(path==='release-domain-candidate.yml'&&run.run_attempt!==1)throw Error('Candidate image attempt differs');
+          }
+          GATE
+      - name: Resolve immutable tested image
+        id: image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo=ghcr.io/infojouwdriver-commits/jd
+          tag="$repo:jouww-sha-fe7121455455a140e24c1c63a69686820829028c-run-41863158831-1"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker pull "$tag"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.build-run"}}' "$tag")" = 41863158831/1
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  image-acceptance:
+    needs: gate
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: read
-      packages: write
+      packages: read
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
           persist-credentials: false
-      - name: Build a separately identified candidate; never deploy
+          ref: fe7121455455a140e24c1c63a69686820829028c
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Pull the exact accepted source image
         env:
-          REGISTRY_TOKEN: ${{ github.token }}
-          NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
-        shell: bash
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.gate.outputs.digest }}
         run: |
           set -euo pipefail
-          test -n "$NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN"
-          image="ghcr.io/${GITHUB_REPOSITORY,,}"
-          tag="jouww-sha-${GITHUB_SHA}-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
           trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker build \
-            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN" \
-            --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
-            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
-            --label "com.jouwdriver.build-run=$GITHUB_RUN_ID/$GITHUB_RUN_ATTEMPT" \
-            --tag "$image:$tag" .
-          docker push "$image:$tag"
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$tag")
-          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
-          printf '### Jouww candidate — not deployed\n`%s`\n\nRevision: `%s`\n\nPortal build origin: `https://app.jouww.com`\n\nTag: `%s`\n' "$digest" "$GITHUB_SHA" "$tag" >> "$GITHUB_STEP_SUMMARY"
+          docker pull "$IMAGE"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = fe7121455455a140e24c1c63a69686820829028c
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
+      - name: Install isolated test prerequisites
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+          sudo apt-get update -qq
+          sudo apt-get install --yes age
+      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ needs.gate.outputs.digest }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: company-tariffs-image-proof
+          path: candidate-native-proof.json
+          retention-days: 14
+
+  backup:
+    needs: image-acceptance
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [gate, image-acceptance, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: fe7121455455a140e24c1c63a69686820829028c
+      - name: Pin the tested additive tariff migration
+        id: migration
+        run: printf 'sha=%s\n' "$(sha256sum migrations/20261104_company_tariffs.sql | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+      - name: Publish company tariffs on the existing portal
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.gate.outputs.digest }}
+          REVISION: fe7121455455a140e24c1c63a69686820829028c
+          BASELINE: cffbed5df802b1e9949be9bb30e984b95469a8bb
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+          MIGRATION_SHA: ${{ steps.migration.outputs.sha }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          [[ "$MIGRATION_SHA" =~ ^[a-f0-9]{64}$ ]]
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p /srv/jouw-driver/releases/$REVISION"
+          scp "${args[@]}" migrations/20261104_company_tariffs.sql "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$REVISION/company-tariffs.sql"
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG' '$MIGRATION_SHA'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export DRIVER_IMAGE=$1 DRIVER_REVISION=$2 DRIVER_BASELINE=$3 DRIVER_BACKUP=$4 DRIVER_MIGRATION_SHA=$5
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DRIVER_IMAGE")" = "$DRIVER_REVISION"
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              cat "$work/Caddyfile" > Caddyfile
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+              edge=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml ps -q edge)
+              if test -n "$edge"; then docker exec "$edge" caddy validate --config /etc/caddy/Caddyfile && docker exec "$edge" caddy reload --config /etc/caddy/Caddyfile || printf 'Caddy rollback requires operator recovery\n' >&2; fi
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.DRIVER_BASELINE)throw Error('Live release differs from reviewed tariff deployment baseline; refusing to deploy');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.DRIVER_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover existing live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .company-tariffs.XXXXXX)
+          cp private-app.yaml runtime-mode.json Caddyfile "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env compose.yaml Caddyfile > "$work/preserved.sha256"
+          node --env-file=.database.env --input-type=module <<'MIGRATE'
+          import fs from 'node:fs';import {spawnSync} from 'node:child_process';import {createHash} from 'node:crypto';
+          const e=process.env;
+          if(e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||e.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
+          const raw=fs.readFileSync('/srv/jouw-driver/releases/'+e.DRIVER_REVISION+'/company-tariffs.sql');
+          if(createHash('sha256').update(raw).digest('hex')!==e.DRIVER_MIGRATION_SHA)throw Error('Migration identity mismatch');
+          const sql=raw.toString('utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"').replaceAll(':"user_role"','"jouw_app_user"');
+          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
+          const applied=spawnSync('docker',args,{input:sql+"\nNOTIFY pgrst, 'reload schema';\n",encoding:'utf8'});
+          if(applied.status!==0)throw Error('Additive tariff migration rejected; existing application retained');
+          const checked=spawnSync('docker',args,{input:"SELECT to_regclass('public.company_tariff_documents') IS NOT NULL AND NOT has_table_privilege('jouw_app_user','public.company_tariff_documents','SELECT') AND has_table_privilege('jouw_service','public.company_tariff_documents','INSERT') AND NOT has_table_privilege('jouw_service','public.company_tariff_documents','UPDATE') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='companies' AND column_name='tariff_profiles') AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='trips' AND column_name='tariff_settings_snapshot');",encoding:'utf8'});
+          if(checked.status!==0||checked.stdout.trim()!=='t')throw Error('Tariff schema or role isolation check failed');
+          MIGRATE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml restart postgrest </dev/null
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.DRIVER_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$DRIVER_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const sites=['https://jouww.com','https://app.jouww.com','https://jouw-driver.duckdns.org'];
+          const get=async(url)=>fetch(url,{redirect:'error',signal:AbortSignal.timeout(20000)});
+          const marketing=sites[0];
+          for(const path of ['/','/fr/solutions','/nl/solutions','/ar/solutions','/fr/solutions/gestion-entreprise-taxi','/robots.txt','/sitemap.xml']){
+            const r=await get(marketing+path);
+            if(r.status!==200)throw Error('Marketing SEO route did not respond successfully: '+path);
+            const body=await r.text();
+            if(path==='/sitemap.xml'&&!body.includes('/fr/solutions'))throw Error('SEO sitemap missing public content');
+            if(path==='/robots.txt'&&!body.includes('Sitemap: https://jouww.com/sitemap.xml'))throw Error('Public robots sitemap absent');
+            if(path==='/fr/solutions'&&!body.includes('https://jouww.com/fr/solutions'))throw Error('SEO canonical missing');
+          }
+          const redirected=await fetch(marketing+'/fr/solutions?utm_source=chatgpt.com&utm_campaign=demo&view=all',{redirect:'manual',signal:AbortSignal.timeout(15000)});
+          if(redirected.status!==307||redirected.headers.get('location')!==marketing+'/fr/solutions?view=all')throw Error('Public referral URL was not cleaned safely');
+          for(const base of sites.slice(1)){
+            const login=await get(base+'/login');
+            if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login accessibility or indexing guard failed');
+            const robots=await get(base+'/robots.txt');
+            if(robots.status!==200||(await robots.text()).indexOf('Disallow: /')<0)throw Error('Portal crawler exclusion failed');
+          }
+          for(const path of ['/next_api/auth/user','/next_api/trips','/next_api/companies']){
+            const r=await get(sites[2]+path);
+            if(r.status!==401)throw Error('API authorization guard changed');
+          }
+          const protectedTariffs=await get(sites[1]+'/next_api/companies/1/pricing');
+          if(protectedTariffs.status!==401)throw Error('Company tariff management authentication guard failed');
+          const absent=await get(sites[1]+'/documents/tariffs/invalid');
+          if(absent.status!==404)throw Error('Tariff document route is unavailable or exposes an invalid capability');
+          console.log('Live portal tariff routes, authentication guards and public website smoke checks passed.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.DRIVER_IMAGE,revision:process.env.DRIVER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.DRIVER_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Company tariff update published to app.jouww.com.\n'
+          REMOTE
