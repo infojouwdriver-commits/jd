@@ -44,12 +44,12 @@ jobs:
               const state = build?.attributes.processingState ?? 'NOT_LISTED';
               console.log('Build ' + version + ' processing: ' + state);
               if (state === 'VALID') {
-                const [detail, groups] = await Promise.all([
+                const [detail, groups] = await Promise.allSettled([
                   get('/v1/builds/' + build.id + '/buildBetaDetail'),
                   get('/v1/builds/' + build.id + '/betaGroups', {'fields[betaGroups]':'isInternalGroup,hasAccessToAllBuilds'}),
                 ]);
-                console.log('Internal TestFlight state: ' + detail.attributes.internalBuildState);
-                console.log('Assigned internal groups: ' + groups.filter(group => group.attributes.isInternalGroup).length);
+                console.log('Internal TestFlight state: ' + (detail.status === 'fulfilled' ? detail.value.attributes.internalBuildState : 'UNAVAILABLE'));
+                console.log('Assigned internal groups: ' + (groups.status === 'fulfilled' ? groups.value.filter(group => group.attributes.isInternalGroup).length : 'UNAVAILABLE'));
                 return;
               }
               if (state === 'FAILED' || state === 'INVALID') throw new Error('Apple processing failed');
