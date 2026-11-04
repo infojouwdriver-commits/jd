@@ -36,3 +36,18 @@ export function createAddressSearch(request:typeof fetch=fetch,clock:()=>number=
  };
 }
 export const searchBelgianAddresses=createAddressSearch();
+
+export async function reverseBelgianAddress(point: RouteCoordinate, language: string, signal: AbortSignal, request: typeof fetch = fetch): Promise<NativeAddress | null> {
+ if (!coordinate(point) || signal.aborted) throw Error('Reverse geocoding unavailable');
+ const url = new URL('https://photon.komoot.io/reverse');
+ url.searchParams.set('lat', String(point.lat));
+ url.searchParams.set('lon', String(point.lon));
+ url.searchParams.set('limit', '1');
+ if (language !== 'nl') url.searchParams.set('lang', language === 'en' ? 'en' : 'fr');
+ const response = await request(url.toString(), {credentials:'omit', redirect:'error', signal, headers:{Accept:'application/json'}});
+ if (!response.ok || signal.aborted) throw Error('Reverse geocoding unavailable');
+ const [address] = parseBelgianAddresses(await response.json());
+ if (signal.aborted) throw Error('Reverse geocoding unavailable');
+ // Keep the measured position. The geocoder may return the centre of a building.
+ return address ? {...point, label:address.label} : null;
+}

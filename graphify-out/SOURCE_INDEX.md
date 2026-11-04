@@ -305,10 +305,10 @@ Links target the working tree, so line positions can move after changes.
 - `DriverMapProps` — [L11](../driver-app/src/DriverMap.tsx#L11)
 - `DriverMap()` — [L12](../driver-app/src/DriverMap.tsx#L12)
 - `DriverMapView()` — [L13](../driver-app/src/DriverMap.tsx#L13)
-- `locate()` — [L34](../driver-app/src/DriverMap.tsx#L34)
-- `chooseDestination()` — [L35](../driver-app/src/DriverMap.tsx#L35)
-- `calculateRoute()` — [L36](../driver-app/src/DriverMap.tsx#L36)
-- `navigate()` — [L43](../driver-app/src/DriverMap.tsx#L43)
+- `locate()` — [L49](../driver-app/src/DriverMap.tsx#L49)
+- `chooseDestination()` — [L50](../driver-app/src/DriverMap.tsx#L50)
+- `calculateRoute()` — [L51](../driver-app/src/DriverMap.tsx#L51)
+- `navigate()` — [L58](../driver-app/src/DriverMap.tsx#L58)
 
 ## [driver-app/src/FleetLocation.tsx](../driver-app/src/FleetLocation.tsx)
 
@@ -377,7 +377,7 @@ Links target the working tree, so line positions can move after changes.
 - `profile()` — [L73](../driver-app/src/api.ts#L73)
 - `ownerRead()` — [L76](../driver-app/src/api.ts#L76)
 - `vehicles()` — [L86](../driver-app/src/api.ts#L86)
-- `driverApi` — [L278](../driver-app/src/api.ts#L278)
+- `driverApi` — [L280](../driver-app/src/api.ts#L280)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -450,8 +450,8 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/ActiveTrip.tsx](../driver-app/src/experience/ActiveTrip.tsx)
 
 - `ActiveTrip.tsx` — [L1](../driver-app/src/experience/ActiveTrip.tsx#L1)
-- `ActiveTrip()` — [L12](../driver-app/src/experience/ActiveTrip.tsx#L12)
-- `invoice()` — [L15](../driver-app/src/experience/ActiveTrip.tsx#L15)
+- `ActiveTrip()` — [L13](../driver-app/src/experience/ActiveTrip.tsx#L13)
+- `invoice()` — [L22](../driver-app/src/experience/ActiveTrip.tsx#L22)
 
 ## [driver-app/src/experience/ActivityFilters.tsx](../driver-app/src/experience/ActivityFilters.tsx)
 
@@ -463,8 +463,8 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/AddressField.tsx](../driver-app/src/experience/AddressField.tsx)
 
 - `AddressField.tsx` — [L1](../driver-app/src/experience/AddressField.tsx#L1)
-- `AddressField()` — [L7](../driver-app/src/experience/AddressField.tsx#L7)
-- `search()` — [L13](../driver-app/src/experience/AddressField.tsx#L13)
+- `AddressField()` — [L8](../driver-app/src/experience/AddressField.tsx#L8)
+- `search()` — [L14](../driver-app/src/experience/AddressField.tsx#L14)
 
 ## [driver-app/src/experience/BillingReminder.tsx](../driver-app/src/experience/BillingReminder.tsx)
 
@@ -480,10 +480,21 @@ Links target the working tree, so line positions can move after changes.
 - `icon` — [L4](../driver-app/src/experience/BrandMark.tsx#L4)
 - `BrandMark()` — [L5](../driver-app/src/experience/BrandMark.tsx#L5)
 
+## [driver-app/src/experience/ClassicFare.tsx](../driver-app/src/experience/ClassicFare.tsx)
+
+- `ClassicFare.tsx` — [L1](../driver-app/src/experience/ClassicFare.tsx#L1)
+- `FarePreview` — [L10](../driver-app/src/experience/ClassicFare.tsx#L10)
+- `Tariff` — [L11](../driver-app/src/experience/ClassicFare.tsx#L11)
+- `words` — [L12](../driver-app/src/experience/ClassicFare.tsx#L12)
+- `same()` — [L18](../driver-app/src/experience/ClassicFare.tsx#L18)
+- `useClassicFare()` — [L19](../driver-app/src/experience/ClassicFare.tsx#L19)
+- `ClassicDisplay()` — [L55](../driver-app/src/experience/ClassicFare.tsx#L55)
+- `FareControls()` — [L78](../driver-app/src/experience/ClassicFare.tsx#L78)
+
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
-- `Home()` — [L12](../driver-app/src/experience/Home.tsx#L12)
+- `Home()` — [L13](../driver-app/src/experience/Home.tsx#L13)
 
 ## [driver-app/src/experience/JourneyLoading.tsx](../driver-app/src/experience/JourneyLoading.tsx)
 
@@ -512,6 +523,14 @@ Links target the working tree, so line positions can move after changes.
 - `Notifications.tsx` — [L1](../driver-app/src/experience/Notifications.tsx#L1)
 - `Notifications()` — [L7](../driver-app/src/experience/Notifications.tsx#L7)
 - `read()` — [L8](../driver-app/src/experience/Notifications.tsx#L8)
+
+## [driver-app/src/experience/PickupLocation.tsx](../driver-app/src/experience/PickupLocation.tsx)
+
+- `PickupLocation.tsx` — [L1](../driver-app/src/experience/PickupLocation.tsx#L1)
+- `messages` — [L8](../driver-app/src/experience/PickupLocation.tsx#L8)
+- `Failure` — [L14](../driver-app/src/experience/PickupLocation.tsx#L14)
+- `PickupLocation()` — [L16](../driver-app/src/experience/PickupLocation.tsx#L16)
+- `locate()` — [L27](../driver-app/src/experience/PickupLocation.tsx#L27)
 
 ## [driver-app/src/experience/Revenues.tsx](../driver-app/src/experience/Revenues.tsx)
 
@@ -722,6 +741,7 @@ Links target the working tree, so line positions can move after changes.
 - `parseBelgianAddresses()` — [L7](../driver-app/src/native-addresses.ts#L7)
 - `createAddressSearch()` — [L26](../driver-app/src/native-addresses.ts#L26)
 - `searchBelgianAddresses` — [L38](../driver-app/src/native-addresses.ts#L38)
+- `reverseBelgianAddress()` — [L40](../driver-app/src/native-addresses.ts#L40)
 
 ## [driver-app/src/native-crypto-preflight.ts](../driver-app/src/native-crypto-preflight.ts)
 
@@ -829,19 +849,19 @@ Links target the working tree, so line positions can move after changes.
 
 - `trip-engine.ts` — [L1](../driver-app/src/trip-engine.ts#L1)
 - `NativeTrip` — [L2](../driver-app/src/trip-engine.ts#L2)
-- `TripSyncReceipt` — [L8](../driver-app/src/trip-engine.ts#L8)
-- `durableReceipt()` — [L9](../driver-app/src/trip-engine.ts#L9)
-- `TripStore` — [L17](../driver-app/src/trip-engine.ts#L17)
-- `.active()` — [L18](../driver-app/src/trip-engine.ts#L18)
-- `.create()` — [L19](../driver-app/src/trip-engine.ts#L19)
-- `.update()` — [L20](../driver-app/src/trip-engine.ts#L20)
-- `.complete()` — [L21](../driver-app/src/trip-engine.ts#L21)
-- `.pending()` — [L22](../driver-app/src/trip-engine.ts#L22)
-- `.acknowledge()` — [L23](../driver-app/src/trip-engine.ts#L23)
-- `validPoint()` — [L25](../driver-app/src/trip-engine.ts#L25)
-- `address()` — [L31](../driver-app/src/trip-engine.ts#L31)
-- `tripDurationSeconds()` — [L36](../driver-app/src/trip-engine.ts#L36)
-- `createTripEngine()` — [L42](../driver-app/src/trip-engine.ts#L42)
+- `TripSyncReceipt` — [L9](../driver-app/src/trip-engine.ts#L9)
+- `durableReceipt()` — [L10](../driver-app/src/trip-engine.ts#L10)
+- `TripStore` — [L19](../driver-app/src/trip-engine.ts#L19)
+- `.active()` — [L20](../driver-app/src/trip-engine.ts#L20)
+- `.create()` — [L21](../driver-app/src/trip-engine.ts#L21)
+- `.update()` — [L22](../driver-app/src/trip-engine.ts#L22)
+- `.complete()` — [L23](../driver-app/src/trip-engine.ts#L23)
+- `.pending()` — [L24](../driver-app/src/trip-engine.ts#L24)
+- `.acknowledge()` — [L25](../driver-app/src/trip-engine.ts#L25)
+- `validPoint()` — [L27](../driver-app/src/trip-engine.ts#L27)
+- `address()` — [L33](../driver-app/src/trip-engine.ts#L33)
+- `tripDurationSeconds()` — [L38](../driver-app/src/trip-engine.ts#L38)
+- `createTripEngine()` — [L44](../driver-app/src/trip-engine.ts#L44)
 
 ## [driver-app/src/trip-error.ts](../driver-app/src/trip-error.ts)
 
@@ -883,10 +903,10 @@ Links target the working tree, so line positions can move after changes.
 - `currentPoint()` — [L23](../driver-app/src/useTripController.ts#L23)
 - `useTripController()` — [L31](../driver-app/src/useTripController.ts#L31)
 - `start()` — [L98](../driver-app/src/useTripController.ts#L98)
-- `synchronize()` — [L116](../driver-app/src/useTripController.ts#L116)
-- `end()` — [L121](../driver-app/src/useTripController.ts#L121)
-- `changeVehicle()` — [L133](../driver-app/src/useTripController.ts#L133)
-- `retrySync()` — [L146](../driver-app/src/useTripController.ts#L146)
+- `synchronize()` — [L120](../driver-app/src/useTripController.ts#L120)
+- `end()` — [L125](../driver-app/src/useTripController.ts#L125)
+- `changeVehicle()` — [L138](../driver-app/src/useTripController.ts#L138)
+- `retrySync()` — [L151](../driver-app/src/useTripController.ts#L151)
 
 ## [driver-app/src/welcome-config.ts](../driver-app/src/welcome-config.ts)
 
@@ -1222,6 +1242,14 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".receipt_email_settings` — [L24](../migrations/20261028_receipt_email.sql#L24)
 - `"schema".receipt_mail_requests` — [L31](../migrations/20261028_receipt_email.sql#L31)
 - `"schema".security_save_receipt_email_settings()` — [L45](../migrations/20261028_receipt_email.sql#L45)
+
+## [migrations/20261104_company_tariffs.sql](../migrations/20261104_company_tariffs.sql)
+
+- `20261104_company_tariffs.sql` — [source](../migrations/20261104_company_tariffs.sql#)
+- `"schema".company_tariff_documents` — [L9](../migrations/20261104_company_tariffs.sql#L9)
+- `company_tariff_documents_history_idx` — [L16](../migrations/20261104_company_tariffs.sql#L16)
+- `"schema".reject_tariff_document_mutation()` — [L25](../migrations/20261104_company_tariffs.sql#L25)
+- `issued_tariff_document_immutable` — [L31](../migrations/20261104_company_tariffs.sql#L31)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -1786,7 +1814,9 @@ Links target the working tree, so line positions can move after changes.
 
 - `pricing/page.tsx` — [L1](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L1)
 - `Company` — [L17](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L17)
-- `CompanyPricingPage()` — [L31](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L31)
+- `Issued` — [L18](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L18)
+- `CompanyPricingPage()` — [L20](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L20)
+- `issue()` — [L91](../src/app/admin/companies/%5Bid%5D/pricing/page.tsx#L91)
 
 ## [src/app/admin/companies/[id]/settings/page.tsx](../src/app/admin/companies/%5Bid%5D/settings/page.tsx)
 
@@ -1929,11 +1959,18 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/app/documents/receipts/[token]/route.ts](../src/app/documents/receipts/%5Btoken%5D/route.ts)
 
-- `[token]/route.ts` — [L1](../src/app/documents/receipts/%5Btoken%5D/route.ts#L1)
+- `receipts/[token]/route.ts` — [L1](../src/app/documents/receipts/%5Btoken%5D/route.ts#L1)
 - `runtime` — [L7](../src/app/documents/receipts/%5Btoken%5D/route.ts#L7)
 - `dynamic` — [L8](../src/app/documents/receipts/%5Btoken%5D/route.ts#L8)
 - `headers` — [L9](../src/app/documents/receipts/%5Btoken%5D/route.ts#L9)
 - `GET()` — [L12](../src/app/documents/receipts/%5Btoken%5D/route.ts#L12)
+
+## [src/app/documents/tariffs/[token]/route.ts](../src/app/documents/tariffs/%5Btoken%5D/route.ts)
+
+- `tariffs/[token]/route.ts` — [L1](../src/app/documents/tariffs/%5Btoken%5D/route.ts#L1)
+- `dynamic` — [L6](../src/app/documents/tariffs/%5Btoken%5D/route.ts#L6)
+- `headers` — [L7](../src/app/documents/tariffs/%5Btoken%5D/route.ts#L7)
+- `GET()` — [L8](../src/app/documents/tariffs/%5Btoken%5D/route.ts#L8)
 
 ## [src/app/driver-login/page.tsx](../src/app/driver-login/page.tsx)
 
@@ -2006,22 +2043,22 @@ Links target the working tree, so line positions can move after changes.
 
 - `driver/taximeter/page.tsx` — [L1](../src/app/driver/taximeter/page.tsx#L1)
 - `PricingConfig` — [L35](../src/app/driver/taximeter/page.tsx#L35)
-- `TripData` — [L40](../src/app/driver/taximeter/page.tsx#L40)
-- `SavedTrip` — [L49](../src/app/driver/taximeter/page.tsx#L49)
-- `LocationPoint` — [L50](../src/app/driver/taximeter/page.tsx#L50)
-- `RouteCoords` — [L51](../src/app/driver/taximeter/page.tsx#L51)
-- `RideType` — [L58](../src/app/driver/taximeter/page.tsx#L58)
-- `calculateDistance()` — [L60](../src/app/driver/taximeter/page.tsx#L60)
-- `calculateActualDistance()` — [L67](../src/app/driver/taximeter/page.tsx#L67)
-- `buildWazeUrl()` — [L74](../src/app/driver/taximeter/page.tsx#L74)
-- `buildGoogleMapsUrl()` — [L79](../src/app/driver/taximeter/page.tsx#L79)
-- `GlassCard()` — [L84](../src/app/driver/taximeter/page.tsx#L84)
-- `DriverActionButton()` — [L99](../src/app/driver/taximeter/page.tsx#L99)
-- `MapPickerSheet()` — [L129](../src/app/driver/taximeter/page.tsx#L129)
-- `NavigateButton()` — [L296](../src/app/driver/taximeter/page.tsx#L296)
-- `BottomSheetModal()` — [L362](../src/app/driver/taximeter/page.tsx#L362)
-- `TaximeterPage()` — [L453](../src/app/driver/taximeter/page.tsx#L453)
-- `TaximeterWorkspace()` — [L457](../src/app/driver/taximeter/page.tsx#L457)
+- `TripData` — [L41](../src/app/driver/taximeter/page.tsx#L41)
+- `SavedTrip` — [L51](../src/app/driver/taximeter/page.tsx#L51)
+- `LocationPoint` — [L52](../src/app/driver/taximeter/page.tsx#L52)
+- `RouteCoords` — [L53](../src/app/driver/taximeter/page.tsx#L53)
+- `RideType` — [L60](../src/app/driver/taximeter/page.tsx#L60)
+- `calculateDistance()` — [L62](../src/app/driver/taximeter/page.tsx#L62)
+- `calculateActualDistance()` — [L69](../src/app/driver/taximeter/page.tsx#L69)
+- `buildWazeUrl()` — [L76](../src/app/driver/taximeter/page.tsx#L76)
+- `buildGoogleMapsUrl()` — [L81](../src/app/driver/taximeter/page.tsx#L81)
+- `GlassCard()` — [L86](../src/app/driver/taximeter/page.tsx#L86)
+- `DriverActionButton()` — [L101](../src/app/driver/taximeter/page.tsx#L101)
+- `MapPickerSheet()` — [L131](../src/app/driver/taximeter/page.tsx#L131)
+- `NavigateButton()` — [L298](../src/app/driver/taximeter/page.tsx#L298)
+- `BottomSheetModal()` — [L364](../src/app/driver/taximeter/page.tsx#L364)
+- `TaximeterPage()` — [L455](../src/app/driver/taximeter/page.tsx#L455)
+- `TaximeterWorkspace()` — [L459](../src/app/driver/taximeter/page.tsx#L459)
 
 ## [src/app/driver/test/page.tsx](../src/app/driver/test/page.tsx)
 
@@ -2273,10 +2310,19 @@ Links target the working tree, so line positions can move after changes.
 
 - `sync/route.ts` — [L1](../src/app/next_api/chiron/sync/route.ts#L1)
 
+## [src/app/next_api/companies/[id]/pricing/documents/route.ts](../src/app/next_api/companies/%5Bid%5D/pricing/documents/route.ts)
+
+- `documents/route.ts` — [L1](../src/app/next_api/companies/%5Bid%5D/pricing/documents/route.ts#L1)
+- `handler` — [L11](../src/app/next_api/companies/%5Bid%5D/pricing/documents/route.ts#L11)
+- `GET` — [L42](../src/app/next_api/companies/%5Bid%5D/pricing/documents/route.ts#L42)
+- `POST` — [L43](../src/app/next_api/companies/%5Bid%5D/pricing/documents/route.ts#L43)
+
 ## [src/app/next_api/companies/[id]/pricing/route.ts](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts)
 
 - `[id]/pricing/route.ts` — [L1](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L1)
-- `GET` — [L8](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L8)
+- `handlePricing` — [L10](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L10)
+- `GET` — [L69](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L69)
+- `PUT` — [L70](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L70)
 
 ## [src/app/next_api/companies/route.ts](../src/app/next_api/companies/route.ts)
 
@@ -2284,7 +2330,7 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L11](../src/app/next_api/companies/route.ts#L11)
 - `POST` — [L75](../src/app/next_api/companies/route.ts#L75)
 - `PUT` — [L106](../src/app/next_api/companies/route.ts#L106)
-- `DELETE` — [L197](../src/app/next_api/companies/route.ts#L197)
+- `DELETE` — [L198](../src/app/next_api/companies/route.ts#L198)
 
 ## [src/app/next_api/company-changes/route.ts](../src/app/next_api/company-changes/route.ts)
 
@@ -2481,7 +2527,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/drivers/pricing/route.ts](../src/app/next_api/drivers/pricing/route.ts)
 
 - `drivers/pricing/route.ts` — [L1](../src/app/next_api/drivers/pricing/route.ts#L1)
-- `GET` — [L10](../src/app/next_api/drivers/pricing/route.ts#L10)
+- `pricingHandler` — [L12](../src/app/next_api/drivers/pricing/route.ts#L12)
+- `GET` — [L79](../src/app/next_api/drivers/pricing/route.ts#L79)
+- `POST` — [L80](../src/app/next_api/drivers/pricing/route.ts#L80)
 
 ## [src/app/next_api/drivers/profile/route.ts](../src/app/next_api/drivers/profile/route.ts)
 
@@ -2782,10 +2830,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/end/route.ts](../src/app/next_api/trips/end/route.ts)
 
 - `end/route.ts` — [L1](../src/app/next_api/trips/end/route.ts#L1)
-- `generateTripUuid()` — [L13](../src/app/next_api/trips/end/route.ts#L13)
-- `generateTripHash()` — [L15](../src/app/next_api/trips/end/route.ts#L15)
-- `getRetentionDate()` — [L34](../src/app/next_api/trips/end/route.ts#L34)
-- `POST` — [L42](../src/app/next_api/trips/end/route.ts#L42)
+- `generateTripUuid()` — [L15](../src/app/next_api/trips/end/route.ts#L15)
+- `generateTripHash()` — [L17](../src/app/next_api/trips/end/route.ts#L17)
+- `getRetentionDate()` — [L36](../src/app/next_api/trips/end/route.ts#L36)
+- `POST` — [L44](../src/app/next_api/trips/end/route.ts#L44)
 
 ## [src/app/next_api/trips/export-pdf/route.ts](../src/app/next_api/trips/export-pdf/route.ts)
 
@@ -4498,6 +4546,11 @@ Links target the working tree, so line positions can move after changes.
 - `companyPricingPatch()` — [L45](../src/lib/company-pricing.ts#L45)
 - `normalizeCompanyPricing()` — [L54](../src/lib/company-pricing.ts#L54)
 - `driverPricing()` — [L60](../src/lib/company-pricing.ts#L60)
+- `CompanyTariff` — [L74](../src/lib/company-pricing.ts#L74)
+- `companyTariffs()` — [L85](../src/lib/company-pricing.ts#L85)
+- `validateCompanyTariffs()` — [L93](../src/lib/company-pricing.ts#L93)
+- `activeCompanyTariffs()` — [L111](../src/lib/company-pricing.ts#L111)
+- `indicativeFare()` — [L116](../src/lib/company-pricing.ts#L116)
 
 ## [src/lib/company-registration.ts](../src/lib/company-registration.ts)
 
@@ -5037,6 +5090,23 @@ Links target the working tree, so line positions can move after changes.
 - `subscription-scheduler.ts` — [L1](../src/lib/subscription-scheduler.ts#L1)
 - `subscriptionTick()` — [L6](../src/lib/subscription-scheduler.ts#L6)
 - `startSubscriptionScheduler()` — [L36](../src/lib/subscription-scheduler.ts#L36)
+
+## [src/lib/tariff-quote.ts](../src/lib/tariff-quote.ts)
+
+- `tariff-quote.ts` — [L1](../src/lib/tariff-quote.ts#L1)
+- `Quote` — [L4](../src/lib/tariff-quote.ts#L4)
+- `signature()` — [L13](../src/lib/tariff-quote.ts#L13)
+- `signTariffQuote()` — [L17](../src/lib/tariff-quote.ts#L17)
+- `readTariffQuote()` — [L21](../src/lib/tariff-quote.ts#L21)
+
+## [src/lib/tariff-sheet.ts](../src/lib/tariff-sheet.ts)
+
+- `tariff-sheet.ts` — [L1](../src/lib/tariff-sheet.ts#L1)
+- `tariffSheetUrl()` — [L7](../src/lib/tariff-sheet.ts#L7)
+- `TariffSheet` — [L8](../src/lib/tariff-sheet.ts#L8)
+- `renderTariffSheet()` — [L14](../src/lib/tariff-sheet.ts#L14)
+- `header()` — [L25](../src/lib/tariff-sheet.ts#L25)
+- `tableHeader()` — [L43](../src/lib/tariff-sheet.ts#L43)
 
 ## [src/lib/totp.ts](../src/lib/totp.ts)
 

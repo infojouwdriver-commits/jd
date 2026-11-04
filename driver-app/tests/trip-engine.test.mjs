@@ -71,3 +71,20 @@ test('selected navigation destination survives encrypted restore, while completi
  }finally{f.db.close();}
  const bad=await fixture();try{await assert.rejects(bad.engine.start({...bad.input(),navigationDestination:{lat:91,lon:4}}));assert.equal(await bad.engine.restore(),null);}finally{bad.db.close();}
 });
+
+test('map estimate and chosen final fare survive an encrypted restart and delayed sync',async()=>{
+ const f=await fixture();
+ try{
+  const tariffQuote={token:'synthetic-signed-quote',code:'T2',price:18.4,km:6.3,minutes:13};
+  await f.engine.start({...f.input(),platform:'INTERNAL',proposedPrice:20,tariffQuote});
+  const reopened=createTripEngine('1',f.store,()=>f.key,f.now);
+  assert.deepEqual((await reopened.restore()).tariffQuote,tariffQuote);
+  f.advance(60000);
+  const payload=await reopened.end(f.point(),21);
+  assert.equal(payload.tariff_quote,tariffQuote.token);
+  assert.equal(payload.initial_proposed_price,18.4);
+  assert.equal(payload.driver_adjusted_price,21);
+  assert.equal(payload.price,21);
+  assert.equal((await f.store.pending('1'))[0].payload.tariff_quote,tariffQuote.token);
+ }finally{f.db.close();}
+});

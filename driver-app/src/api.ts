@@ -189,6 +189,8 @@ export function createDriverApi(transport: typeof fetch = fetch) {
         value.includes('@') ? {email: value, password, ...(otp ? {otp} : {})} : {phone: value, password});
       return profile();
     },
+    tariffs:()=>request<{company_id:number;tariffs?:{code:string;name:string;description:string}[]}>('/next_api/drivers/pricing'),
+    tariffQuote:(code:string,km:number|null,minutes:number|null)=>request<{price:number|null;token:string}>('/next_api/drivers/pricing',{code,km,minutes}),
     async completeTrip(payload: Record<string, unknown>) {
       const current = await profile();
       if ((current.native_trip_contract_version ?? 0) < 1) throw new ApiError(409);

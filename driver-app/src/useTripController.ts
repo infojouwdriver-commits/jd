@@ -95,7 +95,7 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     const publish=async()=>{const active=activeRef.current;if(inFlight||!alive||active?.key!==key)return;inFlight=true;try{await publishNativeTripStatus(api,profile.driver.id,active);}catch{/* Local trip stays durable; the shift card exposes refresh/retry. */}finally{inFlight=false;}};
     void publish();const timer=setInterval(()=>void publish(),20000);return()=>{alive=false;clearInterval(timer);};
   },[trip?.key,profile.driver.id]);
-  async function start() {
+  async function start(estimate?:NativeTrip['tariffQuote'], tariffCode?:string) {
     if (!engine.current || pending>0 || busy || sessionBusy || !actionGate.acquire()) return;
     setBusy(true); setError(''); setReceipt(null);
     try {
@@ -103,10 +103,14 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
       const current = await api.tripAssignment(profile.driver.id);
       const {active}=await api.shifts(profile.driver.id) as ShiftList;
       if(!active||active.ended_at||active.vehicle_id!==current.driver.current_vehicle_id||active.company_id!==current.driver.company_id||!['available','driving_empty'].includes(active.work_status))throw Error('ابدأ وردية للمركبة الحالية واستأنف العمل قبل بدء الرحلة.');
+      const code=platform==='INTERNAL'?(estimate?.code??tariffCode):undefined;
+      const quote=code ? await api.tariffQuote(code,estimate?.km??null,estimate?.minutes??null) : undefined;
+      if(quote&&estimate&&quote.price!==estimate.price) throw Error('تغيّرت التعرفة. حدّث التقدير قبل بدء الرحلة.');
       const point = await currentPoint(); onLocation(point);
       onProfile(current);
       const next = await engine.current.start({shiftId:active.id,companyId: current.driver.company_id, vehicleId: current.driver.current_vehicle_id ?? 0,
-        environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: Number(price.replace(',', '.')), paymentMethod: payment, platform, externalReference, ...(endSelection&&endSelection.label===endAddress?{navigationDestination:{lat:endSelection.lat,lon:endSelection.lon}}:{})});
+        environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: price.trim() ? Number(price.replace(',', '.')) : (estimate?.price ?? 0),
+        ...(quote&&code?{tariffQuote:{...quote,code,km:estimate?.km??null,minutes:estimate?.minutes??null}}:{}), paymentMethod: payment, platform, externalReference, ...(endSelection&&endSelection.label===endAddress?{navigationDestination:{lat:endSelection.lat,lon:endSelection.lon}}:{})});
       updateTrip(next);
       try{await publishNativeTripStatus(api,profile.driver.id,next);}catch{setError('الرحلة محفوظة على الهاتف؛ تعذّر تأكيد حالتها في الوردية.');}
       try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
@@ -118,13 +122,14 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     const result = await engine.current.sync(payload => api.completeTrip(payload));
     if (!disposed.current) {setPending(result.remaining); setReceipt(completedBatchReceipt(result)); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
   }
-  async function end() {
+  async function end(finalPrice?:number) {
     if (!engine.current || busy || sessionBusy || !actionGate.acquire()) return;
     setBusy(true); setError('');
     try {
       const current = activeRef.current; if (!current) return;
-      await engine.current.end(await currentPoint(), current.proposedPrice);
+      await engine.current.end(await currentPoint(), finalPrice ?? current.proposedPrice);
       updateTrip(null); setPending(count => count + 1); setBackground(false);
+      setStartAddress('');setEndAddress('');setStartSelection(null);setEndSelection(null);setPrice('');setExternalReference('');
       try {await stopBackgroundMeter();} catch {setError('حُفظت الرحلة؛ تعذّر إيقاف خدمة الموقع على الهاتف.');}
       await synchronize();
     } catch(error) {setError(tripError(error, 'تعذّر إنهاء الرحلة أو إرسالها. أبقِ بيانات التطبيق وحاول مجدداً.'));}

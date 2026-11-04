@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAddressSearch,parseBelgianAddresses,freshSearchPoint} from '../src/native-addresses.ts';
+import {createAddressSearch,parseBelgianAddresses,freshSearchPoint,reverseBelgianAddress} from '../src/native-addresses.ts';
 const feature=(name,lon,lat,countrycode='BE')=>({type:'Feature',geometry:{type:'Point',coordinates:[lon,lat]},properties:{name,countrycode,city:'Demo',postcode:'1000',country:'Belgium'}});
 const payload=()=>({features:[feature('Further',4.4,50.9),feature('Foreign',4.3501,50.8501,'NL'),feature('Nearest',4.351,50.851),feature('Nearest',4.351,50.851),feature('No country',4.35,50.85,'')]});
 const near={lat:50.85,lon:4.35};
@@ -33,4 +33,34 @@ test('provider errors do not leak payloads; malformed replies never become a sel
 
 test('Dutch UI searches use local provider defaults instead of an unsupported language code',async()=>{
  let url;await createAddressSearch(async value=>{url=new URL(value);return Response.json(payload());})('Synthetic','nl');assert.equal(url.searchParams.has('lang'),false);
+});
+
+test('reverse lookup uses Photon but keeps the measured coordinates for routing', async () => {
+ const controller = new AbortController();
+ const address = await reverseBelgianAddress(near, 'nl', controller.signal, async (target, options) => {
+  const url = new URL(target);
+  assert.equal(url.origin, 'https://photon.komoot.io');
+  assert.equal(url.pathname, '/reverse');
+  assert.equal(url.searchParams.get('lat'), String(near.lat));
+  assert.equal(url.searchParams.get('lon'), String(near.lon));
+  assert.equal(url.searchParams.has('lang'), false);
+  assert.equal(options.credentials, 'omit');
+  assert.equal(options.signal, controller.signal);
+  return Response.json({features:[feature('Pickup', 4.351, 50.851)]});
+ });
+ assert.deepEqual(address, {...near, label:'Pickup, 1000 Demo, Belgium'});
+});
+
+test('reverse lookup rejects invalid input and provider failures and leaves missing addresses empty', async () => {
+ const controller = new AbortController();
+ const unused = () => assert.fail('Unexpected network request');
+ await assert.rejects(reverseBelgianAddress({...near, lat:100}, 'fr', controller.signal, unused));
+ assert.equal(await reverseBelgianAddress(near, 'fr', controller.signal,
+  async () => Response.json({features:[feature('Foreign', 4.351, 50.851, 'NL')]})), null);
+ await assert.rejects(reverseBelgianAddress(near, 'fr', controller.signal, async () => new Response(null, {status:503})));
+ await assert.rejects(reverseBelgianAddress(near, 'fr', controller.signal, async () => {
+  controller.abort();
+  return Response.json(payload());
+ }));
+ await assert.rejects(reverseBelgianAddress(near, 'fr', controller.signal, unused));
 });

@@ -3,15 +3,16 @@ import {Linking,Pressable,View} from 'react-native';
 import {freshSearchPoint,searchBelgianAddresses,type NativeAddress} from '../native-addresses';
 import type {MeterPoint} from '../trip-meter';
 import {usePreferences} from './preferences';
+import PickupLocation from './PickupLocation';
 import {Button,Field,Icon,Label,Notice,Row} from './ui';
-export default function AddressField({label,value,onChange,onSelect,selected,position,disabled}:{label:string;value:string;onChange:(value:string)=>void;onSelect:(address:NativeAddress)=>void;selected?:NativeAddress|null;position?:MeterPoint|null;disabled:boolean}){
+export default function AddressField({label,value,onChange,onSelect,selected,position,disabled,locatePickup=false}:{label:string;value:string;onChange:(value:string)=>void;onSelect:(address:NativeAddress)=>void;selected?:NativeAddress|null;position?:MeterPoint|null;disabled:boolean;locatePickup?:boolean}){
  const {t,colors,language}=usePreferences();const [rows,setRows]=useState<NativeAddress[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(false),[searched,setSearched]=useState(false),[scope,setScope]=useState({value:'',language:''});const flight=useRef<AbortController|null>(null),generation=useRef(0);
  const cancel=()=>{generation.current++;flight.current?.abort();flight.current=null;};
  useEffect(()=>()=>{generation.current++;flight.current?.abort();},[]);
  useEffect(()=>()=>{generation.current++;flight.current?.abort();flight.current=null;},[value,language,disabled]);
  const current=scope.value===value&&scope.language===language;const visibleRows=current?rows:[];
  async function search(){if(disabled||flight.current)return;const controller=new AbortController();flight.current=controller;const version=++generation.current;setScope({value,language});setBusy(true);setError(false);setSearched(false);setRows([]);try{const found=await searchBelgianAddresses(value,language,freshSearchPoint(position),controller.signal);if(version===generation.current){setRows(found);setSearched(true);}}catch{if(version===generation.current)setError(true);}finally{if(version===generation.current){flight.current=null;setBusy(false);}}}
- return <View style={{gap:10}}><Field label={label} value={value} maxLength={500} editable={!disabled} onChangeText={text=>{cancel();setRows([]);setBusy(false);onChange(text);}} returnKeyType="search" onSubmitEditing={()=>{if(value.trim().length>=3&&value.trim().length<=200)void search();}}/>
+ return <View style={{gap:10}}><PickupLocation enabled={locatePickup} value={value} disabled={disabled} onSelect={onSelect}>{accessory=><Field accessory={accessory} label={label} value={value} maxLength={500} editable={!disabled} onChangeText={text=>{cancel();setRows([]);setBusy(false);onChange(text);}} returnKeyType="search" onSubmitEditing={()=>{if(value.trim().length>=3&&value.trim().length<=200)void search();}}/>}</PickupLocation>
  <Button secondary label={t('searchAddress')} icon="search-outline" disabled={disabled||value.trim().length<3||value.trim().length>200} busy={busy&&current} onPress={()=>void search()}/>
  {selected&&selected.label===value&&<Row><Icon name="location" color={colors.icon}/><Label muted size={12}>{t('addressSelected')}</Label></Row>}
  {(current&&(searched||rows.length>0))&&<Label muted size={11}>{freshSearchPoint(position)?t('nearestAddresses'):t('addressWithoutGps')}</Label>}

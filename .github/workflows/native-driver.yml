@@ -72,7 +72,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   ios-simulator:
-    if: github.event_name == 'workflow_dispatch' && inputs.build_ios
+    if: (github.event_name == 'workflow_dispatch' && inputs.build_ios) || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: macos-latest
     timeout-minutes: 45
     defaults:
