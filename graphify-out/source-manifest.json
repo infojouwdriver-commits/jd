@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "3b724ab6cd56bab56e8f4678dbf63efa7e14cf22",
+  "source_commit_context": "6a8a28e011dc09257f5426b25781c1527ec513e7",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -160,7 +160,7 @@
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
     "package.json": "bd92cfccaa9d23345dc0bd76a0d1a481cd966aebe1abf20e5f9af4da20a20cdb",
     "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
-    "scripts/apply-release.mjs": "1617bd21cca4fdf3ea95b2baff9f6c9ebd3ae062a72d28a78a88c6fc043d3c56",
+    "scripts/apply-release.mjs": "7ad7a9279a32dbd2c1188d14dc304c141ec6539c66714b85e5048bd2acd20628",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
     "scripts/code-map.py": "a4d5f75b9f7a0b2c7e9ea064a10d9664d5d976fee9fac63a1ecbab9aeb046837",
     "scripts/convert-database.mjs": "3e5a46b4690231100db6d318a1ba53d1c3daff8a96e00808ab47db64c697a4ca",
@@ -636,8 +636,8 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "56147bf4a2027fc93528dffd14cd85b510bc594e3912639d653a5e4a46f15485",
-    "GRAPH_REPORT.md": "710bc38a5c0beed08e05405628c8856dd64ffc03cff226377736d0edf59dcaa3",
+    "graph.json": "0ac213feb68c7accbef6342eb0757d482b660c552ea352312e284c36203b528f",
+    "GRAPH_REPORT.md": "ecf6b5b4bbe0af879735aef59b0e68e8bf166b3505420ffcf95e4c16c88c9e1b",
     "health.json": "a04f2e7901c1179e79721077892fef1c01379fd213317c0e7f3dda10f4d9b8a0",
     "SOURCE_INDEX.md": "12fa25ca463979cec910b947358a9238333ab4a874afce021bc67f8d70a56530",
     "GRAPH_TREE.html": "3bace06a3bea633d005a9ef503c40646909353e59449becf935ff2a829d469f0"
