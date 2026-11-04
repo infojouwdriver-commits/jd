@@ -1,7 +1,7 @@
 # Graph Report - JOUW DRIVER  (2026-11-04)
 
 ## Corpus Check
-- 629 files · ~267,464 words
+- 629 files · ~267,461 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cbc2eba0`
+- Built from commit: `8a457551`
 - Source hashes are authoritative: run `python3 scripts/code-map.py --check`.
 - Rebuild using the pinned environment: `python scripts/code-map.py` (local AST only).
 

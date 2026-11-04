@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "cbc2eba095fcb3fd2a9ebebb89533b681eaab922",
+  "source_commit_context": "8a457551a344ff59d5fd6dd89f6238188f266479",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -56,7 +56,7 @@
     "driver-app/src/experience/AddressField.tsx": "00b428f3f1a7d84fe31132ea4259b4a4269dd25725e0e34611f63d855b553105",
     "driver-app/src/experience/BillingReminder.tsx": "d06c97110ffaab595cd9b3e854f9f1d906af1e7dc915d37629329b34c5d04a2d",
     "driver-app/src/experience/BrandMark.tsx": "d1676d8b84bc24fe2060bf4e7fdd831d1cc2f70e22b41f6be3d96ba2cccaa4fb",
-    "driver-app/src/experience/ClassicFare.tsx": "340e2222c751764e7aae872608fd96e6d7c55983fb95ff42d35c66257a4faca9",
+    "driver-app/src/experience/ClassicFare.tsx": "7260f86f56a876c2f8f2951a01903858341daf2e1c175ea13da7a537128f77d5",
     "driver-app/src/experience/Home.tsx": "595eb78326da6156c742449e11c4f6d017afd7444d970f1fe7fb4311dd76aac4",
     "driver-app/src/experience/JourneyLoading.tsx": "c5f6762514edeed6e527ed043d74d5265465b9edb2d1c51191921bb6c4ca2fbc",
     "driver-app/src/experience/Messages.tsx": "7bb68cadfd793a9e998de14fd88879a1c4c701c492633ef687bb2b172eee048c",
@@ -637,10 +637,10 @@
   },
   "artifacts": {
     "SOURCE_INDEX.md": "c1e5057faa941734dc704cbb6a61620322684c437b02178bf5a60bd9b3cd734c",
-    "GRAPH_REPORT.md": "e4b52af901f9355ce00f2e0c9f799fd02bd1b2e2d6705ab73ed3da6d8664b3b6",
+    "GRAPH_REPORT.md": "766f05869dedfe2058a517928c838aed690b33398653632d83f832cd54708621",
     "GRAPH_TREE.html": "3bace06a3bea633d005a9ef503c40646909353e59449becf935ff2a829d469f0",
     "health.json": "796ecbce7f78a929aa3ed5c80761e2dc0f15836cd1f3165387e8132eef9dbfa8",
-    "graph.json": "714b3f7248c17aa38a60bce3ff82658033efed60520b0e01116b8e9f002369bd"
+    "graph.json": "bc84a126d1ded611accab77566d486ceae5e7d08f74754050c6a6d3e28960d08"
   },
   "nodes": 3576,
   "edges": 12073,
