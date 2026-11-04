@@ -494,7 +494,7 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
-- `Home()` — [L13](../driver-app/src/experience/Home.tsx#L13)
+- `Home()` — [L14](../driver-app/src/experience/Home.tsx#L14)
 
 ## [driver-app/src/experience/JourneyLoading.tsx](../driver-app/src/experience/JourneyLoading.tsx)
 
@@ -535,7 +535,7 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/Revenues.tsx](../driver-app/src/experience/Revenues.tsx)
 
 - `Revenues.tsx` — [L1](../driver-app/src/experience/Revenues.tsx#L1)
-- `Revenues()` — [L11](../driver-app/src/experience/Revenues.tsx#L11)
+- `Revenues()` — [L12](../driver-app/src/experience/Revenues.tsx#L12)
 
 ## [driver-app/src/experience/Settings.tsx](../driver-app/src/experience/Settings.tsx)
 

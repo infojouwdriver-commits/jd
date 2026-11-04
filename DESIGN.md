@@ -375,3 +375,13 @@ as a map estimate. The occupied display distinguishes the agreed amount from
 live GPS distance and trip time. Keep the agreed amount editable independently
 of the estimate. Put tariff controls directly below the display, with a touch
 target of at least 48 points.
+
+### Native cockpit refresh
+
+The signed-in native app uses the Classic Digital navy instrument frame as its
+visual reference, with emerald for primary actions and active destinations.
+Shared screen headers use an icon, a single title and room for an existing
+action. The home screen puts the available trip action ahead of the map and
+uses a compact map for orientation. The five existing destinations remain
+visible in an inset, safe-area-aware tab bar. Keep route selection on the trip
+screen and keep the existing locale, contrast, shift and authorization behavior.

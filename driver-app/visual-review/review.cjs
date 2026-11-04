@@ -74,6 +74,7 @@ fixtures.api=fixtures.api.replace('export const driverApi={','export const drive
  await page.getByRole('button',{name:'ابحث عن العنوان',exact:true}).last().click();
  await page.getByRole('button',{name:'Demo further',exact:true}).click();
  await page.getByRole('button',{name:'T2 · Airport',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:/إعادة تحميل التعرفات|إعادة المحاولة/}).count(),0,'Loaded tariffs need no refresh control');
  await page.getByText(/29[,.٫]50|٢٩٫٥٠/).waitFor();
  await page.screenshot({path:path.join(output,'classic-digital-ar-dark.png')});
 
