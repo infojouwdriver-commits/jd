@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "60937fb3c44c04cb8eb2832af48f449d3ad3a53a",
+  "source_commit_context": "3b724ab6cd56bab56e8f4678dbf63efa7e14cf22",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -187,7 +187,7 @@
     "src/app/admin/companies/[id]/edit/page.tsx": "61b839995538ad069a7edc780bcf536edc0de29634cb2e956541a009bed3a373",
     "src/app/admin/companies/[id]/page.tsx": "dd2a8a8af04826948c4c45dc7da4c904d8ac240c5bb36ae16b1c6c16c395feac",
     "src/app/admin/companies/[id]/platform-contracts/page.tsx": "2f3f47f8d21a57dea249f993bba166456ac921e63c5c81192b99df40329cb81b",
-    "src/app/admin/companies/[id]/pricing/page.tsx": "eeef8555ef223e65be01d2f55a026bb95dd4af50b018520641543cedd29df6e9",
+    "src/app/admin/companies/[id]/pricing/page.tsx": "90fd928a1c104790bff2a510e923a3813bbf8ccee82d9eb4d2f21ac8a2e94dee",
     "src/app/admin/companies/[id]/settings/page.tsx": "ff921c6b122af4d872f967bda3de5437ef4dbc02ff7f492570e6334a0122c7ff",
     "src/app/admin/companies/page.tsx": "d02f453c6fd85952d630c502ae4fc94fe4b2b2411131f090994b5f91fab3b131",
     "src/app/admin/distributors/page.tsx": "4cc04e792aab726a8398e15b6e98786513bbfc8823fa52ee88542117719df146",
@@ -636,18 +636,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "graph.json": "bbb93c8c191ba24ea7984c8fb5ac52dc2fbef0bf95d96610f7a678b105bba8b4",
-    "GRAPH_REPORT.md": "39d0e2c433f8b94f56f08b583f3ac4268a9909aae8e17ad8bc35ef447c99cbfd",
-    "health.json": "0fc3a6552fe8b2420e8e9021bcdcf9bd184a21b9693d7d983da44968719782df",
+    "graph.json": "56147bf4a2027fc93528dffd14cd85b510bc594e3912639d653a5e4a46f15485",
+    "GRAPH_REPORT.md": "710bc38a5c0beed08e05405628c8856dd64ffc03cff226377736d0edf59dcaa3",
+    "health.json": "a04f2e7901c1179e79721077892fef1c01379fd213317c0e7f3dda10f4d9b8a0",
     "SOURCE_INDEX.md": "12fa25ca463979cec910b947358a9238333ab4a874afce021bc67f8d70a56530",
     "GRAPH_TREE.html": "3bace06a3bea633d005a9ef503c40646909353e59449becf935ff2a829d469f0"
   },
   "nodes": 3576,
-  "edges": 12067,
-  "raw_edges": 12335,
+  "edges": 12069,
+  "raw_edges": 12337,
   "communities": 183,
   "confidence_counts": {
-    "EXTRACTED": 12088,
+    "EXTRACTED": 12090,
     "INFERRED": 247
   }
 }

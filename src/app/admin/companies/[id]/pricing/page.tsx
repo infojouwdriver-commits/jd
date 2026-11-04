@@ -12,7 +12,7 @@ import { ArrowLeft, Save, Loader2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
-import type {CompanyPricing, CompanyTariff} from '@/lib/company-pricing';
+import {validateCompanyTariffs,type CompanyPricing,type CompanyTariff} from '@/lib/company-pricing';
 
 interface Company {id:number;name:string;tariffs:CompanyTariff[];revision:number}
 interface Issued {id:string;issued_at:string;url:string}
@@ -78,7 +78,7 @@ export default function CompanyPricingPage() {
     if (saving || !company) return;
     setSaving(true);
     try {
-      const updated=await api.put<Company>(endpoint,{tariffs,revision:company.revision});
+      const updated=await api.put<Company>(endpoint,{tariffs:validateCompanyTariffs(tariffs),revision:company.revision});
       setCompany(updated);setTariffs(updated.tariffs);setDirty(false);
       toast.success('تم حفظ إعدادات التسعيرة بنجاح');
     } catch (error: any) {
@@ -94,7 +94,7 @@ export default function CompanyPricingPage() {
     try {
       const item=await api.post<Issued>(endpoint+'/documents',{language,revision:company.revision});
       setDocuments(rows=>[item,...rows]);
-      const link=document.createElement('a');link.href=item.url;link.click();
+      const link=document.createElement('a');link.href=item.url;link.download=`Tarifs-${item.id}.pdf`;link.click();
     } catch (error) {toast.error(error instanceof Error?error.message:'تعذّر إصدار الورقة');}
     finally {setIssuing(false);}
   }
