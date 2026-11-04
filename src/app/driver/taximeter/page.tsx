@@ -35,10 +35,12 @@ import { isFreshAccurateLocation, clearNativeTripPoints } from '@/lib/mobile-loc
 interface PricingConfig {
   company_id: number; company_name: string;
   pricing: { base_fee: number; km_rate: number; minute_rate: number; minimum_fare: number; night_fee?: number; airport_fee?: number };
+  tariffs?:{code:string;name:string}[];
   chiron_mode: 'TEST' | 'PRODUCTION';
 }
 interface TripData {
   completionRequestKey: string;
+  tariffQuote?: string;
   startLat: number; startLon: number; startAddress: string; endAddress: string;
   startTime: string; distance: number; duration: number; proposedPrice: number;
   passengerName?: string; paymentMethod?: string; rideType: 'INTERNAL' | 'EXTERNAL';
@@ -477,6 +479,7 @@ function TaximeterWorkspace() {
   const [loading, setLoading] = useState(false);
   const [showStartSuggestions, setShowStartSuggestions] = useState(false);
   const [showEndSuggestions, setShowEndSuggestions] = useState(false);
+  const [tariffCode,setTariffCode]=useState('');
   const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [storageReady, setStorageReady] = useState(false);
@@ -653,6 +656,7 @@ function TaximeterWorkspace() {
     return parseFloat(price.toFixed(2));
   };
 
+  const chosenTariff=pricingConfig?.tariffs?.find(tariff=>tariff.code===tariffCode)??pricingConfig?.tariffs?.[0];
   const showPriceEstimate = async () => {
     setLoading(true);
     setRouteUnavailable(false);
@@ -670,7 +674,8 @@ function TaximeterWorkspace() {
         if (!routeDetails) throw new Error('route_address_not_found');
         setEstimatedDistance(routeDetails.distance);
         setEstimatedDuration(routeDetails.duration);
-        setProposedPrice(calculateProposedPrice(routeDetails.distance, routeDetails.duration).toFixed(2));
+        const quoted=chosenTariff ? await api.post<{price:number}>('/drivers/pricing',{code:chosenTariff.code,km:routeDetails.distance,minutes:routeDetails.duration}) : null;
+        setProposedPrice(quoted?quoted.price.toFixed(2):pricingConfig?.tariffs?'':calculateProposedPrice(routeDetails.distance,routeDetails.duration).toFixed(2));
         setRouteCoords({ startLat: routeDetails.startLat, startLon: routeDetails.startLon, endLat: routeDetails.endLat, endLon: routeDetails.endLon, route: routeDetails.route });
         setShowMap(true);
       } else { setProposedPrice('0.00'); setRouteCoords(null); }
@@ -757,7 +762,11 @@ function TaximeterWorkspace() {
         return;
       }
     }
+      const quote=selectedRideType==='INTERNAL'&&chosenTariff
+        ? await api.post<{token:string}>('/drivers/pricing',{code:chosenTariff.code,km:routeCoords?estimatedDistance:null,minutes:routeCoords?estimatedDuration:null})
+        : null;
       const tripStartData: TripData = {
+        ...(quote?{tariffQuote:quote.token}:{}),
         completionRequestKey: crypto.randomUUID(),
         startLat: startLocation?.lat ?? 0, startLon: startLocation?.lon ?? 0,
         startAddress: startAddress || '', endAddress: endAddress || '',
@@ -820,6 +829,7 @@ function TaximeterWorkspace() {
         external_source: tripData.externalSource || null, external_ride_number: tripData.externalRideNumber || null, currency: 'EUR',
       };
       if (selectedRideType === 'INTERNAL') {
+        if(tripData.tariffQuote)tripPayload.tariff_quote=tripData.tariffQuote;
         tripPayload.estimated_distance_km = estimatedDistance; tripPayload.estimated_duration_min = estimatedDuration;
         tripPayload.initial_proposed_price = tripData.proposedPrice;
         tripPayload.driver_adjusted_price = priceValue !== tripData.proposedPrice ? priceValue : null;
@@ -1175,6 +1185,14 @@ function TaximeterWorkspace() {
             </GlassCard>
           </motion.div>
 
+          {selectedRideType==='INTERNAL'&&!!pricingConfig?.tariffs?.length&&<div className="flex flex-wrap gap-2">
+            {pricingConfig.tariffs.map(tariff=><button key={tariff.code} type="button" disabled={loading}
+              aria-pressed={chosenTariff?.code===tariff.code}
+              className="rounded-xl border border-amber-300/40 px-4 py-2 aria-pressed:bg-amber-300/20"
+              onClick={()=>{setTariffCode(tariff.code);setShowPriceProposal(false);setRouteCoords(null);setProposedPrice('');}}>
+              {tariff.code} · {tariff.name}
+            </button>)}
+          </div>}
           {/* Calculate Price Button */}
           <DriverActionButton onClick={showPriceEstimate} disabled={loading || (!isExternalRide && !paymentMethod)}>
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Navigation className="w-5 h-5" />}

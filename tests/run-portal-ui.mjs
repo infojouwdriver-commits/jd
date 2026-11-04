@@ -48,7 +48,11 @@ try {
     chironTests++;
     data={success:true,totalMessages:10,successCount:10,failedCount:0,results:Array.from({length:10},(_,i)=>({ritnummer:'TEST-synthetic-'+Math.floor(i/2),sequence:i+1,messageType:i%2?'aankomst':'vertrek',success:true,httpStatus:200}))};
    }
-   else if(url.pathname==='/next_api/companies/1/pricing')data={id:1,name:'Company One',base_rate_per_km:0,base_rate_per_minute:'0.5',minimum_fare:'10.75',airport_surcharge:0,night_surcharge_percentage:0,peak_hour_surcharge_percentage:0,night_start_hour:22,night_end_hour:6,peak_hours:null};
+   else if(url.pathname==='/next_api/companies/1/pricing'){
+    const settings={base_rate_per_km:0,base_rate_per_minute:.5,minimum_fare:10.75,airport_surcharge:0,night_surcharge_percentage:0,peak_hour_surcharge_percentage:0,night_start_hour:22,night_end_hour:6,peak_hours:[{start:'07:00',end:'09:00'},{start:'17:00',end:'19:00'}]};
+    if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,name:'Company One',tariffs:pricingWrites.at(-1).tariffs,revision:1};}
+    else data={id:1,name:'Company One',revision:0,tariffs:[{code:'T1',name:'Standard',description:'',starts_on:'2026-01-01',enabled:true,base_fee:10.75,settings}]};
+   }
    await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:{success:true,data})});
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -88,15 +92,22 @@ try {
   await page.getByRole('link',{name:/إعدادات التسعير/}).click();
   await page.waitForURL(base+'/admin/companies/1/pricing');
   const fields=page.locator('input[type="number"]');
-  await fields.first().waitFor();assert.equal(await fields.first().inputValue(),'0');assert.equal(await fields.nth(2).inputValue(),'10.75');
-  await fields.nth(2).fill('-1');await page.getByRole('button',{name:/حفظ/}).click();
+  await fields.first().waitFor();assert.equal(await fields.nth(1).inputValue(),'0');assert.equal(await fields.nth(3).inputValue(),'10.75');
+  await fields.nth(3).fill('-1');await page.getByRole('button',{name:/حفظ/}).click();
   await page.getByText('قيمة التسعير غير صالحة: minimum_fare',{exact:true}).waitFor();assert.equal(pricingWrites.length,0);
-  await fields.nth(2).fill('10.75');
-  const pricingSaved=page.waitForResponse(response=>response.url()===base+'/next_api/companies'&&response.request().method()==='PUT');
-  await page.getByRole('button',{name:/حفظ/}).click();await pricingSaved;await page.waitForURL(base+'/admin/companies');
-  assert.equal(pricingWrites[0].base_rate_per_km,0);assert.equal(pricingWrites[0].airport_surcharge,0);assert.equal(pricingWrites[0].minimum_fare,10.75);assert.equal(pricingWrites[0].peak_hours.length,2);
+  await fields.nth(3).fill('10.75');
+  await page.getByRole('button',{name:'إضافة تعرفة',exact:true}).click();
+  await page.getByRole('textbox',{name:'الاسم',exact:true}).fill('Airport');
+  await page.getByRole('checkbox',{name:'تعرفة مفعّلة',exact:true}).check();
+  const pricingSaved=page.waitForResponse(response=>response.url()===base+'/next_api/companies/1/pricing'&&response.request().method()==='PUT');
+  await page.getByRole('button',{name:/حفظ/}).click();await pricingSaved;
+  const {tariffs,revision}=pricingWrites[0];
+  assert.equal(revision,0);assert.equal(tariffs.length,2);
+  assert.equal(tariffs[0].settings.base_rate_per_km,0);assert.equal(tariffs[0].settings.airport_surcharge,0);
+  assert.equal(tariffs[0].settings.minimum_fare,10.75);assert.equal(tariffs[0].settings.peak_hours.length,2);
+  assert.equal(tariffs[1].code,'T2');assert.equal(tariffs[1].name,'Airport');assert.equal(tariffs[1].enabled,true);
   assert.equal(errors.length,0,errors.join('\n'));
-  checks.push(name+': pricing settings link opens, unset periods render safely, zero rates and cents persist, invalid edits do not submit');
+  checks.push(name+': company tariff editor preserves zeroes and cents, validates edits and adds an independent active T2');
   await page.goto(base+'/admin/companies/1/chiron-settings');
   await page.getByTestId('chiron-test-key-status').getByText(/مفتاح الاختبار محفوظ ومخفي/).waitFor();
   assert.equal(await page.locator('#chiron_test_client_secret').inputValue(),'');

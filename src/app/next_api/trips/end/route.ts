@@ -10,6 +10,8 @@ import { completedTripTimes } from '@/lib/trip-times';
 import { canonicalChironEnvironment } from '@/lib/chiron-protocol';
 import {assertNativeTripExpectation, hasNativeTripExpectation} from '@/lib/native-trip-contract';
 
+import {readTariffQuote} from "@/lib/tariff-quote";
+
 function generateTripUuid(): string { return randomUUID(); }
 
 function generateTripHash(data: Record<string, any>): string {
@@ -207,6 +209,16 @@ export const POST = requestMiddleware(async (request, context) => {
         : null;
       tripData.actual_distance_km = distance_km ? parseFloat(distance_km.toFixed(3)) : null;
       tripData.actual_duration_minutes = actualDuration;
+    }
+
+    if (body.tariff_quote != null) {
+      try {
+        if (ride_type !== 'INTERNAL') throw Error('Unexpected tariff');
+        const quote=readTariffQuote(body.tariff_quote,user_id,String(driver.company_id),startTime.getTime(),process.env.JWT_SECRET||'');
+        Object.assign(tripData,{tariff_code:quote.tariff.code,tariff_settings_snapshot:quote.tariff,
+          estimated_distance_km:quote.km,estimated_duration_min:quote.minutes,
+          initial_proposed_price:quote.price,driver_adjusted_price:tripData.price===quote.price?null:tripData.price});
+      } catch {return createErrorResponse({status:400,errorMessage:'Invalid trip tariff quote'});}
     }
 
     // Generate immutability hash after all fields are set

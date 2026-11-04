@@ -106,6 +106,7 @@ export const POST = requestMiddleware(async (request, context) => {
 export const PUT = requestMiddleware(async (request, context) => {
   const body = await validateRequestBody(request);
   const { id, password, ...updateData } = body;
+  if (['tariff_profiles','tariff_revision'].some(key=>Object.hasOwn(updateData,key))) return createErrorResponse({status:400,errorMessage:'Use company tariff settings'});
 
   if (!id) {
     return createErrorResponse({ errorMessage: "معرف الشركة مطلوب", status: 400 });

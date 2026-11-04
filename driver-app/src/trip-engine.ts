@@ -1,18 +1,20 @@
 import {addMeterPoint, emptyMeter, type MeterPoint, type MeterState} from './trip-meter';
 export interface NativeTrip {
   shiftId?:string;
+  tariffQuote?: {token:string;price:number|null;code:string;km:number|null;minutes:number|null};
   key: string; revision: number; owner: string; companyId: number; vehicleId: number; environment: string;
   startTime: string; start: MeterPoint; startAddress: string; endAddress: string;
   proposedPrice: number; paymentMethod: string; meter: MeterState; navigationDestination?: {lat:number;lon:number}; platform?: 'INTERNAL' | 'UBER' | 'BOLT' | 'HEETCH'; externalReference?: string;
 }
-export interface TripSyncReceipt {id: number; chiron: 'production' | 'test' | 'unconfirmed'}
+export interface TripSyncReceipt {id: number; price?:number; chiron: 'production' | 'test' | 'unconfirmed'}
 function durableReceipt(value: unknown, key: string, owner: string, expectedEnvironment: unknown): TripSyncReceipt | null {
   if (!value || typeof value !== 'object') return null;
   const receipt = value as Record<string, unknown>;
   if (!Number.isSafeInteger(receipt.id) || Number(receipt.id) < 1 || typeof receipt.completion_request_key !== 'string' || receipt.completion_request_key.toLowerCase() !== key.toLowerCase() || receipt.driver_id !== Number(owner)) return null;
   const environment = typeof receipt.chiron_environment === 'string' ? receipt.chiron_environment.toLowerCase() : '';
   const confirmed = receipt.chiron_sync_state === 'COMPLETED' && !receipt.warning && typeof expectedEnvironment === 'string' && environment === expectedEnvironment.toLowerCase();
-  return {id: Number(receipt.id), chiron: confirmed && (environment === 'production' || environment === 'test') ? environment : 'unconfirmed'};
+  const price=typeof receipt.price==='number'||typeof receipt.price==='string' ? Number(receipt.price) : NaN;
+  return {id: Number(receipt.id), ...(Number.isFinite(price)&&price>=0?{price}:{}), chiron: confirmed && (environment === 'production' || environment === 'test') ? environment : 'unconfirmed'};
 }
 export interface TripStore {
   active(owner: string): Promise<NativeTrip | null>;
@@ -48,7 +50,7 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
   let syncing: Promise<{sent: number; remaining: number; receipts: TripSyncReceipt[]}> | null = null;
   return {
     restore: () => serial(() => store.active(owner)),
-    start: (input: {shiftId?:string;companyId: number; vehicleId: number; environment: string; point: MeterPoint; startAddress: string; endAddress: string; proposedPrice: number; paymentMethod: string; navigationDestination?: {lat:number;lon:number}; platform?: 'INTERNAL' | 'UBER' | 'BOLT' | 'HEETCH'; externalReference?: string}) => serial(async () => {
+    start: (input: {shiftId?:string;tariffQuote?:NativeTrip['tariffQuote'];companyId: number; vehicleId: number; environment: string; point: MeterPoint; startAddress: string; endAddress: string; proposedPrice: number; paymentMethod: string; navigationDestination?: {lat:number;lon:number}; platform?: 'INTERNAL' | 'UBER' | 'BOLT' | 'HEETCH'; externalReference?: string}) => serial(async () => {
       if (await store.active(owner)) throw Error('توجد رحلة نشطة. استأنفها أولاً.');
       if (!validPoint(input.point, clock())) throw Error('انتظر موقع GPS حديثاً ودقيقاً.');
       if (![input.companyId, input.vehicleId].every(n => Number.isSafeInteger(n) && n > 0)) throw Error('الشركة والمركبة مطلوبتان.');
@@ -61,7 +63,7 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
       const key = uuid();
       if (!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(key)) throw Error('Trip key invalid');
       const trip: NativeTrip = {key, revision: 0, owner, companyId: input.companyId, vehicleId: input.vehicleId, environment: input.environment,
-        ...(input.shiftId?{shiftId:input.shiftId}:{}),startTime: new Date(clock()).toISOString(), start: input.point,
+        ...(input.tariffQuote?{tariffQuote:input.tariffQuote}:{}),...(input.shiftId?{shiftId:input.shiftId}:{}),startTime: new Date(clock()).toISOString(), start: input.point,
         startAddress: address(input.startAddress), endAddress: address(input.endAddress),
         proposedPrice: input.proposedPrice, paymentMethod: input.paymentMethod, ...(input.platform ? {platform: input.platform, externalReference: input.externalReference?.trim() || undefined} : {}),
         ...(input.navigationDestination?{navigationDestination:{...input.navigationDestination}}:{}),
@@ -85,7 +87,9 @@ export function createTripEngine(owner: string, store: TripStore, uuid: () => st
         start_address: trip.startAddress, end_address: trip.endAddress,
         distance_km: Number(meter.distanceKm.toFixed(2)), duration_minutes: Math.floor(duration / 60),
         actual_distance_km: Number(meter.distanceKm.toFixed(2)), actual_duration_minutes: Math.floor(duration / 60),
-        price, initial_proposed_price: trip.proposedPrice, driver_adjusted_price: price !== trip.proposedPrice ? price : null,
+        price, initial_proposed_price: trip.tariffQuote ? trip.tariffQuote.price : trip.proposedPrice,
+        driver_adjusted_price: price !== (trip.tariffQuote ? trip.tariffQuote.price : trip.proposedPrice) ? price : null,
+        ...(trip.tariffQuote ? {tariff_quote:trip.tariffQuote.token} : {}),
         payment_method: trip.paymentMethod, ride_type: trip.platform && trip.platform !== 'INTERNAL' ? 'EXTERNAL' : 'INTERNAL', currency: 'EUR',
         ...(trip.platform && trip.platform !== 'INTERNAL' ? {external_source: trip.platform, external_ride_number: trip.externalReference || null} : {}),
         _native_company_id: trip.companyId, _native_vehicle_id: trip.vehicleId, _native_environment: trip.environment};

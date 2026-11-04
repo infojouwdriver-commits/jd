@@ -357,3 +357,21 @@ Asset provenance and commercial-use permission are in public/cinematic/ASSETS.md
 On phones the marketing header uses two 44px rows within 112px: brand/languages,
 then fully labelled registration/login. The playhead reads the actual header
 height when refreshing its pin start; no desktop offset is assumed on phones.
+
+### Pickup location
+
+Place the locate control in the same row as the departure input, mirrored with
+the form direction. Keep its 54-point target and distinguish progress with a
+spinner. Keep the field editable while the phone resolves the location so a
+manual change wins. When the address provider cannot resolve the location, show
+the measured coordinates with a retry action below the field.
+
+### Classic Digital fare display
+
+The trip screen uses a navy instrument case, a recessed near-black display and
+green monospace figures. Keep route distance and time below the amount, and
+show the selected tariff next to the state. The idle display labels the amount
+as a map estimate. The occupied display distinguishes the agreed amount from
+live GPS distance and trip time. Keep the agreed amount editable independently
+of the estimate. Put tariff controls directly below the display, with a touch
+target of at least 48 points.
