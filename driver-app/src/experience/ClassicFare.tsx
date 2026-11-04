@@ -10,7 +10,7 @@ import {Button,Label,Notice,Row} from './ui';
 export type FarePreview={start:RouteCoordinate;end:RouteCoordinate;route:NativeRoute};
 type Tariff={code:string;name:string;description:string};
 const words={
- ar:{estimate:'السعر التقديري',note:'تقدير مبني على بيانات الخرائط',final:'السعر المتفق عليه',unavailable:'تعذّر تحميل التعرفات أو تحديث التقدير.',empty:'لا توجد تعرفات سارية.',retry:'تحديث التعرفات'},
+ ar:{estimate:'السعر التقديري',note:'تقدير مبني على بيانات الخرائط',final:'السعر المتفق عليه',unavailable:'تعذّر تحميل التعرفات أو تحديث التقدير.',empty:'لا توجد تعرفات سارية.',retry:'إعادة تحميل التعرفات'},
  fr:{estimate:'Prix estimé',note:'Estimation basée sur les données cartographiques',final:'Prix convenu',unavailable:'Tarifs ou estimation indisponibles.',empty:'Aucun tarif en vigueur.',retry:'Actualiser les tarifs'},
  nl:{estimate:'Geschatte prijs',note:'Raming op basis van kaartgegevens',final:'Afgesproken prijs',unavailable:'Tarieven of prijsraming niet beschikbaar.',empty:'Geen geldige tarieven.',retry:'Tarieven vernieuwen'},
  en:{estimate:'Estimated fare',note:'Estimate based on map data',final:'Agreed fare',unavailable:'Tariffs or estimate unavailable.',empty:'No active tariffs.',retry:'Refresh tariffs'},
