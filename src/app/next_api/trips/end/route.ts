@@ -6,10 +6,11 @@ import { ChironService } from '@/lib/chiron-service';
 import { generateAdminUserToken } from '@/lib/auth';
 import {createPostgrestClient} from '@/lib/postgrest';
 import { createHash, randomUUID } from 'crypto';
-import { completedTripTimes } from '@/lib/trip-times';
+import { completedTripTimes, tripRequestKey } from '@/lib/trip-times';
 import { canonicalChironEnvironment } from '@/lib/chiron-protocol';
-import {assertNativeTripExpectation, hasNativeTripExpectation} from '@/lib/native-trip-contract';
+import {assertNativeTripExpectation} from '@/lib/native-trip-contract';
 
+import {tripDelivery, syncTripEvent} from '@/lib/chiron-retry';
 import {readTariffQuote} from "@/lib/tariff-quote";
 
 function generateTripUuid(): string { return randomUUID(); }
@@ -43,7 +44,7 @@ function getRetentionDate(): string | null {
 
 export const POST = requestMiddleware(async (request, context) => {
   const body = await validateRequestBody(request);
-  if (typeof body.completion_request_key !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.completion_request_key)) return createErrorResponse({errorMessage:'Trip completion key required',status:400});
+  if (!tripRequestKey(body.completion_request_key)) return createErrorResponse({errorMessage:'Trip completion key required',status:400});
 
   const {
     start_lat,
@@ -94,9 +95,10 @@ export const POST = requestMiddleware(async (request, context) => {
 
   try {
     const adminToken = await generateAdminUserToken();
-    if (hasNativeTripExpectation(body)) {
-      const receipts = await new CrudOperations('trips', adminToken).findMany({user_id: Number(user_id), completion_request_key: body.completion_request_key});
-      if (receipts?.[0]) return createSuccessResponse({...receipts[0], replayed: true}, 200);
+    const [departure] = await new CrudOperations('trips', adminToken).findMany({user_id: Number(user_id), completion_request_key: body.completion_request_key});
+    if (departure?.status === 'completed') return createSuccessResponse({...departure,chiron_delivery:departure.chiron_realtime?tripDelivery(departure):'review',replayed:true}, 200);
+    if ((body.chiron_realtime === true || departure) && !departure?.chiron_realtime) {
+      return createErrorResponse({status:409,errorMessage:'Save the original departure before completing this trip'});
     }
 
     const driversCrud = new CrudOperations("drivers", adminToken);
@@ -110,12 +112,17 @@ export const POST = requestMiddleware(async (request, context) => {
     if (driver.status !== 'active') return createErrorResponse({errorMessage:'Driver inactive',status:403});
     const company = await ChironService.getCompanyConfig(driver.company_id);
 
+    if (departure && (String(departure.driver_id) !== String(driver.id) || String(departure.company_id) !== String(driver.company_id))) {
+      return createErrorResponse({status:409,errorMessage:'Original driver or company changed'});
+    }
     let vehicle: any = null;
-    if (driver.current_vehicle_id) {
+    if (departure) {
+      vehicle = await new CrudOperations("vehicles", adminToken).findById(departure.vehicle_id);
+    } else if (driver.current_vehicle_id) {
       const vehiclesCrud = new CrudOperations("vehicles", adminToken);
       vehicle = await vehiclesCrud.findById(driver.current_vehicle_id);
     }
-    if (!vehicle) {
+    if (!vehicle && !departure) {
       const vehiclesCrud = new CrudOperations("vehicles", adminToken);
       const vehicles = await vehiclesCrud.findMany({
         company_id: driver.company_id,
@@ -127,30 +134,22 @@ export const POST = requestMiddleware(async (request, context) => {
       vehicle = vehicles[0];
     }
 
-    if (vehicle.status !== 'active' || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'Vehicle not permitted',status:403});
-    try {assertNativeTripExpectation(body, Number(driver.company_id), Number(vehicle.id), company.chiron_mode);}
+    if (!vehicle || (!departure && vehicle.status !== 'active') || String(vehicle.company_id) !== String(driver.company_id)) return createErrorResponse({errorMessage:'Vehicle not permitted',status:403});
+    try {assertNativeTripExpectation(body, Number(driver.company_id), Number(vehicle.id), departure?.chiron_environment ?? company.chiron_mode);}
     catch {return createErrorResponse({errorMessage:'تغيرت الشركة أو المركبة أو بيئة الإرسال منذ بدء الرحلة. تبقى الرحلة محفوظة على الهاتف.',status:409});}
-    const tripsCrud = new CrudOperations("trips", context.token);
-
     const actualDuration = duration_minutes || 0;
-    const { startTime, endTime } = eventTimes;
-
-    const timestamp = Date.now();
-    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-
-    let ritnummer: string;
-    if (ride_type === 'EXTERNAL' && external_source) {
-      const platformPrefix = external_source.toUpperCase();
-      ritnummer = (external_ride_number && external_ride_number.trim() !== '')
-        ? `${platformPrefix}-${external_ride_number.trim()}`
-        : `${platformPrefix}-${timestamp}-${driver.id}-${randomSuffix}`;
-    } else {
-      ritnummer = `TRIP-${driver.company_id}-${timestamp}-${driver.id}-${randomSuffix}`;
+    const { endTime } = eventTimes;
+    const startTime = departure ? new Date(departure.start_time) : eventTimes.startTime;
+    if (departure && (eventTimes.startTime.getTime() !== startTime.getTime() || endTime <= startTime
+      || ride_type !== departure.ride_type || (external_source ?? null) !== departure.external_source
+      || end_lat == null || end_lon == null || distance_km == null)) {
+      return createErrorResponse({status:409,errorMessage:'Arrival does not match the original departure'});
     }
 
-    if (!ritnummer || ritnummer.trim() === '') {
-      return createErrorResponse({ errorMessage: "فشل في توليد معرف الرحلة", status: 500 });
-    }
+    const trip_uuid = departure?.trip_uuid ?? generateTripUuid();
+    const ritnummer = departure?.ritnummer ?? (ride_type === 'EXTERNAL' && external_ride_number?.trim()
+      ? `${external_source.toUpperCase()}-${external_ride_number.trim()}`.slice(0,100)
+      : `${ride_type === 'EXTERNAL' ? external_source.toUpperCase().slice(0,20) : 'TRIP'}-${trip_uuid}`);
 
     const finalEndLat = end_lat ?? start_lat;
     const finalEndLon = end_lon ?? start_lon;
@@ -162,8 +161,6 @@ export const POST = requestMiddleware(async (request, context) => {
       });
     }
 
-    const trip_uuid = generateTripUuid();
-
     const tripData: Record<string, any> = {
       user_id: parseInt(user_id),
       company_id: driver.company_id,
@@ -171,11 +168,11 @@ export const POST = requestMiddleware(async (request, context) => {
       vehicle_id: vehicle.id,
       start_time: startTime.toISOString(),
       end_time: endTime.toISOString(),
-      start_lat: start_lat ?? finalEndLat,
-      start_lon: start_lon ?? finalEndLon,
+      start_lat: departure?.start_lat ?? start_lat ?? finalEndLat,
+      start_lon: departure?.start_lon ?? start_lon ?? finalEndLon,
       end_lat: finalEndLat,
       end_lon: finalEndLon,
-      start_address: start_address || null,
+      start_address: departure?.start_address ?? (start_address || null),
       end_address: end_address || null,
       distance_km: distance_km != null ? parseFloat(distance_km.toFixed(3)) : null,
       duration_minutes: actualDuration,
@@ -183,7 +180,7 @@ export const POST = requestMiddleware(async (request, context) => {
       status: 'completed',
       ritnummer,
       trip_uuid,
-      chiron_environment: canonicalChironEnvironment(company.chiron_mode),
+      chiron_environment: canonicalChironEnvironment(departure?.chiron_environment ?? company.chiron_mode),
       chiron_sync_attempts: 0,
       chiron_sync_state: 'CREATED',
       passenger_name: passenger_name || null,
@@ -224,81 +221,18 @@ export const POST = requestMiddleware(async (request, context) => {
     // Generate immutability hash after all fields are set
     tripData.trip_hash = generateTripHash(tripData);
 
-    const saved = await createPostgrestClient(adminToken).rpc('security_save_completed_trip',{p_payload:tripData,p_user_id:Number(user_id),p_key:body.completion_request_key});
+    const saved = await createPostgrestClient(adminToken).rpc(
+      departure ? 'security_finish_realtime_trip' : 'security_save_completed_trip',
+      {p_payload:tripData,p_user_id:Number(user_id),p_key:body.completion_request_key},
+    );
+    if (saved.data?.conflict) return createErrorResponse({status:409,errorMessage:'Trip completion conflicts with its departure'});
     if (saved.error || !saved.data?.trip) throw new Error('Atomic trip storage unavailable');
     const trip = saved.data.trip;
-    if (!saved.data.created) return createSuccessResponse({...trip,replayed:true},200);
-    if (process.env.CHIRON_TRANSMISSION_ENABLED !== 'true') return createSuccessResponse({...trip,warning:'تم حفظ الرحلة دون إرسالها — تكامل Chiron غير مفعّل.'},201);
-
-    void 0;
-
-    if (!trip.ritnummer || trip.ritnummer.trim() === '') {
-      return createErrorResponse({ errorMessage: "معرف الرحلة مفقود بعد الإنشاء", status: 500 });
+    if (!saved.data.created) return createSuccessResponse({...trip,chiron_delivery:trip.chiron_realtime?tripDelivery(trip):'review',replayed:true},200);
+    if (!departure) {
+      return createSuccessResponse({...trip,chiron_delivery:'review',warning:'تم حفظ الرحلة للمراجعة. لم يُسجّل انطلاقها عبر مسار Chiron اللحظي.'},201);
     }
-
-    try {
-      await ChironService.sendTripStart(trip.id, driver.company_id, {
-        driver_id: driver.id,
-        vehicle_id: vehicle.id,
-        start_time: startTime.toISOString(),
-        start_lat: start_lat ?? finalEndLat,
-        start_lon: start_lon ?? finalEndLon,
-        ritnummer: trip.ritnummer,
-        external_source: external_source ? external_source.toUpperCase() : undefined,
-      });
-
-      await ChironService.sendTripArrival(trip.id, driver.company_id, {
-        driver_id: driver.id,
-        vehicle_id: vehicle.id,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        start_lat: start_lat ?? finalEndLat,
-        start_lon: start_lon ?? finalEndLon,
-        end_lat: finalEndLat,
-        end_lon: finalEndLon,
-        distance_km: distance_km ? parseFloat(distance_km.toFixed(3)) : 0,
-        price: parseFloat(price.toFixed(2)),
-        ritnummer: trip.ritnummer,
-        external_source: external_source ? external_source.toUpperCase() : undefined,
-      });
-
-      // Lock the trip after successful completion (immutability — Article 33)
-      await tripsCrud.update(trip.id, {
-        locked_after_completion: true,
-        locked_at: new Date().toISOString(),
-      });
-
-      const updatedTrip = await tripsCrud.findById(trip.id);
-      return createSuccessResponse({
-        ...updatedTrip,
-        chiron_sync_status: 'تم الإرسال بنجاح إلى Chiron',
-      }, 201);
-
-    } catch (chironError: any) {
-      console.error("Operation failed");
-
-      await tripsCrud.update(trip.id, {
-        chiron_sync_attempts: 1,
-        sync_error_message: chironError.message,
-        last_sync_attempt: new Date().toISOString(),
-      });
-
-      await ChironService.logSyncAttempt(
-        trip.id,
-        1,
-        'failed',
-        { ritnummer: trip.ritnummer, driver_id: driver.id, vehicle_id: vehicle.id, ride_type, external_source },
-        undefined,
-        chironError.message,
-        500
-      );
-
-      return createSuccessResponse({
-        ...trip,
-        chiron_sync_state: 'ERROR',
-        warning: 'تم حفظ الرحلة ولكن فشل إرسالها إلى Chiron. سيتم إعادة المحاولة لاحقاً.',
-      }, 201);
-    }
+    return createSuccessResponse(await syncTripEvent(trip, adminToken, 'aankomst'), 201);
 
   } catch (error: any) {
     console.error("Operation failed");

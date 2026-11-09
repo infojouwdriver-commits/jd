@@ -28,7 +28,7 @@ export async function authorizeEndpoint(request: NextRequest, payload: JWTPayloa
       const trip = await new CrudOperations('trips', token).findById(id);
       if (!ownsRecord(trip, payload.sub)) throw new Response(null, {status: 404});
       if (path === '/next_api/trips' && trip.locked_after_completion) throw new Response(null, {status: 409});
-    } else if (!['/next_api/trips/start', '/next_api/trips/end', '/next_api/trips/summary', '/next_api/trips/export-pdf'].includes(path)) throw new Response(null, {status: 400});
+    } else if (!['/next_api/trips/start', '/next_api/trips/end', '/next_api/trips/retry-sync', '/next_api/trips/summary', '/next_api/trips/export-pdf'].includes(path)) throw new Response(null, {status: 400});
   }
   if (path.startsWith('/next_api/company-portal')) {
     const capability = path.includes('/billing') ? 'billing' : path.includes('/staff') ? 'staff' : /\/(drivers|vehicles|directory)$/.test(path) ? 'fleet' : 'overview';

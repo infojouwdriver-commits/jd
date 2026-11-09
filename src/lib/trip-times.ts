@@ -9,3 +9,15 @@ export function completedTripTimes(body: Record<string, unknown>, now = Date.now
   if (!Number.isFinite(start) || !Number.isFinite(end) || new Date(start).toISOString().slice(0, 19) !== body.start_time.slice(0, 19) || new Date(end).toISOString().slice(0, 19) !== body.end_time.slice(0, 19) || end < start || end > now + 300_000 || end - start > 48 * 3_600_000 || Math.abs(Math.floor((end - start) / 60_000) - duration) > 1) throw new Error('Invalid trip timestamps or duration');
   return { startTime: new Date(start), endTime: new Date(end) };
 }
+
+export function tripRequestKey(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+export function departureTime(value: unknown, now = Date.now()): string | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)) return null;
+  const time = Date.parse(value);
+  if (!Number.isFinite(time) || time > now + 300_000) return null;
+  const iso = new Date(time).toISOString();
+  return iso.slice(0,19) === value.slice(0,19) ? iso : null;
+}

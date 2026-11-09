@@ -58,7 +58,7 @@ export function stripSecrets(value: unknown): unknown {
   if (!value || typeof value !== 'object') return value;
   const safe: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(value)) {
-    if (/password|secret|token|authorization|raw_profile|request_payload|response_payload|sync_error_message/i.test(key)) continue;
+    if (/password|secret|token|authorization|raw_profile|request_payload|response_payload|chiron_departure_payload|sync_error_message/i.test(key)) continue;
     safe[key] = stripSecrets(item);
   }
   return safe;

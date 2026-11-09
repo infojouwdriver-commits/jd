@@ -26,7 +26,8 @@ try {
       localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));
     });
     await context.addInitScript(syntheticGPS);
-    let mapboxCalls=0, tripWrites=0, loggedIn=true, invoiceWrites=0, invoiceFail=true;const fleetWrites=[];
+    const departures=[],arrivals=[];
+    let mapboxCalls=0, loggedIn=true, invoiceWrites=0, invoiceFail=true;const fleetWrites=[];
     const handleRoute=async route=>{
       const request=route.request(),url=new URL(request.url());
       if(url.hostname==='api.mapbox.com'){
@@ -51,20 +52,28 @@ try {
       }
       else if(url.pathname==='/next_api/auth/logout'){loggedIn=false;data=true;}
       else if(url.pathname==='/next_api/drivers/shifts')data={active:{id:'00000000-0000-4000-8000-000000000001',plate_number:'TEST-1',work_status:'available',version:1},shifts:[]};
-      else if(url.pathname==='/next_api/drivers/pricing')data={company_id:1,company_name:'Synthetic company',pricing:{base_fee:3,km_rate:2,minute_rate:0.3,minimum_fare:10},chiron_mode:'TEST'};
+      else if(url.pathname==='/next_api/drivers/pricing')data={company_id:1,vehicle_id:1,company_name:'Synthetic company',pricing:{base_fee:3,km_rate:2,minute_rate:0.3,minimum_fare:10},chiron_mode:'TEST'};
       else if(url.pathname==='/next_api/drivers/me')data={id:9002,name:'Synthetic Driver',company_id:1};
       else if(url.pathname==='/next_api/fleet/location'){
         if(request.method()==='POST'){fleetWrites.push(request.postDataJSON());data=request.postDataJSON();}
         else data={shift_active:false,sharing_enabled:false};
       }
       if(url.pathname==='/next_api/trips/receipt')data={trip_id:401,invoice_id:1,reference:'TRIP-401',date:'2026-10-28T12:00:00Z',company:'Synthetic company',amount:25,currency:'EUR',distanceKm:1,durationMinutes:1,payment:'cash',pdfUrl:base+'/synthetic.pdf'};
-      if(url.pathname==='/next_api/trips/end')data={id:401};
+      if(url.pathname==='/next_api/trips/start'){
+        const departure=request.postDataJSON();
+        departures.push(departure);
+        data={id:401,completion_request_key:departure.completion_request_key,chiron_environment:'test',chiron_delivery:'accepted'};
+      }
+      if(url.pathname==='/next_api/trips/end'){
+        const arrival=request.postDataJSON();
+        arrivals.push(arrival);
+        data={id:401,completion_request_key:arrival.completion_request_key,chiron_delivery:'accepted'};
+      }
       if(url.pathname==='/next_api/trips/generate-invoice'){
         invoiceWrites++;
         await new Promise(r=>setTimeout(r,200));
         return route.fulfill({status:invoiceFail?503:200,contentType:invoiceFail?'application/json':'application/pdf',body:invoiceFail?JSON.stringify({success:false}):'%PDF-1.4\nSynthetic receipt\n%%EOF'});
       }
-      if(url.pathname.startsWith('/next_api/trips') && request.method()==='POST')tripWrites++;
       return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
     };
     await context.route('**/*',handleRoute);
@@ -98,6 +107,11 @@ try {
     await agreed.fill('25');
     await page.getByRole('button',{name:'Démarrer Course',exact:true}).click();
     await page.getByRole('button',{name:'Terminer Course',exact:true}).waitFor();
+    await page.getByText('Départ accepté par Chiron',{exact:true}).waitFor();
+    assert.equal(departures.length,1);
+    assert.equal(departures[0].agreed_price,25);
+    assert.equal(departures[0].expected_chiron_environment,'TEST');
+    assert.equal(arrivals.length,0);
     await page.getByTestId('active-trip-map').locator('.leaflet-tile-loaded').first().waitFor();
     await page.getByTestId('active-trip-map').getByRole('button',{name:'Suivre la position',exact:true}).click();
     await page.evaluate(()=>window.__setSyntheticPosition({latitude:50.851,longitude:4.352,accuracy:5}));
@@ -109,12 +123,18 @@ try {
     await page.getByRole('button',{name:'Terminer Course' ,exact:true}).waitFor();
     await page.getByText('Position partagée avec votre société et l’administration',{exact:true}).waitFor();
     await page.getByTestId('active-trip-map').locator('.leaflet-container').waitFor();
-    assert.equal(tripWrites,0,'Starting and restoring the synthetic trip must not submit a completed trip');
+    await page.getByText('Départ accepté par Chiron',{exact:true}).waitFor();
+    assert.equal(departures.at(-1).completion_request_key,departures[0].completion_request_key);
+    assert.equal(arrivals.length,0,'Starting and restoring the trip must not submit an arrival');
     assert.equal(await page.locator('.shift-controls').count(),0);
     await page.getByRole('button',{name:'Terminer Course',exact:true}).click();
     await page.getByRole('button',{name:'Envoyer à Chiron',exact:true}).click();
     const invoice=page.getByRole('button',{name:'Générer la facture',exact:true});
     await invoice.waitFor();
+    await page.getByText('Arrivée acceptée par Chiron',{exact:true}).waitFor();
+    assert.equal(arrivals.length,1);
+    assert.equal(arrivals[0].completion_request_key,departures[0].completion_request_key);
+    assert.equal(arrivals[0].start_time,departures[0].start_time);
     await invoice.click();
     await page.getByText('Échec de la génération de la facture',{exact:true}).waitFor();
     assert.equal(await page.getByTestId('receipt-printer').count(),0,'No receipt animation on server failure');

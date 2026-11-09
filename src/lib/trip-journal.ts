@@ -18,12 +18,12 @@ function transactionDone(tx: IDBTransaction): Promise<void> {
   });
 }
 
-export function createTripJournal(factory: IDBFactory, cryptoProvider: Crypto) {
+export function createTripJournal(factory: IDBFactory, cryptoProvider: Crypto, databaseName=DB_NAME) {
   const revisions = new Map<string, number>();
   let database: Promise<IDBDatabase> | undefined;
   function open() {
     database ??= new Promise<IDBDatabase>((resolve, reject) => {
-      const req = factory.open(DB_NAME, 1);
+      const req = factory.open(databaseName, 1);
       req.onupgradeneeded = () => {
         req.result.createObjectStore('keys');
         const records = req.result.createObjectStore('records', { keyPath: 'id' });
@@ -140,9 +140,10 @@ export function createTripJournal(factory: IDBFactory, cryptoProvider: Crypto) {
   return { save, complete, list, remove, sync, close: async () => { (await open()).close(); database = undefined; } };
 }
 
-let browserJournal: ReturnType<typeof createTripJournal> | undefined;
-export function tripJournal() {
+const browserJournals = new Map<string,ReturnType<typeof createTripJournal>>();
+export function tripJournal(scope:'driver'|'legacy-meter'='driver') {
   if (typeof window === 'undefined' || !window.indexedDB || !window.crypto?.subtle) throw new Error('Secure local trip storage is unavailable');
-  browserJournal ??= createTripJournal(window.indexedDB, window.crypto);
-  return browserJournal;
+  const journal=browserJournals.get(scope)??createTripJournal(window.indexedDB,window.crypto,scope==='driver'?DB_NAME:`${DB_NAME}-${scope}`);
+  browserJournals.set(scope,journal);
+  return journal;
 }

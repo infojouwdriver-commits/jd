@@ -45,7 +45,7 @@ test('taximeter passes owner-scoped trip identity and last durable meter anchor 
   assert.match(source, /after: meterRef\.current\.lastPoint\?\.timestamp \?\? 0/);
   assert.match(source, /await replayWatching\(\)/);
   assert.match(source, /await tripJournal\(\)\.complete\(user\.sub, tripPayload\);\s*await stopWatching\(\)/);
-  assert.match(source, /await api\.post\('\/trips\/end', payload\);[\s\S]*?await clearNativeTripPoints\(user\.sub/);
+  assert.match(source, /await submitWebCompletion\(payload\);[\s\S]*?await clearNativeTripPoints\(user\.sub/);
 });
 test('stop before asynchronous registration completes removes eventual watcher without emitting', async () => {
   let resolveId; let callback; const removed = []; const emitted = [];

@@ -2,10 +2,18 @@ import CrudOperations from '@/lib/crud-operations';
 import {createSuccessResponse,createErrorResponse} from '@/lib/create-response';
 import {requestMiddleware,parseQueryParams,validateRequestBody} from '@/lib/api-utils';
 import {generateAdminUserToken} from '@/lib/auth';
-import {retryChironTrip} from '@/lib/chiron-retry';
+import {retryChironTrip,retryPendingTripEvents} from '@/lib/chiron-retry';
 import {ChironError} from '@/lib/chiron-protocol';
 export const POST=requestMiddleware(async(request,context)=>{
- const body=await validateRequestBody(request);const query=parseQueryParams(request);const id=Number(body.trip_id||query.id||query.trip_id);
+ const body=await validateRequestBody(request);
+ if (body.pending === true) {
+  const userId=Number(context.payload?.sub);
+  if (!Number.isSafeInteger(userId) || userId<=0) return createErrorResponse({status:403,errorMessage:'Driver required'});
+  const trips=await retryPendingTripEvents(userId,await generateAdminUserToken());
+  return createSuccessResponse(trips.map(({id,chiron_delivery,chiron_sync_state,chiron_environment})=>({id,chiron_delivery,chiron_sync_state,chiron_environment})));
+ }
+ if (!context.payload?.isAdmin) return createErrorResponse({status:403,errorMessage:'Admin review required'});
+ const query=parseQueryParams(request);const id=Number(body.trip_id||query.id||query.trip_id);
  if(!Number.isSafeInteger(id)||id<=0)return createErrorResponse({errorMessage:'معرّف الرحلة مطلوب',status:400});
  const token=await generateAdminUserToken();const trip=await new CrudOperations('trips',token).findById(id);
  if(!trip||(!context.payload?.isAdmin&&String(trip.user_id)!==String(context.payload?.sub)))return createErrorResponse({errorMessage:'الرحلة غير موجودة',status:404});

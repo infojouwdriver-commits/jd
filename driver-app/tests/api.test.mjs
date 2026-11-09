@@ -119,3 +119,41 @@ test('temporary transport loss retries a safe read once, never mutations or HTTP
 });
 
 test('billing reminder verifies current driver and company and never requests payment details',async()=>{let current={driver:{id:1,company_id:9},company:{id:9}};const calls=[];const api=createDriverApi(async(url)=>{calls.push(url);return Response.json({success:true,data:url.endsWith('/drivers/me')?current:{driver_id:1,notice:{notice_key:'billing:9:1',company_id:9}}});});assert.equal((await api.billingNotice(1)).company_id,9);await assert.rejects(api.billingNotice(2));assert.ok(calls.every(url=>!url.includes('subscription-billing')));});
+
+test('offline departure can resume with the same original event before a queued arrival',async()=>{
+ for(const platform of ['INTERNAL','UBER','BOLT','HEETCH']){
+  let offline=true;
+  const writes=[];
+  const profile={...assigned(),native_trip_contract_version:2};
+  const event={chiron_realtime:true,completion_request_key:'synthetic-key',start_time:'2026-10-14T08:00:00.123Z',start_lat:50.85,start_lon:4.35,start_address:'Synthetic',
+   ride_type:platform==='INTERNAL'?'INTERNAL':'EXTERNAL',external_source:platform==='INTERNAL'?null:platform,
+   external_ride_number:'synthetic-reference',_native_driver_id:1,_native_company_id:10,_native_vehicle_id:20,_native_environment:'PRODUCTION'};
+  const api=createDriverApi(async(url,options)=>{
+   if(url.endsWith('/drivers/me'))return ok(profile);
+   const body=JSON.parse(options.body);writes.push({url,body});
+   if(offline)throw Error('Offline');
+   return ok({id:41,driver_id:1,completion_request_key:event.completion_request_key,chiron_environment:'production',chiron_delivery:'pending'});
+  });
+  await assert.rejects(api.startTrip(event));
+  const end={...event,end_time:'2026-10-14T08:10:00.000Z',end_lat:50.86,end_lon:4.36,price:11};
+  await assert.rejects(api.completeTrip(end));
+  assert.equal(writes.filter(x=>x.url.endsWith('/end')).length,0);
+  offline=false;
+  await api.completeTrip(end);
+  assert.deepEqual(writes[0].body,writes[2].body);
+  assert.equal(writes[2].body.external_source,event.external_source);
+  assert.equal(writes[3].body.end_time,end.end_time);
+  assert.equal(writes[3].body.completion_request_key,event.completion_request_key);
+ }
+});
+
+test('unmatched departure acknowledgement leaves arrival unsent',async()=>{
+ let endRequests=0;
+ const api=createDriverApi(async(url)=>{
+  if(url.endsWith('/drivers/me'))return ok({...assigned(),native_trip_contract_version:2});
+  if(url.endsWith('/end'))endRequests++;
+  return ok({id:1,driver_id:1,completion_request_key:'different',chiron_environment:'test',chiron_delivery:'accepted'});
+ });
+ await assert.rejects(api.completeTrip({chiron_realtime:true,_native_driver_id:1,_native_environment:'PRODUCTION',completion_request_key:'original'}));
+ assert.equal(endRequests,0);
+});

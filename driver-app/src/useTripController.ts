@@ -1,14 +1,15 @@
 import {publishNativeTripStatus} from './shift-trip';
 import {hasShiftIntent} from './native-shift-intent';
-import type {ShiftList} from './shift-model';
-import {useEffect, useRef, useState} from 'react';
+import {AppState} from 'react-native';
+import type {DriverShift,ShiftList} from './shift-model';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import * as Location from 'expo-location';
 import {nativeEngine} from './native-runtime';
 import {enableBackgroundMeter, stopBackgroundMeter} from './background-meter';
 import {nativeJournal} from './native-journal';
-import {tripDurationSeconds, validPoint, type TripSyncReceipt, type NativeTrip} from './trip-engine';
+import {nativeDeparture, tripDurationSeconds, validPoint, type TripSyncReceipt, type NativeTrip} from './trip-engine';
 import type {MeterPoint} from './trip-meter';
-import {driverApi, type DriverProfile, type DriverVehicle} from './api';
+import {ApiError, driverApi, type DriverProfile, type DriverVehicle} from './api';
 import type {ActionGate} from './action-gate';
 import {tripError} from './trip-error';
 import {completedBatchReceipt} from './completed-batch-receipt';
@@ -44,6 +45,8 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
   const [externalReference, setExternalReference] = useState('');
   const [payment, setPayment] = useState<'cash' | 'card'>('card');
   const [seconds, setSeconds] = useState(0);
+  const [chironDeparture,setChironDeparture] = useState<{key:string;state:'accepted'|'pending'|'review'}>();
+  const syncFlight = useRef<Promise<void>|null>(null);
   const [pending, setPending] = useState(0);
   const [receipt, setReceipt] = useState<TripSyncReceipt | null>(null);
   const [background, setBackground] = useState(false);
@@ -91,37 +94,89 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     return () => {stopped = true; clearInterval(timer);};
   }, [trip?.key, onLocation]);
   useEffect(()=>{
-    const key=trip?.key;if(!key)return;let alive=true,inFlight=false;
+    const key=trip?.key;if(!key||trip.realtimeChiron)return;let alive=true,inFlight=false;
     const publish=async()=>{const active=activeRef.current;if(inFlight||!alive||active?.key!==key)return;inFlight=true;try{await publishNativeTripStatus(api,profile.driver.id,active);}catch{/* Local trip stays durable; the shift card exposes refresh/retry. */}finally{inFlight=false;}};
     void publish();const timer=setInterval(()=>void publish(),20000);return()=>{alive=false;clearInterval(timer);};
-  },[trip?.key,profile.driver.id]);
-  async function start(estimate?:NativeTrip['tariffQuote'], tariffCode?:string) {
+  },[trip?.key,trip?.realtimeChiron,profile.driver.id]);
+  async function start(estimate?:NativeTrip['tariffQuote'], tariffCode?:string, cachedShift?:DriverShift|null) {
     if (!engine.current || pending>0 || busy || sessionBusy || !actionGate.acquire()) return;
     setBusy(true); setError(''); setReceipt(null);
     try {
       if(await hasShiftIntent(profile.driver.id))throw Error('أعد تأكيد طلب الوردية السابق أولًا.');
-      const current = await api.tripAssignment(profile.driver.id);
-      const {active}=await api.shifts(profile.driver.id) as ShiftList;
+      let current=profile, active=cachedShift;
+      try {
+        current=await api.tripAssignment(profile.driver.id);
+        ({active}=await api.shifts(profile.driver.id) as ShiftList);
+      } catch (failure) {
+        if (!(failure instanceof ApiError) || ![0,408].includes(failure.status)) throw failure;
+      }
+      if ((current.native_trip_contract_version ?? 0)<2) throw Error('يتطلب بدء رحلة التطبيق تحديث حماية الرحلات على الخادم.');
       if(!active||active.ended_at||active.vehicle_id!==current.driver.current_vehicle_id||active.company_id!==current.driver.company_id||!['available','driving_empty'].includes(active.work_status))throw Error('ابدأ وردية للمركبة الحالية واستأنف العمل قبل بدء الرحلة.');
       const code=platform==='INTERNAL'?(estimate?.code??tariffCode):undefined;
-      const quote=code ? await api.tariffQuote(code,estimate?.km??null,estimate?.minutes??null) : undefined;
+      let quote=estimate;
+      if (code) {
+        try {
+          const verified=await api.tariffQuote(code,estimate?.km??null,estimate?.minutes??null);
+          quote={...verified,code,km:estimate?.km??null,minutes:estimate?.minutes??null};
+        } catch (failure) {
+          if (!(failure instanceof ApiError) || ![0,408].includes(failure.status)) throw failure;
+        }
+      }
       if(quote&&estimate&&quote.price!==estimate.price) throw Error('تغيّرت التعرفة. حدّث التقدير قبل بدء الرحلة.');
       const point = await currentPoint(); onLocation(point);
       onProfile(current);
       const next = await engine.current.start({shiftId:active.id,companyId: current.driver.company_id, vehicleId: current.driver.current_vehicle_id ?? 0,
-        environment: current.company.chiron_mode, point, startAddress, endAddress, proposedPrice: price.trim() ? Number(price.replace(',', '.')) : (estimate?.price ?? 0),
+        environment: current.company.chiron_mode, point, agreedPrice:price.trim()?Number(price.replace(',', '.')):undefined, startAddress, endAddress, proposedPrice: price.trim() ? Number(price.replace(',', '.')) : (estimate?.price ?? 0),
         ...(quote&&code?{tariffQuote:{...quote,code,km:estimate?.km??null,minutes:estimate?.minutes??null}}:{}), paymentMethod: payment, platform, externalReference, ...(endSelection&&endSelection.label===endAddress?{navigationDestination:{lat:endSelection.lat,lon:endSelection.lon}}:{})});
       updateTrip(next);
-      try{await publishNativeTripStatus(api,profile.driver.id,next);}catch{setError('الرحلة محفوظة على الهاتف؛ تعذّر تأكيد حالتها في الوردية.');}
       try {setBackground(await enableBackgroundMeter(next, true));} catch {setBackground(false); setError('تعذّر تشغيل القياس الخلفي. أبقِ التطبيق مفتوحاً.');}
     } catch(error) {setError(tripError(error, 'تعذّر بدء الرحلة. لا تحذف بيانات التطبيق.'));}
     finally {setBusy(false); actionGate.release();}
   }
-  async function synchronize() {
-    if (!engine.current) return;
-    const result = await engine.current.sync(payload => api.completeTrip(payload));
-    if (!disposed.current) {setPending(result.remaining); setReceipt(completedBatchReceipt(result)); if (result.remaining) setError('بقيت رحلة محفوظة على الهاتف تنتظر الإرسال.');}
-  }
+  const synchronize = useCallback(() => {
+    if (syncFlight.current) return syncFlight.current;
+    const meter = engine.current;
+    if (!meter) return Promise.resolve();
+    const active=activeRef.current;
+    const work=(async()=>{
+      if (active?.realtimeChiron) {
+        try {
+          const sent=await api.startTrip(nativeDeparture(active));
+          if (!disposed.current && activeRef.current?.key===active.key) setChironDeparture({key:active.key,state:sent.chiron_delivery});
+        } catch (failure) {
+          if (!disposed.current && activeRef.current?.key===active.key && failure instanceof ApiError && [400,403,409].includes(failure.status)) {
+            setChironDeparture({key:active.key,state:'review'});
+          }
+        }
+      }
+      const result=await meter.sync(payload=>api.completeTrip(payload));
+      if (!disposed.current) {
+        setPending(result.remaining);
+        if (result.sent) setReceipt(completedBatchReceipt(result));
+      }
+      try {
+        const updated=await api.retryChiron(profile.driver.id);
+        if (!disposed.current) setReceipt(previous=>{
+          if (!previous || previous.chiron!=='unconfirmed') return previous;
+          const current=updated.find(item=>item.id===previous.id);
+          if(current?.chiron_delivery==='accepted'&&['test','production'].includes(current.chiron_environment)) {
+            return {...previous,chiron:current.chiron_environment,chironDelivery:undefined};
+          }
+          return current?.chiron_delivery==='review'?{...previous,chironDelivery:'review'}:previous;
+        });
+      } catch {/* Stored server events remain available for retry or review. */}
+    })().finally(()=>{if(syncFlight.current===work)syncFlight.current=null;});
+    syncFlight.current=work;
+    return work;
+  },[profile.driver.id]);
+  useEffect(()=>{
+    if (!ready) return;
+    const run=()=>{if(AppState.currentState==='active')void synchronize().catch(()=>{});};
+    void (async()=>{await syncFlight.current;await synchronize();})().catch(()=>{});
+    const timer=setInterval(run,30000);
+    const subscription=AppState.addEventListener('change',state=>{if(state==='active')run();});
+    return ()=>{clearInterval(timer);subscription.remove();};
+  },[ready,trip?.key,synchronize]);
   async function end(finalPrice?:number) {
     if (!engine.current || busy || sessionBusy || !actionGate.acquire()) return;
     setBusy(true); setError('');
@@ -131,6 +186,7 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
       updateTrip(null); setPending(count => count + 1); setBackground(false);
       setStartAddress('');setEndAddress('');setStartSelection(null);setEndSelection(null);setPrice('');setExternalReference('');
       try {await stopBackgroundMeter();} catch {setError('حُفظت الرحلة؛ تعذّر إيقاف خدمة الموقع على الهاتف.');}
+      await syncFlight.current;
       await synchronize();
     } catch(error) {setError(tripError(error, 'تعذّر إنهاء الرحلة أو إرسالها. أبقِ بيانات التطبيق وحاول مجدداً.'));}
     finally {setBusy(false); actionGate.release();}
@@ -154,5 +210,5 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     try {await synchronize();} catch {setError('تعذّر إرسال الرحلة. البيانات محفوظة على الهاتف.');}
     finally {setBusy(false); actionGate.release();}
   }
-  return {trip, ready, busy, error, startAddress, setStartAddress:(value:string)=>{setStartAddress(value);setStartSelection(null);}, endAddress, setEndAddress:(value:string)=>{setEndAddress(value);setEndSelection(null);}, startSelection,endSelection,selectStart:(value:NativeAddress)=>{setStartAddress(value.label);setStartSelection(value);},selectEnd:(value:NativeAddress)=>{setEndAddress(value.label);setEndSelection(value);}, price, setPrice, payment, setPayment, seconds, pending, receipt, background, vehicles, start, end, changeVehicle, retrySync, platform, setPlatform, externalReference, setExternalReference};
+  return {trip, chironDeparture:chironDeparture?.key===trip?.key ? chironDeparture?.state ?? 'pending' : 'pending', ready, busy, error, startAddress, setStartAddress:(value:string)=>{setStartAddress(value);setStartSelection(null);}, endAddress, setEndAddress:(value:string)=>{setEndAddress(value);setEndSelection(null);}, startSelection,endSelection,selectStart:(value:NativeAddress)=>{setStartAddress(value.label);setStartSelection(value);},selectEnd:(value:NativeAddress)=>{setEndAddress(value.label);setEndSelection(value);}, price, setPrice, payment, setPayment, seconds, pending, receipt, background, vehicles, start, end, changeVehicle, retrySync, platform, setPlatform, externalReference, setExternalReference};
 }
