@@ -2539,8 +2539,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `drivers/pricing/route.ts` — [L1](../src/app/next_api/drivers/pricing/route.ts#L1)
 - `pricingHandler` — [L12](../src/app/next_api/drivers/pricing/route.ts#L12)
-- `GET` — [L82](../src/app/next_api/drivers/pricing/route.ts#L82)
-- `POST` — [L83](../src/app/next_api/drivers/pricing/route.ts#L83)
+- `GET` — [L81](../src/app/next_api/drivers/pricing/route.ts#L81)
+- `POST` — [L82](../src/app/next_api/drivers/pricing/route.ts#L82)
 
 ## [src/app/next_api/drivers/profile/route.ts](../src/app/next_api/drivers/profile/route.ts)
 

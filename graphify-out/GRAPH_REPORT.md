@@ -1,16 +1,16 @@
 # Graph Report - JOUW DRIVER  (2026-11-09)
 
 ## Corpus Check
-- 631 files · ~269,340 words
+- 631 files · ~269,338 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3599 nodes · 12153 edges · 178 communities (121 shown, 57 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 246 edges (avg confidence: 0.85)
+- 3599 nodes · 12151 edges · 177 communities (121 shown, 56 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 244 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c34d13d2`
+- Built from commit: `4449986b`
 - Source hashes are authoritative: run `python3 scripts/code-map.py --check`.
 - Rebuild using the pinned environment: `python scripts/code-map.py` (local AST only).
 
@@ -22,7 +22,6 @@
 - usePreferences
 - Button
 - DriverRegisterForm.tsx
-- stripe-billing.ts
 - Card
 - useAuth
 - preferences.tsx
@@ -45,15 +44,16 @@
 - session.tsx
 - 20261026_invoice_checkout.sql
 - dependencies
+- stripe-billing.ts
+- driver-shifts.ts
+- documents/route.ts
 - company-changes.ts
 - BackgroundGeolocationService.java
 - api-client.ts
 - mobile-location.ts
 - utils.ts
-- pdf-generator.ts
 - use-toast.ts
 - vervoerbewijs.ts
-- driver-shifts.ts
 - driver/taximeter/page.tsx
 - DriverMap.tsx
 - mobile/package.json
@@ -63,18 +63,23 @@
 - native-journal.ts
 - 20261018_company_lifecycle.sql
 - 20261019_shift_activity.sql
-- company-pricing.ts
+- convert-database.mjs
 - update-customer-portal.sh
 - 20261018_contract_billing.sql
-- ref_node_fs
+- engine.ts
+- pdf-generator.ts
+- configure-mail.mjs
 - form.tsx
 - TripPointJournal.java
 - compilerOptions
+- ref_node_fs
 - password/route.ts
+- invoice-email.ts
 - BackgroundGeolocation
 - "schema".security_operations_centre
 - 20261016_native_push.sql
 - company-registrations/route.ts
+- generateAcceptanceReportPdf
 - trip-journal.ts
 - code-map.py
 - ref_node_crypto
@@ -82,24 +87,19 @@
 - scripts
 - command.tsx
 - RouteMap.tsx
+- rollout.mjs
 - 20261019_driver_shifts.sql
 - devDependencies
 - carousel.tsx
-- apply-release.mjs
-- convert-database.mjs
-- configure-mail.mjs
 - ActivityFilters.tsx
-- PDFGenerator
 - PublicInfo.tsx
 - receipt-email/route.ts
+- mail-service.ts
 - DriverFleetShift.tsx
 - "schema".company_registrations
-- engine.ts
 - chart.tsx
-- documents/route.ts
 - "schema".security_fleet_locations
 - secret-vault.ts
-- models.ts
 - "schema".security_save_company_account
 - "schema".company_change_requests
 - chat/route.ts
@@ -113,7 +113,6 @@
 - drawer.tsx
 - Override
 - "schema".security_email_contract
-- rollout.mjs
 - verify-private-owner.cjs
 - 20261028_receipt_email.sql
 - 20261109_chiron_realtime.sql
@@ -127,11 +126,11 @@
 - database-readiness.mjs
 - useAddressSearch.ts
 - company-registration.ts
+- invoice-payment-link.ts
 - activate-chiron-production.sh
 - publish-customer-runtime.sh
 - update-customer-ui.sh
 - contract-template.ts
-- admin-enrollment.mjs
 - 20261009_security.sql
 - 20261018_web_billing.sql
 - invoice_bank_snapshot
@@ -190,14 +189,14 @@
 - 2-file cycle: `src/lib/api-utils.ts -> src/lib/create-response.ts -> src/lib/api-utils.ts`
 - 2-file cycle: `driver-app/src/experience/session.tsx -> driver-app/src/experience/shift-state.tsx -> driver-app/src/experience/session.tsx`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
+- 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
-- 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
-- 4-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
+- 4-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 
-## Communities (178 total, 57 thin omitted)
+## Communities (177 total, 56 thin omitted)
 
 ### Community 0 - "createErrorResponse"
 Cohesion: 0.07
@@ -227,133 +226,133 @@ Nodes (52): ChironSyncPage(), Page(), Page(), CompanyDashboardPage(), TripsPage(
 Cohesion: 0.05
 Nodes (68): @hookform/resolvers, react-hook-form, dynamic, LoginPage(), CompanyLoginForm(), DriverRegisterForm(), DriverRegisterFormProps, FormField() (+60 more)
 
-### Community 7 - "stripe-billing.ts"
-Cohesion: 0.06
-Nodes (60): stripe, runtime, POST(), runtime, runtime, register(), brevoIdempotencyKey(), brevoMailEvent() (+52 more)
-
-### Community 8 - "Card"
+### Community 7 - "Card"
 Cohesion: 0.09
 Nodes (51): AdSlotsPage(), AppExperiencePage(), metadata, CompaniesPage(), CompaniesPageContent(), Company, emptyNew, AdminDriversPage() (+43 more)
 
-### Community 9 - "useAuth"
+### Community 8 - "useAuth"
 Cohesion: 0.08
 Nodes (52): AdminAccountPage(), ApprovalRequest, ApprovalRequestsPage(), DriverRegistrationRequest, DriverRequestCard(), EmptyState(), GeneralRequestCard(), ChironSettingsPage() (+44 more)
 
-### Community 10 - "preferences.tsx"
+### Community 9 - "preferences.tsx"
 Cohesion: 0.06
 Nodes (49): Layout(), Navigation(), ActivityProvider(), RoadArt(), BrandMark(), icon, companyCopy, copy (+41 more)
 
-### Community 11 - "api.ts"
+### Community 10 - "api.ts"
 Cohesion: 0.05
 Nodes (55): AccountInfo, ActivityQuery, ActivityTrip, ApiError, createDriverApi(), loadProfile(), ownerRead(), profile() (+47 more)
 
-### Community 12 - "lib/auth.ts"
+### Community 11 - "lib/auth.ts"
 Cohesion: 0.10
 Nodes (52): GET, PUT, driverLoginSchema, findCredentialByPhoneSafely(), findDriverByPhone(), findFirstByField(), getDriverEmailCandidates(), normalizePhone() (+44 more)
 
-### Community 13 - "dependencies"
+### Community 12 - "dependencies"
 Cohesion: 0.03
 Nodes (65): dependencies, autoprefixer, bcryptjs, @capacitor/core, class-variance-authority, clsx, cmdk, date-fns (+57 more)
 
-### Community 14 - "ref_react"
+### Community 13 - "ref_react"
 Cohesion: 0.06
 Nodes (39): class-variance-authority, sonner, FailedTrip, Company, Issued, DriverTestPage(), glassCard, LatestReportResponse (+31 more)
 
-### Community 15 - "useTripController.ts"
+### Community 14 - "useTripController.ts"
 Cohesion: 0.09
 Nodes (41): ActionGate, DriverProfile, DriverVehicle, Context, enableBackgroundMeter(), stopBackgroundMeter(), completedBatchReceipt(), nativeJournal() (+33 more)
 
-### Community 16 - "zod"
+### Community 15 - "zod"
 Cohesion: 0.07
 Nodes (42): zod, dynamic, GET(), headers, available(), GET, POST, schema (+34 more)
 
-### Community 17 - "marketing-content.ts"
+### Community 16 - "marketing-content.ts"
 Cohesion: 0.08
 Nodes (42): metadata, generateMetadata(), LocalizedHome(), Props, dynamicParams, generateMetadata(), Props, SolutionsPage() (+34 more)
 
-### Community 18 - "cn"
+### Community 17 - "cn"
 Cohesion: 0.06
 Nodes (51): @radix-ui/react-accordion, @radix-ui/react-avatar, @radix-ui/react-context-menu, @radix-ui/react-menubar, AccordionContent, AccordionItem, AccordionTrigger, Avatar (+43 more)
 
-### Community 19 - "next"
+### Community 18 - "next"
 Cohesion: 0.06
 Nodes (39): nextConfig, next, DriverProfileRoute(), PrivacyCenter(), metadata, RegistrationPage(), DriverData, DriverProfilePage() (+31 more)
 
-### Community 20 - "end/route.ts"
+### Community 19 - "end/route.ts"
 Cohesion: 0.11
 Nodes (29): GET, POST, generateTripHash(), generateTripUuid(), getRetentionDate(), POST, POST, POST (+21 more)
 
-### Community 21 - "api-utils.ts"
+### Community 20 - "api-utils.ts"
 Cohesion: 0.07
 Nodes (43): POST, VALID_TYPES, GET, normalizeUrlPreview(), ApiParams, appendCorsHeaders(), clearCookie(), extractBearerToken() (+35 more)
 
-### Community 22 - "SiteAIAgent.tsx"
+### Community 21 - "SiteAIAgent.tsx"
 Cohesion: 0.06
 Nodes (45): next-themes, DriverLayout(), dynamic, metadata, RootLayout(), viewport, apiFetch(), ApiResponse (+37 more)
 
-### Community 23 - "BackgroundGeolocation"
+### Community 22 - "BackgroundGeolocation"
 Cohesion: 0.07
 Nodes (10): Capacitor, CoreLocation, CryptoKit, Foundation, BackgroundGeolocation, formatLocation(), Watcher, TripPointJournal (+2 more)
 
-### Community 24 - "package.json"
+### Community 23 - "package.json"
 Cohesion: 0.05
 Nodes (41): engines, node, @capacitor/core, eslint, react, react-dom, @types/react, typescript (+33 more)
 
-### Community 25 - "sidebar.tsx"
+### Community 24 - "sidebar.tsx"
 Cohesion: 0.07
 Nodes (31): @radix-ui/react-separator, @radix-ui/react-tooltip, Separator, SidebarContent, SidebarContext, SidebarFooter, SidebarGroup, SidebarGroupAction (+23 more)
 
-### Community 26 - "driver-app/package.json"
+### Community 25 - "driver-app/package.json"
 Cohesion: 0.06
 Nodes (37): devDependencies, eslint, eslint-config-expo, @types/react, typescript, eslint, react, react-dom (+29 more)
 
-### Community 27 - "session.tsx"
+### Community 26 - "session.tsx"
 Cohesion: 0.11
 Nodes (26): App(), logout(), styles, createActionGate(), apiConnectionKey(), DriverTripSummary, DriverMap(), clearReceiptCache() (+18 more)
 
-### Community 28 - "20261026_invoice_checkout.sql"
+### Community 27 - "20261026_invoice_checkout.sql"
 Cohesion: 0.08
 Nodes (21): invoice_activation_begin, invoice_activation_paid, invoice_checkout_active, invoice_company_begin, invoice_payment_guard, invoice_receipt_immutable, invoice_service_guard, "schema".invoice_checkout_receipts (+13 more)
 
-### Community 29 - "dependencies"
+### Community 28 - "dependencies"
 Cohesion: 0.05
 Nodes (36): dependencies, expo, expo-constants, expo-crypto, expo-file-system, expo-haptics, expo-linking, expo-location (+28 more)
 
-### Community 30 - "company-changes.ts"
+### Community 29 - "stripe-billing.ts"
+Cohesion: 0.14
+Nodes (31): stripe, runtime, runtime, Checkout, Client, closeInvoiceCheckout(), invoiceCheckout(), invoiceRpc() (+23 more)
+
+### Community 30 - "driver-shifts.ts"
+Cohesion: 0.12
+Nodes (26): jspdf, ShiftPage(), DriverShifts(), downloadPdf(), configurePdfFonts(), driverShiftPdf(), ensure(), page() (+18 more)
+
+### Community 31 - "documents/route.ts"
+Cohesion: 0.11
+Nodes (27): Company, GET, handler, POST, GET, POST, pricingHandler, activeCompanyTariffs() (+19 more)
+
+### Community 32 - "company-changes.ts"
 Cohesion: 0.16
 Nodes (23): GET, resolveDistributorInfo(), resolveEffectiveUserType(), POST, POST, PUT, getAuthRoles(), changeFingerprint() (+15 more)
 
-### Community 31 - "BackgroundGeolocationService.java"
+### Community 33 - "BackgroundGeolocationService.java"
 Cohesion: 0.10
 Nodes (4): BackgroundGeolocationService, LocalBinder, LocationCallback, Watcher
 
-### Community 32 - "api-client.ts"
+### Community 34 - "api-client.ts"
 Cohesion: 0.12
 Nodes (22): dompurify, dompurify, ContractPrintPage(), PrintableContract, ContractReview, SignContractPage(), ContractDocument(), ApiError (+14 more)
 
-### Community 33 - "mobile-location.ts"
+### Community 35 - "mobile-location.ts"
 Cohesion: 0.11
 Nodes (22): messages, useGeolocation(), UseGeolocationOptions, LocationPoint, useSmartGeolocation(), clearNativeTripPoints(), createNativeLocationWatch(), createNativeTripReplay() (+14 more)
 
-### Community 34 - "utils.ts"
+### Community 36 - "utils.ts"
 Cohesion: 0.07
 Nodes (21): clsx, @radix-ui/react-hover-card, @radix-ui/react-progress, @radix-ui/react-radio-group, @radix-ui/react-slider, react-day-picker, react-resizable-panels, tailwind-merge (+13 more)
 
-### Community 35 - "pdf-generator.ts"
-Cohesion: 0.14
-Nodes (24): jspdf, configurePdfFonts(), generateAcceptanceReportPdf(), ensure(), event(), header(), heading(), line() (+16 more)
-
-### Community 36 - "use-toast.ts"
+### Community 37 - "use-toast.ts"
 Cohesion: 0.12
 Nodes (25): @radix-ui/react-toast, Toast, ToastAction, ToastActionElement, ToastClose, ToastDescription, ToastProps, ToastTitle (+17 more)
 
-### Community 37 - "vervoerbewijs.ts"
+### Community 38 - "vervoerbewijs.ts"
 Cohesion: 0.13
 Nodes (23): dynamic, GET(), headers, runtime, chironColor(), chironLabel(), fmtDateTime(), fmtGps() (+15 more)
-
-### Community 38 - "driver-shifts.ts"
-Cohesion: 0.14
-Nodes (23): ShiftPage(), DriverShifts(), downloadPdf(), driverShiftPdf(), ensure(), page(), pairs(), paragraph() (+15 more)
 
 ### Community 39 - "driver/taximeter/page.tsx"
 Cohesion: 0.13
@@ -391,9 +390,9 @@ Nodes (12): companies_archive_name, company_lifecycle_events_company, drivers_co
 Cohesion: 0.12
 Nodes (13): guard_shift_work, immutable_shift_activity, link_trip_shift, "schema".driver_shift_activity, "schema".security_driver_shifts(), "schema".security_guard_shift_work(), "schema".security_record_trip_shift(), "schema".security_shift_declaration_activity() (+5 more)
 
-### Community 48 - "company-pricing.ts"
-Cohesion: 0.16
-Nodes (20): Company, GET, POST, pricingHandler, CompanyPricing, companyPricingPatch(), CompanyTariff, companyTariffs() (+12 more)
+### Community 48 - "convert-database.mjs"
+Cohesion: 0.18
+Nodes (19): main(), convertExport(), EXCLUDED, identifier(), integer(), JsonNumber, literal(), main() (+11 more)
 
 ### Community 49 - "update-customer-portal.sh"
 Cohesion: 0.09
@@ -403,129 +402,133 @@ Nodes (21): BILLING_MAIL_MIGRATION, BILLING_MIGRATION, COMPANY_STAFF_MIGRATION, 
 Cohesion: 0.12
 Nodes (12): contract_registration_request, contract_signature_request, "schema".security_activate_contract_billing(), "schema".security_contract_credit_snapshot(), "schema".security_guard_contract_profile(), "schema".security_preserve_signed_contract(), "schema".security_review_company_subscription(), "schema".security_sign_company_contract() (+4 more)
 
-### Community 51 - "ref_node_fs"
-Cohesion: 0.13
-Nodes (10): checkedStripeSetup(), enabledStripeEvents, encoded(), main(), stripeApiVersion, stripeRuntimeFiles(), stripeRuntimeKeys, mobileConfig() (+2 more)
+### Community 51 - "engine.ts"
+Cohesion: 0.19
+Nodes (19): qrcode, gsap, qrcode, three, mountCinema(), render(), resize(), optimize() (+11 more)
 
-### Community 52 - "form.tsx"
+### Community 52 - "pdf-generator.ts"
+Cohesion: 0.11
+Nodes (10): ChironTestMessage, structuredPaymentReference(), AcceptanceTestReport, CompanyInfo, CompanyInvoiceData, DriverInfo, PDFGenerator, TestResult (+2 more)
+
+### Community 53 - "configure-mail.mjs"
+Cohesion: 0.14
+Nodes (14): checkedBrevoSetup(), mailRuntimeFiles(), mailRuntimeKeys, main(), readBrevoSetupResponse(), readMailRuntimeEnv(), checkedStripeSetup(), enabledStripeEvents (+6 more)
+
+### Community 54 - "form.tsx"
 Cohesion: 0.11
 Nodes (19): @radix-ui/react-label, @radix-ui/react-slot, Breadcrumb, BreadcrumbEllipsis(), BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage (+11 more)
 
-### Community 55 - "compilerOptions"
+### Community 57 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib (+11 more)
 
-### Community 56 - "password/route.ts"
+### Community 58 - "ref_node_fs"
+Cohesion: 0.13
+Nodes (8): createEnrollmentHandler(), escapeHtml(), totp(), mobileConfig(), files, names, values, [id,output]
+
+### Community 59 - "password/route.ts"
 Cohesion: 0.23
 Nodes (12): POST, PUT, GET, POST, GET, POST, credentials, saveCompanyAccount() (+4 more)
 
-### Community 58 - ""schema".security_operations_centre"
+### Community 60 - "invoice-email.ts"
+Cohesion: 0.24
+Nodes (13): register(), BankInstructions, bankPaymentPayload(), invoiceBankPayload(), InvoicePaymentState, validIban(), deliverInvoiceEmail(), esc() (+5 more)
+
+### Community 62 - ""schema".security_operations_centre"
 Cohesion: 0.16
 Nodes (5): invoice_test_classification, "schema".security_driver_billing_notice(), "schema".security_invoice_test_classification(), "schema".security_live_statistics(), "schema".security_operations_centre()
 
-### Community 59 - "20261016_native_push.sql"
+### Community 63 - "20261016_native_push.sql"
 Cohesion: 0.19
 Nodes (9): native_message_push, native_notification_push, native_push_pending, "schema".native_push_devices, "schema".native_push_jobs, "schema".security_claim_native_push(), "schema".security_enqueue_native_push(), "schema".security_push_device() (+1 more)
 
-### Community 60 - "company-registrations/route.ts"
+### Community 64 - "company-registrations/route.ts"
 Cohesion: 0.34
 Nodes (14): PUT, review, DELETE, document(), failed(), GET, positiveId(), POST (+6 more)
 
-### Community 61 - "trip-journal.ts"
+### Community 65 - "generateAcceptanceReportPdf"
+Cohesion: 0.26
+Nodes (14): generateAcceptanceReportPdf(), ensure(), event(), header(), heading(), line(), page(), AcceptanceReportData (+6 more)
+
+### Community 66 - "trip-journal.ts"
 Cohesion: 0.23
 Nodes (14): browserJournals, createTripJournal(), complete(), encryptRecord(), list(), ownerKey(), remove(), save() (+6 more)
 
-### Community 62 - "code-map.py"
+### Community 67 - "code-map.py"
 Cohesion: 0.24
 Nodes (5): build(), check(), fingerprint(), git(), selected_paths()
 
-### Community 63 - "ref_node_crypto"
+### Community 68 - "ref_node_crypto"
 Cohesion: 0.18
 Nodes (10): copy, decryptPushToken(), fcmAccessToken(), fcmPayload(), sendFcm(), serviceAccount(), account, jwt() (+2 more)
 
-### Community 64 - "welcome-config.ts"
+### Community 69 - "welcome-config.ts"
 Cohesion: 0.23
 Nodes (14): DEFAULT_WELCOME, localized(), MAX_WELCOME_IMAGE_BYTES, parseWelcome(), record(), sameWelcomeContent(), validWelcomePoster(), WELCOME_LANGUAGES (+6 more)
 
-### Community 65 - "scripts"
+### Community 70 - "scripts"
 Cohesion: 0.12
 Nodes (16): scripts, build, db:convert, db:import-staging, dev, dev:debug, lint, preflight (+8 more)
 
-### Community 66 - "command.tsx"
+### Community 71 - "command.tsx"
 Cohesion: 0.17
 Nodes (14): cmdk, @radix-ui/react-dialog, @radix-ui/react-popover, CompanyPicker(), Command, CommandDialog(), CommandEmpty, CommandGroup (+6 more)
 
-### Community 67 - "RouteMap.tsx"
+### Community 72 - "RouteMap.tsx"
 Cohesion: 0.19
 Nodes (14): RouteCoords, TripData, encodePolyline(), getLabel(), RouteMap(), RouteMapProps, staticMapUrl(), Coordinate (+6 more)
 
-### Community 68 - "20261019_driver_shifts.sql"
+### Community 73 - "rollout.mjs"
+Cohesion: 0.15
+Nodes (10): dir, aad, openPushCredential(), compose(), directory, env, [image, revision, target], lock (+2 more)
+
+### Community 74 - "20261019_driver_shifts.sql"
 Cohesion: 0.23
 Nodes (10): driver_shifts_history, driver_shifts_one_driver, driver_shifts_one_vehicle, immutable_shift_event, preserve_driver_shift, "schema".driver_shift_events, "schema".driver_shifts, "schema".security_immutable_shift_event() (+2 more)
 
-### Community 69 - "devDependencies"
+### Community 75 - "devDependencies"
 Cohesion: 0.13
 Nodes (15): devDependencies, eslint, eslint-config-next, @eslint/eslintrc, eslint-plugin-react-hooks, fake-indexeddb, tailwindcss, @tailwindcss/postcss (+7 more)
 
-### Community 70 - "carousel.tsx"
+### Community 76 - "carousel.tsx"
 Cohesion: 0.17
 Nodes (14): embla-carousel-react, Carousel, CarouselApi, CarouselContent, CarouselContext, CarouselContextProps, CarouselItem, CarouselNext (+6 more)
 
-### Community 71 - "apply-release.mjs"
-Cohesion: 0.21
-Nodes (10): files, names, values, main(), identifier(), writePrivate(), auditSql(), constraints() (+2 more)
-
-### Community 72 - "convert-database.mjs"
-Cohesion: 0.27
-Nodes (12): convertExport(), EXCLUDED, integer(), JsonNumber, literal(), main(), parseLossless(), parseSchema() (+4 more)
-
-### Community 73 - "configure-mail.mjs"
-Cohesion: 0.20
-Nodes (9): checkedBrevoSetup(), mailRuntimeFiles(), mailRuntimeKeys, main(), readBrevoSetupResponse(), readMailRuntimeEnv(), dir, aad (+1 more)
-
-### Community 74 - "ActivityFilters.tsx"
+### Community 77 - "ActivityFilters.tsx"
 Cohesion: 0.31
 Nodes (10): Period, periodDates(), validDay(), validRange(), Context, useActivityFilters(), useStateValue(), ActivityFilters() (+2 more)
 
-### Community 76 - "PublicInfo.tsx"
+### Community 78 - "PublicInfo.tsx"
 Cohesion: 0.23
 Nodes (9): metadata, Page(), metadata, Page(), metadata, PrivacyPolicyPage(), Locale, PublicInfo() (+1 more)
 
-### Community 77 - "receipt-email/route.ts"
+### Community 79 - "receipt-email/route.ts"
 Cohesion: 0.23
 Nodes (11): esc(), GET, Draft, IssuedReceipt, localized, ReceiptAd, receiptAdSchema, receiptEmailHtml() (+3 more)
 
-### Community 78 - "DriverFleetShift.tsx"
+### Community 80 - "mail-service.ts"
+Cohesion: 0.28
+Nodes (10): POST(), runtime, brevoIdempotencyKey(), brevoMailEvent(), brevoProviderId(), brevoWebhookAuthorized(), mailEventKey(), MailMessage (+2 more)
+
+### Community 81 - "DriverFleetShift.tsx"
 Cohesion: 0.26
 Nodes (10): copy, DriverFleetShift(), GeolocationPoint, registerFleetSharingStopper(), distanceMetres(), FleetLocationRow, FleetPoint, FleetWorkStatus (+2 more)
 
-### Community 79 - ""schema".company_registrations"
+### Community 82 - ""schema".company_registrations"
 Cohesion: 0.21
 Nodes (4): company_registrations_status_time, "schema".company_registrations, "schema".security_review_company_registration(), "schema".security_submit_company_registration()
 
-### Community 80 - "engine.ts"
-Cohesion: 0.20
-Nodes (10): qrcode, gsap, qrcode, three, mountCinema(), render(), resize(), optimize() (+2 more)
-
-### Community 81 - "chart.tsx"
+### Community 83 - "chart.tsx"
 Cohesion: 0.24
 Nodes (11): recharts, ChartConfig, ChartContainer, ChartContext, ChartContextProps, ChartLegendContent, ChartStyle(), ChartTooltipContent (+3 more)
 
-### Community 82 - "documents/route.ts"
-Cohesion: 0.27
-Nodes (8): GET, handler, POST, activeCompanyTariffs(), documentOrigin, renderTariffSheet(), TariffSheet, tariffSheetUrl()
-
-### Community 83 - ""schema".security_fleet_locations"
+### Community 84 - ""schema".security_fleet_locations"
 Cohesion: 0.29
 Nodes (5): idx_driver_fleet_locations_company, "schema".driver_fleet_locations, "schema".security_driver_fleet_location(), "schema".security_fleet_locations(), "schema".security_update_driver_fleet_location()
 
-### Community 84 - "secret-vault.ts"
+### Community 85 - "secret-vault.ts"
 Cohesion: 0.22
 Nodes (9): jose, apply, headers, url, close(), send(), decryptSecret(), encryptSecret() (+1 more)
-
-### Community 85 - "models.ts"
-Cohesion: 0.47
-Nodes (9): box(), createCar(), createPhone(), createPrinter(), mesh(), metal(), surface(), textTexture() (+1 more)
 
 ### Community 87 - ""schema".company_change_requests"
 Cohesion: 0.29
@@ -567,57 +570,57 @@ Nodes (7): @radix-ui/react-toggle, @radix-ui/react-toggle-group, ToggleGroup, To
 Cohesion: 0.25
 Nodes (7): vaul, DrawerContent, DrawerDescription, DrawerFooter(), DrawerHeader(), DrawerOverlay, DrawerTitle
 
-### Community 99 - "rollout.mjs"
-Cohesion: 0.29
-Nodes (7): compose(), directory, env, [image, revision, target], lock, root, run()
-
-### Community 100 - "verify-private-owner.cjs"
+### Community 99 - "verify-private-owner.cjs"
 Cohesion: 0.29
 Nodes (5): assert, {createHmac}, fs, main(), otpAt()
 
-### Community 101 - "20261028_receipt_email.sql"
+### Community 100 - "20261028_receipt_email.sql"
 Cohesion: 0.29
 Nodes (3): "schema".receipt_email_settings, "schema".receipt_mail_requests, "schema".security_reserve_mail()
 
-### Community 102 - "20261109_chiron_realtime.sql"
+### Community 101 - "20261109_chiron_realtime.sql"
 Cohesion: 0.32
 Nodes (4): record_trip_shift, "schema".security_finish_realtime_trip(), trips_company_realtime_platform_ref_idx, trips_driver_realtime_active_idx
 
-### Community 103 - "[...path]/route.ts"
+### Community 102 - "[...path]/route.ts"
 Cohesion: 0.25
 Nodes (6): DELETE, GET, OPTIONS, PATCH, POST, PUT
 
-### Community 105 - "driver-app/tsconfig.json"
+### Community 104 - "driver-app/tsconfig.json"
 Cohesion: 0.29
 Nodes (6): compilerOptions, allowImportingTsExtensions, strict, exclude, extends, expo/tsconfig.base
 
-### Community 106 - "LiveMap.tsx"
+### Community 105 - "LiveMap.tsx"
 Cohesion: 0.33
 Nodes (5): leaflet, LiveMap(), LiveMapPoint, Props, words
 
-### Community 107 - "20261019_email_identity.sql"
+### Community 106 - "20261019_email_identity.sql"
 Cohesion: 0.33
 Nodes (3): "schema".security_attempt_email_code(), "schema".security_reset_email_password(), "schema".security_submit_verified_company_subscription()
 
-### Community 108 - ""schema".manual_invoices"
+### Community 107 - ""schema".manual_invoices"
 Cohesion: 0.38
 Nodes (3): manual_invoice_immutable, "schema".manual_invoice_payments, "schema".manual_invoices
 
-### Community 109 - "definitions.d.ts"
+### Community 108 - "definitions.d.ts"
 Cohesion: 0.29
 Nodes (3): BackgroundGeolocationPlugin, CallbackError, WatcherOptions
 
-### Community 110 - "database-readiness.mjs"
+### Community 109 - "database-readiness.mjs"
 Cohesion: 0.29
 Nodes (5): base, checks, headers, now, required
 
-### Community 111 - "useAddressSearch.ts"
+### Community 110 - "useAddressSearch.ts"
 Cohesion: 0.52
 Nodes (5): useAddressSearch(), UseAddressSearchOptions, AddressSuggestion, belgianSuggestions(), sortByDistance()
 
-### Community 112 - "company-registration.ts"
+### Community 111 - "company-registration.ts"
 Cohesion: 0.29
 Nodes (5): chironPortals, CompanyRegistration, companyRegistrationSchema, optional, password
+
+### Community 112 - "invoice-payment-link.ts"
+Cohesion: 0.43
+Nodes (6): claims, InvoiceLink, invoicePaymentUrl(), mac(), readInvoiceLink(), signInvoiceLink()
 
 ### Community 113 - "activate-chiron-production.sh"
 Cohesion: 0.33
@@ -635,58 +638,54 @@ Nodes (4): CUSTOMER_IMAGE, CUSTOMER_REVISION, update-customer-ui.sh script, VERI
 Cohesion: 0.40
 Nodes (4): CONTRACT_DOCUMENT_CSS, CONTRACT_TEMPLATE_HTML_FR, CONTRACT_TEMPLATE_HTML_NL, ContractData
 
-### Community 117 - "admin-enrollment.mjs"
-Cohesion: 0.60
-Nodes (3): createEnrollmentHandler(), escapeHtml(), totp()
-
-### Community 121 - "20261104_company_tariffs.sql"
+### Community 120 - "20261104_company_tariffs.sql"
 Cohesion: 0.70
 Nodes (4): company_tariff_documents_history_idx, issued_tariff_document_immutable, "schema".company_tariff_documents, "schema".reject_tariff_document_mutation()
 
-### Community 122 - "GpsLocationButton.tsx"
+### Community 121 - "GpsLocationButton.tsx"
 Cohesion: 0.40
 Nodes (4): GpsLocationButton(), GpsLocationButtonProps, GpsStatus, LABELS
 
-### Community 123 - "driver-activity.ts"
+### Community 122 - "driver-activity.ts"
 Cohesion: 0.70
 Nodes (4): activityColumns, activityFilters(), brusselsDay(), civilDate()
 
-### Community 124 - "prepare-customer-runtime.sh"
+### Community 123 - "prepare-customer-runtime.sh"
 Cohesion: 0.50
 Nodes (3): CUSTOMER_IMAGE, CUSTOMER_REVISION, prepare-customer-runtime.sh script
 
-### Community 128 - "scroll-area.tsx"
+### Community 127 - "scroll-area.tsx"
 Cohesion: 0.67
 Nodes (3): @radix-ui/react-scroll-area, ScrollArea, ScrollBar
 
-### Community 129 - "company-portal/drivers/route.ts"
+### Community 128 - "company-portal/drivers/route.ts"
 Cohesion: 0.50
 Nodes (3): DELETE, POST, PUT
 
-### Community 130 - "company-portal/vehicles/route.ts"
+### Community 129 - "company-portal/vehicles/route.ts"
 Cohesion: 0.50
 Nodes (3): DELETE, POST, PUT
 
-### Community 131 - "invoices/send/route.ts"
+### Community 130 - "invoices/send/route.ts"
 Cohesion: 0.50
 Nodes (3): GET, POST, unavailable
 
-### Community 132 - "view/route.ts"
+### Community 131 - "view/route.ts"
 Cohesion: 0.50
 Nodes (3): GET, POST, unavailable
 
-### Community 133 - "websocket/route.ts"
+### Community 132 - "websocket/route.ts"
 Cohesion: 0.50
 Nodes (3): GET, POST, unavailable
 
-### Community 134 - "totp.ts"
+### Community 133 - "totp.ts"
 Cohesion: 0.83
 Nodes (3): decodeTotpSecret(), matchingTotpStep(), totpAt()
 
 ## Knowledge Gaps
 - **776 isolated node(s):** `activate-chiron-production.sh script`, `CHIRON_ACTIVATION_REVISION`, `VERIFIED_BACKUP_TAG`, `CHIRON_ACTIVATION_PROOF`, `backup-foundation.sh script` (+771 more)
   These have ≤1 connection - possible missing edges. (Counts symbols only; 1123 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **57 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **56 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -697,7 +696,7 @@ _Questions this graph is uniquely positioned to answer:_
   _776 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `createErrorResponse` be split into smaller, more focused modules?**
   _Cohesion score 0.07285429141716566 - nodes in this community are weakly interconnected._
-- **Why does `generateAdminUserToken()` connect `createErrorResponse` to `lib/auth.ts`, `company-changes.ts`?**
+- **Why does `generateAdminUserToken()` connect `createErrorResponse` to `company-changes.ts`, `lib/auth.ts`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Should `useLanguage` be split into smaller, more focused modules?**
   _Cohesion score 0.028739750019902872 - nodes in this community are weakly interconnected._

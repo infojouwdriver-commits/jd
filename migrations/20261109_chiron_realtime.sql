@@ -17,7 +17,7 @@ BEGIN
    AND lower(chiron_mode)=input.chiron_environment FOR SHARE;
  IF NOT FOUND THEN RETURN jsonb_build_object('conflict',true); END IF;
  PERFORM 1 FROM drivers WHERE id=input.driver_id AND user_id=p_user_id AND company_id=input.company_id
-   AND status='active' AND coalesce(current_vehicle_id,input.vehicle_id)=input.vehicle_id FOR UPDATE;
+   AND status='active' AND coalesce(current_vehicle_id,assigned_vehicle_id)=input.vehicle_id FOR UPDATE;
  IF NOT FOUND THEN RETURN jsonb_build_object('conflict',true); END IF;
  PERFORM 1 FROM vehicles WHERE id=input.vehicle_id AND company_id=input.company_id AND status='active' FOR SHARE;
  IF NOT FOUND THEN RETURN jsonb_build_object('conflict',true); END IF;

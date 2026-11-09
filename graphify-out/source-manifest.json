@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "c34d13d21280b6ba06384245f45c04a775a4e9e7",
+  "source_commit_context": "4449986bb497e4a8dfc869536e6f23b1f2f4e3f0",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -144,7 +144,7 @@
     "migrations/20261027_shift_conflict_retry.sql": "89a489b5813821bed1b539a8bf9c98ade06408d5467a96c2587cf9b5e1f5aa36",
     "migrations/20261028_receipt_email.sql": "178a9ecc5fe08860fb75137ff90c91e5599233269bdb9f6b029f3742e2336f06",
     "migrations/20261104_company_tariffs.sql": "2e6baf273bd903aba79ffa3143e57a8bf9c6469d1971edba532719586263f539",
-    "migrations/20261109_chiron_realtime.sql": "717151e79a6a11e06d62444b740755bc61a5e906687128b6c2bd8578a9d4f513",
+    "migrations/20261109_chiron_realtime.sql": "77e33410e11d2e40b7d030b5da558378e77da718f76b23c9d504955dceb8b2d8",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
     "mobile/package.json": "40aee03ff72ed5bafad1a679e6a019b22989dae4f215042703e794b2c7aa50d5",
     "mobile/plugins/background-geolocation/Package.swift": "856e9b12db8d9499d30a655955838104ec135fc809c772a31dd6d75b07923ec4",
@@ -300,7 +300,7 @@
     "src/app/next_api/drivers/activity/route.ts": "4389678718c1d6b7aad1eb2ddff6cf659206026e9cacc85f2df6d3d6f624a72d",
     "src/app/next_api/drivers/billing-notice/route.ts": "b01cbbeec1fb506c9840df4e4441073061cd63c793506692c1638e5911bc9c29",
     "src/app/next_api/drivers/me/route.ts": "ce17d5869c7d920fba891549a850e15bc5e876c130906ed0cb6f2caa38dc8435",
-    "src/app/next_api/drivers/pricing/route.ts": "cad2853971245121374cc614b0e921ed9456b3b08875e9a6a9103e233e00b11a",
+    "src/app/next_api/drivers/pricing/route.ts": "1395512c28f16d2feb03161334bb247f7db754640dc8d37b6be04b8ae2ac7ebd",
     "src/app/next_api/drivers/profile/route.ts": "4ec74a733a4eee873fbe09093875bf25e6057eec35a21be5637d5c77882b3f6f",
     "src/app/next_api/drivers/route.ts": "cebe2b0e432901bc88d9f5236ba430b1509165ac7ed6e8017f465715deeb099b",
     "src/app/next_api/drivers/shifts/pdf/route.ts": "f27162080b8a2e0e907b1b3d9eb737a406f00455945e0691f3e0ad5653125444",
@@ -357,7 +357,7 @@
     "src/app/next_api/trips/receipt/route.ts": "b2e73ec730ac61df7e7539edde5f8c5b19ca5023532b56765e3d08a6db112568",
     "src/app/next_api/trips/retry-sync/route.ts": "e1c318ec32c3ff72aa3a69ef280841c57654c59b487d2e0ef148c9e9c04ab3e9",
     "src/app/next_api/trips/route.ts": "ba942987edea07f3f73ab8c096ffe6347f4811f25b1b9306775a979be71eff4d",
-    "src/app/next_api/trips/start/route.ts": "a18e894a876dc9d0bb9264ce9fc7ec182ea959b4387bdc12f6095bdf714ff02f",
+    "src/app/next_api/trips/start/route.ts": "828af9df5512f73569794d60b7cd0d645f9b655125dcaaa3c67a5519935e722e",
     "src/app/next_api/trips/summary/route.ts": "0ff0ddae0d9dc8213430af8e5547f485a976cbdedf6c31b8f37d92398ed61dd2",
     "src/app/next_api/vehicles/route.ts": "318cbc2c355a65c5b904af770e900140828c38a037cc20163075ad03e0410d21",
     "src/app/next_api/webhooks/brevo/route.ts": "0b655370c388cdae8ecf23e66efcb75ae8f46dd129719b2edd1e98fdfcafcba6",
@@ -639,17 +639,17 @@
   },
   "artifacts": {
     "GRAPH_TREE.html": "51f9d7fd10bfd3494e2a73a7dacf9c81a73b102b2147a0cf639c915c54ae0f36",
-    "SOURCE_INDEX.md": "7af5d61d7a563ae9a5e770fd090549ff6e09215b217ec2a74dcf8a7060bf6ff2",
-    "GRAPH_REPORT.md": "124337069d790fe2a614cd14f78651f3c41cadcf9bc0e95ea5025e3e5a0cc39a",
-    "graph.json": "ddb6352189f7639598492f1e57bffb88659e926dffe93ff25229b17ffd93fa7e",
-    "health.json": "d6a161e2b30e2ec720979693f9b220b7d46da2be7aa748807ae03e3f1b74d02c"
+    "SOURCE_INDEX.md": "ab286205c000c6b76d8cd52cb99cf583bf8cf0e8affff70fcfc65d530a5cb03f",
+    "GRAPH_REPORT.md": "84371461215df0d6ae2972dbefef39c2c4f4b1920434354e5d00d0c685d2e6c0",
+    "graph.json": "4c7191bec4c0ddaa7c5c98d06f6b88266269973ad1bbab40558d3a1ca3113a58",
+    "health.json": "835ee81a1879e322d1cd4175b41cc423969bda8d421314a8b0280ffea6aee192"
   },
   "nodes": 3599,
-  "edges": 12153,
-  "raw_edges": 12422,
-  "communities": 178,
+  "edges": 12151,
+  "raw_edges": 12420,
+  "communities": 177,
   "confidence_counts": {
     "EXTRACTED": 12176,
-    "INFERRED": 246
+    "INFERRED": 244
   }
 }

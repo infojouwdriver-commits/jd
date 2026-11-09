@@ -35,6 +35,9 @@ test('real-time departure and completion preserve the frozen trip and record shi
   assert.equal((await begin({...departure,chiron_environment:'production'})).conflict,true);
   assert.equal((await begin({...departure,vehicle_id:2})).conflict,true);
   assert.equal((await begin(departure,2)).conflict,true);
+  await db.exec('UPDATE drivers SET current_vehicle_id=NULL WHERE id=1');
+  assert.equal((await begin()).conflict,true);
+  await db.exec('UPDATE drivers SET assigned_vehicle_id=1 WHERE id=1');
   const first=await begin();
   assert.equal(first.created,true);
   assert.equal(first.trip.shift_id,shift);

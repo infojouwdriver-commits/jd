@@ -40,9 +40,8 @@ export const POST = requestMiddleware(async (request, context) => {
     } catch {return createErrorResponse({status:409,errorMessage:'Departure conflicts with a stored trip'});}
     return createSuccessResponse(await syncTripDeparture(existing,token));
   }
-  const vehicles = new CrudOperations('vehicles',token);
-  const vehicle = driver.current_vehicle_id ? await vehicles.findById(driver.current_vehicle_id)
-    : (await vehicles.findMany({company_id:driver.company_id,status:'active'},{limit:1,offset:0,orderBy:{column:'id',direction:'asc'}}))[0];
+  const vehicleId = driver.current_vehicle_id ?? driver.assigned_vehicle_id;
+  const vehicle = vehicleId ? await new CrudOperations('vehicles',token).findById(vehicleId) : null;
   if (!vehicle || vehicle.status !== 'active' || String(vehicle.company_id) !== String(driver.company_id)) {
     return createErrorResponse({status:403,errorMessage:'No authorized vehicle'});
   }
