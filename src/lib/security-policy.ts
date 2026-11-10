@@ -2,7 +2,9 @@ export function trustedOrigins(appOrigin: string, configured = ''): Set<string> 
   const values = [appOrigin, ...configured.split(',')];
   return new Set(values.filter(Boolean).map(value => {
     const url = new URL(value.trim());
-    if (url.username || url.password || url.pathname !== '/' || url.search || url.hash || !['https:', 'http:', 'capacitor:'].includes(url.protocol)) throw new Error('Invalid trusted origin');
+    if (url.username || url.password || !url.host || url.search || url.hash || !['https:', 'http:', 'capacitor:'].includes(url.protocol)) throw new Error('Invalid trusted origin');
+    if (url.pathname && url.pathname !== '/') throw new Error('Invalid trusted origin');
+    if (url.protocol === 'capacitor:') return `capacitor://${url.host}`;
     return url.origin;
   }));
 }

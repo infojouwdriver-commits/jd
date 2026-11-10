@@ -5,6 +5,14 @@ test('reject attacker domains and suffix confusion', () => {
  for (const origin of ['https://evil.zoer.cloud','https://app.example.com.evil.test','https://evil.example.com','https://app.example.com:444',null]) assert.equal(originAllowed(origin,'https://app.example.com'),false);
  assert.equal(originAllowed('https://app.example.com','https://app.example.com'),true);
 });
+test('a configured Capacitor host does not trust opaque browser origins', () => {
+ for (const configured of ['capacitor://localhost', 'capacitor://localhost/']) {
+  assert.equal(originAllowed('capacitor://localhost','https://app.example.com',configured),true);
+  assert.equal(originAllowed('null','https://app.example.com',configured),false);
+  assert.equal(originAllowed('capacitor://other','https://app.example.com',configured),false);
+ }
+ assert.throws(() => originAllowed('null','https://app.example.com','capacitor:///'));
+});
 test('admin role is granted only by exact server configuration', () => {
  assert.equal(isPlatformAdmin('1','11,21'),false);
  assert.equal(isPlatformAdmin('1',''),false);

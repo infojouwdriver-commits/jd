@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "512f78b831bbf29e37a6e673e2a55c123776d1ff",
+  "source_commit_context": "37c42afb39efc8f6248f067ceac9ece8fe72097f",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -356,7 +356,7 @@
     "src/app/next_api/trips/receipt-email/route.ts": "5cd01491a4859f034724657db5d44948a8c4e44cc620f3388695750a444daa21",
     "src/app/next_api/trips/receipt/route.ts": "b2e73ec730ac61df7e7539edde5f8c5b19ca5023532b56765e3d08a6db112568",
     "src/app/next_api/trips/retry-sync/route.ts": "e1c318ec32c3ff72aa3a69ef280841c57654c59b487d2e0ef148c9e9c04ab3e9",
-    "src/app/next_api/trips/route.ts": "ba942987edea07f3f73ab8c096ffe6347f4811f25b1b9306775a979be71eff4d",
+    "src/app/next_api/trips/route.ts": "9d6a73961d1a0ac300df30589a827bf9e6d863caec593ce75e529c6169e9127a",
     "src/app/next_api/trips/start/route.ts": "828af9df5512f73569794d60b7cd0d645f9b655125dcaaa3c67a5519935e722e",
     "src/app/next_api/trips/summary/route.ts": "0ff0ddae0d9dc8213430af8e5547f485a976cbdedf6c31b8f37d92398ed61dd2",
     "src/app/next_api/vehicles/route.ts": "318cbc2c355a65c5b904af770e900140828c38a037cc20163075ad03e0410d21",
@@ -612,7 +612,7 @@
     "src/lib/sanitize-html.ts": "ecb1a3a60a5bbc804df90637acd99efc6471666f9363cb4c842d7dfa4b7f846c",
     "src/lib/secret-vault.ts": "862c4e00a6f9ddf29bd558c0a99c6981d0788b802a56493b9ad0d8842d33206c",
     "src/lib/security-guard.ts": "471f555a75360613bbc55b3d9240f1ddb5edd64e5da2d4f7d2cb18d20192e2c1",
-    "src/lib/security-policy.ts": "73aaaf3f01552d09b49613eb00f9d36c9f3fb30630244f0cbde764a827d756b3",
+    "src/lib/security-policy.ts": "15d2e68faa53adf28d7f5d310374079505d6483a1c679e0ad116e3eb80668b34",
     "src/lib/security-session.ts": "b1afa3fd191f28b7a828f2ebf9da4bd02cf83e0d14a3cfdb960907c2b33eb7fd",
     "src/lib/server-utils.ts": "1153bafe61ee21c804b1583effe1a36dcfcf308b5195630c6cc924d90b88a57b",
     "src/lib/shift-document.ts": "13d1aa4161ca9442abe79046675dbd7f73edc16985c2fc89a813aa985e01ade0",
@@ -638,18 +638,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "SOURCE_INDEX.md": "9a11481b3a9a062275342b1580d76a2dcc235b5e1bfb15c73f9ef303337c8c26",
-    "health.json": "f6b1541564af2def8b3efbb5a489b65eef723da2b7e8c3920052ba0de14c3e2b",
     "GRAPH_TREE.html": "4c2d6c52d9d8caf09a25b082f0c5a878d37be81f3e4f8ffe7b9053d087391387",
-    "GRAPH_REPORT.md": "9cf96b47085a144446926e6a067c2a92601f806f6f848ab9a87606ecd564a6d4",
-    "graph.json": "355183dbe96737062ebec6603035b8bc7500ffd410797132db6eb76a0adc7b94"
+    "health.json": "22d79d05c53c67fdeab3f0299a3883b50ca883f394a5e24a88d48ec6b1313ad1",
+    "SOURCE_INDEX.md": "7442c26e11a37a7b48ac2219de0c64d527a6d42c3cabb8f383e49e400c3fe381",
+    "GRAPH_REPORT.md": "9e8fa83314212da5eccea861204e03c6f81549143dec331c7d201401f78c0951",
+    "graph.json": "f5cd7766a2e00b163eb3bfbd4ad6fec04f0a54e9e59d10b5e6cec208a3e7c4b0"
   },
   "nodes": 3610,
-  "edges": 12185,
-  "raw_edges": 12439,
+  "edges": 12187,
+  "raw_edges": 12441,
   "communities": 194,
   "confidence_counts": {
-    "EXTRACTED": 12195,
-    "INFERRED": 244
+    "EXTRACTED": 12198,
+    "INFERRED": 243
   }
 }

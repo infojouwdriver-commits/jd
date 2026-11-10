@@ -1,16 +1,16 @@
 # Graph Report - JOUW DRIVER  (2026-11-10)
 
 ## Corpus Check
-- 631 files · ~269,338 words
+- 631 files · ~269,402 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3610 nodes · 12185 edges · 194 communities (135 shown, 59 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 244 edges (avg confidence: 0.85)
+- 3610 nodes · 12187 edges · 194 communities (135 shown, 59 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 243 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `512f78b8`
+- Built from commit: `37c42afb`
 - Source hashes are authoritative: run `python3 scripts/code-map.py --check`.
 - Rebuild using the pinned environment: `python scripts/code-map.py` (local AST only).
 
@@ -185,7 +185,7 @@
 5. `CrudOperations` - 212 edges
 6. `validateRequestBody()` - 164 edges
 7. `Button` - 160 edges
-8. `createPostgrestClient()` - 130 edges
+8. `createPostgrestClient()` - 132 edges
 9. `requestMiddleware()` - 123 edges
 10. `useLanguage()` - 114 edges
 
@@ -204,10 +204,10 @@
 ## Import Cycles
 - 2-file cycle: `src/lib/api-utils.ts -> src/lib/create-response.ts -> src/lib/api-utils.ts`
 - 2-file cycle: `driver-app/src/experience/session.tsx -> driver-app/src/experience/shift-state.tsx -> driver-app/src/experience/session.tsx`
-- 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
+- 3-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
-- 3-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
+- 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
@@ -767,7 +767,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `activate-chiron-production.sh script`, `CHIRON_ACTIVATION_REVISION`, `VERIFIED_BACKUP_TAG` to the rest of the system?**
   _776 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `createErrorResponse` be split into smaller, more focused modules?**
-  _Cohesion score 0.06935508005386802 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06928026335478078 - nodes in this community are weakly interconnected._
 - **Why does `DriverDashboard()` connect `DriverDashboard.tsx` to `useAuth`, `Button`, `Label`, `Input`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Should `createPostgrestClient` be split into smaller, more focused modules?**

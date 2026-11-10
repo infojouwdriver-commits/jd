@@ -42,6 +42,7 @@ test('trip listing defaults admin to live snapshots across tenants, selected ten
  '@/lib/crud-operations':{default:Crud},'@/lib/create-response':jsonResponse,
  '@/lib/api-utils':{requestMiddleware:handler=>handler,parseQueryParams:request=>({limit:50,offset:0,company_id:request.company})},
  '@/lib/auth':{generateAdminUserToken:async()=>''},
+ '@/lib/postgrest':{},
  });
  assert.equal((await route.GET({nextUrl:new URL('https://app.example/next_api/trips')}, {payload:{sub:'1',isAdmin:true}})).status,200);assert.equal(queries[0].is_test,false);
  await route.GET({company:'9',nextUrl:new URL('https://app.example/next_api/trips')},{payload:{sub:'1',isAdmin:true}});assert.equal(queries[1].company_id,9);
