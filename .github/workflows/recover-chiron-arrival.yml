@@ -1,4 +1,3 @@
-<stdin>:37: SyntaxWarning: invalid escape sequence '\ '
 name: Reconcile the verified Chiron departure and deliver the saved arrival
 on:
   workflow_dispatch:
