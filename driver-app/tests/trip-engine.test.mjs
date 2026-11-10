@@ -88,3 +88,29 @@ test('map estimate and chosen final fare survive an encrypted restart and delaye
   assert.equal((await f.store.pending('1'))[0].payload.tariff_quote,tariffQuote.token);
  }finally{f.db.close();}
 });
+
+test('background restoration keeps an offline departure and a later queued arrival with original GPS and time',async()=>{
+ const f=await fixture();
+ try{
+  const started=await f.engine.start({...f.input(),platform:'HEETCH',externalReference:'synthetic-offline'});
+  f.advance(90000);
+  const resumed=createTripEngine('1',f.store,()=>f.key,f.now);
+  const restored=await resumed.restore();
+  assert.equal(restored.realtimeChiron,true);
+  assert.equal(restored.startTime,started.startTime);
+  assert.equal(restored.start.lat,started.start.lat);
+  await resumed.end({...f.point(),lat:50.851},9);
+  const original=(await f.store.pending('1'))[0].payload;
+  assert.equal(original.start_time,started.startTime);
+  assert.equal(original.end_lat,50.851);
+  assert.equal((await resumed.sync(async()=>{throw Error('offline arrival');})).remaining,1);
+  f.advance(120000);
+  let replay;
+  await createTripEngine('1',f.store,()=>f.key,f.now).sync(async payload=>{
+   replay=payload;
+   return {id:1,driver_id:1,completion_request_key:f.key,chiron_environment:'test',chiron_sync_state:'START_ACCEPTED'};
+  });
+  assert.equal(replay.end_time,original.end_time);
+  assert.equal(replay.completion_request_key,started.key);
+ }finally{f.db.close();}
+});

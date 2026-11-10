@@ -66,7 +66,7 @@ try {
  CREATE FUNCTION public.stack_role_probe() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('role',current_user,'superuser',rolsuper,'bypassrls',rolbypassrls,'login',rolcanlogin) FROM pg_roles WHERE rolname=current_user $$;`);
  // Existing operational tenant predates rollout; new onboarding below must still wait for first payment.
  await psql("INSERT INTO companies(id,name) VALUES(1,'Synthetic acceptance company') ON CONFLICT(id) DO NOTHING;");
- for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261023_app_experience.sql','migrations/20261024_contract_email_signing.sql','migrations/20261024_stripe_billing.sql','migrations/20261026_manual_invoices.sql','migrations/20261026_signature_billing_conflict.sql','migrations/20261026_invoice_bank_qr.sql','migrations/20261026_invoice_checkout.sql','migrations/20261027_shift_conflict_retry.sql','migrations/20261028_receipt_email.sql','migrations/20261104_company_tariffs.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
+ for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261023_app_experience.sql','migrations/20261024_contract_email_signing.sql','migrations/20261024_stripe_billing.sql','migrations/20261026_manual_invoices.sql','migrations/20261026_signature_billing_conflict.sql','migrations/20261026_invoice_bank_qr.sql','migrations/20261026_invoice_checkout.sql','migrations/20261027_shift_conflict_retry.sql','migrations/20261028_receipt_email.sql','migrations/20261104_company_tariffs.sql','migrations/20261109_chiron_realtime.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
@@ -185,6 +185,24 @@ try {
  assert.equal((await success('/trips?completion_request_key=eq.'+appKey,service)).length,1);checks.push('Two application retries return the original completed record without duplication or repricing');
  assert.equal((await appApi('/next_api/trips?id='+finished.id,'PUT',{price:99},cookie)).status,409);checks.push('Application refuses edits to the locked completed trip');
  assert.equal((await appApi('/next_api/companies','GET',undefined,cookie)).status,403);assert.equal((await appApi('/next_api/trips?id='+again.trip.id,'PUT',{price:99},cookie)).status,404);checks.push('Real database-backed driver authorization denies admin routes and another owner trip');
+ const realtimeKey=randomUUID();
+ const realtime={...tripBody,completion_request_key:realtimeKey,chiron_realtime:true,expected_company_id:1,expected_vehicle_id:1,expected_chiron_environment:'TEST'};
+ assert.equal((await appApi('/next_api/trips/end','POST',realtime,cookie)).status,409);
+ const departure={completion_request_key:realtimeKey,start_time:originalStart,start_lat:50.85,start_lon:4.35,start_address:'Synthetic start',ride_type:'INTERNAL',
+   expected_company_id:1,expected_vehicle_id:1,expected_chiron_environment:'TEST'};
+ const starts=await Promise.all([appApi('/next_api/trips/start','POST',departure,cookie),appApi('/next_api/trips/start','POST',departure,cookie)]);
+ assert.deepEqual(starts.map(r=>r.status).sort(),[200,201]);
+ assert.equal(starts[0].data.data.id,starts[1].data.data.id);
+ assert.equal(starts[0].data.data.status,'in_progress');
+ assert.notEqual(starts[0].data.data.chiron_delivery,'accepted');
+ const duplicate=await appApi('/next_api/trips/start','POST',{...departure,completion_request_key:randomUUID()},cookie);
+ assert.equal(duplicate.status,409);
+ const ends=await Promise.all([appApi('/next_api/trips/end','POST',realtime,cookie),appApi('/next_api/trips/end','POST',realtime,cookie)]);
+ assert.deepEqual(ends.map(r=>r.status).sort(),[200,201]);
+ assert.ok(ends.every(r=>r.data.data.id===starts[0].data.data.id&&r.data.data.ritnummer===starts[0].data.data.ritnummer&&r.data.data.price===22.55));
+ assert.equal((await appApi('/next_api/trips/retry-sync','POST',{pending:true},cookie)).status,200);
+ assert.equal((await success('/trips?completion_request_key=eq.'+realtimeKey,service)).length,1);
+ checks.push('Real PostgreSQL concurrent START and END keep one trip, pin TEST, and preserve the original fare and event data');
  const adminLogin=await appApi('/next_api/auth/login','POST',{email:'admin@example.invalid',password:appPassword,otp:totpAt(mfaSecret,Math.floor(Date.now()/30000))});
  assert.equal(adminLogin.status,200,'Native administrator MFA login failed');const adminCookie=adminLogin.response.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
  // Receipt delivery has no invoice-issuance side effect and remains independent from provider setup.

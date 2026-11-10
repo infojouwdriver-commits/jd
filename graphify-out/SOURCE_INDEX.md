@@ -377,7 +377,9 @@ Links target the working tree, so line positions can move after changes.
 - `profile()` — [L73](../driver-app/src/api.ts#L73)
 - `ownerRead()` — [L76](../driver-app/src/api.ts#L76)
 - `vehicles()` — [L86](../driver-app/src/api.ts#L86)
-- `driverApi` — [L280](../driver-app/src/api.ts#L280)
+- `tripAssignmentBody()` — [L94](../driver-app/src/api.ts#L94)
+- `startTrip()` — [L98](../driver-app/src/api.ts#L98)
+- `driverApi` — [L304](../driver-app/src/api.ts#L304)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -849,19 +851,20 @@ Links target the working tree, so line positions can move after changes.
 
 - `trip-engine.ts` — [L1](../driver-app/src/trip-engine.ts#L1)
 - `NativeTrip` — [L2](../driver-app/src/trip-engine.ts#L2)
-- `TripSyncReceipt` — [L9](../driver-app/src/trip-engine.ts#L9)
-- `durableReceipt()` — [L10](../driver-app/src/trip-engine.ts#L10)
-- `TripStore` — [L19](../driver-app/src/trip-engine.ts#L19)
-- `.active()` — [L20](../driver-app/src/trip-engine.ts#L20)
-- `.create()` — [L21](../driver-app/src/trip-engine.ts#L21)
-- `.update()` — [L22](../driver-app/src/trip-engine.ts#L22)
-- `.complete()` — [L23](../driver-app/src/trip-engine.ts#L23)
-- `.pending()` — [L24](../driver-app/src/trip-engine.ts#L24)
-- `.acknowledge()` — [L25](../driver-app/src/trip-engine.ts#L25)
-- `validPoint()` — [L27](../driver-app/src/trip-engine.ts#L27)
-- `address()` — [L33](../driver-app/src/trip-engine.ts#L33)
-- `tripDurationSeconds()` — [L38](../driver-app/src/trip-engine.ts#L38)
-- `createTripEngine()` — [L44](../driver-app/src/trip-engine.ts#L44)
+- `nativeDeparture()` — [L11](../driver-app/src/trip-engine.ts#L11)
+- `TripSyncReceipt` — [L23](../driver-app/src/trip-engine.ts#L23)
+- `durableReceipt()` — [L24](../driver-app/src/trip-engine.ts#L24)
+- `TripStore` — [L35](../driver-app/src/trip-engine.ts#L35)
+- `.active()` — [L36](../driver-app/src/trip-engine.ts#L36)
+- `.create()` — [L37](../driver-app/src/trip-engine.ts#L37)
+- `.update()` — [L38](../driver-app/src/trip-engine.ts#L38)
+- `.complete()` — [L39](../driver-app/src/trip-engine.ts#L39)
+- `.pending()` — [L40](../driver-app/src/trip-engine.ts#L40)
+- `.acknowledge()` — [L41](../driver-app/src/trip-engine.ts#L41)
+- `validPoint()` — [L43](../driver-app/src/trip-engine.ts#L43)
+- `address()` — [L49](../driver-app/src/trip-engine.ts#L49)
+- `tripDurationSeconds()` — [L54](../driver-app/src/trip-engine.ts#L54)
+- `createTripEngine()` — [L60](../driver-app/src/trip-engine.ts#L60)
 
 ## [driver-app/src/trip-error.ts](../driver-app/src/trip-error.ts)
 
@@ -899,14 +902,13 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/useTripController.ts](../driver-app/src/useTripController.ts)
 
 - `useTripController.ts` — [L1](../driver-app/src/useTripController.ts#L1)
-- `pointOf()` — [L17](../driver-app/src/useTripController.ts#L17)
-- `currentPoint()` — [L23](../driver-app/src/useTripController.ts#L23)
-- `useTripController()` — [L31](../driver-app/src/useTripController.ts#L31)
-- `start()` — [L98](../driver-app/src/useTripController.ts#L98)
-- `synchronize()` — [L120](../driver-app/src/useTripController.ts#L120)
-- `end()` — [L125](../driver-app/src/useTripController.ts#L125)
-- `changeVehicle()` — [L138](../driver-app/src/useTripController.ts#L138)
-- `retrySync()` — [L151](../driver-app/src/useTripController.ts#L151)
+- `pointOf()` — [L18](../driver-app/src/useTripController.ts#L18)
+- `currentPoint()` — [L24](../driver-app/src/useTripController.ts#L24)
+- `useTripController()` — [L32](../driver-app/src/useTripController.ts#L32)
+- `start()` — [L101](../driver-app/src/useTripController.ts#L101)
+- `end()` — [L180](../driver-app/src/useTripController.ts#L180)
+- `changeVehicle()` — [L194](../driver-app/src/useTripController.ts#L194)
+- `retrySync()` — [L207](../driver-app/src/useTripController.ts#L207)
 
 ## [driver-app/src/welcome-config.ts](../driver-app/src/welcome-config.ts)
 
@@ -1250,6 +1252,15 @@ Links target the working tree, so line positions can move after changes.
 - `company_tariff_documents_history_idx` — [L16](../migrations/20261104_company_tariffs.sql#L16)
 - `"schema".reject_tariff_document_mutation()` — [L25](../migrations/20261104_company_tariffs.sql#L25)
 - `issued_tariff_document_immutable` — [L31](../migrations/20261104_company_tariffs.sql#L31)
+
+## [migrations/20261109_chiron_realtime.sql](../migrations/20261109_chiron_realtime.sql)
+
+- `20261109_chiron_realtime.sql` — [source](../migrations/20261109_chiron_realtime.sql#)
+- `trips_driver_realtime_active_idx` — [L5](../migrations/20261109_chiron_realtime.sql#L5)
+- `trips_company_realtime_platform_ref_idx` — [L7](../migrations/20261109_chiron_realtime.sql#L7)
+- `"schema".security_save_trip_departure()` — [L11](../migrations/20261109_chiron_realtime.sql#L11)
+- `"schema".security_finish_realtime_trip()` — [L47](../migrations/20261109_chiron_realtime.sql#L47)
+- `record_trip_shift` — [L73](../migrations/20261109_chiron_realtime.sql#L73)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -1777,7 +1788,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `chiron-sync/page.tsx` — [L1](../src/app/admin/chiron-sync/page.tsx#L1)
 - `FailedTrip` — [L22](../src/app/admin/chiron-sync/page.tsx#L22)
-- `ChironSyncPage()` — [L37](../src/app/admin/chiron-sync/page.tsx#L37)
+- `ChironSyncPage()` — [L41](../src/app/admin/chiron-sync/page.tsx#L41)
 
 ## [src/app/admin/companies/[id]/chiron-settings/page.tsx](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx)
 
@@ -2042,23 +2053,23 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/driver/taximeter/page.tsx](../src/app/driver/taximeter/page.tsx)
 
 - `driver/taximeter/page.tsx` — [L1](../src/app/driver/taximeter/page.tsx#L1)
-- `PricingConfig` — [L35](../src/app/driver/taximeter/page.tsx#L35)
-- `TripData` — [L41](../src/app/driver/taximeter/page.tsx#L41)
-- `SavedTrip` — [L51](../src/app/driver/taximeter/page.tsx#L51)
-- `LocationPoint` — [L52](../src/app/driver/taximeter/page.tsx#L52)
-- `RouteCoords` — [L53](../src/app/driver/taximeter/page.tsx#L53)
-- `RideType` — [L60](../src/app/driver/taximeter/page.tsx#L60)
-- `calculateDistance()` — [L62](../src/app/driver/taximeter/page.tsx#L62)
-- `calculateActualDistance()` — [L69](../src/app/driver/taximeter/page.tsx#L69)
-- `buildWazeUrl()` — [L76](../src/app/driver/taximeter/page.tsx#L76)
-- `buildGoogleMapsUrl()` — [L81](../src/app/driver/taximeter/page.tsx#L81)
-- `GlassCard()` — [L86](../src/app/driver/taximeter/page.tsx#L86)
-- `DriverActionButton()` — [L101](../src/app/driver/taximeter/page.tsx#L101)
-- `MapPickerSheet()` — [L131](../src/app/driver/taximeter/page.tsx#L131)
-- `NavigateButton()` — [L298](../src/app/driver/taximeter/page.tsx#L298)
-- `BottomSheetModal()` — [L364](../src/app/driver/taximeter/page.tsx#L364)
-- `TaximeterPage()` — [L455](../src/app/driver/taximeter/page.tsx#L455)
-- `TaximeterWorkspace()` — [L459](../src/app/driver/taximeter/page.tsx#L459)
+- `PricingConfig` — [L36](../src/app/driver/taximeter/page.tsx#L36)
+- `TripData` — [L42](../src/app/driver/taximeter/page.tsx#L42)
+- `SavedTrip` — [L53](../src/app/driver/taximeter/page.tsx#L53)
+- `LocationPoint` — [L54](../src/app/driver/taximeter/page.tsx#L54)
+- `RouteCoords` — [L55](../src/app/driver/taximeter/page.tsx#L55)
+- `RideType` — [L62](../src/app/driver/taximeter/page.tsx#L62)
+- `calculateDistance()` — [L64](../src/app/driver/taximeter/page.tsx#L64)
+- `calculateActualDistance()` — [L71](../src/app/driver/taximeter/page.tsx#L71)
+- `buildWazeUrl()` — [L78](../src/app/driver/taximeter/page.tsx#L78)
+- `buildGoogleMapsUrl()` — [L83](../src/app/driver/taximeter/page.tsx#L83)
+- `GlassCard()` — [L88](../src/app/driver/taximeter/page.tsx#L88)
+- `DriverActionButton()` — [L103](../src/app/driver/taximeter/page.tsx#L103)
+- `MapPickerSheet()` — [L133](../src/app/driver/taximeter/page.tsx#L133)
+- `NavigateButton()` — [L300](../src/app/driver/taximeter/page.tsx#L300)
+- `BottomSheetModal()` — [L366](../src/app/driver/taximeter/page.tsx#L366)
+- `TaximeterPage()` — [L457](../src/app/driver/taximeter/page.tsx#L457)
+- `TaximeterWorkspace()` — [L461](../src/app/driver/taximeter/page.tsx#L461)
 
 ## [src/app/driver/test/page.tsx](../src/app/driver/test/page.tsx)
 
@@ -2528,8 +2539,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `drivers/pricing/route.ts` — [L1](../src/app/next_api/drivers/pricing/route.ts#L1)
 - `pricingHandler` — [L12](../src/app/next_api/drivers/pricing/route.ts#L12)
-- `GET` — [L79](../src/app/next_api/drivers/pricing/route.ts#L79)
-- `POST` — [L80](../src/app/next_api/drivers/pricing/route.ts#L80)
+- `GET` — [L81](../src/app/next_api/drivers/pricing/route.ts#L81)
+- `POST` — [L82](../src/app/next_api/drivers/pricing/route.ts#L82)
 
 ## [src/app/next_api/drivers/profile/route.ts](../src/app/next_api/drivers/profile/route.ts)
 
@@ -2830,10 +2841,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/end/route.ts](../src/app/next_api/trips/end/route.ts)
 
 - `end/route.ts` — [L1](../src/app/next_api/trips/end/route.ts#L1)
-- `generateTripUuid()` — [L15](../src/app/next_api/trips/end/route.ts#L15)
-- `generateTripHash()` — [L17](../src/app/next_api/trips/end/route.ts#L17)
-- `getRetentionDate()` — [L36](../src/app/next_api/trips/end/route.ts#L36)
-- `POST` — [L44](../src/app/next_api/trips/end/route.ts#L44)
+- `generateTripUuid()` — [L16](../src/app/next_api/trips/end/route.ts#L16)
+- `generateTripHash()` — [L18](../src/app/next_api/trips/end/route.ts#L18)
+- `getRetentionDate()` — [L37](../src/app/next_api/trips/end/route.ts#L37)
+- `POST` — [L45](../src/app/next_api/trips/end/route.ts#L45)
 
 ## [src/app/next_api/trips/export-pdf/route.ts](../src/app/next_api/trips/export-pdf/route.ts)
 
@@ -2871,10 +2882,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/start/route.ts](../src/app/next_api/trips/start/route.ts)
 
 - `start/route.ts` — [L1](../src/app/next_api/trips/start/route.ts#L1)
-- `generateTripUuid()` — [L8](../src/app/next_api/trips/start/route.ts#L8)
-- `generateTripHash()` — [L10](../src/app/next_api/trips/start/route.ts#L10)
-- `getRetentionDate()` — [L24](../src/app/next_api/trips/start/route.ts#L24)
-- `POST` — [L32](../src/app/next_api/trips/start/route.ts#L32)
+- `POST` — [L13](../src/app/next_api/trips/start/route.ts#L13)
 
 ## [src/app/next_api/trips/summary/route.ts](../src/app/next_api/trips/summary/route.ts)
 
@@ -2968,8 +2976,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/taximeter/page.tsx](../src/app/taximeter/page.tsx)
 
 - `app/taximeter/page.tsx` — [L1](../src/app/taximeter/page.tsx#L1)
-- `TripData` — [L23](../src/app/taximeter/page.tsx#L23)
-- `TaximeterPage()` — [L34](../src/app/taximeter/page.tsx#L34)
+- `TripData` — [L26](../src/app/taximeter/page.tsx#L26)
+- `TaximeterPage()` — [L38](../src/app/taximeter/page.tsx#L38)
 
 ## [src/app/trips/page.tsx](../src/app/trips/page.tsx)
 
@@ -4475,7 +4483,15 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/chiron-retry.ts](../src/lib/chiron-retry.ts)
 
 - `chiron-retry.ts` — [L1](../src/lib/chiron-retry.ts#L1)
-- `retryChironTrip()` — [L5](../src/lib/chiron-retry.ts#L5)
+- `retryable` — [L6](../src/lib/chiron-retry.ts#L6)
+- `review` — [L7](../src/lib/chiron-retry.ts#L7)
+- `canAttempt()` — [L9](../src/lib/chiron-retry.ts#L9)
+- `tripDelivery()` — [L16](../src/lib/chiron-retry.ts#L16)
+- `publicTrip()` — [L27](../src/lib/chiron-retry.ts#L27)
+- `syncTripEvent()` — [L33](../src/lib/chiron-retry.ts#L33)
+- `syncTripDeparture()` — [L56](../src/lib/chiron-retry.ts#L56)
+- `retryChironTrip()` — [L64](../src/lib/chiron-retry.ts#L64)
+- `retryPendingTripEvents()` — [L76](../src/lib/chiron-retry.ts#L76)
 
 ## [src/lib/chiron-service.ts](../src/lib/chiron-service.ts)
 
@@ -4485,14 +4501,14 @@ Links target the working tree, so line positions can move after changes.
 - `.getPlatformContract()` — [L13](../src/lib/chiron-service.ts#L13)
 - `.getPricingJson()` — [L16](../src/lib/chiron-service.ts#L16)
 - `.resolveEnvironment()` — [L21](../src/lib/chiron-service.ts#L21)
-- `.getAccessToken()` — [L30](../src/lib/chiron-service.ts#L30)
-- `.sendChironMessage()` — [L38](../src/lib/chiron-service.ts#L38)
-- `.sendEvent()` — [L49](../src/lib/chiron-service.ts#L49)
-- `.sendTripStart()` — [L81](../src/lib/chiron-service.ts#L81)
-- `.sendTripArrival()` — [L82](../src/lib/chiron-service.ts#L82)
-- `.runAcceptanceTest()` — [L83](../src/lib/chiron-service.ts#L83)
-- `.logSyncAttempt()` — [L115](../src/lib/chiron-service.ts#L115)
-- `.calculateProposedFare()` — [L118](../src/lib/chiron-service.ts#L118)
+- `.getAccessToken()` — [L31](../src/lib/chiron-service.ts#L31)
+- `.sendChironMessage()` — [L41](../src/lib/chiron-service.ts#L41)
+- `.sendEvent()` — [L64](../src/lib/chiron-service.ts#L64)
+- `.sendTripStart()` — [L117](../src/lib/chiron-service.ts#L117)
+- `.sendTripArrival()` — [L118](../src/lib/chiron-service.ts#L118)
+- `.runAcceptanceTest()` — [L119](../src/lib/chiron-service.ts#L119)
+- `.logSyncAttempt()` — [L151](../src/lib/chiron-service.ts#L151)
+- `.calculateProposedFare()` — [L154](../src/lib/chiron-service.ts#L154)
 
 ## [src/lib/chiron-test-result.ts](../src/lib/chiron-test-result.ts)
 
@@ -5133,6 +5149,7 @@ Links target the working tree, so line positions can move after changes.
 - `list()` — [L100](../src/lib/trip-journal.ts#L100)
 - `remove()` — [L114](../src/lib/trip-journal.ts#L114)
 - `sync()` — [L123](../src/lib/trip-journal.ts#L123)
+- `browserJournals` — [L143](../src/lib/trip-journal.ts#L143)
 - `tripJournal()` — [L144](../src/lib/trip-journal.ts#L144)
 
 ## [src/lib/trip-meter.ts](../src/lib/trip-meter.ts)
@@ -5148,6 +5165,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `completedTripTimes()` — [L1](../src/lib/trip-times.ts#L1)
 - `trip-times.ts` — [L1](../src/lib/trip-times.ts#L1)
+- `tripRequestKey()` — [L13](../src/lib/trip-times.ts#L13)
+- `departureTime()` — [L17](../src/lib/trip-times.ts#L17)
 
 ## [src/lib/user-register.ts](../src/lib/user-register.ts)
 
@@ -5158,6 +5177,14 @@ Links target the working tree, so line positions can move after changes.
 
 - `utils.ts` — [L1](../src/lib/utils.ts#L1)
 - `cn()` — [L4](../src/lib/utils.ts#L4)
+
+## [src/lib/web-trip-chiron.ts](../src/lib/web-trip-chiron.ts)
+
+- `web-trip-chiron.ts` — [L1](../src/lib/web-trip-chiron.ts#L1)
+- `ChironDelivery` — [L3](../src/lib/web-trip-chiron.ts#L3)
+- `WebTripDeparture` — [L4](../src/lib/web-trip-chiron.ts#L4)
+- `submitWebDeparture()` — [L18](../src/lib/web-trip-chiron.ts#L18)
+- `submitWebCompletion()` — [L26](../src/lib/web-trip-chiron.ts#L26)
 
 ## [src/locales/driver.ts](../src/locales/driver.ts)
 

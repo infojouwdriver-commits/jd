@@ -26,11 +26,15 @@ interface FailedTrip {
   start_address: string;
   end_address: string;
   distance_km: number;
-  price: number;
+  price: number | null;
   chiron_trip_id: string | null;
   chiron_sync_attempts: number;
   chiron_sync_state: string;
-  sync_error_message: string;
+  chiron_delivery: 'accepted'|'pending'|'review';
+  chiron_environment: string;
+  chiron_error_codes: string[];
+  ritnummer: string;
+  review_code: string;
   last_sync_attempt: string;
 }
 
@@ -53,9 +57,7 @@ export default function ChironSyncPage() {
   const fetchFailedTrips = async () => {
     setLoading(true);
     try {
-      const allTrips = await api.get<FailedTrip[]>('/trips');
-      const failed = allTrips.filter(trip => !!trip.end_time && trip.chiron_sync_state !== 'COMPLETED');
-      setFailedTrips(failed);
+      setFailedTrips(await api.get<FailedTrip[]>('/chiron-sync/retry'));
     } catch (error: any) {
       toast.error(error.message || 'فشل تحميل الرحلات الفاشلة');
     } finally {
@@ -72,8 +74,8 @@ export default function ChironSyncPage() {
   const handleRetry = async (tripId: number) => {
     setRetrying(tripId);
     try {
-      await api.post('/trips/retry-sync', { trip_id: tripId });
-      toast.success('تم إعادة محاولة المزامنة بنجاح');
+      const result=await api.post<{chiron_delivery:string}>('/trips/retry-sync', { trip_id: tripId });
+      if (result.chiron_delivery==='accepted') toast.success('أكد Chiron استلام الرسالة');
       fetchFailedTrips();
     } catch (error: any) {
       toast.error(error.message || 'فشلت إعادة المحاولة');
@@ -126,7 +128,7 @@ export default function ChironSyncPage() {
           <Card className="p-6 rounded-3xl border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">رحلات فاشلة</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">رحلات معلّقة أو للمراجعة</p>
                 <p className="text-3xl font-bold text-red-600 dark:text-red-400">{failedTrips.length}</p>
               </div>
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/30">
@@ -173,10 +175,10 @@ export default function ChironSyncPage() {
                   <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                  رائع! لا توجد رحلات فاشلة
+                  رائع! لا توجد رحلات معلّقة أو للمراجعة
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400">
-                  جميع الرحلات تمت مزامنتها بنجاح مع Chiron
+                  ستظهر هنا الرسائل التي تنتظر الإرسال أو تحتاج مراجعة.
                 </p>
               </div>
             </Card>
@@ -207,7 +209,7 @@ export default function ChironSyncPage() {
                   </div>
                   <div className="text-left">
                     <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      €{trip.price.toFixed(2)}
+                      {trip.price==null?'—':`€${Number(trip.price).toFixed(2)}`}
                     </div>
                   </div>
                 </div>
@@ -227,11 +229,13 @@ export default function ChironSyncPage() {
                     </p>
                   </div>
 
-                  {trip.sync_error_message && (
+                  <p className="text-sm">{trip.ritnummer} · {trip.chiron_environment} · {trip.chiron_sync_state}</p>
+                  {['START_SENT','ARRIVAL_SENT'].includes(trip.chiron_sync_state)&&<p className="text-sm">تحقّق من هذا الرقم في Chiron قبل أي إجراء.</p>}
+                  {trip.review_code && (
                     <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                       <p className="text-xs text-red-600 dark:text-red-400 mb-1">رسالة الخطأ</p>
                       <p className="text-sm text-red-900 dark:text-red-100">
-                        {trip.sync_error_message}
+                        {[trip.review_code,...trip.chiron_error_codes].join(' · ')}
                       </p>
                     </div>
                   )}
@@ -248,7 +252,7 @@ export default function ChironSyncPage() {
 
                 <Button
                   onClick={() => handleRetry(trip.id)}
-                  disabled={retrying === trip.id}
+                  disabled={retrying === trip.id || ['START_SENT','ARRIVAL_SENT'].includes(trip.chiron_sync_state)}
                   className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600"
                 >
                   {retrying === trip.id ? (

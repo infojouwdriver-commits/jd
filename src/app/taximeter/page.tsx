@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -20,8 +20,12 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
 
+import {tripJournal} from '@/lib/trip-journal';
+import {submitWebCompletion,submitWebDeparture,type ChironDelivery,type WebTripDeparture} from '@/lib/web-trip-chiron';
+
 interface TripData {
   completionRequestKey: string;
+  departure: WebTripDeparture;
   startLat: number;
   startLon: number;
   startAddress: string;
@@ -34,6 +38,11 @@ interface TripData {
 export default function TaximeterPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const owner=user?.sub;
+  const [assignment,setAssignment]=useState<{company_id:number;vehicle_id:number;chiron_mode:string}>();
+  const [chiron,setChiron]=useState<ChironDelivery>('pending');
+  const [journalReady,setJournalReady]=useState(false);
+  const busy=useRef(false);
   const [tripActive, setTripActive] = useState(false);
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [currentLat, setCurrentLat] = useState<number | null>(null);
@@ -53,6 +62,50 @@ export default function TaximeterPage() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  const flush=useCallback(async()=>{
+    if (!owner || !navigator.onLine) return;
+    const result=await tripJournal('legacy-meter').sync(owner,async payload=>{
+      const receipt=await submitWebCompletion(payload);
+      setChiron(receipt.chiron_delivery ?? 'pending');
+    });
+    if(result.remaining) setChiron('pending');
+    await api.post('/trips/retry-sync',{pending:true});
+  },[owner]);
+
+  useEffect(()=>{
+    if(!owner)return;
+    let alive=true;
+    void api.get<{company_id:number;vehicle_id:number;chiron_mode:string}>('/drivers/pricing')
+      .then(value=>{if(alive)setAssignment(value);}).catch(()=>{});
+    void tripJournal('legacy-meter').list<TripData>(owner,'active').then(rows=>{
+      if(!alive)return;
+      const saved=rows[0];
+      if(saved){setTripData({...saved,startTime:new Date(saved.departure.start_time)});setTripActive(true);}
+      setJournalReady(true);
+    }).catch(()=>toast.error('تعذّر فتح سجل الرحلات.'));
+    const run=()=>void flush().catch(()=>{});
+    run();const timer=window.setInterval(run,30000);
+    window.addEventListener('online',run);
+    return()=>{alive=false;window.clearInterval(timer);window.removeEventListener('online',run);};
+  },[owner,flush]);
+
+  const departure=tripData?.departure;
+  useEffect(()=>{
+    if(!departure)return;
+    let alive=true, sending=false;
+    const publish=async()=>{
+      if(!alive||sending||!navigator.onLine)return;
+      sending=true;
+      try{const receipt=await submitWebDeparture(departure);if(alive)setChiron(receipt.chiron_delivery);}
+      catch{/* Original departure stays in the journal. */}
+      finally{sending=false;}
+    };
+    const run=()=>void publish();
+    run();const timer=window.setInterval(run,30000);
+    window.addEventListener('online',run);
+    return()=>{alive=false;window.clearInterval(timer);window.removeEventListener('online',run);};
+  },[departure]);
 
   // Get current GPS position
   const getCurrentPosition = useCallback((): Promise<{ lat: number; lon: number }> => {
@@ -121,20 +174,30 @@ export default function TaximeterPage() {
 
   // Start trip
   const handleStartTrip = async () => {
+    if(!user||!journalReady||busy.current||tripActive||!assignment?.vehicle_id)return;
+    busy.current=true;
     try {
       const position = await getCurrentPosition();
       
+      const key=crypto.randomUUID(),startTime=new Date();
+      const departure:WebTripDeparture={
+        completion_request_key:key,start_time:startTime.toISOString(),start_lat:position.lat,start_lon:position.lon,
+        start_address:startAddress||'موقع غير محدد',ride_type:'INTERNAL',expected_company_id:Number(assignment.company_id),
+        expected_vehicle_id:Number(assignment.vehicle_id),expected_chiron_environment:assignment.chiron_mode,
+      };
       const newTripData: TripData = {
-        completionRequestKey: crypto.randomUUID(),
+        departure,completionRequestKey:key,
         startLat: position.lat,
         startLon: position.lon,
         startAddress: startAddress || 'موقع غير محدد',
-        startTime: new Date(),
+        startTime,
         distance: 0,
         duration: 0,
         price: START_FEE
       };
 
+      await tripJournal('legacy-meter').save(user.sub,'active',key,newTripData);
+      setChiron('pending');
       setTripData(newTripData);
       setCurrentLat(position.lat);
       setCurrentLon(position.lon);
@@ -142,12 +205,13 @@ export default function TaximeterPage() {
       toast.success('تم بدء الرحلة بنجاح');
     } catch (error: any) {
       toast.error(error.message || 'فشل بدء الرحلة');
-    }
+    }finally{busy.current=false;}
   };
 
   // End trip
   const handleEndTrip = async () => {
-    if (!tripData) return;
+    if (!tripData||!user||busy.current) return;
+    busy.current=true;
 
     try {
       const position = await getCurrentPosition();
@@ -157,11 +221,16 @@ export default function TaximeterPage() {
         position.lat,
         position.lon
       );
-      const duration = Math.floor((new Date().getTime() - tripData.startTime.getTime()) / 1000 / 60);
+      const endTime=new Date();
+      const duration = Math.floor((endTime.getTime() - tripData.startTime.getTime()) / 1000 / 60);
       const price = calculatePrice(distance, duration);
 
-      // Send trip to backend
-      await api.post('/trips/end', {
+      // Queue the original arrival before attempting the network.
+      await tripJournal('legacy-meter').complete(user.sub,{
+        departure:tripData.departure,chiron_realtime:true,
+        expected_company_id:tripData.departure.expected_company_id,expected_vehicle_id:tripData.departure.expected_vehicle_id,
+        expected_chiron_environment:tripData.departure.expected_chiron_environment,
+        start_time:tripData.departure.start_time,end_time:endTime.toISOString(),
         completion_request_key: tripData.completionRequestKey,
         ride_type: 'INTERNAL',
         start_lat: tripData.startLat,
@@ -185,11 +254,10 @@ export default function TaximeterPage() {
       setStartAddress('');
       setEndAddress('');
       
-      // Redirect to trips history
-      router.push('/trips');
+      void flush().catch(()=>{});
     } catch (error: any) {
       toast.error(error.message || 'فشل إنهاء الرحلة');
-    }
+    }finally{busy.current=false;}
   };
 
   // Update trip data in real-time
@@ -238,6 +306,7 @@ export default function TaximeterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      {tripActive&&<p role="status">{chiron==='accepted'?'قبل Chiron الانطلاق':chiron==='review'?'إرسال Chiron يحتاج مراجعة الإدارة':'بانتظار تأكيد Chiron'}</p>}
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-800/50">
         <div className="container mx-auto px-4 py-4">
@@ -406,7 +475,7 @@ export default function TaximeterPage() {
         <div className="space-y-4">
           {!tripActive ? (
             <Button
-              onClick={handleStartTrip}
+              onClick={handleStartTrip} disabled={!journalReady||!assignment?.vehicle_id}
               className="w-full h-16 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-lg shadow-xl shadow-green-500/30"
             >
               <Play className="w-6 h-6 ml-2" />

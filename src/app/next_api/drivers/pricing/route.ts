@@ -59,10 +59,12 @@ const pricingHandler = requestMiddleware(async (request, context) => {
       return createSuccessResponse({price,token:signTariffQuote({user:user_id,company:String(company.id),issued:Date.now(),tariff,km,minutes,price},process.env.JWT_SECRET||'')});
     }
     const pricing = driverPricing(company);
+    const vehicleId = driver.current_vehicle_id ?? driver.assigned_vehicle_id;
 
     return createSuccessResponse({
       company_id: company.id,
       company_name: company.name,
+      vehicle_id: vehicleId ?? null,
       pricing, tariffs,
       chiron_mode: company.chiron_mode
     });

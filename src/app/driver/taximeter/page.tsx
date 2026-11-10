@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api-client';
+import {submitWebCompletion,submitWebDeparture,type ChironDelivery,type WebTripDeparture} from '@/lib/web-trip-chiron';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,13 +34,14 @@ import { addMeterPoint, emptyMeter, type MeterState } from '@/lib/trip-meter';
 import { isFreshAccurateLocation, clearNativeTripPoints } from '@/lib/mobile-location';
 
 interface PricingConfig {
-  company_id: number; company_name: string;
+  company_id: number; company_name: string; vehicle_id:number|null;
   pricing: { base_fee: number; km_rate: number; minute_rate: number; minimum_fare: number; night_fee?: number; airport_fee?: number };
   tariffs?:{code:string;name:string}[];
   chiron_mode: 'TEST' | 'PRODUCTION';
 }
 interface TripData {
   completionRequestKey: string;
+  departure?: WebTripDeparture;
   tariffQuote?: string;
   startLat: number; startLon: number; startAddress: string; endAddress: string;
   startTime: string; distance: number; duration: number; proposedPrice: number;
@@ -472,6 +474,8 @@ function TaximeterWorkspace() {
   const [selectedStartCoords, setSelectedStartCoords] = useState<Coordinate | null>(null);
   const [selectedEndCoords, setSelectedEndCoords] = useState<Coordinate | null>(null);
   const [passengerName, setPassengerName] = useState('');
+  const [agreedPriceEdited,setAgreedPriceEdited] = useState(false);
+  const quoteCache = useRef<{code:string;km:number|null;minutes:number|null;token:string}|null>(null);
   const [proposedPrice, setProposedPrice] = useState('');
   const [finalPrice, setFinalPrice] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -483,6 +487,8 @@ function TaximeterWorkspace() {
   const [pricingConfig, setPricingConfig] = useState<PricingConfig | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [storageReady, setStorageReady] = useState(false);
+  const [chironDeparture,setChironDeparture] = useState<{key:string;state:ChironDelivery}>();
+  const [chironArrival,setChironArrival] = useState<{id:number;state:ChironDelivery}>();
   const [pendingTrips, setPendingTrips] = useState(0);
   const [syncingTrips, setSyncingTrips] = useState(false);
   const [storageError, setStorageError] = useState(false);
@@ -521,7 +527,8 @@ function TaximeterWorkspace() {
     setSyncingTrips(true);
     try {
       const result = await tripJournal().sync(user.sub, async payload => {
-        const response = await api.post('/trips/end', payload);
+        const response = await submitWebCompletion(payload);
+        setChironArrival({id:response.id,state:response.chiron_delivery ?? (response.warning ? 'review' : 'pending')});
         // Clear only after server acknowledgement. A failure leaves the queued
         // idempotent payload available so cleanup can be retried safely.
         await clearNativeTripPoints(user.sub, String(payload.completion_request_key));
@@ -529,7 +536,7 @@ function TaximeterWorkspace() {
         if (response.warning) toast.warning(response.warning);
       });
       setPendingTrips(result.remaining);
-      if (result.sent) toast.success(language === 'ar' ? `تمت مزامنة ${result.sent} رحلة` : language === 'fr' ? `${result.sent} trajet(s) synchronisé(s)` : `${result.sent} rit(ten) gesynchroniseerd`);
+      if (result.sent) toast.success(language === 'ar' ? `حفظ الخادم ${result.sent} رحلة` : language === 'fr' ? `${result.sent} trajet(s) enregistré(s) sur le serveur` : `${result.sent} rit(ten) opgeslagen op de server`);
     } catch { setStorageError(true); }
     finally { setSyncingTrips(false); }
   }, [user, language]);
@@ -579,7 +586,7 @@ function TaximeterWorkspace() {
 
   useEffect(() => {
     const nativeTrip = activeTripRef.current;
-    if (tripActive && selectedRideType === 'INTERNAL' && user && nativeTrip) {
+    if (tripActive && user && nativeTrip) {
       startWatching((point: GeolocationPoint) => {
         if (endingRef.current && !replayingForEndRef.current) return;
         meterRef.current = addMeterPoint(meterRef.current, point);
@@ -594,9 +601,6 @@ function TaximeterWorkspace() {
         }
       }, { background: true, trip: { owner: user.sub, key: nativeTrip.completionRequestKey,
         after: meterRef.current.lastPoint?.timestamp ?? 0 } });
-    } else if (tripActive && user && nativeTrip) {
-      // External rides still display live foreground GPS; their price remains supplied by the platform.
-      startWatching(() => {});
     } else { stopWatching(); }
     return () => { stopWatching(); };
   }, [tripActive, selectedRideType, user?.sub, startWatching, stopWatching]);
@@ -660,6 +664,7 @@ function TaximeterWorkspace() {
   const showPriceEstimate = async () => {
     setLoading(true);
     setRouteUnavailable(false);
+    setAgreedPriceEdited(false);
     try {
       if (selectedRideType === 'INTERNAL') {
         if (!startAddress) {
@@ -674,7 +679,8 @@ function TaximeterWorkspace() {
         if (!routeDetails) throw new Error('route_address_not_found');
         setEstimatedDistance(routeDetails.distance);
         setEstimatedDuration(routeDetails.duration);
-        const quoted=chosenTariff ? await api.post<{price:number}>('/drivers/pricing',{code:chosenTariff.code,km:routeDetails.distance,minutes:routeDetails.duration}) : null;
+        const quoted=chosenTariff ? await api.post<{price:number;token:string}>('/drivers/pricing',{code:chosenTariff.code,km:routeDetails.distance,minutes:routeDetails.duration}) : null;
+        if(quoted&&chosenTariff)quoteCache.current={code:chosenTariff.code,km:routeDetails.distance,minutes:routeDetails.duration,token:quoted.token};
         setProposedPrice(quoted?quoted.price.toFixed(2):pricingConfig?.tariffs?'':calculateProposedPrice(routeDetails.distance,routeDetails.duration).toFixed(2));
         setRouteCoords({ startLat: routeDetails.startLat, startLon: routeDetails.startLon, endLat: routeDetails.endLat, endLon: routeDetails.endLon, route: routeDetails.route });
         setShowMap(true);
@@ -705,11 +711,57 @@ function TaximeterWorkspace() {
     finally { setLoading(false); }
   };
 
+  const departure = tripData?.departure;
+  useEffect(() => {
+    if (!departure || !isOnline || !user?.sub) return;
+    let alive=true, busy=false;
+    const publish=async()=>{
+      if (!alive || busy) return;
+      busy=true;
+      try {
+        const result=await submitWebDeparture(departure);
+        if (alive) {
+          setChironDeparture({key:departure.completion_request_key,state:result.chiron_delivery});
+          window.dispatchEvent(new Event('driver-shift-updated'));
+        }
+      } catch (failure) {
+        if (alive && failure instanceof Error && 'status' in failure && [400,403,409].includes(Number(failure.status))) {
+          setChironDeparture({key:departure.completion_request_key,state:'review'});
+        }
+      }
+      finally {busy=false;}
+    };
+    void publish();
+    const timer=window.setInterval(()=>void publish(),30_000);
+    return ()=>{alive=false;window.clearInterval(timer);};
+  },[departure,isOnline,user?.sub]);
+
+  useEffect(()=>{
+    if (!user?.sub || !isOnline) return;
+    let alive=true, busy=false;
+    const retry=async()=>{
+      if (!alive || busy || document.visibilityState==='hidden') return;
+      busy=true;
+      try {
+        const updates=await api.post<{id:number;chiron_delivery:ChironDelivery}[]>('/trips/retry-sync',{pending:true});
+        if (alive) setChironArrival(previous=>{
+          const latest=previous&&updates.find(item=>item.id===previous.id);
+          return latest?{id:latest.id,state:latest.chiron_delivery}:previous;
+        });
+      } catch {/* The server retains pending events for the next retry. */}
+      finally {busy=false;}
+    };
+    void retry();
+    const timer=window.setInterval(()=>void retry(),30_000);
+    document.addEventListener('visibilitychange',retry);
+    return ()=>{alive=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',retry);};
+  },[user?.sub,isOnline]);
+
   // The durable local trip is authoritative for whether the portal meter is running.
   // Publishing its status must never discard or block the locally saved trip.
   useEffect(() => {
     const key = tripData?.completionRequestKey;
-    if (!tripActive || !key || !user) return;
+    if (!tripActive || !key || !user || tripData.departure) return;
     let cancelled = false, sending = false, warned = false;
     const publish = async () => {
       if (sending || cancelled) return;
@@ -740,6 +792,9 @@ function TaximeterWorkspace() {
     startingRef.current = true;
     setLoading(true);
     try {
+    if (!pricingConfig?.vehicle_id || !['TEST','PRODUCTION'].includes(pricingConfig.chiron_mode)) {
+      throw new Error('Trip vehicle or environment unavailable');
+    }
     let startLocation = currentLocation;
       let loc = currentLocation;
       if (!loc || !isFreshAccurateLocation(loc)) {
@@ -762,15 +817,38 @@ function TaximeterWorkspace() {
         return;
       }
     }
-      const quote=selectedRideType==='INTERNAL'&&chosenTariff
-        ? await api.post<{token:string}>('/drivers/pricing',{code:chosenTariff.code,km:routeCoords?estimatedDistance:null,minutes:routeCoords?estimatedDuration:null})
-        : null;
+      let quote:{token:string}|null=null;
+      if(selectedRideType==='INTERNAL'&&chosenTariff){
+        const km=routeCoords?estimatedDistance:null,minutes=routeCoords?estimatedDuration:null;
+        try {
+          if(navigator.onLine)quote=await api.post<{token:string}>('/drivers/pricing',{code:chosenTariff.code,km,minutes});
+        } catch(failure) {
+          if(navigator.onLine && !(failure instanceof Error && ['TRANSPORT','TIMEOUT','OFFLINE'].includes(String((failure as Error&{errorCode?:string}).errorCode))))throw failure;
+        }
+        const cached=quoteCache.current;
+        if(!quote&&cached&&cached.code===chosenTariff.code&&cached.km===km&&cached.minutes===minutes)quote=cached;
+      }
+      if (!isFreshAccurateLocation(startLocation)) {
+        const refreshed=await getLocation(true);
+        if (!refreshed || !isFreshAccurateLocation(refreshed)) throw new Error('Departure GPS is stale');
+        startLocation=refreshed;
+      }
+      const key=crypto.randomUUID(), startTime=new Date().toISOString();
+      const departure:WebTripDeparture={
+        completion_request_key:key,start_time:startTime,start_lat:startLocation.lat,start_lon:startLocation.lon,
+        start_address:startAddress,ride_type:selectedRideType==='INTERNAL'?'INTERNAL':'EXTERNAL',
+        external_source:selectedRideType==='INTERNAL'?null:selectedRideType,external_ride_number:externalRideNumber||null,
+        ...(selectedRideType==='INTERNAL'&&(routeUnavailable||agreedPriceEdited)?{agreed_price:Number(proposedPrice)}:{}),
+        expected_company_id:Number(pricingConfig.company_id),expected_vehicle_id:Number(pricingConfig.vehicle_id),
+        expected_chiron_environment:pricingConfig.chiron_mode,
+      };
       const tripStartData: TripData = {
+        departure,
         ...(quote?{tariffQuote:quote.token}:{}),
-        completionRequestKey: crypto.randomUUID(),
-        startLat: startLocation?.lat ?? 0, startLon: startLocation?.lon ?? 0,
+        completionRequestKey:key,
+        startLat: startLocation.lat, startLon: startLocation.lon,
         startAddress: startAddress || '', endAddress: endAddress || '',
-        startTime: new Date().toISOString(), distance: 0, duration: 0,
+        startTime, distance: 0, duration: 0,
         proposedPrice: selectedRideType === 'INTERNAL' ? parseFloat(proposedPrice) : 0,
         passengerName: passengerName || undefined,
         paymentMethod: selectedRideType !== 'INTERNAL' ? 'app' : paymentMethod,
@@ -814,11 +892,14 @@ function TaximeterWorkspace() {
       let endLoc = currentLocation;
       if (!endLoc || !isFreshAccurateLocation(endLoc)) endLoc = await getLocation(false);
       if (!endLoc || !isFreshAccurateLocation(endLoc)) throw new Error(language === 'ar' ? 'تعذّر تحديد موقع نهاية الرحلة بدقة. أبقِ الرحلة مفتوحة وحاول مجدداً.' : language === 'fr' ? 'Position de fin indisponible. Gardez le trajet ouvert et réessayez.' : 'Eindlocatie niet beschikbaar. Houd de rit open en probeer opnieuw.');
-      const actualDistance = selectedRideType === 'INTERNAL' ? meterRef.current.distanceKm : 0;
+      const actualDistance = addMeterPoint(meterRef.current,endLoc).distanceKm;
       const endTime = new Date();
       const actualDuration = Math.floor((endTime.getTime() - new Date(tripData.startTime).getTime()) / 60000);
       const tripPayload: any = {
         completion_request_key: tripData.completionRequestKey,
+        ...(tripData.departure?{chiron_realtime:true,departure:tripData.departure,
+          expected_company_id:tripData.departure.expected_company_id,expected_vehicle_id:tripData.departure.expected_vehicle_id,
+          expected_chiron_environment:tripData.departure.expected_chiron_environment}:{}),
         start_time: tripData.startTime, end_time: endTime.toISOString(),
         start_lat: tripData.startLat, start_lon: tripData.startLon,
         end_lat: endLoc?.lat ?? tripData.startLat, end_lon: endLoc?.lon ?? tripData.startLon,
@@ -964,6 +1045,14 @@ function TaximeterWorkspace() {
         </div>
       )}
 
+      {(departure || chironArrival) && <p role="status" className="jd-panel p-3">
+        {(() => {
+          const state=departure?(chironDeparture?.key===departure.completion_request_key?chironDeparture.state:'pending'):chironArrival?.state;
+          if(state==='review')return language==='ar'?'إرسال Chiron يحتاج مراجعة الإدارة':language==='fr'?'Envoi Chiron à vérifier par l’administration':'Chiron-verzending vereist controle';
+          if(state==='accepted')return language==='ar'?(departure?'قبل Chiron الانطلاق':'قبل Chiron الوصول'):language==='fr'?(departure?'Départ accepté par Chiron':'Arrivée acceptée par Chiron'):(departure?'Vertrek aanvaard door Chiron':'Aankomst aanvaard door Chiron');
+          return language==='ar'?'بانتظار تأكيد Chiron':language==='fr'?'En attente de confirmation Chiron':'Wacht op bevestiging van Chiron';
+        })()}
+      </p>}
       {!tripActive && <section className="jd-panel jd-standby"><ReferenceMeter fare={null} distanceKm={0} durationSeconds={0} running={false}/></section>}
       {/* Alerts */}
       <AnimatePresence>
@@ -1311,7 +1400,7 @@ function TaximeterWorkspace() {
                       aria-label={routeUnavailable ? (language === 'nl' ? 'Overeengekomen prijs' : language === 'ar' ? 'السعر المتفق عليه' : 'Prix convenu') : t.proposedPrice}
                       min="0.01"
                       value={proposedPrice}
-                      onChange={(e) => setProposedPrice(e.target.value)}
+                      onChange={(e) => {setProposedPrice(e.target.value);setAgreedPriceEdited(true);}}
                       className="w-full pr-10 pl-4 text-2xl font-black outline-none"
                       style={{ ...inputStyle, height: '56px', color: 'var(--dp-text)' }}
                     />

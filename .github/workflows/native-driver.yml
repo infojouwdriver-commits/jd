@@ -39,7 +39,12 @@ jobs:
       - run: npm run lint && npm run typecheck && npm test && npx expo install --check
       - run: npx expo prebuild --platform android --no-install
       - name: Compile bundled preview application
-        run: ./android/gradlew -p android assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+        # Match the Java 17 toolchain used by Expo SDK 57's Android builders.
+        run: |
+          export JAVA_HOME="${JAVA_HOME_17_X64:?Java 17 is required}"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          java -version
+          ./android/gradlew -p android assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: driver-android-preview-${{ github.sha }}
@@ -47,7 +52,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   visual-review:
-    runs-on: ubuntu-latest
+    # Playwright 1.56.1 supports Ubuntu 24.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:

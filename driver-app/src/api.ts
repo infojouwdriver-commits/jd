@@ -91,6 +91,25 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       || result.vehicles.some(vehicle => !Number.isSafeInteger(vehicle.id) || vehicle.id <= 0 || vehicle.company_id !== current.driver.company_id || vehicle.status !== 'active' || typeof vehicle.plate_number !== 'string')) throw new ApiError(502);
     return {profile: current, vehicles: result.vehicles};
   }
+  function tripAssignmentBody(payload:Record<string,unknown>) {
+    const {_native_driver_id, _native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
+    return {...body,expected_company_id:_native_company_id,expected_vehicle_id:_native_vehicle_id,expected_chiron_environment:_native_environment};
+  }
+  async function startTrip(payload:Record<string,unknown>) {
+    const current = await profile();
+    if ((current.native_trip_contract_version ?? 0) < 2 || current.driver.id !== payload._native_driver_id) throw new ApiError(409);
+    const {completion_request_key,start_time,start_lat,start_lon,start_address,ride_type,external_source,external_ride_number,agreed_price} = payload;
+    const expected = tripAssignmentBody(payload);
+    const receipt=await request<{id:number;driver_id:number;completion_request_key:string;chiron_environment:string;chiron_delivery:'accepted'|'pending'|'review'}>(
+      '/next_api/trips/start',{completion_request_key,start_time,start_lat,start_lon,start_address,ride_type,external_source,external_ride_number,agreed_price,
+        expected_company_id:expected.expected_company_id,expected_vehicle_id:expected.expected_vehicle_id,expected_chiron_environment:expected.expected_chiron_environment},
+    );
+    if (!Number.isSafeInteger(receipt.id) || receipt.id < 1 || receipt.driver_id !== current.driver.id ||
+      receipt.completion_request_key?.toLowerCase() !== String(completion_request_key).toLowerCase() ||
+      receipt.chiron_environment?.toLowerCase() !== String(expected.expected_chiron_environment).toLowerCase() ||
+      !['accepted','pending','review'].includes(receipt.chiron_delivery)) throw new ApiError(502);
+    return receipt;
+  }
   return {
     profile,
     vehicles,
@@ -191,12 +210,17 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     },
     tariffs:()=>request<{company_id:number;tariffs?:{code:string;name:string;description:string}[]}>('/next_api/drivers/pricing'),
     tariffQuote:(code:string,km:number|null,minutes:number|null)=>request<{price:number|null;token:string}>('/next_api/drivers/pricing',{code,km,minutes}),
+    startTrip,
+    async retryChiron(owner:number) {
+      if ((await profile()).driver.id !== owner) throw new ApiError(403);
+      return request<{id:number;chiron_environment:'test'|'production';chiron_delivery:'accepted'|'pending'|'review'}[]>('/next_api/trips/retry-sync',{pending:true});
+    },
     async completeTrip(payload: Record<string, unknown>) {
       const current = await profile();
       if ((current.native_trip_contract_version ?? 0) < 1) throw new ApiError(409);
-      const {_native_driver_id, _native_company_id, _native_vehicle_id, _native_environment, ...body} = payload;
-      if (_native_driver_id !== undefined && current.driver.id !== _native_driver_id) throw new ApiError(409);
-      return request<{id: number; completion_request_key: string; warning?: string; chiron_environment?: string; chiron_sync_state?: string}>('/next_api/trips/end', {...body, expected_company_id: _native_company_id, expected_vehicle_id: _native_vehicle_id, expected_chiron_environment: _native_environment});
+      if (payload._native_driver_id !== undefined && current.driver.id !== payload._native_driver_id) throw new ApiError(409);
+      if (payload.chiron_realtime === true) await startTrip(payload);
+      return request<{id: number; completion_request_key: string; warning?: string; chiron_environment?: string; chiron_sync_state?: string}>('/next_api/trips/end', tripAssignmentBody(payload));
     },
     async reportFleet(owner: number, point: MeterPoint) {
       if (![point.lat, point.lon, point.timestamp, point.accuracy].every(Number.isFinite)
