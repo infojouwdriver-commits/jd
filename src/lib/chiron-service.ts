@@ -53,13 +53,13 @@ export class ChironService {
    throw new ChironError('رفض Chiron الرسالة. راجع بيانات الرحلة.',424,'CHIRON_MESSAGE_REJECTED',false,{httpStatus:response.status,errors:[]});
   }
   let body:any;try{body=await response.json();}catch{throw uncertain();}
-  if(response.status!==200||body?.httpStatus!=='OK'||!Array.isArray(body.fouten))throw uncertain();
+  if(![200,201].includes(response.status)||body?.httpStatus!=='OK'||!Array.isArray(body.fouten))throw uncertain();
   if(body.fouten.length){
    const errors=body.fouten.slice(0,25).map((item:any)=>item?.code).filter((code:unknown)=>typeof code==='string'&&/^CH[0-9]{4}$/.test(code));
-   throw uncertain({httpStatus:200,errors});
+   throw uncertain({httpStatus:response.status,errors});
   }
   if(body.message!=='De taxirit is verwerkt.')throw uncertain();
-  return {httpStatus:200,accepted:true};
+  return {httpStatus:response.status,accepted:true};
  }
  private static async sendEvent(tripId:number,companyId:number,status:'vertrek'|'aankomst',automatic=false){
   const token=await generateAdminUserToken(),crud=new CrudOperations('trips',token),trip=await crud.findById(tripId);

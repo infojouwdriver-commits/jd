@@ -17,7 +17,7 @@ function fixture(options={}){
  const fetch=async(url,init)=>{requests.push({url,init});assert.equal(init.redirect,'error');assert.ok(init.signal);if(url.endsWith('/oauth/token')&&options.authUnavailable)throw Error('synthetic auth timeout');if(url.endsWith('/oauth/token'))return Response.json({access_token:'test-only-token'});const message=JSON.parse(init.body);messages.push(message);if(options.networkFailure)throw Error('test network timeout');if(options.failArrival&&message.status==='aankomst')return new Response('{}',{status:400});if(options.authExpired && messages.length===1)return new Response('{}',{status:401});
  if(options.serverError)return new Response('{}',{status:503});
  if(options.invalidReceipt)return Response.json({accepted:true});
- return Response.json({message:'De taxirit is verwerkt.',httpStatus:'OK',fouten:options.bodyErrors?[{code:'CH1102'}]:[]},{status:200});};
+ return Response.json({message:'De taxirit is verwerkt.',httpStatus:'OK',fouten:options.bodyErrors?[{code:'CH1102'}]:[]},{status:options.receiptStatus??200});};
  const {ChironService:service}=compile('../src/lib/chiron-service.ts',{'./crud-operations':{__esModule:true,default:Crud},'./auth':{generateAdminUserToken:async()=>'test-only-service'},'./postgrest':{createPostgrestClient:client},'./chiron-protocol':protocol,'./company-pricing':pricing,fetch},env);
  return {service,protocol,rows,messages,requests,env};
 }
@@ -63,6 +63,18 @@ test('arrival requires a completed trip and an acknowledged departure',async()=>
  assert.equal(f.messages[1].broncreatiedatum,'2026-10-11T10:11:02Z');
  assert.equal(f.messages[1].ritnummer,f.messages[0].ritnummer);
 });
+test('HTTP 201 receipts like those observed in production preserve acknowledgement for both events',async()=>{
+ const f=fixture({receiptStatus:201});
+ Object.assign(f.rows.trips[0],{chiron_realtime:true,chiron_environment:'test',chiron_sync_state:'CREATED',end_time:null,status:'in_progress'});
+ await f.service.sendTripStart(1,1,{});
+ assert.equal(f.rows.trips[0].chiron_sync_state,'START_ACCEPTED');
+ assert.equal(f.rows.trips[0].start_sync_response.httpStatus,201);
+ Object.assign(f.rows.trips[0],{end_time:'2026-10-11T10:11:02Z',status:'completed'});
+ await f.service.sendTripArrival(1,1,{});
+ assert.equal(f.rows.trips[0].chiron_sync_state,'COMPLETED');
+ assert.equal(f.rows.trips[0].arrival_sync_response.httpStatus,201);
+ assert.equal(f.messages[0].ritnummer,f.messages[1].ritnummer);
+});
 test('expired OAuth renews once before a new submission in the same environment',async()=>{
  const f=fixture({authExpired:true});
  await f.service.sendTripStart(1,1,{});
@@ -79,12 +91,15 @@ test('OAuth outage does not claim departure, and a recovery uses original data',
  await f.service.sendTripStart(1,1,{});
  assert.equal(f.messages[0].rit.vertrektijdstip,'2026-10-11T10:00:00Z');
 });
-test('HTTP 200 errors, missing acceptance and server errors hold the departure for review',async()=>{
- for(const variant of [{bodyErrors:true},{invalidReceipt:true},{serverError:true}]){
+test('HTTP 200 or 201 errors, missing acceptance and server errors hold the departure for review',async()=>{
+ for(const variant of [{bodyErrors:true},{bodyErrors:true,receiptStatus:201},{invalidReceipt:true},{serverError:true}]){
   const f=fixture(variant);
   await assert.rejects(f.service.sendTripStart(1,1,{}),e=>e.code==='CHIRON_DELIVERY_UNCERTAIN');
   assert.equal(f.rows.trips[0].chiron_sync_state,'START_SENT');
-  if(variant.bodyErrors)assert.equal(f.rows.trips[0].start_sync_response.errors.join(','),'CH1102');
+  if(variant.bodyErrors){
+   assert.equal(f.rows.trips[0].start_sync_response.errors.join(','),'CH1102');
+   assert.equal(f.rows.trips[0].start_sync_response.httpStatus,variant.receiptStatus??200);
+  }
   await assert.rejects(f.service.sendTripStart(1,1,{}));
   await assert.rejects(f.service.sendTripArrival(1,1,{}));
   assert.equal(f.messages.length,1);
