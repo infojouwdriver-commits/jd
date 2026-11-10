@@ -1,4 +1,4 @@
-name: Reconcile the verified Chiron departure and deliver the saved arrival
+name: Record the confirmed Chiron arrival without resending
 on:
   workflow_dispatch:
 permissions:
@@ -7,12 +7,12 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 jobs:
-  reconcile:
+  record-receipt:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: production
     steps:
-      - name: Reconcile and send arrival for the one reported trip
+      - name: Record the verified arrival response for one exact trip
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -31,81 +31,29 @@ jobs:
           ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
           cd /srv/jouw-driver/foundation
-          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
-          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$app")" = ff65762de788040c7fa66431e678adef6adf5e3d
-          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
-          docker exec "$app" node -e 'if(process.env.CHIRON_TRANSMISSION_ENABLED!=="true"||process.env.CHIRON_PRODUCTION_ENABLED!=="true")process.exit(1)'
-          ride=$(docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -Atq <<'SQL'
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -Atq <<'SQL'
           BEGIN;
           SET LOCAL lock_timeout='5s';
           SET LOCAL statement_timeout='5s';
+          -- Recovery run 42816937724 returned HTTP 201, Chiron OK and an empty error list.
           WITH target AS (
-            SELECT id,company_id FROM public.trips WHERE encode(sha256(convert_to(ritnummer,'UTF8')),'hex')='5e55f547c36cabba6ec36385c9a3fc844be4818f97e1c5ef4db6323f9a326a7a'
-          ), reconciled AS (
+            SELECT id FROM public.trips WHERE encode(sha256(convert_to(ritnummer,'UTF8')),'hex')='5e55f547c36cabba6ec36385c9a3fc844be4818f97e1c5ef4db6323f9a326a7a'
+          ), recorded AS (
             UPDATE public.trips t
-            SET chiron_sync_state='START_ACCEPTED',
-                start_sync_response=jsonb_build_object('accepted',true,'source','chiron_trip_report'),
-                start_accepted_at=clock_timestamp(),sync_error_message='CHIRON_OPERATOR_RECONCILED'
+            SET chiron_sync_state='COMPLETED',sync_error_message=NULL,
+                arrival_sync_response=jsonb_build_object('accepted',true,'httpStatus',201),
+                arrival_sent_at='2026-11-10T12:34:52.030912Z'::timestamptz
             FROM target WHERE (SELECT count(*) FROM target)=1 AND t.id=target.id
-              AND t.chiron_environment='production' AND t.chiron_realtime
-              AND t.status='completed' AND t.end_time>t.start_time AND t.end_lat IS NOT NULL AND t.end_lon IS NOT NULL
-              AND t.distance_km>=0 AND t.price>0 AND t.is_test IS NOT TRUE
-              AND t.chiron_sync_state='START_SENT' AND t.chiron_sync_attempts=1
+              AND t.chiron_realtime AND t.chiron_environment='production' AND t.status='completed'
+              AND t.chiron_sync_state='ARRIVAL_SENT' AND t.chiron_sync_attempts=2
+              AND t.start_sync_response->>'source'='chiron_trip_report' AND t.start_sync_response->>'accepted'='true'
+              AND t.arrival_sync_response IS NULL AND t.arrival_sent_at IS NULL
               AND t.sync_error_message='CHIRON_DELIVERY_UNCERTAIN'
-              AND t.chiron_departure_payload->>'ritnummer'=t.ritnummer AND t.chiron_departure_payload->>'status'='vertrek'
-              AND t.start_sync_response IS NULL AND t.arrival_sync_response IS NULL AND t.arrival_sent_at IS NULL
-            RETURNING t.id,t.company_id
+              AND t.last_sync_attempt BETWEEN '2026-11-10T12:34:35Z'::timestamptz AND '2026-11-10T12:34:53Z'::timestamptz
+            RETURNING t.chiron_sync_state,t.arrival_sync_response
           )
-          SELECT id||' '||company_id FROM reconciled;
+          SELECT json_build_object('updated',count(*),'state',max(chiron_sync_state),
+            'accepted',bool_and(arrival_sync_response->>'accepted'='true')) FROM recorded;
           COMMIT;
           SQL
-          )
-          [[ "$ride" =~ ^[1-9][0-9]*\ [1-9][0-9]*$ ]]
-          read -r trip_id company_id <<< "$ride"
-          docker exec -i "$app" node --input-type=commonjs - "$trip_id" "$company_id" <<'NODE'
-          const {createHash}=require('node:crypto');
-          const path=require('node:path');
-          const root=path.resolve('.next/server');
-          require(root+'/app/next_api/trips/start/route.js');
-          const runtime=require(root+'/webpack-runtime.js');
-          const modules=Object.entries(runtime.m).filter(([,factory])=>factory.toString().includes('CHIRON_PRODUCTION_NOT_ENABLED'));
-          if(modules.length!==1)throw Error('Expected the deployed Chiron sender');
-          const service=Object.values(runtime(modules[0][0])).find(value=>typeof value?.sendTripArrival==='function');
-          if(!service)throw Error('Chiron arrival sender unavailable');
-          const fetchOriginal=global.fetch;
-          let submitted=false;
-          global.fetch=async (input,init)=>{
-            if(String(input)!=='https://mow.api.vlaanderen.be/chiron/taxirit')return fetchOriginal(input,init);
-            const request=JSON.parse(init.body);
-            const hash=createHash('sha256').update(request.ritnummer).digest('hex');
-            if(submitted||request.status!=='aankomst'||hash!=='5e55f547c36cabba6ec36385c9a3fc844be4818f97e1c5ef4db6323f9a326a7a')throw Error('Only one arrival for the reported trip is permitted');
-            submitted=true;
-            let response;
-            try{response=await fetchOriginal(input,init);}catch(error){
-              console.log(JSON.stringify({providerTransportError:error?.name==='TimeoutError'?'timeout':'other'}));
-              throw error;
-            }
-            let body;
-            try{body=await response.clone().json();}catch{}
-            console.log(JSON.stringify({
-              providerHttpStatus:response.status,jsonObject:Boolean(body&&typeof body==='object'&&!Array.isArray(body)),
-              statusOk:body?.httpStatus==='OK',hasStatus:Object.hasOwn(body??{},'httpStatus'),
-              hasMessage:typeof body?.message==='string',documentedMessage:body?.message==='De taxirit is verwerkt.',
-              hasErrorsList:Array.isArray(body?.fouten),errorCount:Array.isArray(body?.fouten)?body.fouten.length:null,
-              errorCodes:Array.isArray(body?.fouten)?body.fouten.map(error=>error?.code).filter(code=>typeof code==='string'&&/^CH[0-9]{4}$/.test(code)).slice(0,10):[],
-              hasAnswerTime:typeof body?.antwoordTijdstip==='string',
-            }));
-            return response;
-          };
-          (async()=>{
-            try{
-              const result=await service.sendTripArrival(Number(process.argv[2]),Number(process.argv[3]),null);
-              if(!submitted||result?.success!==true||result.replayed)throw Error('No new accepted arrival');
-              console.log('Arrival acknowledged and saved by the deployed Chiron sender.');
-            }catch(error){
-              const code=typeof error?.code==='string'&&/^CHIRON_[A-Z_]+$/.test(error.code)?error.code:'RECOVERY_UNCONFIRMED';
-              console.error(code);process.exitCode=1;
-            }
-          })();
-          NODE
           REMOTE
