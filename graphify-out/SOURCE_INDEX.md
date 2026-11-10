@@ -2891,8 +2891,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/route.ts](../src/app/next_api/trips/route.ts)
 
 - `next_api/trips/route.ts` — [L1](../src/app/next_api/trips/route.ts#L1)
-- `GET` — [L7](../src/app/next_api/trips/route.ts#L7)
-- `PUT` — [L85](../src/app/next_api/trips/route.ts#L85)
+- `GET` — [L8](../src/app/next_api/trips/route.ts#L8)
+- `PUT` — [L86](../src/app/next_api/trips/route.ts#L86)
 
 ## [src/app/next_api/trips/start/route.ts](../src/app/next_api/trips/start/route.ts)
 
@@ -5030,15 +5030,15 @@ Links target the working tree, so line positions can move after changes.
 
 - `security-policy.ts` — [L1](../src/lib/security-policy.ts#L1)
 - `trustedOrigins()` — [L1](../src/lib/security-policy.ts#L1)
-- `originAllowed()` — [L9](../src/lib/security-policy.ts#L9)
-- `isPlatformAdmin()` — [L12](../src/lib/security-policy.ts#L12)
-- `publicEndpoint()` — [L15](../src/lib/security-policy.ts#L15)
-- `disabledEndpoint()` — [L19](../src/lib/security-policy.ts#L19)
-- `memberEndpoint()` — [L22](../src/lib/security-policy.ts#L22)
-- `ownsRecord()` — [L38](../src/lib/security-policy.ts#L38)
-- `calendarMonthDeadline()` — [L41](../src/lib/security-policy.ts#L41)
-- `safeChironUrl()` — [L50](../src/lib/security-policy.ts#L50)
-- `stripSecrets()` — [L56](../src/lib/security-policy.ts#L56)
+- `originAllowed()` — [L11](../src/lib/security-policy.ts#L11)
+- `isPlatformAdmin()` — [L14](../src/lib/security-policy.ts#L14)
+- `publicEndpoint()` — [L17](../src/lib/security-policy.ts#L17)
+- `disabledEndpoint()` — [L21](../src/lib/security-policy.ts#L21)
+- `memberEndpoint()` — [L24](../src/lib/security-policy.ts#L24)
+- `ownsRecord()` — [L40](../src/lib/security-policy.ts#L40)
+- `calendarMonthDeadline()` — [L43](../src/lib/security-policy.ts#L43)
+- `safeChironUrl()` — [L52](../src/lib/security-policy.ts#L52)
+- `stripSecrets()` — [L58](../src/lib/security-policy.ts#L58)
 
 ## [src/lib/security-session.ts](../src/lib/security-session.ts)
 

@@ -3,6 +3,7 @@ import CrudOperations from '@/lib/crud-operations';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { requestMiddleware, parseQueryParams, validateRequestBody } from "@/lib/api-utils";
 import { generateAdminUserToken } from '@/lib/auth';
+import { createPostgrestClient } from '@/lib/postgrest';
 
 export const GET = requestMiddleware(async (request, context) => {
   const { limit, offset, company_id } = parseQueryParams(request);
@@ -122,10 +123,19 @@ export const PUT = requestMiddleware(async (request, context) => {
     }
 
     if (existing.locked_after_completion) return createErrorResponse({errorMessage:'Completed trip is locked; use an audited correction procedure',status:409});
-    const updated = await tripsCrud.update(id, {
+    const update = createPostgrestClient(adminToken).from('trips').update({
       price: parseFloat(newPrice.toFixed(2)),
       updated_at: new Date().toISOString(),
-    });
+    }).eq('id', id);
+    if (!context.payload?.isAdmin) update.eq('user_id', context.payload!.sub);
+
+    // A concurrent trip completion can lock the row after the read above.
+    const {data, error} = await update
+      .is('locked_after_completion', existing.locked_after_completion ?? null)
+      .select();
+    if (error) throw error;
+    const updated = data?.[0];
+    if (!updated) return createErrorResponse({errorMessage:'Trip changed; refresh before retrying',status:409});
 
     return createSuccessResponse(updated);
   } catch (error: any) {

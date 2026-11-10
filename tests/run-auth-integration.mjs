@@ -23,7 +23,7 @@ let welcomeWrites=0;
 const shiftCalls=[];
 const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
-const claims=new Set();let unavailable=false;const databaseTokens=[];
+const claims=new Set();let unavailable=false;let completeBeforePriceUpdate=false;const databaseTokens=[];
 rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
 rows.companies=[{id:1,name:'Synthetic Company',chiron_mode:'TEST'}];rows.vehicles=[];
 const mock=http.createServer(async(req,res)=>{
@@ -60,7 +60,10 @@ const mock=http.createServer(async(req,res)=>{
     const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='is')return arg==='null'?row[key]==null:arg==='true'?row[key]===true:row[key]===false;if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
    });
    if(req.method==='POST'){const record={...(Array.isArray(body)?body[0]:body),id:table.length+1,created_at:new Date().toISOString(),revoked:false};table.push(record);data=record;}
-   else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));
+   else {if(url.pathname==='/trips'&&req.method==='PATCH'&&completeBeforePriceUpdate){
+     completeBeforePriceUpdate=false;Object.assign(rows.trips[0],{locked_after_completion:true,status:'completed',price:25});
+    }
+    let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));
     if(req.method==='GET'&&req.headers.prefer?.includes('count=exact')){const total=found.length;const offset=Number(url.searchParams.get('offset')||0),limit=Number(url.searchParams.get('limit')||1000);found=found.slice(offset,offset+limit);res.setHeader('Content-Range',`${offset}-${offset+found.length-1}/${total}`);}
     const columns=url.searchParams.get('select');if(columns&&columns!=='*')found=found.map(row=>Object.fromEntries(columns.split(',').filter(k=>k in row).map(k=>[k,row[k]])));
     data=req.headers.accept?.includes('vnd.pgrst.object')?found[0]:found;}
@@ -208,7 +211,11 @@ try {
  await status('Driver cannot enter admin company endpoint',request('/next_api/companies','GET',null,driverToken),403);
  await status('Client admin role claims do not grant platform authority',request('/next_api/companies','GET',null,await sign(2,'password','test_admin')),403);
  await status('Driver cannot edit another driver trip',request('/next_api/trips?id=102','PUT',{price:40},driverToken),404);assert.equal(rows.trips[1].price,20);
+ await status('MFA administrator can edit an unlocked trip',request('/next_api/trips?id=102','PUT',{price:22},refreshedToken),200);assert.equal(rows.trips[1].price,22);
  await status('Driver can edit own unlocked trip',request('/next_api/trips?id=101','PUT',{price:15},driverToken),200);assert.equal(rows.trips[0].price,15);
+ completeBeforePriceUpdate=true;
+ await status('Trip completion wins against an in-flight price edit',request('/next_api/trips?id=101','PUT',{price:16},driverToken),409);
+ assert.equal(rows.trips[0].price,25);
  rows.users[1].is_active=false;await status('Disabled user cannot obtain login cookies',request('/next_api/auth/login','POST',{email:rows.users[1].email,password}),401);await status('Disabled driver cannot use existing access token',request('/next_api/trips','GET',null,driverToken),401);rows.users[1].is_active=true;
  rows.users[1].security_revoked_before=new Date(Date.now()+1000).toISOString();await status('Account-wide revocation blocks old access token',request('/next_api/trips','GET',null,driverToken),401);delete rows.users[1].security_revoked_before;
  unavailable=true;await status('Production rate storage failure closes access',request('/next_api/trips','GET',null,driverToken),503);
