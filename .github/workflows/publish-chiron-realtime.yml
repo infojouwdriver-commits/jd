@@ -13,6 +13,7 @@ jobs:
       actions: read
     outputs:
       backup_tag: ${{ steps.release.outputs.backup_tag }}
+      digest: ${{ steps.release.outputs.digest }}
     steps:
       - name: Verify the merged release, exact successful checks and recent backup
         id: release
@@ -48,96 +49,19 @@ jobs:
           const age=Date.now()-Date.parse(backup.updated_at);
           if(backup.path!=='.github/workflows/backup-foundation.yml'||backup.status!=='completed'||backup.conclusion!=='success'||
              backup.run_attempt!==1||!Number.isFinite(age)||age<0||age>24*60*60*1000)throw Error('Verified recent restore drill required');
+          const previous=await api('/actions/runs/42804805583');
+          if(previous.path!=='.github/workflows/publish-chiron-realtime.yml'||
+             previous.head_sha!=='3dc62ee22caa1cf25fa78aa69de6cb15de688858'||previous.run_attempt!==1||
+             previous.status!=='completed'||previous.conclusion!=='failure')throw Error('Previous publication evidence mismatch');
+          const evidence=await api('/actions/runs/42804805583/jobs');
+          for(const [id,name] of [[129791109129,'domain / candidate'],[129793982801,'build'],[129795065013,'image-acceptance']]){
+            if(!evidence.jobs?.some(job=>job.id===id&&job.name===name&&job.conclusion==='success'))throw Error('Pinned image evidence incomplete: '+name);
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'digest=ghcr.io/infojouwdriver-commits/jd@sha256:30b7dea303f67579585e3018f379fa58e8d63436d0f7a1edd79f5c98450c4acc\n');
           fs.appendFileSync(process.env.GITHUB_OUTPUT,'backup_tag='+backup.id+'-'+backup.run_attempt+'\n');
           GATE
-  domain:
-    uses: ./.github/workflows/domain-candidate.yml
-
-  build:
-    needs: [gate, domain]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      digest: ${{ steps.image.outputs.digest }}
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          ref: ff65762de788040c7fa66431e678adef6adf5e3d
-          persist-credentials: false
-      - name: Build and publish the pinned source image
-        id: image
-        env:
-          GH_TOKEN: ${{ github.token }}
-          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
-          REVISION: ff65762de788040c7fa66431e678adef6adf5e3d
-        run: |
-          set -euo pipefail
-          test -n "$MAPBOX_PUBLIC_TOKEN"
-          repo=ghcr.io/infojouwdriver-commits/jd
-          tag="$repo:chiron-$REVISION-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker build --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
-            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
-            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-            --label "org.opencontainers.image.revision=$REVISION" \
-            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
-            --tag "$tag" .
-          docker push "$tag"
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$tag")
-          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
-          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
-
-  image-acceptance:
-    needs: build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          persist-credentials: false
-          ref: ff65762de788040c7fa66431e678adef6adf5e3d
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
-        with:
-          node-version: '22.18.0'
-          package-manager-cache: false
-      - name: Pull the exact accepted source image
-        env:
-          GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.build.outputs.digest }}
-        run: |
-          set -euo pipefail
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker pull "$IMAGE"
-          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = ff65762de788040c7fa66431e678adef6adf5e3d
-          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
-      - name: Install isolated test prerequisites
-        run: |
-          npm install --global pnpm@11.25.0
-          pnpm install --frozen-lockfile
-          sudo apt-get update -qq
-          sudo apt-get install --yes age
-      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
-        env:
-          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
-        run: |
-          set -o pipefail
-          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: chiron-realtime-image-proof
-          path: candidate-native-proof.json
-          retention-days: 14
-
   publish:
-    needs: [gate, build, image-acceptance]
+    needs: gate
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
@@ -162,7 +86,7 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           REGISTRY_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.build.outputs.digest }}
+          IMAGE: ${{ needs.gate.outputs.digest }}
           REVISION: ff65762de788040c7fa66431e678adef6adf5e3d
           BASELINE: fe7121455455a140e24c1c63a69686820829028c
           BACKUP_TAG: ${{ needs.gate.outputs.backup_tag }}
@@ -259,13 +183,14 @@ jobs:
           sha256sum --status --check "$work/preserved.sha256"
           node --input-type=module <<'ACCEPT'
           const app='https://app.jouww.com';
-          const get=async(url,method='GET')=>fetch(url,{method,headers:method==='POST'?{Origin:app}:undefined,redirect:'error',signal:AbortSignal.timeout(20000)});
+          const get=async(url,method='GET')=>fetch(url,{method,...(method==='POST'?{headers:{Origin:app,'Content-Type':'application/json'},body:'{}'}:{}),redirect:'error',signal:AbortSignal.timeout(20000)});
           for(const path of ['/login','/driver-login']){
             const login=await get(app+path);
             if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login or indexing guard failed: '+path);
           }
           for(const path of ['/next_api/trips/start','/next_api/trips/end','/next_api/trips/retry-sync']){
-            if((await get(app+path,'POST')).status!==401)throw Error('Trip authorization guard failed: '+path);
+            const result=await get(app+path,'POST');
+            if(result.status!==401)throw Error('Trip authorization guard failed: '+path+' returned '+result.status);
           }
           if((await get('https://jouww.com/')).status!==200)throw Error('Marketing site smoke check failed');
           console.log('Live portal pages and trip authorization verified without creating or sending a trip.');
