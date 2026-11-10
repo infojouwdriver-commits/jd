@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "d8d9bf3d71ec408674675f89c1550c5f91e86e9b",
+  "source_commit_context": "512f78b831bbf29e37a6e673e2a55c123776d1ff",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -555,7 +555,7 @@
     "src/lib/brevo-mail.ts": "c75d775c0df6c07ff909bfaa1a2339421344fb7dd91d27f89f9ee66e320aa220",
     "src/lib/chiron-protocol.ts": "e5e5027f636c67714fbbc957dda7b213f0a4b9253966bb7d839f48a58f54f51f",
     "src/lib/chiron-retry.ts": "c865f4c35fc5d1cceb93edf05f227af2b9a31e6059292f5a6cafa5a2280f581c",
-    "src/lib/chiron-service.ts": "4a804ea637ee8f4a0e64ce6a16c6417a6a71c5ef94c1006dc97476a3edea3af0",
+    "src/lib/chiron-service.ts": "187fa3b6427da0b7a35a355087d2df7c46e65ddd76a75b9bfe8038cc5a5df2c5",
     "src/lib/chiron-test-result.ts": "21f68a187b4279912d32a483b610d23b00eaeffed2d2e997171911d03d45b971",
     "src/lib/company-account.ts": "233fb1e9ed15359e40210b4d55cb816206433295dddb3de4beff76476b70985d",
     "src/lib/company-changes.ts": "8c8729dc7d42c125052a0153f476868a2e0894b73e81a19b52559dff39e7e9d9",
@@ -638,18 +638,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "51f9d7fd10bfd3494e2a73a7dacf9c81a73b102b2147a0cf639c915c54ae0f36",
-    "health.json": "835ee81a1879e322d1cd4175b41cc423969bda8d421314a8b0280ffea6aee192",
-    "SOURCE_INDEX.md": "ab286205c000c6b76d8cd52cb99cf583bf8cf0e8affff70fcfc65d530a5cb03f",
-    "GRAPH_REPORT.md": "d2baadadd37cc0676e20238c75fa15684b1b1fe30574503017abcb6b99128810",
-    "graph.json": "84429f0f98e909bc846b7ec7c8c64d7c6f19d3caf3adfddceedd1bb0b7681c24"
+    "SOURCE_INDEX.md": "9a11481b3a9a062275342b1580d76a2dcc235b5e1bfb15c73f9ef303337c8c26",
+    "health.json": "f6b1541564af2def8b3efbb5a489b65eef723da2b7e8c3920052ba0de14c3e2b",
+    "GRAPH_TREE.html": "4c2d6c52d9d8caf09a25b082f0c5a878d37be81f3e4f8ffe7b9053d087391387",
+    "GRAPH_REPORT.md": "9cf96b47085a144446926e6a067c2a92601f806f6f848ab9a87606ecd564a6d4",
+    "graph.json": "355183dbe96737062ebec6603035b8bc7500ffd410797132db6eb76a0adc7b94"
   },
-  "nodes": 3599,
-  "edges": 12151,
-  "raw_edges": 12420,
-  "communities": 177,
+  "nodes": 3610,
+  "edges": 12185,
+  "raw_edges": 12439,
+  "communities": 194,
   "confidence_counts": {
-    "EXTRACTED": 12176,
+    "EXTRACTED": 12195,
     "INFERRED": 244
   }
 }

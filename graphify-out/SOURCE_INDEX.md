@@ -960,6 +960,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261010_driver_lifecycle.sql` — [source](../migrations/20261010_driver_lifecycle.sql#)
 - `"schema".security_create_driver_account()` — [L3](../migrations/20261010_driver_lifecycle.sql#L3)
+- `"schema".security_deactivate_driver_account()` — [L49](../migrations/20261010_driver_lifecycle.sql#L49)
 
 ## [migrations/20261010_gateway_lockdown.sql](../migrations/20261010_gateway_lockdown.sql)
 
@@ -979,6 +980,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261012_accounts_messages.sql` — [source](../migrations/20261012_accounts_messages.sql#)
 - `"schema".security_save_company_account()` — [L3](../migrations/20261012_accounts_messages.sql#L3)
+- `"schema".security_write_message()` — [L49](../migrations/20261012_accounts_messages.sql#L49)
+- `"schema".security_change_account()` — [L103](../migrations/20261012_accounts_messages.sql#L103)
 - `"schema".security_driver_messages()` — [L131](../migrations/20261012_accounts_messages.sql#L131)
 - `"schema".security_portal_release_ready()` — [L144](../migrations/20261012_accounts_messages.sql#L144)
 
@@ -1040,16 +1043,19 @@ Links target the working tree, so line positions can move after changes.
 - `vehicles_company_archive` — [L17](../migrations/20261018_company_lifecycle.sql#L17)
 - `"schema".security_archive_company()` — [L23](../migrations/20261018_company_lifecycle.sql#L23)
 - `"schema".security_restore_company()` — [L58](../migrations/20261018_company_lifecycle.sql#L58)
+- `"schema".security_company_operation_guard()` — [L90](../migrations/20261018_company_lifecycle.sql#L90)
 - `jd_company_trip_start_guard` — [L111](../migrations/20261018_company_lifecycle.sql#L111)
 - `jd_company_driver_guard` — [L113](../migrations/20261018_company_lifecycle.sql#L113)
 - `jd_company_vehicle_guard` — [L115](../migrations/20261018_company_lifecycle.sql#L115)
 - `"schema".security_company_preserve_history()` — [L116](../migrations/20261018_company_lifecycle.sql#L116)
 - `jd_company_preserve_history` — [L119](../migrations/20261018_company_lifecycle.sql#L119)
+- `"schema".security_review_company_archive()` — [L122](../migrations/20261018_company_lifecycle.sql#L122)
 
 ## [migrations/20261018_company_staff.sql](../migrations/20261018_company_staff.sql)
 
 - `20261018_company_staff.sql` — [source](../migrations/20261018_company_staff.sql#)
 - `"schema".company_staff_events` — [L2](../migrations/20261018_company_staff.sql#L2)
+- `"schema".security_change_company_staff()` — [L13](../migrations/20261018_company_staff.sql#L13)
 
 ## [migrations/20261018_contract_billing.sql](../migrations/20261018_contract_billing.sql)
 
@@ -1096,9 +1102,11 @@ Links target the working tree, so line positions can move after changes.
 - `subscription_event_immutable` — [L102](../migrations/20261018_subscription_billing.sql#L102)
 - `"schema".security_prepare_subscription_invoice()` — [L105](../migrations/20261018_subscription_billing.sql#L105)
 - `"schema".security_issue_subscription_document()` — [L142](../migrations/20261018_subscription_billing.sql#L142)
+- `"schema".security_save_subscription_settings()` — [L201](../migrations/20261018_subscription_billing.sql#L201)
+- `"schema".security_prepare_subscription_credit()` — [L215](../migrations/20261018_subscription_billing.sql#L215)
 - `"schema".subscription_scheduler_state` — [L261](../migrations/20261018_subscription_billing.sql#L261)
 - `"schema".security_subscription_tick()` — [L268](../migrations/20261018_subscription_billing.sql#L268)
-- `"schema".security_finish_subscription_mail()` — [L307](../migrations/20261018_subscription_billing.sql#L307)
+- `"schema".security_claim_subscription_mail()` — [L293](../migrations/20261018_subscription_billing.sql#L293)
 - `"schema".security_company_platform_ready()` — [L315](../migrations/20261018_subscription_billing.sql#L315)
 - `"schema".security_void_subscription_preparation()` — [L323](../migrations/20261018_subscription_billing.sql#L323)
 
@@ -1130,6 +1138,7 @@ Links target the working tree, so line positions can move after changes.
 - `driver_shifts_history` — [L25](../migrations/20261019_driver_shifts.sql#L25)
 - `"schema".driver_shift_events` — [L26](../migrations/20261019_driver_shifts.sql#L26)
 - `"schema".security_record_driver_shift()` — [L43](../migrations/20261019_driver_shifts.sql#L43)
+- `"schema".security_driver_shifts()` — [L93](../migrations/20261019_driver_shifts.sql#L93)
 - `"schema".security_immutable_shift_event()` — [L110](../migrations/20261019_driver_shifts.sql#L110)
 - `immutable_shift_event` — [L116](../migrations/20261019_driver_shifts.sql#L116)
 - `"schema".security_preserve_driver_shift()` — [L118](../migrations/20261019_driver_shifts.sql#L118)
@@ -1169,6 +1178,7 @@ Links target the working tree, so line positions can move after changes.
 ## [migrations/20261024_contract_email_signing.sql](../migrations/20261024_contract_email_signing.sql)
 
 - `20261024_contract_email_signing.sql` — [source](../migrations/20261024_contract_email_signing.sql#)
+- `"schema".security_email_contract()` — [L5](../migrations/20261024_contract_email_signing.sql#L5)
 
 ## [migrations/20261024_stripe_billing.sql](../migrations/20261024_stripe_billing.sql)
 
@@ -1180,7 +1190,7 @@ Links target the working tree, so line positions can move after changes.
 - `stripe_receipt_preserved` — [L44](../migrations/20261024_stripe_billing.sql#L44)
 - `"schema".security_stripe_begin()` — [L53](../migrations/20261024_stripe_billing.sql#L53)
 - `"schema".security_stripe_authorize()` — [L85](../migrations/20261024_stripe_billing.sql#L85)
-- `"schema".security_stripe_event()` — [L119](../migrations/20261024_stripe_billing.sql#L119)
+- `"schema".security_stripe_allocate()` — [L103](../migrations/20261024_stripe_billing.sql#L103)
 - `stripe_document_issued` — [L155](../migrations/20261024_stripe_billing.sql#L155)
 - `stripe_manual_payment_guard` — [L174](../migrations/20261024_stripe_billing.sql#L174)
 - `stripe_manual_credit_guard` — [L176](../migrations/20261024_stripe_billing.sql#L176)
@@ -1219,6 +1229,7 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_subscription_immutable()` — [L138](../migrations/20261026_invoice_checkout.sql#L138)
 - `"schema".security_manual_invoice_immutable()` — [L143](../migrations/20261026_invoice_checkout.sql#L143)
 - `"schema".security_invoice_email_issue()` — [L148](../migrations/20261026_invoice_checkout.sql#L148)
+- `"schema".security_invoice_email_tick()` — [L160](../migrations/20261026_invoice_checkout.sql#L160)
 - `invoice_service_guard` — [L221](../migrations/20261026_invoice_checkout.sql#L221)
 
 ## [migrations/20261026_manual_invoices.sql](../migrations/20261026_manual_invoices.sql)
@@ -1226,12 +1237,16 @@ Links target the working tree, so line positions can move after changes.
 - `20261026_manual_invoices.sql` — [source](../migrations/20261026_manual_invoices.sql#)
 - `"schema".manual_invoices` — [L3](../migrations/20261026_manual_invoices.sql#L3)
 - `"schema".manual_invoice_payments` — [L11](../migrations/20261026_manual_invoices.sql#L11)
+- `"schema".security_manual_invoice()` — [L22](../migrations/20261026_manual_invoices.sql#L22)
 - `manual_invoice_immutable` — [L83](../migrations/20261026_manual_invoices.sql#L83)
+- `manual_payment_immutable` — [L85](../migrations/20261026_manual_invoices.sql#L85)
+- `"schema".security_confirm_admin_company()` — [L87](../migrations/20261026_manual_invoices.sql#L87)
 
 ## [migrations/20261026_signature_billing_conflict.sql](../migrations/20261026_signature_billing_conflict.sql)
 
 - `20261026_signature_billing_conflict.sql` — [source](../migrations/20261026_signature_billing_conflict.sql#)
 - `"schema".security_email_contract()` — [L5](../migrations/20261026_signature_billing_conflict.sql#L5)
+- `"schema".security_sign_company_contract()` — [L44](../migrations/20261026_signature_billing_conflict.sql#L44)
 
 ## [migrations/20261027_shift_conflict_retry.sql](../migrations/20261027_shift_conflict_retry.sql)
 
