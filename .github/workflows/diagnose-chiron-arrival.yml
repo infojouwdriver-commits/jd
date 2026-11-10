@@ -1,0 +1,51 @@
+name: Diagnose Chiron arrival for the reported trip
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read delivery status and error codes for the reported trip
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /srv/jouw-driver/foundation
+          docker compose --env-file .database.env --project-name jouw-driver --file compose.yaml exec -T db psql -U postgres -d jouw_driver -v ON_ERROR_STOP=1 -Atq <<'SQL'
+          BEGIN READ ONLY;
+          SET LOCAL statement_timeout='5s';
+          SELECT json_build_object(
+            'status',status,'environment',chiron_environment,'realtime',chiron_realtime,
+            'departure_acknowledged',start_sync_response->>'accepted'='true',
+            'arrival_acknowledged',arrival_sync_response->>'accepted'='true',
+            'departure_http_status',start_sync_response->'httpStatus',
+            'arrival_http_status',arrival_sync_response->'httpStatus',
+            'departure_errors',ARRAY(SELECT code FROM jsonb_array_elements_text(CASE WHEN jsonb_typeof(start_sync_response->'errors')='array' THEN start_sync_response->'errors' ELSE '[]'::jsonb END) code WHERE code ~ '^CH[0-9]{4}$'),
+            'arrival_errors',ARRAY(SELECT code FROM jsonb_array_elements_text(CASE WHEN jsonb_typeof(arrival_sync_response->'errors')='array' THEN arrival_sync_response->'errors' ELSE '[]'::jsonb END) code WHERE code ~ '^CH[0-9]{4}$'),
+            'sync_state',chiron_sync_state,'attempts',chiron_sync_attempts,
+            'error',CASE WHEN sync_error_message ~ '^CHIRON_[A-Z_]+$' THEN sync_error_message WHEN sync_error_message IS NOT NULL THEN '[unclassified]' END,
+            'has_end',end_time IS NOT NULL,'end_after_start',end_time>start_time,'end_gps_present',end_lat IS NOT NULL AND end_lon IS NOT NULL,
+            'distance_present',distance_km IS NOT NULL,'distance_zero',distance_km=0,'price_present',price IS NOT NULL,'price_zero',price=0,
+            'snapshot_present',chiron_departure_payload IS NOT NULL,'arrival_attempted',arrival_sent_at IS NOT NULL)
+          FROM public.trips WHERE encode(sha256(convert_to(ritnummer,'UTF8')),'hex')='5e55f547c36cabba6ec36385c9a3fc844be4818f97e1c5ef4db6323f9a326a7a';
+          SELECT json_build_object('matching_rows',count(*)) FROM public.trips WHERE encode(sha256(convert_to(ritnummer,'UTF8')),'hex')='5e55f547c36cabba6ec36385c9a3fc844be4818f97e1c5ef4db6323f9a326a7a';
+          COMMIT;
+          SQL
+          REMOTE
