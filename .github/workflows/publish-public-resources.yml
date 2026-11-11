@@ -23,6 +23,7 @@ jobs:
           const comparison=await result.json();
           const files=new Set([
             '.github/workflows/publish-public-resources.yml',
+            '.github/workflows/ci.yml','.github/scripts/install-age-linux.sh',
             'src/app/[locale]/solutions/resources/[resource]/page.tsx',
             'src/app/sitemap.ts','src/components/landing/DriverSettlementCalculator.tsx',
             'src/components/landing/MarketingEditorial.tsx','src/components/landing/MarketingExplore.tsx',
@@ -106,8 +107,8 @@ jobs:
         run: |
           npm install --global pnpm@11.25.0
           pnpm install --frozen-lockfile
-          sudo apt-get update -qq
-          sudo apt-get install --yes age
+      - name: Install checksum-verified age
+        run: bash .github/scripts/install-age-linux.sh
       - name: Exercise exact image against synthetic PostgreSQL and trusted origins
         env:
           ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
