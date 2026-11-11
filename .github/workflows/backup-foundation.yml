@@ -42,10 +42,26 @@ jobs:
         with:
           node-version: '22.18.0'
           package-manager-cache: false
-      - name: Install official Ubuntu encryption and PostgreSQL clients
+      - name: Install checksum-verified age
+        run: bash .github/scripts/install-age-linux.sh
+      - name: Use the PostgreSQL client from the isolated restore service
+        env:
+          RESTORE_DB_CONTAINER: ${{ job.services.restore-db.id }}
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq age postgresql-client-16
+          set -euo pipefail
+          [[ "$RESTORE_DB_CONTAINER" =~ ^[a-f0-9]{64}$ ]]
+          bindir="$RUNNER_TEMP/jd-restore-tools"
+          install -d "$bindir"
+          cat > "$bindir/psql" <<'PSQL'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          exec docker exec -i -e PGHOST -e PGPORT -e PGDATABASE -e PGUSER -e PGPASSWORD -e PGOPTIONS -e PGCONNECT_TIMEOUT "$RESTORE_DB_CONTAINER" psql "$@"
+          PSQL
+          chmod 0755 "$bindir/psql"
+          "$bindir/psql" --version
+          docker exec "$RESTORE_DB_CONTAINER" pg_restore --version
+          printf '%s\n' "$bindir" >> "$GITHUB_PATH"
+          printf 'RESTORE_DB_CONTAINER=%s\n' "$RESTORE_DB_CONTAINER" >> "$GITHUB_ENV"
       - name: Encrypt on the server and restore into an isolated PostgreSQL database
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -97,7 +113,7 @@ jobs:
           VERIFY
           # Restore roles needed by policies without using live passwords here.
           psql --no-psqlrc -v ON_ERROR_STOP=1 -q -c 'CREATE ROLE jouw_app_user; CREATE ROLE jouw_service; CREATE ROLE jouw_gateway;' >/dev/null
-          if ! pg_restore --no-owner --no-privileges --exit-on-error --dbname "$PGDATABASE" "$keydir/restore/database.dump" 2> "$keydir/restore-errors"; then
+          if ! docker exec -i -e PGHOST -e PGPORT -e PGDATABASE -e PGUSER -e PGPASSWORD "$RESTORE_DB_CONTAINER" pg_restore --no-owner --no-privileges --exit-on-error --dbname "$PGDATABASE" < "$keydir/restore/database.dump" 2> "$keydir/restore-errors"; then
             printf 'Native PostgreSQL restore failed; private diagnostics were not logged.\n' >&2
             exit 1
           fi
@@ -112,7 +128,7 @@ jobs:
           printf '{"scope":"private foundation","nativePostgreSQLRestore":"passed","allTableCounts":"matched","coreContract":"passed","ownerRecord":"verified","createdAt":"%s"}\n' "$(date -u +%FT%TZ)" > backup-output/restore-verification.json
           if [ "$INCLUDE_RESTORE_TOOL" = true ]; then
             mkdir backup-output/restore-tools
-            cp /usr/bin/age backup-output/restore-tools/age
+            cp "$(command -v age)" backup-output/restore-tools/age
             age --version > backup-output/restore-tools/version.txt
             sha256sum backup-output/restore-tools/age | awk '{print $1}' > backup-output/restore-tools/age.sha256
           fi
