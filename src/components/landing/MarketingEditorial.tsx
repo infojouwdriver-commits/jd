@@ -1,3 +1,4 @@
+import { resourceHref, resourcePages, resourceTitles, type ResourcePage } from '@/lib/marketing-resources';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
@@ -8,15 +9,15 @@ import { portalHref } from '@/lib/portal-origin';
 
 const navLink = 'rounded-full border border-[#64748b] px-4 py-2 text-sm text-[#f5f2e9] transition-colors hover:border-[#e0bd5b] hover:text-[#e0bd5b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]';
 
-function SiteShell({ locale, topic, children }: { locale: MarketingLocale; topic?: MarketingTopic; children: ReactNode }) {
+export function MarketingSiteShell({ locale, topic, resource, children }: { locale: MarketingLocale; topic?: MarketingTopic; resource?: ResourcePage; children: ReactNode }) {
   const t = marketingCopy[locale];
-  const localeLink = (language: MarketingLocale) => topic ? solutionHref(language, topic) : hubHref(language);
+  const localeLink = (language: MarketingLocale) => resource ? resourceHref(language, resource) : topic ? solutionHref(language, topic) : hubHref(language);
   const signup = portalHref('/register-company?lang=' + locale, process.env.NEXT_PUBLIC_PORTAL_ORIGIN);
   return (
     <div lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen bg-[#0d1727] text-[#f5f2e9]">
       <header className="border-b border-[#364357]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5">
-          <Link href="/" className="text-xl font-semibold tracking-wider focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]" aria-label="JOUW DRIVER">
+          <Link href={`/${locale}`} className="text-xl font-semibold tracking-wider focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]" aria-label="JOUW DRIVER">
             JOUW <span className="text-[#e0bd5b]">DRIVER</span>
           </Link>
           <nav aria-label="Languages" className="flex flex-wrap items-center gap-3">
@@ -33,6 +34,9 @@ function SiteShell({ locale, topic, children }: { locale: MarketingLocale; topic
           <span>© {new Date().getFullYear()} JOUW DRIVER</span>
           <nav className="flex flex-wrap items-center gap-5">
             <Link href={hubHref(locale)} className="underline decoration-[#e0bd5b] underline-offset-4">{t.homeLabel} / {t.overview}</Link>
+            {resourcePages.filter((page) => page !== 'chiron').map((page) => (
+              <Link key={page} href={resourceHref(locale, page)} aria-current={resource === page ? 'page' : undefined} className={navLink}>{resourceTitles[locale][page]}</Link>
+            ))}
             <Link href="/privacy-policy" className="underline decoration-[#e0bd5b] underline-offset-4">Privacy</Link>
             <a href={signup} className="font-semibold text-[#e0bd5b] underline underline-offset-4">{t.companyLink}</a>
           </nav>
@@ -50,7 +54,7 @@ function TopicCard({ locale, topic }: { locale: MarketingLocale; topic: Marketin
       <p className="mb-3 text-xs font-semibold tracking-widest text-[#e0bd5b]">{value.eyebrow}</p>
       <h2 className="mb-4 text-2xl font-semibold leading-snug">{value.title}</h2>
       <p className="mb-8 flex-1 text-sm leading-7 text-[#c1cbd8]">{value.description}</p>
-      <Link href={solutionHref(locale, topic)} className="inline-flex min-h-11 items-center text-sm font-semibold text-[#e0bd5b] underline underline-offset-8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]">{t.learnMore}</Link>
+      <Link href={solutionHref(locale, topic)} className="inline-flex min-h-11 items-center text-sm font-semibold text-[#e0bd5b] underline underline-offset-8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e0bd5b]">{value.eyebrow}</Link>
     </article>
   );
 }
@@ -62,7 +66,7 @@ function Caution({ locale }: { locale: MarketingLocale }) {
 export function MarketingHub({ locale }: { locale: MarketingLocale }) {
   const t = marketingCopy[locale];
   return (
-    <SiteShell locale={locale}>
+    <MarketingSiteShell locale={locale}>
       <nav aria-label="Breadcrumb" className="mb-9 text-sm text-[#c1cbd8]"><Link href="/" className="underline underline-offset-4">{t.homeLabel}</Link><span aria-hidden="true"> / </span>{t.overview}</nav>
       <p className="mb-5 text-sm font-semibold uppercase tracking-widest text-[#e0bd5b]">JOUW DRIVER · BELGIUM</p>
       <h1 className="max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">{t.hubTitle}</h1>
@@ -71,7 +75,7 @@ export function MarketingHub({ locale }: { locale: MarketingLocale }) {
         {marketingTopics.map((topic) => <TopicCard key={topic} locale={locale} topic={topic} />)}
       </section>
       <Caution locale={locale} />
-    </SiteShell>
+    </MarketingSiteShell>
   );
 }
 
@@ -79,7 +83,7 @@ export function MarketingSolution({ locale, topic }: { locale: MarketingLocale; 
   const t = marketingCopy[locale];
   const s = t.solutions[topic];
   return (
-    <SiteShell locale={locale} topic={topic}>
+    <MarketingSiteShell locale={locale} topic={topic}>
       <nav aria-label="Breadcrumb" className="mb-9 text-sm text-[#c1cbd8]">
         <Link href="/" className="underline underline-offset-4">{t.homeLabel}</Link>
         <span aria-hidden="true"> / </span>
@@ -129,6 +133,6 @@ export function MarketingSolution({ locale, topic }: { locale: MarketingLocale; 
         </div>
       </section>
       <Caution locale={locale} />
-    </SiteShell>
+    </MarketingSiteShell>
   );
 }

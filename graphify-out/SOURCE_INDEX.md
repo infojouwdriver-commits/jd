@@ -1765,6 +1765,16 @@ Links target the working tree, so line positions can move after changes.
 - `generateMetadata()` — [L18](../src/app/%5Blocale%5D/solutions/page.tsx#L18)
 - `SolutionsPage()` — [L41](../src/app/%5Blocale%5D/solutions/page.tsx#L41)
 
+## [src/app/[locale]/solutions/resources/[resource]/page.tsx](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx)
+
+- `[resource]/page.tsx` — [L1](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L1)
+- `Props` — [L12](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L12)
+- `isResource()` — [L15](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L15)
+- `getPage()` — [L19](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L19)
+- `generateStaticParams()` — [L29](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L29)
+- `generateMetadata()` — [L33](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L33)
+- `MarketingResource()` — [L49](../src/app/%5Blocale%5D/solutions/resources/%5Bresource%5D/page.tsx#L49)
+
 ## [src/app/about/page.tsx](../src/app/about/page.tsx)
 
 - `about/page.tsx` — [L1](../src/app/about/page.tsx#L1)
@@ -2986,7 +2996,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/sitemap.ts](../src/app/sitemap.ts)
 
 - `sitemap.ts` — [L1](../src/app/sitemap.ts#L1)
-- `sitemap()` — [L7](../src/app/sitemap.ts#L7)
+- `sitemap()` — [L8](../src/app/sitemap.ts#L8)
 
 ## [src/app/taximeter/page.tsx](../src/app/taximeter/page.tsx)
 
@@ -3455,6 +3465,15 @@ Links target the working tree, so line positions can move after changes.
 - `sectionTitles` — [L296](../src/components/landing/DriverGuideSection.tsx#L296)
 - `DriverGuideSection()` — [L317](../src/components/landing/DriverGuideSection.tsx#L317)
 
+## [src/components/landing/DriverSettlementCalculator.tsx](../src/components/landing/DriverSettlementCalculator.tsx)
+
+- `DriverSettlementCalculator.tsx` — [L1](../src/components/landing/DriverSettlementCalculator.tsx#L1)
+- `fields` — [L10](../src/components/landing/DriverSettlementCalculator.tsx#L10)
+- `summary` — [L14](../src/components/landing/DriverSettlementCalculator.tsx#L14)
+- `DriverSettlementCalculator()` — [L19](../src/components/landing/DriverSettlementCalculator.tsx#L19)
+- `change()` — [L34](../src/components/landing/DriverSettlementCalculator.tsx#L34)
+- `download()` — [L42](../src/components/landing/DriverSettlementCalculator.tsx#L42)
+
 ## [src/components/landing/FaqPage.tsx](../src/components/landing/FaqPage.tsx)
 
 - `FaqPage.tsx` — [L1](../src/components/landing/FaqPage.tsx#L1)
@@ -3516,16 +3535,16 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/MarketingEditorial.tsx](../src/components/landing/MarketingEditorial.tsx)
 
 - `MarketingEditorial.tsx` — [L1](../src/components/landing/MarketingEditorial.tsx#L1)
-- `SiteShell()` — [L11](../src/components/landing/MarketingEditorial.tsx#L11)
-- `TopicCard()` — [L45](../src/components/landing/MarketingEditorial.tsx#L45)
-- `Caution()` — [L58](../src/components/landing/MarketingEditorial.tsx#L58)
-- `MarketingHub()` — [L62](../src/components/landing/MarketingEditorial.tsx#L62)
-- `MarketingSolution()` — [L78](../src/components/landing/MarketingEditorial.tsx#L78)
+- `MarketingSiteShell()` — [L12](../src/components/landing/MarketingEditorial.tsx#L12)
+- `TopicCard()` — [L49](../src/components/landing/MarketingEditorial.tsx#L49)
+- `Caution()` — [L62](../src/components/landing/MarketingEditorial.tsx#L62)
+- `MarketingHub()` — [L66](../src/components/landing/MarketingEditorial.tsx#L66)
+- `MarketingSolution()` — [L82](../src/components/landing/MarketingEditorial.tsx#L82)
 
 ## [src/components/landing/MarketingExplore.tsx](../src/components/landing/MarketingExplore.tsx)
 
 - `MarketingExplore.tsx` — [L1](../src/components/landing/MarketingExplore.tsx#L1)
-- `MarketingExplore()` — [L10](../src/components/landing/MarketingExplore.tsx#L10)
+- `MarketingExplore()` — [L11](../src/components/landing/MarketingExplore.tsx#L11)
 
 ## [src/components/landing/ParallaxSection.tsx](../src/components/landing/ParallaxSection.tsx)
 
@@ -3536,9 +3555,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/PlatformLanding.tsx](../src/components/landing/PlatformLanding.tsx)
 
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
-- `PlatformLanding()` — [L23](../src/components/landing/PlatformLanding.tsx#L23)
-- `openRegistration()` — [L59](../src/components/landing/PlatformLanding.tsx#L59)
-- `closeRegistration()` — [L73](../src/components/landing/PlatformLanding.tsx#L73)
+- `PlatformLanding()` — [L24](../src/components/landing/PlatformLanding.tsx#L24)
+- `openRegistration()` — [L60](../src/components/landing/PlatformLanding.tsx#L60)
+- `closeRegistration()` — [L74](../src/components/landing/PlatformLanding.tsx#L74)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 
@@ -4896,6 +4915,20 @@ Links target the working tree, so line positions can move after changes.
 - `findSolution()` — [L252](../src/lib/marketing-content.ts#L252)
 - `languageAlternates()` — [L256](../src/lib/marketing-content.ts#L256)
 
+## [src/lib/marketing-resources.ts](../src/lib/marketing-resources.ts)
+
+- `marketing-resources.ts` — [L1](../src/lib/marketing-resources.ts#L1)
+- `resourcePages` — [L3](../src/lib/marketing-resources.ts#L3)
+- `ResourcePage` — [L4](../src/lib/marketing-resources.ts#L4)
+- `resourceHref()` — [L5](../src/lib/marketing-resources.ts#L5)
+- `resourceCopy` — [L6](../src/lib/marketing-resources.ts#L6)
+- `calculatorCopy` — [L161](../src/lib/marketing-resources.ts#L161)
+- `calculatorText()` — [L339](../src/lib/marketing-resources.ts#L339)
+- `calculatorDescription` — [L343](../src/lib/marketing-resources.ts#L343)
+- `resourceTitles` — [L349](../src/lib/marketing-resources.ts#L349)
+- `taxiGuideSources` — [L356](../src/lib/marketing-resources.ts#L356)
+- `chironGuide` — [L357](../src/lib/marketing-resources.ts#L357)
+
 ## [src/lib/message-access.ts](../src/lib/message-access.ts)
 
 - `message-access.ts` — [L1](../src/lib/message-access.ts#L1)
@@ -4987,6 +5020,22 @@ Links target the working tree, so line positions can move after changes.
 
 - `postgrest.ts` — [L1](../src/lib/postgrest.ts#L1)
 - `createPostgrestClient()` — [L7](../src/lib/postgrest.ts#L7)
+
+## [src/lib/public-driver-settlement-pdf.ts](../src/lib/public-driver-settlement-pdf.ts)
+
+- `public-driver-settlement-pdf.ts` — [L1](../src/lib/public-driver-settlement-pdf.ts#L1)
+- `downloadSettlement()` — [L5](../src/lib/public-driver-settlement-pdf.ts#L5)
+- `box()` — [L20](../src/lib/public-driver-settlement-pdf.ts#L20)
+- `text()` — [L21](../src/lib/public-driver-settlement-pdf.ts#L21)
+
+## [src/lib/public-driver-settlement.ts](../src/lib/public-driver-settlement.ts)
+
+- `public-driver-settlement.ts` — [L1](../src/lib/public-driver-settlement.ts#L1)
+- `settlementPlatforms` — [L1](../src/lib/public-driver-settlement.ts#L1)
+- `SettlementForm` — [L2](../src/lib/public-driver-settlement.ts#L2)
+- `emptySettlement()` — [L11](../src/lib/public-driver-settlement.ts#L11)
+- `cents()` — [L18](../src/lib/public-driver-settlement.ts#L18)
+- `calculateSettlement()` — [L28](../src/lib/public-driver-settlement.ts#L28)
 
 ## [src/lib/rate-limit.ts](../src/lib/rate-limit.ts)
 

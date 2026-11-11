@@ -1,4 +1,5 @@
 "use client";
+import { resourceHref } from '@/lib/marketing-resources';
 import "./cinematic/cinematic.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -93,7 +94,8 @@ export default function PlatformLanding({
         <nav className="jd-links" aria-label={t.experience}>
           <a href="#experience">{t.experience}</a>
           <a href="#platform">{t.drivers}</a>
-          <a href="#subscription">{t.subscription}</a>
+          <Link href={resourceHref(language, 'driver-calculator')}>{{ fr: 'Calculateur', nl: 'Calculator', ar: 'الحاسبة' }[language]}</Link>
+          <Link href={resourceHref(language, 'faq')}>{t.faq}</Link>
         </nav>
         <nav className="jd-languages" aria-label={t.language}>
           {(["fr", "nl", "ar"] as const).map((l) => (

@@ -1,3 +1,4 @@
+import { resourceHref, resourcePages } from '@/lib/marketing-resources';
 import type { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
 import { marketingOrigin, marketingLocales, marketingTopics, hubHref, solutionHref } from '@/lib/marketing-content';
@@ -13,6 +14,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...marketingLocales.map((locale) => ({
       url: marketingOrigin + hubHref(locale), changeFrequency: 'monthly' as const, priority: 0.8,
     })),
+    ...marketingLocales.flatMap((locale) => resourcePages.map((page) => ({
+      url: marketingOrigin + resourceHref(locale, page),
+      changeFrequency: 'monthly' as const,
+      alternates: { languages: {
+        'fr-BE': marketingOrigin + resourceHref('fr', page), 'nl-BE': marketingOrigin + resourceHref('nl', page),
+        ar: marketingOrigin + resourceHref('ar', page), 'x-default': marketingOrigin + resourceHref('fr', page),
+      } },
+    }))),
     ...marketingLocales.flatMap((locale) => marketingTopics.map((topic) => ({
       url: marketingOrigin + solutionHref(locale, topic),
       changeFrequency: 'monthly' as const, priority: 0.7,
