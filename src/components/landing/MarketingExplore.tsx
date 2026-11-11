@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { resourceHref, resourcePages, resourceTitles } from '@/lib/marketing-resources';
 import { useLanguage, type AppLanguage } from '@/contexts/LanguageContext';
 import {
   marketingCopy, marketingTopics, hubHref, solutionHref,
@@ -26,12 +27,19 @@ export default function MarketingExplore({ locale }: { locale?: AppLanguage } = 
               <h3>{item.eyebrow}</h3>
               <p>{item.description}</p>
               <Link href={solutionHref(language, topic)} className="mt-5 inline-block text-[#e0bd5b] underline underline-offset-4">
-                {copy.learnMore}
+                {item.eyebrow}
               </Link>
             </article>
           );
         })}
       </div>
+      <nav className="mt-8 flex flex-wrap gap-x-5 gap-y-2">
+        {resourcePages.map((page) => (
+          <Link key={page} href={resourceHref(language, page)} className="inline-flex min-h-11 items-center text-[#e0bd5b] underline underline-offset-4">
+            {resourceTitles[language][page]}
+          </Link>
+        ))}
+      </nav>
       <p className="mt-8">
         <Link href={hubHref(language)} className="text-[#e0bd5b] underline underline-offset-4">
           {copy.hubTitle}

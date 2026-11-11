@@ -2,8 +2,8 @@ import type { AppLanguage } from "@/contexts/LanguageContext";
 export const cinematicCopy = {
   fr: {
     eyebrow: "LE QUOTIDIEN DU TAXI, REPENSÉ",
-    title: "Le taxi devient bien plus qu’une voiture.",
-    accent: "Un écosystème connecté.",
+    title: "Logiciel de gestion pour les entreprises de taxi",
+    accent: "De la course au décompte.",
     intro:
       "Du premier kilomètre au dernier reçu. JOUW DRIVER relie le chauffeur, le véhicule et votre entreprise.",
     discover: "Explorer l’expérience",
@@ -121,8 +121,8 @@ export const cinematicCopy = {
   },
   nl: {
     eyebrow: "DE TAXIWERKDAG, OPNIEUW ONTWORPEN",
-    title: "Een taxi is meer dan een auto.",
-    accent: "Het is een verbonden platform.",
+    title: "Software voor taxibedrijven in België",
+    accent: "Van rit tot afrekening.",
     intro:
       "Van de eerste kilometer tot het laatste ontvangstbewijs. JOUW DRIVER verbindt chauffeur, voertuig en bedrijf.",
     discover: "Ontdek de ervaring",
@@ -239,8 +239,8 @@ export const cinematicCopy = {
   },
   ar: {
     eyebrow: "يوم عمل التاكسي، برؤية جديدة",
-    title: "التاكسي لم يعد مجرد سيارة.",
-    accent: "إنه نظام متكامل.",
+    title: "برنامج لإدارة شركات التاكسي في بلجيكا",
+    accent: "من الرحلة إلى التسوية.",
     intro:
       "من أول كيلومتر إلى آخر إيصال. تربط JOUW DRIVER السائق والمركبة وشركتك في مساحة واحدة.",
     discover: "استكشف التجربة",

@@ -1,0 +1,261 @@
+name: Publish verified public resources
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-public-resources.yml']
+permissions:
+  contents: read
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Verify the public resources change scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          const baseline='6300c2df769bf2734b44222336cbef9748268ab4';
+          const result=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+baseline+'...'+process.env.GITHUB_SHA,{
+            headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)
+          });
+          if(!result.ok)throw Error('Cannot verify public resources changes');
+          const comparison=await result.json();
+          const files=new Set([
+            '.github/workflows/publish-public-resources.yml',
+            'src/app/[locale]/solutions/resources/[resource]/page.tsx',
+            'src/app/sitemap.ts','src/components/landing/DriverSettlementCalculator.tsx',
+            'src/components/landing/MarketingEditorial.tsx','src/components/landing/MarketingExplore.tsx',
+            'src/components/landing/PlatformLanding.tsx','src/components/landing/cinematic/copy.ts',
+            'src/lib/marketing-resources.ts','src/lib/public-driver-settlement.ts',
+            'src/lib/public-driver-settlement-pdf.ts','tests/public-driver-settlement.test.mjs'
+          ]);
+          if(comparison.status!=='ahead'||comparison.merge_base_commit?.sha!==baseline||!comparison.files?.some(f=>f.filename==='src/app/sitemap.ts')||
+            comparison.files.some(f=>f.status==='removed'||!files.has(f.filename)&&!f.filename.startsWith('graphify-out/')))throw Error('Unexpected release scope');
+          GATE
+  checks:
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+  build:
+    needs: [checks, scope]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build and publish the pinned source image
+        id: image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$MAPBOX_PUBLIC_TOKEN"
+          repo=ghcr.io/infojouwdriver-commits/jd
+          tag="$repo:public-resources-$REVISION-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$REVISION" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            --tag "$tag" .
+          docker push "$tag"
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  image-acceptance:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Pull the exact accepted source image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker pull "$IMAGE"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = ${{ github.sha }}
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
+      - name: Install isolated test prerequisites
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+          sudo apt-get update -qq
+          sudo apt-get install --yes age
+      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: public-resources-image-proof
+          path: candidate-native-proof.json
+          retention-days: 14
+
+  backup:
+    needs: image-acceptance
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [build, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Publish the verified public marketing resources
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+          REVISION: ${{ github.sha }}
+          BASELINE: 37c42afb39efc8f6248f067ceac9ece8fe72097f
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export DRIVER_IMAGE=$1 DRIVER_REVISION=$2 DRIVER_BASELINE=$3 DRIVER_BACKUP=$4
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DRIVER_IMAGE")" = "$DRIVER_REVISION"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$DRIVER_IMAGE")" = https://app.jouww.com
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.DRIVER_BASELINE)throw Error('Live release differs from verified production baseline; refusing to deploy');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.DRIVER_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover existing live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .public-resources.XXXXXX)
+          cp private-app.yaml runtime-mode.json "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env compose.yaml Caddyfile > "$work/preserved.sha256"
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.DRIVER_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$DRIVER_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const app='https://app.jouww.com';
+          const get=async(url,method='GET')=>fetch(url,{method,...(method==='POST'?{headers:{Origin:app,'Content-Type':'application/json'},body:'{}'}:{}),redirect:'error',signal:AbortSignal.timeout(20000)});
+          for(const path of ['/login','/driver-login']){
+            const login=await get(app+path);
+            if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login or indexing guard failed: '+path);
+          }
+          for(const path of ['/next_api/trips/start','/next_api/trips/end','/next_api/trips/retry-sync']){
+            if((await get(app+path,'POST')).status!==401)throw Error('Trip authorization guard failed: '+path);
+          }
+          const marketing='https://jouww.com';
+          const locales=['fr','nl','ar'];
+          const pages=['driver-calculator','faq','flanders-taxi-guide','chiron'];
+          const paths=locales.flatMap(locale=>pages.map(page=>[locale,page,'/'+locale+'/solutions/resources/'+page]));
+          const sitemap=await get(marketing+'/sitemap.xml');
+          if(sitemap.status!==200)throw Error('Marketing sitemap unavailable');
+          const xml=await sitemap.text();
+          await Promise.all(paths.map(async([locale,page,path])=>{
+            const response=await get(marketing+path);
+            const html=await response.text();
+            if(response.status!==200||response.headers.get('x-robots-tag')?.includes('noindex')||
+              !html.includes('rel="canonical" href="'+marketing+path+'"')||
+              !html.includes('hrefLang="fr-BE"')&&!html.includes('hreflang="fr-BE"')||
+              !xml.includes(marketing+path)||!html.includes('<html lang="'+locale+'"'))
+              throw Error('Localized marketing verification failed: '+path);
+          }));
+          console.log('Live portal pages and trip authorization verified without creating or sending a trip.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.DRIVER_IMAGE,revision:process.env.DRIVER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.DRIVER_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Public resources published to jouww.com.\n'
+          REMOTE
