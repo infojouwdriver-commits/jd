@@ -171,7 +171,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Public marketing pages must expose their content before client hydration.
   // This controls the loading presentation only; server/API authorization is unchanged.
-  if (isLoading && !['/', '/fr', '/nl', '/ar', '/login', '/driver-login', '/about', '/contact', '/privacy-policy'].includes(pathname)) {
+  const publicPage = ['/', '/fr', '/nl', '/ar', '/login', '/driver-login', '/about', '/contact', '/privacy-policy'].includes(pathname) ||
+    /^\/(?:fr|nl|ar)\/solutions(?:\/|$)/.test(pathname);
+  if (isLoading && !publicPage) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white"></div>
