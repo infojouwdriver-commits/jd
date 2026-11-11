@@ -18,6 +18,15 @@ try {
    assert.ok(r.body.includes('class="jd-cinema '),'Public homepage HTML contains the scene before hydration: '+host+path);
    assert.ok(r.body.includes('type="application/ld+json"'),'Public homepage HTML contains structured data: '+host+path);
   }
+  for(const locale of ['fr','nl','ar']) {
+   for(const resource of ['driver-calculator','faq','flanders-taxi-guide','chiron']) {
+    const path='/'+locale+'/solutions/resources/'+resource;
+    const r=await send(path,host);
+    assert.equal(r.status,200);
+    assert.match(r.body, /<h1\b[^>]*>[^<]+<\/h1>/, 'Resource heading must be in the raw public HTML: '+host+path);
+    assert.ok(r.body.includes('href="https://jouww.com'+path+'"'), 'Resource canonical missing: '+path);
+   }
+  }
   for(const path of ['/about','/contact','/privacy-policy']) {
    const r=await send(path,host);
    assert.equal(r.status,200);
