@@ -63,7 +63,11 @@ jobs:
       - name: Install browser for portal regression checks
         run: |
           npm install --prefix "$RUNNER_TEMP/portal-ui" --no-audit --no-fund --ignore-scripts playwright@1.56.1
-          node "$RUNNER_TEMP/portal-ui/node_modules/playwright/cli.js" install --with-deps chromium
+          runner="$RUNNER_TEMP/portal-ui/node_modules/playwright"
+          node "$runner/cli.js" install chromium
+          if ! node --input-type=module -e 'const {chromium}=await import(process.argv[1]); const browser=await chromium.launch(); await browser.close();' "$runner/index.mjs"; then
+            node "$runner/cli.js" install-deps chromium
+          fi
       - name: Company, account, trip and fleet browser regressions
         run: UI_PLAYWRIGHT_PATH="$RUNNER_TEMP/portal-ui/node_modules/playwright/index.mjs" node tests/run-portal-ui.mjs
       - name: Company archive, ledger and permission UI acceptance
@@ -124,9 +128,7 @@ jobs:
         run: |
           npm install --global pnpm@11.25.0
           pnpm install --frozen-lockfile
-      - name: Install age from the Ubuntu package repository
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install --yes age
+      - name: Install checksum-verified age
+        run: bash .github/scripts/install-age-linux.sh
       - name: Standalone Docker app, native PostgreSQL, encrypted restore and PostgREST acceptance
         run: node tests/run-database-stack.mjs
