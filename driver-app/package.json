@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native/assets-registry": "0.88.1",
     "@rnmapbox/maps": "10.3.8",
     "expo": "~58.0.25",
     "expo-constants": "~58.0.16",

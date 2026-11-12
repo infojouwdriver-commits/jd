@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "06a8ee5aa80c3c2b49a98f2b41b6ce7335fe2238",
+  "source_commit_context": "24d61007b7fb130c8fa7aa60d8d2626834c23d82",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -29,7 +29,7 @@
     "deploy/verify-private-owner.cjs": "620880e81187ee3418b9fa26086ad0ec2a23f8e1426dc250df6714a697c608e4",
     "driver-app/App.tsx": "676b02b35ebf9c379e3d5f7fcb3e87e8cfcd8e02dae6b5a966a7503c747e12b7",
     "driver-app/app.config.js": "ce1a3112f962042167cbfa15c0ebd33be15b16575a5f38bc80139681409730d9",
-    "driver-app/package.json": "c2710feb0393ca4b2fce046e519a9f0fbe1d23e9b7ebac690582c576b5b1880d",
+    "driver-app/package.json": "dfa943dcf3004538afe4d8667d571634415a69886609b7a998b5807e7da49ba7",
     "driver-app/src/DriverMap.tsx": "a6effc1255a97e005d047896e9aa048567b571a8f04ebbec2c98a7924c29203b",
     "driver-app/src/FleetLocation.tsx": "f4376a21b1b37a6cdeb5d325304d30c9594a914f4ace53571187cf231324762b",
     "driver-app/src/TripHistory.tsx": "6a413bb9bcfaed91779d9163171acd8992244db0e7b8fe05035faaeffdff22a5",
@@ -643,18 +643,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "ebe23aa34de92e37bb66f6034a995c95d28bf102d77901808eae015f54aef5b9",
-    "health.json": "c2986582534a399c5e0dac370cab898737a85e53b38cd7a82e53d17bd1a75c0a",
-    "SOURCE_INDEX.md": "e54235d8716647e08e840047dadca45a975ac6c4dca47adc623c696412b23413",
-    "GRAPH_REPORT.md": "b16be17bf10b361a2d3d013e487a4c148e2d06be504db6a108cd9dddc7fa08be",
-    "graph.json": "42893c81269fcc2e1f94f0d0d244172e729de6b99f3cb9f1bc5660738300a826"
+    "GRAPH_TREE.html": "9997f8fe50c90a2c1da5b4496a519fa2575d1070bfab980ef9a1b404d6c94cae",
+    "health.json": "be3a8a53d50e919881ca5fe8a3b6ddab95c1557d7c12c9d3be0a37f235ec1bed",
+    "SOURCE_INDEX.md": "e883f3b998fcfdf94b5ae6f49d04e2577ec712556eb393e98b5e21bfbea37af0",
+    "GRAPH_REPORT.md": "b2a734c662834c98593f03ed90d42ab30f028256c0e9824d59d40f18fbf37b80",
+    "graph.json": "1d937a6fd921c2159901ee067cec282932de9e9c584703002e3da588dd22e348"
   },
-  "nodes": 3650,
-  "edges": 12290,
-  "raw_edges": 12549,
+  "nodes": 3652,
+  "edges": 12292,
+  "raw_edges": 12551,
   "communities": 187,
   "confidence_counts": {
-    "EXTRACTED": 12304,
+    "EXTRACTED": 12306,
     "INFERRED": 245
   }
 }
