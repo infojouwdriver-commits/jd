@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {randomBytes} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import fs from 'node:fs';
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 
 const {chromium,webkit}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
 const image=process.env.UI_IMAGE;
@@ -11,8 +12,10 @@ assert.match(image,/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/)
 const container='jouw-driver-isolated-ui';
 const base='http://127.0.0.1:3008';
 const docker=(args)=>execFileSync('docker',args,{stdio:['ignore','pipe','pipe']}).toString().trim();
-const settings={JWT_SECRET:randomBytes(48).toString('hex'),HASH_SALT_KEY:randomBytes(32).toString('hex'),RATE_LIMIT_SECRET:randomBytes(48).toString('hex'),APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'jouw_app_user',SCHEMA_ADMIN_USER:'jouw_service',DEPLOYMENT_MODE:'production',SCHEMA_VALIDATED:'true',SCHEMA_SOURCE:'independent',TRUST_PROXY:'false',CHIRON_TRANSMISSION_ENABLED:'false'};
 fs.mkdirSync('ui-output',{recursive:true});
+const bridgeGateway=docker(['network','inspect','bridge','--format','{{(index .IPAM.Config 0).Gateway}}']);
+const fixture=await startAdminUiFixture(bridgeGateway);
+const settings={...fixture.env,HASH_SALT_KEY:randomBytes(32).toString('hex'),RATE_LIMIT_SECRET:randomBytes(48).toString('hex'),APP_ORIGIN:base,DEPLOYMENT_MODE:'production',SCHEMA_VALIDATED:'true',SCHEMA_SOURCE:'independent',TRUST_PROXY:'false',CHIRON_TRANSMISSION_ENABLED:'false'};
 const checks=[];
 try{
  docker(['run','--detach','--name',container,'--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--publish','127.0.0.1:3008:3000',...Object.entries(settings).flatMap(([k,v])=>['--env',k+'='+v]),'--entrypoint','node',image,'server.js']);
@@ -85,6 +88,7 @@ try{
     await route.fulfill({status:request.method()==='POST'?201:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
    });
    // Start authenticated fixture in a fresh document, after the anonymous form checks.
+   await fixture.authenticate(context,base);
    await page.close(); page=await context.newPage();
    page.on('pageerror',error=>failures.push(error.message));
    page.on('console',message=>{if(/Refused to execute|Refused to load the script|violates.*script-src/i.test(message.text()))failures.push('Script CSP violation');});
@@ -135,4 +139,4 @@ try{
  }
  fs.writeFileSync('ui-output/verification.json',JSON.stringify({image,scope:'isolated deployed image on loopback; fixture admin API; real backend verified separately; no live accounts',checks},null,2));
  console.log(JSON.stringify({scope:'isolated immutable production image',passed:checks.length,checks}));
-}finally{try{docker(['rm','--force',container]);}catch{}}
+}finally{try{docker(['rm','--force',container]);}catch{}await fixture.close();}

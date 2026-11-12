@@ -1,14 +1,15 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 // Local invoice payment acceptance. Synthetic API only; no provider payment or real email.
-import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import fs from 'node:fs';import {pathToFileURL} from 'node:url';import {randomBytes} from 'node:crypto';
-import {operationsCopy} from '../src/components/operations/operations-copy.ts';
+import assert from 'node:assert/strict';import {spawn} from 'node:child_process';import fs from 'node:fs';import {pathToFileURL} from 'node:url';import {operationsCopy} from '../src/components/operations/operations-copy.ts';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href),base='http://127.0.0.1:3041',qa=process.env.STRIPE_BILLING_QA_DIR||'/tmp/jd-stripe-qa';fs.mkdirSync(qa,{recursive:true});
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3041'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),NEXT_TELEMETRY_DISABLED:'1'},stdio:'ignore'});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3041'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:'ignore'});
 let browser,lastPage;const checks=[];
 const copy={ar:{pay:'الدفع عبر Stripe',send:'إرسال الفاتورة',title:'دفع الفاتورة',refresh:'تحديث الحالة',paid:'الفاتورة مسددة. لا تدفع مرة أخرى.'},fr:{pay:'Payer avec Stripe',send:'Envoyer la facture',title:'Payer la facture',refresh:'Actualiser le statut',paid:'Facture payée. Ne payez pas à nouveau.'},nl:{pay:'Betalen met Stripe',send:'Factuur verzenden',title:'Factuur betalen',refresh:'Status vernieuwen',paid:'Factuur betaald. Betaal niet opnieuw.'}};
 try{
  let ready=false;for(let i=0;i<100;i++){try{ready=(await fetch(base+'/login')).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,300));}assert.ok(ready);browser=await chromium.launch({headless:true});
  for(const locale of ['ar','fr','nl'])for(const width of [390,1280]){
-  const c=operationsCopy[locale],w=copy[locale],context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block',reducedMotion:'reduce'});
+  const c=operationsCopy[locale],w=copy[locale],context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block',reducedMotion:'reduce'});await fixture.authenticate(context,base);
   await context.addInitScript(({locale,width})=>{localStorage.setItem('theme',width===390?'dark':'light');localStorage.setItem('driver_language',locale);localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));},{locale,width});
   let balance=5000,fail=false,admin=false;const writes=[],oldCalls=[],errors=[];
   const company={id:3,name:'Synthetic Invoice Company',is_test:false,subscription_status:'active'};
@@ -41,4 +42,4 @@ try{
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);checks.push(`${locale}/${width}: invoice link replaces automatic consent, public one-time payment, failure recovery, settled suppression, send PDF/email same-request retry`);await context.close();
  }
  fs.writeFileSync(qa+'/result.json',JSON.stringify({passed:true,checks},null,2));console.log(JSON.stringify({passed:true,checks},null,2));
-}catch(e){if(lastPage&&!lastPage.isClosed()){await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});console.error((await lastPage.locator('body').innerText()).slice(-2500));}throw e;}finally{await browser?.close();server.kill('SIGTERM');}
+}catch(e){if(lastPage&&!lastPage.isClosed()){await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});console.error((await lastPage.locator('body').innerText()).slice(-2500));}throw e;}finally{await browser?.close();server.kill('SIGTERM');await fixture.close();}

@@ -1,3 +1,4 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 // Synthetic document fixtures only; verify actual production rendering and print CSS.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,19 +6,19 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
-import {randomBytes} from 'node:crypto';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
 const style={},template={};
 for(const [file,context] of [['contract-document-style',{exports:style}],['contract-template',{exports:template,require:()=>style}]]) vm.runInNewContext(ts.transpileModule(fs.readFileSync(`src/lib/${file}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,context);
 const contracts=['nl','fr'].map((language,i)=>({id:i+1,company_id:1,contract_number:`QA-${language}`,contract_status:i?'active':'pending_signature',signed_at:i?'2026-01-31T12:00:00Z':null,monthly_fee:99.95,annual_fee:1199.4,contract_start_date:'2026-01-31',contract_end_date:'2027-01-31',contract_duration_months:12,auto_renew:true,renewal_notice_days:90,contract_html_template:template.generateContractHTML({contractNumber:`QA-${language}`,companyName:'SYNTHETIC & Co',companyVAT:'BE0000000000',companyKBO:'0000000000',startDate:'2026-01-31',endDate:'2027-01-31',monthlyFee:99.95,annualFee:1199.4,durationMonths:12,language})+'<img src="https://example.invalid/tracker"><script>window.contractInjected=true</script><style>body{display:none}</style>'}));
 const base='http://127.0.0.1:3014';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3014'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3014'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:['ignore','pipe','pipe']});
 let browser;const checks=[];
 try{
  let ready=false;for(let i=0;i<60;i++){try{ready=(await fetch(base+'/login')).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,500));}assert.ok(ready);
  browser=await chromium.launch({headless:true});
  for(const [name,viewport] of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
-  const context=await browser.newContext({viewport,serviceWorkers:'block'});
+  const context=await browser.newContext({viewport,serviceWorkers:'block'});await fixture.authenticate(context,base);
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
   const invitationCalls=[];
   const foreign=[];await context.route('**/*',route=>{if(new URL(route.request().url()).origin===base)return route.continue();foreign.push(route.request().url());return route.abort();});
@@ -56,4 +57,4 @@ try{
   assert.equal(foreign.filter(x=>x.includes('tracker')).length,0);assert.deepEqual(errors,[]);await context.close();
  }
  console.log(JSON.stringify({passed:checks.length,checks,data:'Synthetic fixtures only; no legal signing or production account'},null,2));
-}finally{await browser?.close();server.kill('SIGTERM');}
+}finally{await browser?.close();server.kill('SIGTERM');await fixture.close();}

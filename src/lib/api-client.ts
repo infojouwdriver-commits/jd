@@ -1,4 +1,5 @@
 import {driverReturnPath} from './driver-return-path';
+import {adminReturnPath} from './admin-return-path';
 import {connectionFailure,connectionMessage} from './connection-state';
 
 import { AUTH_ENABLED, authConfig } from "../config/auth-config";
@@ -163,7 +164,9 @@ function redirectToLogin() {
     return;
   }
 
-  const loginUrl = `${loginPath}?redirect=${encodeURIComponent(currentPath.startsWith('/driver/')?driverReturnPath(currentPath+window.location.search):currentPath)}`;
+  const destination = currentPath + window.location.search;
+  const returnTo = currentPath.startsWith('/driver/') ? driverReturnPath(destination) : adminReturnPath(destination) ?? currentPath;
+  const loginUrl = `${loginPath}?redirect=${encodeURIComponent(returnTo)}`;
   window.location.href = loginUrl;
 }
 

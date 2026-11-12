@@ -1,19 +1,20 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 // Browser fixtures exercise shipped UI only; native tests separately validate database/authentication.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
-import {randomBytes} from 'node:crypto';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
 const base='http://127.0.0.1:3010';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3010'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3010'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:['ignore','pipe','pipe']});
 let browser;const checks=[];
 try {
  let ready=false;for(let i=0;i<60;i++){try{ready=(await fetch(base+'/login')).ok;}catch{}if(ready)break;await new Promise(resolve=>setTimeout(resolve,500));}assert.ok(ready);
  browser=await chromium.launch({headless:true});
  for(const [name,viewport]of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
-  const context=await browser.newContext({viewport,serviceWorkers:'block'});
+  const context=await browser.newContext({viewport,serviceWorkers:'block'});await fixture.authenticate(context,base);
   await context.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
   await context.route('**/*',route=>{
     const url=new URL(route.request().url());
@@ -156,4 +157,4 @@ try {
   await context.close();
  }
  console.log(JSON.stringify({passed:checks.length,checks,data:'Synthetic browser fixtures only; no real accounts'},null,2));
-} finally {await browser?.close();server.kill('SIGTERM');}
+} finally {await browser?.close();server.kill('SIGTERM');await fixture.close();}

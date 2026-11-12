@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { generateAdminUserToken } from '@/lib/auth';
 import { createPostgrestClient } from '@/lib/postgrest';
 import { mailEvent } from '@/lib/mail-policy';
+import { readBoundedBody } from '@/lib/request-body';
 
 export const runtime = 'nodejs';
 
@@ -14,12 +15,12 @@ export async function POST(request: NextRequest) {
   if (!secret || !id || id.length > 256 || !timestamp || !signature) {
     return NextResponse.json({error:'Invalid webhook'}, {status:400});
   }
-  const payload = await request.text();
   let verified: unknown;
   try {
+    const payload = new TextDecoder().decode(await readBoundedBody(request));
     verified = new Resend().webhooks.verify({payload,headers:{id,timestamp,signature},webhookSecret:secret});
-  } catch {
-    return NextResponse.json({error:'Invalid webhook'}, {status:400});
+  } catch (error) {
+    return NextResponse.json({error:'Invalid webhook'}, {status:error instanceof Response ? error.status : 400});
   }
   let event;
   try { event = mailEvent(verified); } catch { return NextResponse.json({error:'Invalid webhook'}, {status:400}); }

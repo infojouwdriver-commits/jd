@@ -1,6 +1,7 @@
 import { originAllowed, publicEndpoint, disabledEndpoint } from "./security-policy";
 import { authorizeEndpoint } from "./security-guard";
 import { rateLimit, consumeRateLimit } from "./rate-limit";
+import { MAX_API_BODY_BYTES, readBoundedBody } from "./request-body";
 
 import { NextRequest, NextResponse } from "next/server";
 import { sendTransactionalMail } from "./mail-service";
@@ -191,7 +192,9 @@ function appendCorsHeaders(response: Response, request: NextRequest): Response {
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
-  response.headers.set("Vary", "Origin");
+  if (!response.headers.get("Vary")?.split(",").some(value => value.trim().toLowerCase() === "origin")) {
+    response.headers.append("Vary", "Origin");
+  }
 
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
   return response;
@@ -298,19 +301,7 @@ export function parseQueryParams(request: NextRequest) {
 
 export async function validateRequestBody(request: NextRequest): Promise<any> {
   try {
-    const reader = request.body?.getReader();
-    if (!reader) throw new Response(null, {status: 400});
-    const chunks: Uint8Array[] = []; let size = 0;
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > 262144) { await reader.cancel(); throw new Response(null, {status: 413}); }
-      chunks.push(value);
-    }
-    const joined = new Uint8Array(size); let offset = 0;
-    for (const chunk of chunks) { joined.set(chunk, offset); offset += chunk.byteLength; }
-    const body = JSON.parse(new TextDecoder().decode(joined));
+    const body = JSON.parse(new TextDecoder().decode(await readBoundedBody(request)));
 
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       throw new Response(null, { status: 400 });
@@ -370,7 +361,7 @@ export function requestMiddleware(
       if ((origin && !originAllowed(origin, process.env.APP_ORIGIN || request.nextUrl.origin, process.env.TRUSTED_ORIGINS)) || (isMutation && !origin && (!bearer || request.headers.has('cookie')))) {
         return appendCorsHeaders(createErrorResponse({errorMessage: 'Origin verification failed', status: 403}), request);
       }
-      if (Number(request.headers.get('content-length') || 0) > 262144) return appendCorsHeaders(createErrorResponse({errorMessage: 'Request too large', status: 413}), request);
+      if (Number(request.headers.get('content-length') || 0) > MAX_API_BODY_BYTES) return appendCorsHeaders(createErrorResponse({errorMessage: 'Request too large', status: 413}), request);
       if (isMutation && request.headers.get('content-type')?.split(';')[0] !== 'application/json') return appendCorsHeaders(createErrorResponse({errorMessage: 'JSON content type required', status: 415}), request);
       const limited = await rateLimit(request, path);
       if (limited) return appendCorsHeaders(limited, request);

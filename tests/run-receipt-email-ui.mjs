@@ -1,9 +1,11 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 // Browser-only synthetic receipts and provider responses. Never accesses production mail or customers.
-import assert from 'node:assert/strict';import fs from 'node:fs';import {spawn} from 'node:child_process';import {randomBytes} from 'node:crypto';import {pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';import fs from 'node:fs';import {spawn} from 'node:child_process';import {pathToFileURL} from 'node:url';
 import {receiptEmailWords,receiptMessage} from '../src/lib/receipt-email-model.ts';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
 const base='http://127.0.0.1:3051',out=process.env.RECEIPT_QA_DIR||'/tmp/jd-receipt-reference';fs.mkdirSync(out,{recursive:true});
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3051'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1'},stdio:'ignore'});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3051'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:'ignore'});
 let browser;const checks=[];
 try{
  let ready=false;for(let i=0;i<60;i++){try{ready=(await fetch(base+'/driver-login')).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,500));}assert.ok(ready);
@@ -35,8 +37,8 @@ try{
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:out+'/receipt-'+language+'-'+theme+'.png',fullPage:true});assert.equal(issues,0);assert.deepEqual(errors,[]);
  checks.push(language+'/'+theme+': existing invoice, editable multilingual optional email, invalid recipient focus, persisted uncertain retry identity, provider acceptance, existing PDF printer and reduced motion');await context.close();
  }
- const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});await context.addInitScript(()=>localStorage.setItem('driver_language','ar'));let settings={version:1,enabled:true,text:{ar:'إعلان',fr:'Annonce',nl:'Advertentie'},url:'https://jouww.com'},writes=0;
+ const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});await fixture.authenticate(context,base);await context.addInitScript(()=>localStorage.setItem('driver_language','ar'));let settings={version:1,enabled:true,text:{ar:'إعلان',fr:'Annonce',nl:'Advertentie'},url:'https://jouww.com'},writes=0;
  await context.route('**/next_api/**',async route=>{const u=new URL(route.request().url());let data=[];if(u.pathname==='/next_api/auth/user')data={sub:'1',isAdmin:true,userType:'admin',email:'admin@example.invalid'};else if(u.pathname==='/next_api/receipt-email-settings'){if(route.request().method()==='PUT'){settings={...route.request().postDataJSON(),version:settings.version+1};writes++;}data=settings;}return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,data})});});
  const page=await context.newPage();page.setDefaultTimeout(15000);await page.goto(base+'/admin/receipt-email');await page.locator('#receipt-ad-enabled').click();await page.locator('#receipt-ad-ar').fill('JOUW DRIVER — نص قابل للتعديل');await page.locator('#receipt-ad-url').fill('https://jouww.com/fr/solutions');await page.getByRole('button',{name:'حفظ',exact:true}).click();await page.getByText('تم حفظ إعلان البريد.',{exact:true}).waitFor();assert.equal(settings.enabled,false);assert.equal(writes,1);assert.equal(settings.url,'https://jouww.com/fr/solutions');checks.push('administrator: ad on/off, localized text and URL saved with a version');await context.close();
  console.log(JSON.stringify({passed:checks.length,checks},null,2));
-}finally{await browser?.close();server.kill('SIGTERM');}
+}finally{await browser?.close();server.kill('SIGTERM');await fixture.close();}

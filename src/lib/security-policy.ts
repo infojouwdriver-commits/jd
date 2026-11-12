@@ -2,15 +2,19 @@ export function trustedOrigins(appOrigin: string, configured = ''): Set<string> 
   const values = [appOrigin, ...configured.split(',')];
   return new Set(values.filter(Boolean).map(value => {
     const url = new URL(value.trim());
-    if (url.username || url.password || url.pathname !== '/' || url.search || url.hash || !['https:', 'http:', 'capacitor:'].includes(url.protocol)) throw new Error('Invalid trusted origin');
-    return url.origin;
+    if (!url.hostname || url.username || url.password || !['', '/'].includes(url.pathname) || url.search || url.hash || !['https:', 'http:', 'capacitor:'].includes(url.protocol)) throw new Error('Invalid trusted origin');
+    return url.protocol === 'capacitor:' ? `capacitor://${url.host.toLowerCase()}` : url.origin;
   }));
 }
 export function originAllowed(origin: string | null, appOrigin: string, configured = ''): boolean {
-  return origin !== null && trustedOrigins(appOrigin, configured).has(origin);
+  return origin !== null && origin !== 'null' && trustedOrigins(appOrigin, configured).has(origin);
 }
 export function isPlatformAdmin(userId: string, configured = ''): boolean {
   return configured.split(',').map(s => s.trim()).filter(Boolean).includes(String(userId));
+}
+export function accountSessionActive(user: {is_active?: boolean; status?: string; security_revoked_before?: string} | null, issuedAt: number): boolean {
+  return !!user && user.is_active !== false && user.status !== 'disabled' &&
+    (!user.security_revoked_before || issuedAt * 1000 > Date.parse(user.security_revoked_before));
 }
 export function publicEndpoint(path: string, method: string): boolean {
   return (method === 'POST' && ['/next_api/invoice-payment', '/next_api/contracts/verify-token', '/next_api/contracts/sign', '/next_api/company-registrations', '/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout'].includes(path)) ||

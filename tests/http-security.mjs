@@ -8,12 +8,16 @@ async function check(path, options, status) {
 }
 const denied = await check('/next_api/companies',{},401);
 assert.match(denied.headers.get('cache-control'),/no-store/);
+assert.match(denied.headers.get('vary'), /\borigin\b/i);
 await check('/next_api/companies',{headers:{authorization:'Bearer malformed'}},401);
 for(const path of ['/next_api/push/devices','/next_api/push/test','/next_api/push/receipt']){
  await check(path,{method:'POST',headers:{origin:base,'Content-Type':'application/json'},body:'{}'},401);
  await check(path,{method:'POST',headers:{origin:'https://untrusted.example','Content-Type':'application/json'},body:'{}'},403);
 }
 await check('/next_api/auth/login',{method:'POST',headers:{origin:'https://attacker.zoer.cloud','Content-Type':'application/json'},body:'{}'},403);
+const opaque = await check('/next_api/auth/login',{method:'OPTIONS',headers:{origin:'null'}},403);
+assert.equal(opaque.headers.get('access-control-allow-origin'),null);
+assert.match(opaque.headers.get('vary'), /\borigin\b/i);
 await check('/next_api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'},403);
 await check('/next_api/auth/login',{method:'POST',headers:{origin:base,'Content-Type':'text/plain'},body:'{}'},415);
 await check('/next_api/ai-assistant/chat',{method:'POST',headers:{origin:base,'Content-Type':'application/json'},body:'{}'},503);

@@ -1,13 +1,15 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 import {operationsCopy} from '../src/components/operations/operations-copy.ts';
 // Synthetic browser acceptance; no production accounts or financial dispatch.
 import assert from 'node:assert/strict';import fs from 'node:fs';import {spawn} from 'node:child_process';import {pathToFileURL} from 'node:url';import {randomBytes} from 'node:crypto';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href),base='http://127.0.0.1:3017';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3017'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1'},stdio:'ignore'});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3017'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:'ignore'});
 const checks=[];let browser,lastPage;const qa=process.env.OPERATIONS_QA_DIR||'/tmp/jd-operations-qa';fs.mkdirSync(qa,{recursive:true});
 try{
  let ready=false;for(let i=0;i<60;i++){try{ready=(await fetch(base+'/login')).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,500));}assert.ok(ready);browser=await chromium.launch({headless:true});
  for(const [name,viewport] of [['desktop',{width:1280,height:900}],['mobile',{width:390,height:844}]]){
- const context=await browser.newContext({viewport,serviceWorkers:'block'});await context.addInitScript(()=>{if(!localStorage.getItem('driver_language'))localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
+ const context=await browser.newContext({viewport,serviceWorkers:'block'});await fixture.authenticate(context,base);await context.addInitScript(()=>{if(!localStorage.getItem('driver_language'))localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});
  const requests=[],writes=[],billingWrites=[];let billingFail=true,billingEmpty=false,billingReadError=false;let archiveFail=true,archived=false;
  await context.route('**/*',r=>new URL(r.request().url()).origin===base?r.continue():r.abort());
  await context.route(base+'/next_api/**',async route=>{const req=route.request(),url=new URL(req.url());let data=[],status=200;
@@ -46,4 +48,4 @@ try{
  assert.deepEqual(errors,[]);await context.close();
  }
  fs.writeFileSync(qa+'/result.json',JSON.stringify({passed:true,checks},null,2));console.log(JSON.stringify({passed:true,checks},null,2));
-}catch(error){if(lastPage&&!lastPage.isClosed()){console.error('Synthetic page:',(await lastPage.locator('body').innerText()).slice(-6500));await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});}throw error;}finally{await browser?.close();server.kill('SIGTERM');}
+}catch(error){if(lastPage&&!lastPage.isClosed()){console.error('Synthetic page:',(await lastPage.locator('body').innerText()).slice(-6500));await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});}throw error;}finally{await browser?.close();server.kill('SIGTERM');await fixture.close();}

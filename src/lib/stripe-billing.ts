@@ -5,6 +5,7 @@ import {operationsAccess,operationFailure} from './operations-access';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {createSuccessResponse,createErrorResponse} from './create-response';
+import {readBoundedBody} from './request-body';
 import {stripeConfiguration,stripeClient,stripeEvents,stripeObjectId,verifiedStripeReceipt,StripePaymentReview,type StripeEnrollment} from './stripe-billing-core';
 
 type Client=ReturnType<typeof createPostgrestClient>;
@@ -86,12 +87,10 @@ export async function stripeWebhook(request:Request){
  let config:ReturnType<typeof stripeConfiguration>;try{config=stripeConfiguration();}catch{return Response.json({error:'Payment service unavailable'},{status:503});}
  const stripe=stripeClient(config);let event:Stripe.Event;
  try{
-  const reader=request.body?.getReader();if(!reader)throw Error('Missing body');const chunks:Uint8Array[]=[];let size=0;
-  for(;;){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>262144){await reader.cancel();throw Error('Invalid size');}chunks.push(part.value);}
-  const body=Buffer.concat(chunks);
+  const body=await readBoundedBody(request);
   event=stripe.webhooks.constructEvent(body,request.headers.get('stripe-signature')||'',config.webhook);
   if(event.api_version!=='2026-09-30.endive'||event.livemode!==config.live||event.account&&event.account!==config.account)throw Error('Unexpected account or event version');
- }catch{return Response.json({error:'Invalid payment notification'},{status:400});}
+ }catch(error){return Response.json({error:'Invalid payment notification'},{status:error instanceof Response?error.status:400});}
  if(!(stripeEvents as readonly string[]).includes(event.type))return Response.json({received:true});
  try{await processStripeEvent(stripe,createPostgrestClient(await generateAdminUserToken()),event);return Response.json({received:true});}
  catch{return Response.json({error:'Payment reconciliation pending'},{status:503});}

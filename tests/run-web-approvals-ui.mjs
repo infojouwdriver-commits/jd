@@ -1,18 +1,19 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 // Synthetic web-only acceptance: permission presentation, pending changes, local demo/cash ledger.
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
-import {randomBytes} from 'node:crypto';
 import {operationsCopy} from '../src/components/operations/operations-copy.ts';
 const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href),base='http://127.0.0.1:3018';
-const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3018'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,JWT_SECRET:randomBytes(48).toString('hex'),POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1'},stdio:'ignore'});
+const fixture=await startAdminUiFixture();
+const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3018'],{env:{...process.env,NODE_ENV:'production',APP_ORIGIN:base,POSTGREST_URL:'http://127.0.0.1:39999',POSTGREST_SCHEMA:'public',SCHEMA_USER:'browser',SCHEMA_ADMIN_USER:'service',NEXT_TELEMETRY_DISABLED:'1',...fixture.env},stdio:'ignore'});
 let browser,lastPage;const checks=[],qa=process.env.OPERATIONS_QA_DIR||'/tmp/jd-web-qa';fs.mkdirSync(qa,{recursive:true});
 try{
  let ready=false;for(let i=0;i<80;i++){try{ready=(await fetch(base+'/login')).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,250));}assert.ok(ready);
  browser=await chromium.launch({headless:true});
  for(const locale of ['ar','fr','nl'])for(const width of [1280,390]){
-  const c=operationsCopy[locale],context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block'});
+  const c=operationsCopy[locale],context=await browser.newContext({viewport:{width,height:844},serviceWorkers:'block'});await fixture.authenticate(context,base);
   await context.addInitScript(locale=>{localStorage.setItem('driver_language',locale);localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));},locale);
   let role='owner',admin=false,state='prepared',paid=0,proposal=null,fail=true;const writes=[],company={id:1,name:'Synthetic Company',is_test:true,subscription_status:'active',address:'Synthetic Street',vat_number:'BE0123456789',kbo_number:'0123456789'};
   await context.route('**/*',r=>new URL(r.request().url()).origin===base?r.continue():r.abort());
@@ -42,4 +43,4 @@ try{
   await page.getByRole('button',{name:c.settings,exact:true}).click();assert.equal(await page.getByLabel(c.defaultVat,{exact:true}).inputValue(),'21');await page.getByRole('dialog').getByRole('button',{name:c.cancel,exact:true}).last().click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:`${qa}/billing-${locale}-${width}.png`,fullPage:true});assert.deepEqual(errors,[]);checks.push(`${locale}/${width}: admin approval, demo issuance, 21% VAT and cash settlement work`);await context.close();
  }
  fs.writeFileSync(qa+'/web-result.json',JSON.stringify({passed:true,checks},null,2));console.log(JSON.stringify({passed:true,checks},null,2));
-}catch(e){if(lastPage&&!lastPage.isClosed()){console.error((await lastPage.locator('body').innerText()).slice(-4500));await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});}throw e;}finally{await browser?.close();server.kill('SIGTERM');}
+}catch(e){if(lastPage&&!lastPage.isClosed()){console.error((await lastPage.locator('body').innerText()).slice(-4500));await lastPage.screenshot({path:qa+'/failure.png',fullPage:true});}throw e;}finally{await browser?.close();server.kill('SIGTERM');await fixture.close();}
