@@ -1,6 +1,7 @@
 
 'use client';
 import {driverReturnPath} from '@/lib/driver-return-path';
+import {adminReturnPath} from '@/lib/admin-return-path';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '@/types/auth';
@@ -112,10 +113,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return;
     }
 
-    if (userData?.userType === 'distributor') {
+    const redirect = new URLSearchParams(window.location.search).get('redirect');
+    const adminDestination = pathnameRef.current === '/login' && userData.isAdmin ? adminReturnPath(redirect) : null;
+    if (adminDestination) {
+      router.replace(adminDestination);
+    } else if (userData?.userType === 'distributor') {
       router.push('/distributor/dashboard');
     } else if (userData?.userType === 'driver' && !userData?.isAdmin) {
-      router.push(driverReturnPath(new URLSearchParams(window.location.search).get('redirect')));
+      router.push(driverReturnPath(redirect));
     } else if (
       userData?.userType === 'manager' ||
       userData?.userType === 'company' ||

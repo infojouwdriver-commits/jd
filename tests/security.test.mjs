@@ -1,9 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {originAllowed, isPlatformAdmin, publicEndpoint, disabledEndpoint, memberEndpoint, ownsRecord, calendarMonthDeadline, safeChironUrl, stripSecrets} from '../src/lib/security-policy.ts';
+import {readBoundedBody} from '../src/lib/request-body.ts';
 test('reject attacker domains and suffix confusion', () => {
  for (const origin of ['https://evil.zoer.cloud','https://app.example.com.evil.test','https://evil.example.com','https://app.example.com:444',null]) assert.equal(originAllowed(origin,'https://app.example.com'),false);
  assert.equal(originAllowed('https://app.example.com','https://app.example.com'),true);
+});
+test('native trusted origins never authorize opaque origins or other native hosts', () => {
+ const app = 'https://app.example.com';
+ const native = 'capacitor://localhost';
+ assert.equal(originAllowed(native, app, native), true);
+ for (const origin of ['null', null, 'capacitor://other', 'https://localhost']) {
+  assert.equal(originAllowed(origin, app, native), false);
+ }
+});
+test('bounded bodies preserve raw bytes and reject declared and streamed oversize', async () => {
+ const url = 'https://app.example.com/webhook';
+ const bytes = Buffer.from('é!', 'utf8');
+ assert.deepEqual(await readBoundedBody(new Request(url, {method:'POST', body:bytes}), 3), bytes);
+ await assert.rejects(readBoundedBody(new Request(url, {
+  method:'POST', headers:{'Content-Length':'4'}, body:bytes,
+ }), 3), {status:413});
+ let cancelled = false;
+ const stream = new ReadableStream({
+  start(controller) {
+   controller.enqueue(bytes);
+   controller.enqueue(bytes);
+  },
+  cancel() { cancelled = true; },
+ });
+ await assert.rejects(readBoundedBody(new Request(url, {method:'POST', body:stream, duplex:'half'}), 3), {status:413});
+ assert.equal(cancelled, true);
 });
 test('admin role is granted only by exact server configuration', () => {
  assert.equal(isPlatformAdmin('1','11,21'),false);

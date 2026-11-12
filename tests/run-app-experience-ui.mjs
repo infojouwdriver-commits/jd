@@ -1,8 +1,8 @@
+import {startAdminUiFixture} from './admin-ui-fixture.mjs';
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
 import { DEFAULT_WELCOME } from "../driver-app/src/welcome-config.ts";
 const { chromium } = await import(
   process.env.UI_PLAYWRIGHT_PATH || "playwright"
@@ -10,6 +10,7 @@ const { chromium } = await import(
 const base = "http://127.0.0.1:3027",
   out = process.env.WELCOME_QA_DIR || "/tmp/jd-welcome-qa";
 fs.mkdirSync(out, { recursive: true });
+const fixture = await startAdminUiFixture();
 const server = spawn(
   process.execPath,
   [
@@ -25,12 +26,12 @@ const server = spawn(
       ...process.env,
       NODE_ENV: "production",
       APP_ORIGIN: base,
-      JWT_SECRET: randomBytes(48).toString("hex"),
       POSTGREST_URL: "http://127.0.0.1:39999",
       POSTGREST_SCHEMA: "public",
       SCHEMA_USER: "browser",
       SCHEMA_ADMIN_USER: "service",
       NEXT_TELEMETRY_DISABLED: "1",
+      ...fixture.env,
     },
     stdio: "ignore",
   },
@@ -55,6 +56,7 @@ try {
         reducedMotion: "reduce",
         serviceWorkers: "block",
       });
+      await fixture.authenticate(context, base);
       await context.addInitScript(
         ({ language, theme }) => {
           localStorage.setItem("driver_language", language);
@@ -207,4 +209,5 @@ try {
 } finally {
   if (browser) await browser.close();
   server.kill("SIGTERM");
+  await fixture.close();
 }

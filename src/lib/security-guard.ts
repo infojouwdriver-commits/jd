@@ -3,13 +3,12 @@ import type { NextRequest } from 'next/server';
 import { authCrudOperations, generateAdminUserToken } from './auth';
 import CrudOperations from './crud-operations';
 import type { JWTPayload } from './api-utils';
-import { isPlatformAdmin, memberEndpoint, ownsRecord } from './security-policy';
+import { accountSessionActive, isPlatformAdmin, memberEndpoint, ownsRecord } from './security-policy';
 
 export async function authorizeEndpoint(request: NextRequest, payload: JWTPayload): Promise<void> {
   const {usersCrud} = await authCrudOperations();
   const user = await usersCrud.findById(payload.sub);
-  if (!user || user.is_active === false || user.status === 'disabled') throw new Response(null, {status: 401});
-  if (user.security_revoked_before && payload.iat * 1000 <= Date.parse(user.security_revoked_before)) throw new Response(null, {status: 401});
+  if (!accountSessionActive(user, payload.iat)) throw new Response(null, {status: 401});
   payload.isAdmin = isPlatformAdmin(String(user.id), process.env.PLATFORM_ADMIN_IDS);
   const path = request.nextUrl.pathname;
   if (payload.isAdmin) {

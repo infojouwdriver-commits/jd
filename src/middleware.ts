@@ -1,7 +1,10 @@
 import {NextResponse, type NextRequest} from 'next/server';
-import {originAllowed} from './lib/security-policy';
+import {originAllowed, trustedOrigins} from './lib/security-policy';
+import {authConfig} from './config/auth-config';
+import {adminPageAccess} from './lib/admin-page-access';
+import {adminReturnPath} from './lib/admin-return-path';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const api = /^\/(next_api|api)(\/|$)/.test(request.nextUrl.pathname);
   const appOrigin = process.env.APP_ORIGIN || request.nextUrl.origin;
   const origin = request.headers.get('origin');
@@ -46,13 +49,27 @@ export function middleware(request: NextRequest) {
   if (api && origin && !allowed) response = NextResponse.json({success: false, errorMessage: 'Origin not permitted'}, {status: 403});
   else if (api && request.method === 'OPTIONS') response = new NextResponse(null, {status: 204});
   else response = NextResponse.next({request:{headers:forwarded}});
+  if (/^\/admin(?:\/|$)/.test(request.nextUrl.pathname)) {
+    const access = await adminPageAccess(request.cookies.get(authConfig.tokenCookieName)?.value);
+    if (access === 'unavailable') {
+      response = new NextResponse('Administration temporarily unavailable', {status:503, headers:{'Retry-After':'30'}});
+    } else if (access !== 'allowed') {
+      const host = request.headers.get('host')?.toLowerCase();
+      const origin = [...trustedOrigins(appOrigin, process.env.TRUSTED_ORIGINS)]
+        .find(value => /^https?:/.test(value) && new URL(value).host === host) ?? appOrigin;
+      const destination = new URL(access === 'dashboard' ? '/dashboard' : authConfig.loginPath, origin);
+      const returnTo = adminReturnPath(request.nextUrl.pathname + request.nextUrl.search);
+      if (access === 'login' && returnTo) destination.searchParams.set('redirect', returnTo);
+      response = NextResponse.redirect(destination, 303);
+    }
+  }
   if (api && allowed) {
     response.headers.set('Access-Control-Allow-Origin', origin!);
     response.headers.set('Access-Control-Allow-Credentials', 'true');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    response.headers.set('Vary', 'Origin');
   }
+  if (api) response.headers.append('Vary', 'Origin');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('Referrer-Policy', 'no-referrer');
@@ -70,4 +87,4 @@ export function middleware(request: NextRequest) {
   }
   return response;
 }
-export const config = {matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']};
+export const config = {runtime: 'nodejs', matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']};

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {randomBytes} from 'node:crypto';
+import {pathToFileURL} from 'node:url';
 import bcrypt from 'bcryptjs';
 import {SignJWT,jwtVerify} from 'jose';
 import {totpAt} from '../src/lib/totp.ts';
@@ -23,7 +24,7 @@ let welcomeWrites=0;
 const shiftCalls=[];
 const changeCalls=[];
 const registrationCalls=[];rows.company_registrations=[];
-const claims=new Set();let unavailable=false;const databaseTokens=[];
+const claims=new Set();let unavailable=false,usersUnavailable=false;const databaseTokens=[];
 rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
 rows.companies=[{id:1,name:'Synthetic Company',chiron_mode:'TEST'}];rows.vehicles=[];
 const mock=http.createServer(async(req,res)=>{
@@ -32,6 +33,7 @@ const mock=http.createServer(async(req,res)=>{
   const {payload}=await jwtVerify(token,new TextEncoder().encode(secret),{issuer:'jouw-driver',audience:'jouw-driver'});
   databaseTokens.push(payload);assert.equal(payload.role,'test_admin');assert.equal(payload.sub,'0');
   const url=new URL(req.url,'http://localhost');let raw='';for await(const chunk of req)raw+=chunk;const body=raw?JSON.parse(raw):{};
+  if(usersUnavailable&&url.pathname==='/users'){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}
   let data;
   if(url.pathname.startsWith('/rpc/')) {
    if(url.pathname==='/rpc/security_rate_limit'){if(unavailable){res.writeHead(503,{'Content-Type':'application/json'});res.end('{}');return;}data=true;}
@@ -71,14 +73,25 @@ const mock=http.createServer(async(req,res)=>{
  }catch{res.writeHead(500,{'Content-Type':'application/json'});res.end(JSON.stringify({message:'Simulated database assertion failed'}));}
 });
 mock.listen(0,'127.0.0.1');await once(mock,'listening');
-const dbUrl=`http://127.0.0.1:${mock.address().port}`;const base='http://127.0.0.1:3003';
+const dbUrl=`http://127.0.0.1:${mock.address().port}`;const base='http://localhost:3003';
 const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3003'],{env:{...process.env,NODE_ENV:'production',JWT_SECRET:secret,HASH_SALT_KEY:randomBytes(32).toString('hex'),DATA_ENCRYPTION_KEY:randomBytes(32).toString('hex'),SCHEMA_USER:'test_user',SCHEMA_ADMIN_USER:'test_admin',POSTGREST_URL:dbUrl,POSTGREST_SCHEMA:'public',POSTGREST_API_KEY:'',PLATFORM_ADMIN_IDS:'1',ADMIN_TOTP_SECRETS_JSON:JSON.stringify({'1':totpSecret}),RATE_LIMIT_SECRET:randomBytes(32).toString('hex'),APP_ORIGIN:base,TRUST_PROXY:'false',NEXT_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});
 const checks=[];
 async function request(path,method='GET',body,token,cookie){return fetch(base+path,{method,headers:{...(method!=='GET'?{'Content-Type':'application/json',origin:base}:{}),...(token?{Authorization:`Bearer ${token}`} :{}),...(cookie?{cookie}: {})},body:body?JSON.stringify(body):undefined});}
 async function status(name,promise,expected){const response=await promise;assert.equal(response.status,expected,name);checks.push(name);return response;}
-const sign=async(id,amr='password',role='test_user')=>new SignJWT({sub:String(id),role,amr,isAdmin:true}).setProtectedHeader({alg:'HS256'}).setIssuer('jouw-driver').setAudience('jouw-driver').setIssuedAt().setExpirationTime('5m').sign(new TextEncoder().encode(secret));
+const sign=async(id,amr='password',role='test_user',expires='5m')=>new SignJWT({sub:String(id),role,amr,isAdmin:true}).setProtectedHeader({alg:'HS256'}).setIssuer('jouw-driver').setAudience('jouw-driver').setIssuedAt().setExpirationTime(expires).sign(new TextEncoder().encode(secret));
+const adminPath='/admin/companies/1?tab=billing';
+const adminPage=(token,headers={})=>fetch(base+adminPath,{redirect:'manual',headers:{...headers,...(token?{Cookie:`auth-token=${token}`}:{})}});
 try {
  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Production startup timeout')),45000);server.stdout.on('data',chunk=>{if(chunk.toString().includes('Ready')){clearTimeout(timer);resolve();}});server.once('exit',code=>{clearTimeout(timer);reject(Error(`Production server exited ${code}`));});});
+ const anonymousPage=await status('Anonymous admin page redirects before rendering',adminPage(),303);
+ assert.equal(new URL(anonymousPage.headers.get('location')).searchParams.get('redirect'),adminPath);
+ assert.match(anonymousPage.headers.get('cache-control'),/no-store/);
+ const anonymousFlight=await status('Anonymous admin router request redirects before rendering',adminPage(null,{RSC:'1'}),303);
+ assert.equal(new URL(anonymousFlight.headers.get('location')).searchParams.get('redirect'),adminPath);
+ assert.doesNotMatch(await anonymousFlight.text(), /workspace-content/);
+ const memberPage=await status('Non-administrator cannot load admin page',adminPage(await sign(2)),303);
+ assert.equal(new URL(memberPage.headers.get('location')).pathname,'/dashboard');
+ await status('Administrator without MFA cannot load admin page',adminPage(await sign(1)),303);
  await status('Administrator password alone is rejected',request('/next_api/auth/login','POST',{email:rows.users[0].email,password}),401);
  const otp=totpAt(totpSecret,Math.floor(Date.now()/30000));
  const login=await status('Administrator password and OTP succeeds',request('/next_api/auth/login','POST',{email:rows.users[0].email,password,otp}),200);
@@ -88,6 +101,34 @@ try {
  const refresh=await status('MFA verified administrator refresh succeeds',request('/next_api/auth/refresh','POST',{},null,cookie),200);
  const refreshedToken=decodeURIComponent(refresh.headers.getSetCookie().find(c=>c.startsWith('auth-token=')).split(';')[0].slice('auth-token='.length));
  assert.equal((await jwtVerify(refreshedToken,new TextEncoder().encode(secret))).payload.amr,'otp');checks.push('Refresh preserves administrator MFA claim');
+ await status('Active MFA administrator can load admin page',adminPage(refreshedToken),200);
+ rows.users[0].is_active=false;
+ await status('Disabled administrator is rejected on the next admin navigation',adminPage(refreshedToken,{RSC:'1'}),303);
+ rows.users[0].is_active=true;
+ rows.users[0].security_revoked_before=new Date().toISOString();
+ await status('Revoked administrator session cannot load admin page',adminPage(refreshedToken),303);
+ delete rows.users[0].security_revoked_before;
+ usersUnavailable=true;
+ const unavailablePage=await status('Admin page fails closed when the account store is unavailable',adminPage(refreshedToken),503);
+ assert.match(unavailablePage.headers.get('cache-control'),/no-store/);
+ usersUnavailable=false;
+ if(process.env.UI_PLAYWRIGHT_PATH){
+  const {chromium}=await import(pathToFileURL(process.env.UI_PLAYWRIGHT_PATH).href);
+  const browser=await chromium.launch({headless:true});
+  try{
+   const context=await browser.newContext({serviceWorkers:'block'});
+   const refreshValue=refresh.headers.getSetCookie().find(c=>c.startsWith('refresh-token=')).split(';')[0].slice('refresh-token='.length);
+   await context.addCookies([
+    {name:'auth-token',value:await sign(1,'otp','test_user','-1m'),url:base,httpOnly:true},
+    {name:'refresh-token',value:refreshValue,domain:new URL(base).hostname,path:'/next_api/auth/refresh',httpOnly:true},
+   ]);
+   const page=await context.newPage();
+   await page.goto(base+adminPath);
+   await page.waitForURL(base+adminPath);
+   await page.locator('#workspace-content').waitFor();
+   checks.push('Browser renews an expired administrator session and restores the original page and query');
+  }finally{await browser.close();}
+ }
  await status('Rotated refresh cookie cannot be replayed',request('/next_api/auth/refresh','POST',{},null,cookie),401);
  await status('Password-only admin access is denied in production',request('/next_api/trips','GET',null,await sign(1)),401);
  const driverToken=await sign(2);

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import {driverReturnPath} from '../src/lib/driver-return-path.ts';
+import {adminReturnPath} from '../src/lib/admin-return-path.ts';
 import {connectionFailure,connectionMessage} from '../src/lib/connection-state.ts';
 
 function client(pathname, fetch, search='') {
@@ -11,7 +12,8 @@ function client(pathname, fetch, search='') {
     .replace(/import \{ AUTH_ENABLED, authConfig \}[^;]+;/, 'const AUTH_ENABLED = true; const authConfig = {loginPath:"/login"};')
     .replace(/import \{ AUTH_CODE \}[^;]+;/, 'const AUTH_CODE = {TOKEN_MISSING:"TOKEN_MISSING", TOKEN_EXPIRED:"TOKEN_EXPIRED"};');
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const context = { exports: {}, require:name=>{if(name==='./driver-return-path')return {driverReturnPath};if(name==='./connection-state')return {connectionFailure,connectionMessage};throw Error('Unexpected import');},AbortSignal, fetch, window: { location: { pathname, search, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
+  const modules = {'./driver-return-path': {driverReturnPath}, './admin-return-path': {adminReturnPath}, './connection-state': {connectionFailure, connectionMessage}};
+  const context = { exports: {}, require:name=>{assert.ok(modules[name], `Unexpected import: ${name}`);return modules[name];},AbortSignal, fetch, window: { location: { pathname, search, href: '', origin: 'https://app.example' } }, URL, URLSearchParams, console, process: { env: {} } };
   vm.runInNewContext(output, context);
   return { api: context.exports.api, location: context.window.location };
 }
@@ -53,3 +55,11 @@ test('parallel expired requests share a refresh and retry without document navig
 });
 
 test('expired shift document login preserves the scanned shift identity',async()=>{const id='45bf75f8-bae3-4df3-b809-287134548a54';const {api,location}=client('/driver/shifts',missing,'?id='+id);await assert.rejects(api.get('/drivers/shifts?id='+id));assert.equal(location.href,'/driver-login?redirect='+encodeURIComponent('/driver/shifts?id='+id));});
+
+test('admin login preserves the tab and strips framework routing parameters', async () => {
+  const {api, location} = client('/admin/companies/1', missing, '?tab=billing&_rsc=abc');
+  await assert.rejects(api.get('/company-workspace'));
+  assert.equal(location.href, '/login?redirect=' + encodeURIComponent('/admin/companies/1?tab=billing'));
+  assert.equal(adminReturnPath('//external.example/admin'), null);
+  assert.equal(adminReturnPath('/admin/../login'), null);
+});
