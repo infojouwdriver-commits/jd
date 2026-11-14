@@ -1,3 +1,5 @@
+import * as emailRenderer from '../src/lib/email/renderer.ts';
+import {verificationDesign} from '../src/lib/email/account.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -67,6 +69,7 @@ test('self password changes require current credentials and ignore caller user I
  const calls=[];
  const route=load('../src/app/next_api/auth/account/route.ts',{
  '@/lib/mail-policy':{mailConfiguration:()=>({ready:false})},
+ '@/lib/email/renderer':emailRenderer,
  '@/lib/api-utils':{requestMiddleware:handler=>handler,validateRequestBody:async request=>request.body},
  '@/lib/auth':{authCrudOperations:async()=>({usersCrud:{findById:async id=>({id,password:'existing-hash',email:'owner@example.invalid'})}}),generateAdminUserToken:async()=>''},
  '@/lib/create-response':jsonResponse,
@@ -86,8 +89,8 @@ test('verification email never claims delivery without a configured provider or 
  const source=fs.readFileSync(new URL('../src/lib/api-utils.ts',import.meta.url),'utf8');
  const snippet=source.slice(source.indexOf('export async function sendVerificationEmail'),source.indexOf('function shouldUseSecureCookies'));
  const output=ts.transpileModule(snippet,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
- const run=async(result)=>{const exports={};let message;vm.runInNewContext(output,{exports,sendTransactionalMail:async(value)=>{message=value;return result;}});return {sent:await exports.sendVerificationEmail('recipient@example.invalid','123456'),message};};
+ const run=async(result)=>{const exports={};let message;vm.runInNewContext(output,{exports,verificationDesign,sendTransactionalMail:async(value)=>{message=value;return result;}});return {sent:await exports.sendVerificationEmail('recipient@example.invalid','123456'),message};};
  assert.equal((await run({accepted:false,status:'not_configured'})).sent,false);
  assert.equal((await run({accepted:false,status:'failed'})).sent,false);
- const accepted=await run({accepted:true,status:'accepted'});assert.equal(accepted.sent,true);assert.equal(accepted.message.purpose,'verification');assert.match(accepted.message.text,/123456/);assert.equal(accepted.message.event,'verification:recipient@example.invalid:123456');
+ const accepted=await run({accepted:true,status:'accepted'});assert.equal(accepted.sent,true);assert.equal(accepted.message.purpose,'verification');assert.equal(accepted.message.design.code,'123456');assert.equal(accepted.message.event,'verification:recipient@example.invalid:123456');
 });

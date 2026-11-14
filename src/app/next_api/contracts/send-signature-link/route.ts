@@ -38,7 +38,7 @@ export const POST=requestMiddleware(async(request,context)=>{
   if(!mailConfiguration(process.env).ready)return createErrorResponse({status:409,errorMessage:'البريد غير مفعّل بعد. يلزم إعداد مزود مجاني ومرسل معتمد؛ يستطيع صاحب الشركة التوقيع الآن من بوابة الشركة.'});
   const link=issueContractEmailLink({v:1,contract:contract.id,company:company.id,owner:owner.id,email:owner.email.trim().toLowerCase(),request:value.request_id,revision:contract.updated_at,digest:contractDigest(contract.contract_html_template||''),expires:Date.now()+72*3600000},process.env.JWT_SECRET||'');
   const content=contractInvitation(contract,company,process.env.APP_ORIGIN||'',link);
-  const sent=await sendTransactionalMail({...content,to:owner.email,purpose:'contract_invitation',event:`contract-invitation:${contract.id}:${owner.id}:${value.request_id}`});
+  const sent=await sendTransactionalMail({design:content.design,to:owner.email,purpose:'contract_invitation',event:`contract-invitation:${contract.id}:${owner.id}:${value.request_id}`});
   if(!sent.accepted)return createErrorResponse({status:sent.status==='quota_exceeded'?429:409,errorMessage:sent.status==='quota_exceeded'?'وصل البريد إلى الحد المجاني؛ حاول لاحقًا.':sent.status==='uncertain'||sent.status==='sending'?'لم يتأكد قبول الرسالة. أعد المحاولة بنفس الطلب لتجنب التكرار.':'لم يقبل مزود البريد الدعوة. راجع إعداد المرسل وحالة التسليم.'});
   return createSuccessResponse({accepted:true,status:sent.status,delivery_id:sent.delivery_id});
  }catch(error){if(error instanceof Response)return error;if(error instanceof z.ZodError)return createErrorResponse({status:400,errorMessage:'معرف العقد ومرجع طلب الإرسال مطلوبان'});return createErrorResponse({status:503,errorMessage:'Mail unavailable'});}
