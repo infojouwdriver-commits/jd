@@ -4,8 +4,9 @@ import {generateVerificationCode,hashVerificationCode} from '@/lib/server-utils'
 import {authCrudOperations} from '@/lib/auth';
 import {mailConfiguration} from '@/lib/mail-policy';
 import {consumeRateLimit} from '@/lib/rate-limit';
+import {emailLanguages,resolveEmailLanguage} from '@/lib/email/renderer';
 import {z} from 'zod';
-const schema=z.object({email:z.string().trim().toLowerCase().email().max(254),type:z.enum(['register','reset-password','company-registration']),request_id:z.string().uuid().optional()}).strict().refine(v=>v.type!=='company-registration'||!!v.request_id);
+const schema=z.object({email:z.string().trim().toLowerCase().email().max(254),type:z.enum(['register','reset-password','company-registration']),request_id:z.string().uuid().optional(),language:z.enum(emailLanguages).optional()}).strict().refine(v=>v.type!=='company-registration'||!!v.request_id);
 export const POST=requestMiddleware(async request=>{
  const parsed=schema.safeParse(await validateRequestBody(request));
  if(!parsed.success)return createErrorResponse({status:400,errorMessage:'Check the email and request details'});
@@ -19,7 +20,8 @@ export const POST=requestMiddleware(async request=>{
   if(v.type==='reset-password'?(!user||user.is_active===false||user.status==='disabled'||user.auth_provider==='google'):!!user)return createSuccessResponse({data:true});
   const code=generateVerificationCode(),purpose=v.type==='company-registration'?'company-registration:'+v.request_id:v.type;
   const row=await userPasscodeCrud.create({pass_object:v.email,security_purpose:purpose,passcode:await hashVerificationCode(code),valid_until:new Date(Date.now()+180000).toISOString(),revoked:false,retry_count:0});
-  let sent=false;try{sent=await sendVerificationEmail(v.email,code,v.type);}catch{/* No provider details or code in logs. */}
+  const locale=v.language||resolveEmailLanguage(request.cookies.get('driver_language')?.value||request.headers.get('accept-language')?.split(/[,;]/)[0], 'en');
+  let sent=false;try{sent=await sendVerificationEmail(v.email,code,v.type,locale,user?.display_name);}catch{/* No provider details or code in logs. */}
   if(!sent){await userPasscodeCrud.update(row.id,{revoked:true});if(v.type!=='reset-password')return createErrorResponse({status:503,errorMessage:'Email confirmation temporarily unavailable'});}
   return createSuccessResponse({data:true});
  }catch{return createErrorResponse({status:503,errorMessage:'Email confirmation temporarily unavailable'});}

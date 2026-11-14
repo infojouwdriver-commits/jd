@@ -1,3 +1,4 @@
+import {resolveEmailLanguage} from '@/lib/email/renderer';
 import { requestMiddleware, validateRequestBody, sendVerificationEmail } from '@/lib/api-utils';
 import { authCrudOperations, generateAdminUserToken } from '@/lib/auth';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
@@ -37,7 +38,7 @@ export const POST = requestMiddleware(async (request, context) => {
    const code = generateVerificationCode();
    const row = await userPasscodeCrud.create({pass_object:body.email,security_purpose:'account-email:'+userId,passcode:await hashVerificationCode(code),valid_until:new Date(Date.now()+3*60000).toISOString(),revoked:false});
    let sent = false;
-   try { sent = await sendVerificationEmail(body.email, code, 'account-email'); } catch { /* Do not expose provider diagnostics or codes. */ }
+   try { sent = await sendVerificationEmail(body.email, code, 'account-email', resolveEmailLanguage(request.cookies.get('driver_language')?.value||request.headers.get('accept-language')?.split(/[,;]/)[0], 'en'), user.display_name); } catch { /* Do not expose provider diagnostics or codes. */ }
    if (!sent) { await userPasscodeCrud.update(row.id,{revoked:true}); return createErrorResponse({errorMessage:'تعذر إرسال رمز التحقق',status:503}); }
    return createSuccessResponse({sent:true});
   }

@@ -130,7 +130,7 @@ export function DriverRegisterForm({ onSuccess, onSwitchToLogin }: DriverRegiste
     setIsLoading(true);
     setError(null);
     try {
-      await api.post("/auth/send-verification", { email, type: "register" });
+      await api.post("/auth/send-verification", { email, type: "register", language });
       setCodeSent(true);
       startCooldown();
       return true;

@@ -15,7 +15,7 @@ test('localized optional ad, safe edited text and strict recipient validation',(
  assert.equal(receiptAdSchema.safeParse({...ad,url:'javascript:alert(1)'}).success,false);
  assert.equal(receiptAdSchema.safeParse({...ad,url:'https://user:pass@evil.invalid'}).success,false);
  assert.equal(receiptSendSchema.safeParse({request_id:randomUUID(),to:'x@example.invalid',subject:'header\r\nBcc:x',message:'hello',language:'fr',settings_version:1}).success,false);
- const html=receiptEmailHtml('<script>x</script> https://jouww.com?a=1&b=2');assert.match(html,/&lt;script&gt;/);assert.match(html,/<a href="https:\/\/jouww.com/);assert.doesNotMatch(html,/<script>/);
+ const html=receiptEmailHtml('<script>x</script> https://jouww.com?a=1&b=2');assert.match(html,/&lt;script&gt;/);assert.match(html,/<a [^>]*href="https:\/\/jouww.com/);assert.doesNotMatch(html,/<script>/);
  assert.equal(memberEndpoint('/next_api/trips/receipt-email','POST','driver'),true);assert.equal(memberEndpoint('/next_api/receipt-email-settings','PUT','driver'),false);
 });
 test('receipt email migration preserves invoices, isolates browser access and rejects request mutation or stale settings',async()=>{const db=await setup();try{

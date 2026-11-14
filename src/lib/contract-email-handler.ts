@@ -5,7 +5,7 @@ import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
 import {readContractEmailLink} from './contract-email-link';
 import {contractSigningCopy,contractSigningLanguage} from './contract-signing-copy';
-import {contractInvitation} from './contract-invitation';
+import {contractDesign} from './email/contract';
 import {sendTransactionalMail} from './mail-service';
 import {mailConfiguration} from './mail-policy';
 import {consumeRateLimit} from './rate-limit';
@@ -32,15 +32,14 @@ export function emailContractHandler(action:'review'|'sign'){
     // Persisted signature is independent of mail transport; retry uses the same mail events.
     let accepted=false;
     try{
-     const content=contractInvitation(data.contract,data.company,process.env.APP_ORIGIN||'',parsed.data.signature_token);
-     const esc=(s:unknown)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
-     const heading=contractSigningCopy[language].saved;
-     const text=`${heading}\n${data.evidence.signer_name}\n${data.evidence.signer_email}\n${data.evidence.signed_at}\nSHA-256: ${data.digest}\n${content.text}`;
-     const html=content.html.replace('<main style=',`<p>${esc(heading)}</p><p>${esc(data.evidence.signer_name)} · ${esc(data.evidence.signer_email)} · ${esc(data.evidence.signed_at)}</p><p>SHA-256: ${esc(data.digest)}</p><main style=`);
+     const design=contractDesign(data.contract,data.company,{
+      url:new URL('/company/dashboard',process.env.APP_ORIGIN).href,
+      evidence:{...data.evidence,digest:data.digest},
+     });
      const config=mailConfiguration(process.env),sender=config.sender.match(/<([^>]+)>/)?.[1]||config.sender;
      const recipients=[...new Set([invite.email,sender].filter(Boolean))];
      accepted=true;
-     for(const to of recipients){const sent=await sendTransactionalMail({to,subject:'JOUW DRIVER — '+data.contract.contract_number.replace(/[\r\n]/g,' ')+' — '+heading,text,html,purpose:'contract_confirmation',event:`contract-confirmation:${invite.request}:${to}`});accepted=accepted&&sent.accepted;}
+     for(const to of recipients){const sent=await sendTransactionalMail({to,design,purpose:'contract_confirmation',event:`contract-confirmation:${invite.request}:${to}`});accepted=accepted&&sent.accepted;}
     }catch{accepted=false;}
     data={...data,confirmation_accepted:accepted};
    }

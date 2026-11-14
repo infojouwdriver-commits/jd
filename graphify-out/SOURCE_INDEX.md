@@ -651,7 +651,7 @@ Links target the working tree, so line positions can move after changes.
 
 ## [driver-app/src/experience/receipt.ts](../driver-app/src/experience/receipt.ts)
 
-- `receipt.ts` — [L1](../driver-app/src/experience/receipt.ts#L1)
+- `experience/receipt.ts` — [L1](../driver-app/src/experience/receipt.ts#L1)
 - `directory()` — [L7](../driver-app/src/experience/receipt.ts#L7)
 - `clearReceiptCache()` — [L8](../driver-app/src/experience/receipt.ts#L8)
 - `shareReceipt()` — [L10](../driver-app/src/experience/receipt.ts#L10)
@@ -1277,6 +1277,13 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_finish_realtime_trip()` — [L47](../migrations/20261109_chiron_realtime.sql#L47)
 - `record_trip_shift` — [L73](../migrations/20261109_chiron_realtime.sql#L73)
 
+## [migrations/20261114_email_templates.sql](../migrations/20261114_email_templates.sql)
+
+- `20261114_email_templates.sql` — [source](../migrations/20261114_email_templates.sql#)
+- `"schema".security_reserve_mail()` — [L7](../migrations/20261114_email_templates.sql#L7)
+- `"schema".email_template_settings` — [L25](../migrations/20261114_email_templates.sql#L25)
+- `"schema".email_template_audit` — [L34](../migrations/20261114_email_templates.sql#L34)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -1884,6 +1891,11 @@ Links target the working tree, so line positions can move after changes.
 - `AdminDriversPageContent()` — [L92](../src/app/admin/drivers/page.tsx#L92)
 - `AdminDriversPage()` — [L753](../src/app/admin/drivers/page.tsx#L753)
 
+## [src/app/admin/email-templates/page.tsx](../src/app/admin/email-templates/page.tsx)
+
+- `email-templates/page.tsx` — [L1](../src/app/admin/email-templates/page.tsx#L1)
+- `EmailTemplatesPage()` — [L3](../src/app/admin/email-templates/page.tsx#L3)
+
 ## [src/app/admin/fleet/page.tsx](../src/app/admin/fleet/page.tsx)
 
 - `fleet/page.tsx` — [L1](../src/app/admin/fleet/page.tsx#L1)
@@ -2250,10 +2262,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/auth/account/route.ts](../src/app/next_api/auth/account/route.ts)
 
 - `account/route.ts` — [L1](../src/app/next_api/auth/account/route.ts#L1)
-- `available()` — [L9](../src/app/next_api/auth/account/route.ts#L9)
-- `schema` — [L10](../src/app/next_api/auth/account/route.ts#L10)
-- `GET` — [L16](../src/app/next_api/auth/account/route.ts#L16)
-- `POST` — [L21](../src/app/next_api/auth/account/route.ts#L21)
+- `available()` — [L10](../src/app/next_api/auth/account/route.ts#L10)
+- `schema` — [L11](../src/app/next_api/auth/account/route.ts#L11)
+- `GET` — [L17](../src/app/next_api/auth/account/route.ts#L17)
+- `POST` — [L22](../src/app/next_api/auth/account/route.ts#L22)
 
 ## [src/app/next_api/auth/driver-login/route.ts](../src/app/next_api/auth/driver-login/route.ts)
 
@@ -2310,8 +2322,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/auth/send-verification/route.ts](../src/app/next_api/auth/send-verification/route.ts)
 
 - `send-verification/route.ts` — [L1](../src/app/next_api/auth/send-verification/route.ts#L1)
-- `schema` — [L8](../src/app/next_api/auth/send-verification/route.ts#L8)
-- `POST` — [L9](../src/app/next_api/auth/send-verification/route.ts#L9)
+- `schema` — [L9](../src/app/next_api/auth/send-verification/route.ts#L9)
+- `POST` — [L10](../src/app/next_api/auth/send-verification/route.ts#L10)
 
 ## [src/app/next_api/auth/user/route.ts](../src/app/next_api/auth/user/route.ts)
 
@@ -2605,6 +2617,16 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L8](../src/app/next_api/drivers/vehicles/route.ts#L8)
 - `PUT` — [L54](../src/app/next_api/drivers/vehicles/route.ts#L54)
 
+## [src/app/next_api/email-templates/route.ts](../src/app/next_api/email-templates/route.ts)
+
+- `email-templates/route.ts` — [L1](../src/app/next_api/email-templates/route.ts#L1)
+- `forbidden()` — [L15](../src/app/next_api/email-templates/route.ts#L15)
+- `invalid()` — [L16](../src/app/next_api/email-templates/route.ts#L16)
+- `serviceClient()` — [L17](../src/app/next_api/email-templates/route.ts#L17)
+- `GET` — [L19](../src/app/next_api/email-templates/route.ts#L19)
+- `PUT` — [L37](../src/app/next_api/email-templates/route.ts#L37)
+- `POST` — [L50](../src/app/next_api/email-templates/route.ts#L50)
+
 ## [src/app/next_api/example/route.ts](../src/app/next_api/example/route.ts)
 
 - `example/route.ts` — [L1](../src/app/next_api/example/route.ts#L1)
@@ -2884,9 +2906,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/trips/receipt-email/route.ts](../src/app/next_api/trips/receipt-email/route.ts)
 
 - `receipt-email/route.ts` — [L1](../src/app/next_api/trips/receipt-email/route.ts#L1)
-- `esc()` — [L12](../src/app/next_api/trips/receipt-email/route.ts#L12)
-- `GET` — [L13](../src/app/next_api/trips/receipt-email/route.ts#L13)
-- `POST` — [L20](../src/app/next_api/trips/receipt-email/route.ts#L20)
+- `GET` — [L14](../src/app/next_api/trips/receipt-email/route.ts#L14)
+- `POST` — [L21](../src/app/next_api/trips/receipt-email/route.ts#L21)
 
 ## [src/app/next_api/trips/receipt/route.ts](../src/app/next_api/trips/receipt/route.ts)
 
@@ -3742,6 +3763,17 @@ Links target the working tree, so line positions can move after changes.
 - `CompanyPicker()` — [L31](../src/components/operations/DirectoryToolbar.tsx#L31)
 - `DirectoryToolbar()` — [L215](../src/components/operations/DirectoryToolbar.tsx#L215)
 
+## [src/components/operations/EmailTemplatesPanel.tsx](../src/components/operations/EmailTemplatesPanel.tsx)
+
+- `EmailTemplatesPanel.tsx` — [L1](../src/components/operations/EmailTemplatesPanel.tsx#L1)
+- `Template` — [L13](../src/components/operations/EmailTemplatesPanel.tsx#L13)
+- `Preview` — [L14](../src/components/operations/EmailTemplatesPanel.tsx#L14)
+- `languageLabels` — [L15](../src/components/operations/EmailTemplatesPanel.tsx#L15)
+- `EmailTemplatesPanel()` — [L19](../src/components/operations/EmailTemplatesPanel.tsx#L19)
+- `edit()` — [L49](../src/components/operations/EmailTemplatesPanel.tsx#L49)
+- `save()` — [L56](../src/components/operations/EmailTemplatesPanel.tsx#L56)
+- `send()` — [L75](../src/components/operations/EmailTemplatesPanel.tsx#L75)
+
 ## [src/components/operations/FleetRecordsTab.tsx](../src/components/operations/FleetRecordsTab.tsx)
 
 - `FleetRecordsTab.tsx` — [L1](../src/components/operations/FleetRecordsTab.tsx#L1)
@@ -4440,41 +4472,41 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/api-utils.ts](../src/lib/api-utils.ts)
 
 - `api-utils.ts` — [L1](../src/lib/api-utils.ts#L1)
-- `JWTPayload` — [L12](../src/lib/api-utils.ts#L12)
-- `ApiParams` — [L18](../src/lib/api-utils.ts#L18)
-- `trimEnvValue()` — [L23](../src/lib/api-utils.ts#L23)
-- `normalizeHttpUrl()` — [L27](../src/lib/api-utils.ts#L27)
-- `normalizePublicUrl()` — [L46](../src/lib/api-utils.ts#L46)
-- `safeDecode()` — [L60](../src/lib/api-utils.ts#L60)
-- `parseCookieHeader()` — [L68](../src/lib/api-utils.ts#L68)
-- `getCookieValueFromRequest()` — [L90](../src/lib/api-utils.ts#L90)
-- `getJwtSecretCandidate()` — [L104](../src/lib/api-utils.ts#L104)
-- `getHostname()` — [L110](../src/lib/api-utils.ts#L110)
-- `getRootDomain()` — [L124](../src/lib/api-utils.ts#L124)
-- `getConfiguredOrigins()` — [L134](../src/lib/api-utils.ts#L134)
-- `getConfiguredHostnames()` — [L146](../src/lib/api-utils.ts#L146)
-- `isZoerCloudHostname()` — [L152](../src/lib/api-utils.ts#L152)
-- `getCookieDomainOverride()` — [L156](../src/lib/api-utils.ts#L156)
-- `getSharedCookieDomain()` — [L161](../src/lib/api-utils.ts#L161)
-- `getAllowedOrigin()` — [L171](../src/lib/api-utils.ts#L171)
-- `appendCorsHeaders()` — [L175](../src/lib/api-utils.ts#L175)
-- `normalizeServerEnv()` — [L200](../src/lib/api-utils.ts#L200)
-- `getCookies()` — [L243](../src/lib/api-utils.ts#L243)
-- `validateEnv()` — [L256](../src/lib/api-utils.ts#L256)
-- `parseQueryParams()` — [L273](../src/lib/api-utils.ts#L273)
-- `validateRequestBody()` — [L299](../src/lib/api-utils.ts#L299)
-- `getSenderEmail()` — [L338](../src/lib/api-utils.ts#L338)
-- `extractBearerToken()` — [L342](../src/lib/api-utils.ts#L342)
-- `getEffectiveRequestToken()` — [L346](../src/lib/api-utils.ts#L346)
-- `requestMiddleware()` — [L351](../src/lib/api-utils.ts#L351)
-- `responseRedirect()` — [L458](../src/lib/api-utils.ts#L458)
-- `getRequestIp()` — [L468](../src/lib/api-utils.ts#L468)
-- `sendVerificationEmail()` — [L472](../src/lib/api-utils.ts#L472)
-- `shouldUseSecureCookies()` — [L493](../src/lib/api-utils.ts#L493)
-- `shouldUseCrossSiteCookies()` — [L513](../src/lib/api-utils.ts#L513)
-- `getSameSiteValue()` — [L531](../src/lib/api-utils.ts#L531)
-- `setCookie()` — [L533](../src/lib/api-utils.ts#L533)
-- `clearCookie()` — [L568](../src/lib/api-utils.ts#L568)
+- `JWTPayload` — [L13](../src/lib/api-utils.ts#L13)
+- `ApiParams` — [L19](../src/lib/api-utils.ts#L19)
+- `trimEnvValue()` — [L24](../src/lib/api-utils.ts#L24)
+- `normalizeHttpUrl()` — [L28](../src/lib/api-utils.ts#L28)
+- `normalizePublicUrl()` — [L47](../src/lib/api-utils.ts#L47)
+- `safeDecode()` — [L61](../src/lib/api-utils.ts#L61)
+- `parseCookieHeader()` — [L69](../src/lib/api-utils.ts#L69)
+- `getCookieValueFromRequest()` — [L91](../src/lib/api-utils.ts#L91)
+- `getJwtSecretCandidate()` — [L105](../src/lib/api-utils.ts#L105)
+- `getHostname()` — [L111](../src/lib/api-utils.ts#L111)
+- `getRootDomain()` — [L125](../src/lib/api-utils.ts#L125)
+- `getConfiguredOrigins()` — [L135](../src/lib/api-utils.ts#L135)
+- `getConfiguredHostnames()` — [L147](../src/lib/api-utils.ts#L147)
+- `isZoerCloudHostname()` — [L153](../src/lib/api-utils.ts#L153)
+- `getCookieDomainOverride()` — [L157](../src/lib/api-utils.ts#L157)
+- `getSharedCookieDomain()` — [L162](../src/lib/api-utils.ts#L162)
+- `getAllowedOrigin()` — [L172](../src/lib/api-utils.ts#L172)
+- `appendCorsHeaders()` — [L176](../src/lib/api-utils.ts#L176)
+- `normalizeServerEnv()` — [L201](../src/lib/api-utils.ts#L201)
+- `getCookies()` — [L244](../src/lib/api-utils.ts#L244)
+- `validateEnv()` — [L257](../src/lib/api-utils.ts#L257)
+- `parseQueryParams()` — [L274](../src/lib/api-utils.ts#L274)
+- `validateRequestBody()` — [L300](../src/lib/api-utils.ts#L300)
+- `getSenderEmail()` — [L339](../src/lib/api-utils.ts#L339)
+- `extractBearerToken()` — [L343](../src/lib/api-utils.ts#L343)
+- `getEffectiveRequestToken()` — [L347](../src/lib/api-utils.ts#L347)
+- `requestMiddleware()` — [L352](../src/lib/api-utils.ts#L352)
+- `responseRedirect()` — [L459](../src/lib/api-utils.ts#L459)
+- `getRequestIp()` — [L469](../src/lib/api-utils.ts#L469)
+- `sendVerificationEmail()` — [L473](../src/lib/api-utils.ts#L473)
+- `shouldUseSecureCookies()` — [L490](../src/lib/api-utils.ts#L490)
+- `shouldUseCrossSiteCookies()` — [L510](../src/lib/api-utils.ts#L510)
+- `getSameSiteValue()` — [L528](../src/lib/api-utils.ts#L528)
+- `setCookie()` — [L530](../src/lib/api-utils.ts#L530)
+- `clearCookie()` — [L565](../src/lib/api-utils.ts#L565)
 
 ## [src/lib/app-experience.ts](../src/lib/app-experience.ts)
 
@@ -4663,7 +4695,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/contract-invitation.ts](../src/lib/contract-invitation.ts)
 
 - `contract-invitation.ts` — [L1](../src/lib/contract-invitation.ts#L1)
-- `contractInvitation()` — [L2](../src/lib/contract-invitation.ts#L2)
+- `contractInvitation()` — [L5](../src/lib/contract-invitation.ts#L5)
 
 ## [src/lib/contract-signing-copy.ts](../src/lib/contract-signing-copy.ts)
 
@@ -4789,6 +4821,82 @@ Links target the working tree, so line positions can move after changes.
 - `email-verification.ts` — [L1](../src/lib/email-verification.ts#L1)
 - `verifyEmailCode()` — [L5](../src/lib/email-verification.ts#L5)
 
+## [src/lib/email/account.ts](../src/lib/email/account.ts)
+
+- `account.ts` — [L1](../src/lib/email/account.ts#L1)
+- `VerificationPurpose` — [L3](../src/lib/email/account.ts#L3)
+- `copy` — [L5](../src/lib/email/account.ts#L5)
+- `verificationDesign()` — [L28](../src/lib/email/account.ts#L28)
+
+## [src/lib/email/contract.ts](../src/lib/email/contract.ts)
+
+- `contract.ts` — [L1](../src/lib/email/contract.ts#L1)
+- `copy` — [L3](../src/lib/email/contract.ts#L3)
+- `ContractEmailData` — [L10](../src/lib/email/contract.ts#L10)
+- `SignatureEvidence` — [L16](../src/lib/email/contract.ts#L16)
+- `contractDesign()` — [L23](../src/lib/email/contract.ts#L23)
+
+## [src/lib/email/invoice.ts](../src/lib/email/invoice.ts)
+
+- `invoice.ts` — [L1](../src/lib/email/invoice.ts#L1)
+- `InvoiceMailPurpose` — [L3](../src/lib/email/invoice.ts#L3)
+- `copy` — [L5](../src/lib/email/invoice.ts#L5)
+- `InvoiceEmailData` — [L12](../src/lib/email/invoice.ts#L12)
+- `invoiceDesign()` — [L27](../src/lib/email/invoice.ts#L27)
+
+## [src/lib/email/receipt.ts](../src/lib/email/receipt.ts)
+
+- `email/receipt.ts` — [L1](../src/lib/email/receipt.ts#L1)
+- `tripReceiptDesign()` — [L3](../src/lib/email/receipt.ts#L3)
+- `reports` — [L7](../src/lib/email/receipt.ts#L7)
+- `driverReportDesign()` — [L14](../src/lib/email/receipt.ts#L14)
+
+## [src/lib/email/renderer.ts](../src/lib/email/renderer.ts)
+
+- `emailLanguages` — [L1](../src/lib/email/renderer.ts#L1)
+- `renderer.ts` — [L1](../src/lib/email/renderer.ts#L1)
+- `EmailLanguage` — [L2](../src/lib/email/renderer.ts#L2)
+- `templateIds` — [L3](../src/lib/email/renderer.ts#L3)
+- `TemplateId` — [L8](../src/lib/email/renderer.ts#L8)
+- `resolveEmailLanguage()` — [L10](../src/lib/email/renderer.ts#L10)
+- `emailBrand` — [L15](../src/lib/email/renderer.ts#L15)
+- `labels` — [L22](../src/lib/email/renderer.ts#L22)
+- `EmailDesign` — [L29](../src/lib/email/renderer.ts#L29)
+- `EmailEdits` — [L43](../src/lib/email/renderer.ts#L43)
+- `editableTemplateIds` — [L49](../src/lib/email/renderer.ts#L49)
+- `isEditableTemplate()` — [L50](../src/lib/email/renderer.ts#L50)
+- `escapeEmail()` — [L54](../src/lib/email/renderer.ts#L54)
+- `safeEmailUrl()` — [L60](../src/lib/email/renderer.ts#L60)
+- `emailMessageHtml()` — [L70](../src/lib/email/renderer.ts#L70)
+- `renderEmail()` — [L79](../src/lib/email/renderer.ts#L79)
+
+## [src/lib/email/samples.ts](../src/lib/email/samples.ts)
+
+- `samples.ts` — [L1](../src/lib/email/samples.ts#L1)
+- `names` — [L8](../src/lib/email/samples.ts#L8)
+- `emailSampleDesign()` — [L15](../src/lib/email/samples.ts#L15)
+
+## [src/lib/email/settings-model.ts](../src/lib/email/settings-model.ts)
+
+- `settings-model.ts` — [L1](../src/lib/email/settings-model.ts#L1)
+- `subject` — [L4](../src/lib/email/settings-model.ts#L4)
+- `paragraph` — [L5](../src/lib/email/settings-model.ts#L5)
+- `invoiceEdit` — [L6](../src/lib/email/settings-model.ts#L6)
+- `templates` — [L7](../src/lib/email/settings-model.ts#L7)
+- `emailSettingsDataSchema` — [L12](../src/lib/email/settings-model.ts#L12)
+- `saveEmailSettingsSchema` — [L13](../src/lib/email/settings-model.ts#L13)
+- `sendEmailSampleSchema` — [L18](../src/lib/email/settings-model.ts#L18)
+- `EmailSettingsData` — [L23](../src/lib/email/settings-model.ts#L23)
+- `EmailSettings` — [L24](../src/lib/email/settings-model.ts#L24)
+- `emailDesignVersion` — [L29](../src/lib/email/settings-model.ts#L29)
+- `testRecipientAllowed()` — [L30](../src/lib/email/settings-model.ts#L30)
+
+## [src/lib/email/settings.ts](../src/lib/email/settings.ts)
+
+- `settings.ts` — [L1](../src/lib/email/settings.ts#L1)
+- `readEmailSettings()` — [L5](../src/lib/email/settings.ts#L5)
+- `emailEdits()` — [L12](../src/lib/email/settings.ts#L12)
+
 ## [src/lib/fleet-sharing-runtime.ts](../src/lib/fleet-sharing-runtime.ts)
 
 - `fleet-sharing-runtime.ts` — [L1](../src/lib/fleet-sharing-runtime.ts#L1)
@@ -4829,9 +4937,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/invoice-email.ts](../src/lib/invoice-email.ts)
 
 - `invoice-email.ts` — [L1](../src/lib/invoice-email.ts#L1)
-- `esc()` — [L8](../src/lib/invoice-email.ts#L8)
-- `sendInvoiceEmail()` — [L9](../src/lib/invoice-email.ts#L9)
-- `deliverInvoiceEmail()` — [L13](../src/lib/invoice-email.ts#L13)
+- `sendInvoiceEmail()` — [L10](../src/lib/invoice-email.ts#L10)
+- `deliverInvoiceEmail()` — [L14](../src/lib/invoice-email.ts#L14)
 
 ## [src/lib/invoice-payment-handler.ts](../src/lib/invoice-payment-handler.ts)
 
@@ -4873,9 +4980,11 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/mail-service.ts](../src/lib/mail-service.ts)
 
 - `mail-service.ts` — [L1](../src/lib/mail-service.ts#L1)
-- `MailMessage` — [L5](../src/lib/mail-service.ts#L5)
-- `MailResult` — [L6](../src/lib/mail-service.ts#L6)
-- `sendTransactionalMail()` — [L7](../src/lib/mail-service.ts#L7)
+- `MailPurpose` — [L7](../src/lib/mail-service.ts#L7)
+- `MailAttachment` — [L8](../src/lib/mail-service.ts#L8)
+- `MailMessage` — [L9](../src/lib/mail-service.ts#L9)
+- `MailResult` — [L11](../src/lib/mail-service.ts#L11)
+- `sendTransactionalMail()` — [L12](../src/lib/mail-service.ts#L12)
 
 ## [src/lib/manual-invoices.ts](../src/lib/manual-invoices.ts)
 
@@ -5047,15 +5156,15 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/receipt-email-model.ts](../src/lib/receipt-email-model.ts)
 
 - `receipt-email-model.ts` — [L1](../src/lib/receipt-email-model.ts#L1)
-- `ReceiptLanguage` — [L2](../src/lib/receipt-email-model.ts#L2)
-- `receiptEmailWords` — [L3](../src/lib/receipt-email-model.ts#L3)
-- `localized` — [L8](../src/lib/receipt-email-model.ts#L8)
-- `receiptAdSchema` — [L9](../src/lib/receipt-email-model.ts#L9)
-- `ReceiptAd` — [L10](../src/lib/receipt-email-model.ts#L10)
-- `receiptSendSchema` — [L11](../src/lib/receipt-email-model.ts#L11)
-- `receiptMessage()` — [L12](../src/lib/receipt-email-model.ts#L12)
-- `IssuedReceipt` — [L16](../src/lib/receipt-email-model.ts#L16)
-- `receiptEmailHtml()` — [L17](../src/lib/receipt-email-model.ts#L17)
+- `ReceiptLanguage` — [L3](../src/lib/receipt-email-model.ts#L3)
+- `receiptEmailWords` — [L4](../src/lib/receipt-email-model.ts#L4)
+- `localized` — [L10](../src/lib/receipt-email-model.ts#L10)
+- `receiptAdSchema` — [L11](../src/lib/receipt-email-model.ts#L11)
+- `ReceiptAd` — [L12](../src/lib/receipt-email-model.ts#L12)
+- `receiptSendSchema` — [L13](../src/lib/receipt-email-model.ts#L13)
+- `receiptMessage()` — [L14](../src/lib/receipt-email-model.ts#L14)
+- `IssuedReceipt` — [L18](../src/lib/receipt-email-model.ts#L18)
+- `receiptEmailHtml()` — [L19](../src/lib/receipt-email-model.ts#L19)
 
 ## [src/lib/sanitize-html.ts](../src/lib/sanitize-html.ts)
 
