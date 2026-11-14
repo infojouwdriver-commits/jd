@@ -26,7 +26,7 @@ export interface EmailSettings {
   updated_at:string | null;
   settings:EmailSettingsData;
 }
-export const emailDesignVersion = '1.0.0';
+export const emailDesignVersion = '1.0.1';
 export function testRecipientAllowed(address:string, adminEmail:string, configured = '') {
   return [adminEmail, ...configured.split(',')].some(email => email.trim().toLowerCase() === address);
 }

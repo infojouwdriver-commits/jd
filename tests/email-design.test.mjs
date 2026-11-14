@@ -13,8 +13,10 @@ for (const language of emailLanguages) test(`all email samples render in ${langu
     const result=renderEmail(emailSampleDesign(id,language),{}, {sample:true});
     assert.equal(result.design.id,id);
     assert.match(result.html,new RegExp(`<html lang="${language}" dir="${language==='ar'?'rtl':'ltr'}">`));
-    assert.ok(result.html.includes(emailBrand.animatedLogo));
-    assert.ok(result.html.includes(emailBrand.staticLogo));
+    assert.ok(result.html.includes(`background="${emailBrand.staticLogo}"`));
+    assert.ok(result.html.includes(`<!--[if mso]><img src="${emailBrand.staticLogo}"`));
+    assert.equal(result.html.match(/<img\b/g)?.length,1);
+    assert.doesNotMatch(result.html,/\.gif/);
     assert.match(result.html,/#101D34/);
     assert.match(result.html,/#D7AC60/);
     assert.doesNotMatch(result.html,/<script|mailto:|pay\/invoice|sign-contract\/email/);
@@ -74,8 +76,10 @@ test('template endpoints are private and send only to administrator or explicitl
 
 test('logo assets have the expected mail-safe formats and size',()=>{
   const gif=readFileSync(new URL('../public/email/jouw-driver-logo-v1.gif',import.meta.url));
-  const png=readFileSync(new URL('../public/email/jouw-driver-logo-v1.png',import.meta.url));
+  const png=readFileSync(new URL('../public/email/jouw-driver-logo-v2.png',import.meta.url));
   assert.equal(gif.subarray(0,6).toString(),'GIF89a');
   assert.equal(png.subarray(1,4).toString(),'PNG');
-  assert.ok(gif.length<60_000&&png.length<20_000);
+  assert.equal(png.readUInt32BE(16),54);
+  assert.equal(png.readUInt32BE(20),54);
+  assert.ok(gif.length<60_000&&png.length<8_000);
 });

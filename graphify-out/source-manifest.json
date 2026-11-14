@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "06a8ee5aa80c3c2b49a98f2b41b6ce7335fe2238",
+  "source_commit_context": "f8f5d2083192698dce118318473087c14fa22672",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -594,9 +594,9 @@
     "src/lib/email/contract.ts": "42acf0d2b582613f877fbf858a7ed3c8fe9037edef1d8d833a3fde03dbad26e3",
     "src/lib/email/invoice.ts": "aaed779f23abf9c27bc3bb2c83b406e06dfe9b49464d485c51eb8c6482b4df39",
     "src/lib/email/receipt.ts": "ba439b1705b4ccf013d812b852f52c3edac8ae86798288a0e47a0c83cde944fa",
-    "src/lib/email/renderer.ts": "9ef348c5ba0b25e2c88d8052f7fee4802f160be2174cc12992ad953edf305925",
+    "src/lib/email/renderer.ts": "39a2b3d319da269bab235a1b8631cc3af5f6c45addac18640ad7bf2392d7be14",
     "src/lib/email/samples.ts": "6602cc8d2481df5245163b4b1c9ddc5a455c71d70cdfac15c07ed8e6be3a9b15",
-    "src/lib/email/settings-model.ts": "f23577d6473994d1e7d956b5db81a8ce9dd95512d8f1a230bd3ffa50a55fbf2c",
+    "src/lib/email/settings-model.ts": "0442acc03e0b80edc7ed9d15fd902254bc02163ecd8ddc744a60fc6693159a43",
     "src/lib/email/settings.ts": "3bb14e20509d2b534c3716559e6921d7edc182b2070b938b8891b0fbeb32337e",
     "src/lib/fleet-sharing-runtime.ts": "e8ada1b7640377fe7299c86799215690256b5b9a30caf255ea51a2f563e443de",
     "src/lib/fleet-tracking.ts": "88ab8497ba28f5952a29abc78dd49ba6483638da35be94d724d40d2473c9f5e4",
@@ -657,9 +657,9 @@
   "artifacts": {
     "GRAPH_TREE.html": "460033e5b02d408a97da560ad29cd69ee9df73c2812f86e0e4e8d341bb96e1bd",
     "health.json": "3d55969b75fdffbba8c39910ea9f714121b524c2722e417e1b6fa62cb5214fe8",
-    "SOURCE_INDEX.md": "5ab4ac9905706248ee5e8ca23fc7bf5c589fc32290b534130f9068c6f3510531",
-    "GRAPH_REPORT.md": "eb9760ec296660720a0b18839dbe92f9a7e5d65e975da66e312421ef102009f6",
-    "graph.json": "4087681075476feaf850035dde65482145bc551ae72dfc0de5665bab61162270"
+    "SOURCE_INDEX.md": "6056ec20a6f4dc4c25f7ff8ab49a096aa160b7cde8570cc7ca189516a2888910",
+    "GRAPH_REPORT.md": "6b782f9bb8a904afd51e0f4087b0cfb89542b3572402e604c312d9d18884ff4b",
+    "graph.json": "b020863e682602b40ab923c2ad4238da0b98092ec73f6aa3a5605236179b22d2"
   },
   "nodes": 3720,
   "edges": 12533,
