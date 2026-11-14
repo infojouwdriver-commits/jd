@@ -12,11 +12,12 @@ export function resolveEmailLanguage(value: unknown, fallback: EmailLanguage = '
   return emailLanguages.find(item => item === language) ?? fallback;
 }
 
+const logoPath = '/email/jouw-driver-logo-v2.png';
+
 export const emailBrand = {
   site: 'https://jouww.com',
   contact: 'https://jouww.com/contact',
-  animatedLogo: 'https://app.jouww.com/email/jouw-driver-logo-v1.gif',
-  staticLogo: 'https://app.jouww.com/email/jouw-driver-logo-v1.png',
+  staticLogo: 'https://app.jouww.com' + logoPath,
 } as const;
 
 const labels = {
@@ -76,7 +77,7 @@ export function emailMessageHtml(value: string, linkify = false): string {
   }).join('');
 }
 
-export function renderEmail(design: EmailDesign, edits: EmailEdits = {}, options: {sample?: boolean; logo?: 'local' | 'static'} = {}) {
+export function renderEmail(design: EmailDesign, edits: EmailEdits = {}, options: {sample?: boolean; logo?: 'local'} = {}) {
   const {language, title, fields = [], filenames = [], note, code, message} = design;
   const copy = labels[language];
   const dir = language === 'ar' ? 'rtl' : 'ltr';
@@ -88,8 +89,7 @@ export function renderEmail(design: EmailDesign, edits: EmailEdits = {}, options
   const finalSubject = options.sample ? `[${copy.subject}] ${subject}` : subject;
   const signature = edits.signature || '';
   const actionUrl = design.action && !options.sample ? safeEmailUrl(design.action.url) : null;
-  const logo = options.logo === 'local' ? '/email/jouw-driver-logo-v1.gif' :
-    options.logo === 'static' ? emailBrand.staticLogo : emailBrand.animatedLogo;
+  const logo = options.logo === 'local' ? logoPath : emailBrand.staticLogo;
   const table = 'role="presentation" cellpadding="0" cellspacing="0" border="0"';
   const paragraph = (value: string, linkify = false) =>
     `<p style="margin:0 0 16px;overflow-wrap:anywhere;word-break:break-word">${emailMessageHtml(value, linkify)}</p>`;
@@ -101,10 +101,10 @@ export function renderEmail(design: EmailDesign, edits: EmailEdits = {}, options
 <!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table ${table} width="100%" dir="${dir}" style="width:100%;max-width:600px;font-family:Arial,Tahoma,sans-serif;border-collapse:separate">
 <tr><td bgcolor="#101D34" class="jd-pad" style="border-top:4px solid #D7AC60;padding:24px 32px;color:#FFFFFF">
-<table ${table} dir="${dir}"><tr><td width="66" valign="middle"><table ${table}><tr><td bgcolor="#F2F4F8" width="54" height="54" align="center" valign="middle" style="border-radius:12px">
-<!--[if mso]><img src="${emailBrand.staticLogo}" alt="JOUW DRIVER" width="38" height="41" style="display:block;border:0;color:#101D34"><![endif]-->
-<!--[if !mso]><!--><img src="${logo}" alt="JOUW DRIVER" width="38" height="41" style="display:block;border:0;color:#101D34"><!--<![endif]-->
-</td></tr></table></td><td valign="middle" align="${align}"><strong style="display:block;color:#FFFFFF;font-size:19px;letter-spacing:1px" dir="ltr">JOUW DRIVER</strong><span style="color:#D7AC60;font-size:13px;line-height:1.5">${copy.service}</span></td></tr></table>
+<table ${table} dir="${dir}"><tr><td width="66" valign="middle">
+<!--[if mso]><img src="${logo}" alt="" width="54" height="54" style="display:block;border:0"><![endif]-->
+<!--[if !mso]><!--><table ${table} aria-hidden="true"><tr><td class="jd-logo" width="54" height="54" background="${logo}" style="background-image:url('${logo}');background-position:center;background-repeat:no-repeat;font-size:0;line-height:0">&nbsp;</td></tr></table><!--<![endif]-->
+</td><td valign="middle" align="${align}"><strong style="display:block;color:#FFFFFF;font-size:19px;letter-spacing:1px" dir="ltr">JOUW DRIVER</strong><span style="color:#D7AC60;font-size:13px;line-height:1.5">${copy.service}</span></td></tr></table>
 </td></tr>
 <tr><td bgcolor="#FFFFFF" align="${align}" class="jd-body jd-pad" style="padding:30px 32px;color:#344054;font-size:16px;line-height:1.65">
 ${options.sample ? `<p class="jd-card" style="margin:0 0 12px;background:#F2F4F8;padding:8px 12px;font-weight:bold">${copy.sample}</p>` : ''}

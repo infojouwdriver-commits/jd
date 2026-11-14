@@ -63,11 +63,16 @@ try {
   });
   await page.goto(base+'/admin/email-templates');
   const frame=page.frameLocator('iframe[title="معاينة رسالة تجريبية"]');
-  const image=frame.locator('img');
+  const logo=frame.locator('.jd-logo');
   await frame.locator('h1').waitFor();
-  await image.evaluate(img=>img.decode());
+  const logoUrl=base+'/email/jouw-driver-logo-v2.png';
+  const logoResponse=await page.request.get(logoUrl);
+  assert.ok(logoResponse.ok());
+  assert.equal(logoResponse.headers()['content-type'],'image/png');
+  assert.equal(await logo.getAttribute('background'),'/email/jouw-driver-logo-v2.png');
   assert.equal(await frame.locator('html').getAttribute('dir'),'rtl');
-  assert.ok((await image.evaluate(img=>img.naturalWidth))>0);
+  assert.match(await logo.evaluate(cell=>getComputedStyle(cell).backgroundImage),/jouw-driver-logo-v2\.png/);
+  assert.equal(await frame.locator('img').count(),0);
   assert.ok(await frame.getByText('DEMO-INVOICE-01.pdf').isVisible());
   assert.equal(await frame.locator('a.jd-action').count(),0);
 
@@ -76,7 +81,7 @@ try {
   await page.getByRole('button',{name:'حفظ النصوص'}).click();
   await frame.getByText('فريق الفوترة').waitFor();
   await page.getByRole('button',{name:'HTML',exact:true}).click();
-  assert.match(await page.locator('pre').innerText(),/jouw-driver-logo-v1.gif/);
+  assert.match(await page.locator('pre').innerText(),/jouw-driver-logo-v2\.png/);
   await page.getByRole('button',{name:'نص عادي',exact:true}).click();
   assert.match(await page.locator('pre').innerText(),/DEMO-INVOICE-01.pdf/);
 
