@@ -42,6 +42,8 @@ export default function ChironSettingsPage() {
 
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [connection, setConnection] = useState<{mode:string;message:string;ok:boolean}|null>(null);
   const [formData, setFormData] = useState({
     chiron_mode: 'TEST' as 'TEST' | 'PRODUCTION',
     chiron_test_client_id: '',
@@ -104,6 +106,36 @@ export default function ChironSettingsPage() {
     }
   };
 
+  async function testConnection(mode: 'TEST' | 'PRODUCTION') {
+    const prefix = mode === 'TEST' ? 'chiron_test_' : 'chiron_prod_';
+    setChecking(true);
+    setConnection(null);
+    try {
+      await api.post('/chiron-settings/test', {
+        companyId: Number(companyId), mode,
+        clientId: formData[`${prefix}client_id`],
+        clientSecret: formData[`${prefix}client_secret`],
+        authUrl: formData[`${prefix}auth_url`],
+        apiUrl: formData[`${prefix}api_url`],
+      }, {signal:AbortSignal.timeout(25_000)});
+      setConnection({mode, ok:true, message:'نجحت المصادقة وأكّدت واجهة Chiron الاتصال.'});
+    } catch (error) {
+      setConnection({mode, ok:false, message:error instanceof Error ? error.message : 'تعذّر تأكيد الاتصال.'});
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  function connectionButton(mode: 'TEST' | 'PRODUCTION') {
+    return <div className="space-y-2">
+      <Button type="button" variant="outline" disabled={checking || loading} onClick={() => void testConnection(mode)}>
+        <TestTube className="me-2 h-4 w-4" />
+        {checking ? 'جارٍ التحقق…' : 'اختبار الاتصال'}
+      </Button>
+      {connection?.mode === mode && <p role="status" className={connection.ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-destructive'}>{connection.message}</p>}
+    </div>;
+  }
+
   if (isLoading || !user?.isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -120,7 +152,7 @@ export default function ChironSettingsPage() {
           <p>{company?.testCredentialsConfigured ? 'بيانات اتصال الاختبار محفوظة. يمكنك إجراء اختبار القبول.' : 'أدخل بيانات Client ID وClient Secret التي حصلت عليها من Chiron لبيئة الاختبار.'}</p>
           <p>الإرسال الفعلي إلى PRODUCTION يحتاج إكمال اختبار القبول وتفعيل بيئة الإنتاج.</p>
           <p>{!company ? 'جارٍ التحقق من إعدادات الخادم…' : company.productionEnabled ? 'الإرسال الإنتاجي مفعّل على الخادم؛ يلزم التحقق من قبول الرحلات الفعلية.' : 'الإرسال الإنتاجي غير مفعّل على الخادم، حتى عند اختيار PRODUCTION للشركة.'}</p>
-          <Link href="/admin/test-trips" className="mt-2 inline-block font-semibold underline">فتح اختبار قبول Chiron</Link>
+          <Link href={`/admin/test-trips?company=${companyId}`} className="mt-2 inline-block font-semibold underline">فتح اختبار قبول Chiron</Link>
         </div>
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -243,6 +275,7 @@ export default function ChironSettingsPage() {
                     الافتراضي: https://mow-acc.api.vlaanderen.be/chiron/taxirit
                   </p>
                 </div>
+                {connectionButton('TEST')}
               </TabsContent>
 
               {/* Production Environment */}
@@ -297,6 +330,7 @@ export default function ChironSettingsPage() {
                     الافتراضي: https://mow.api.vlaanderen.be/chiron/taxirit
                   </p>
                 </div>
+                {connectionButton('PRODUCTION')}
               </TabsContent>
             </Tabs>
 

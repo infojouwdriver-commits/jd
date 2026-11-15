@@ -95,6 +95,14 @@ try {
  assert.equal((await api('/rpc/security_save_email_templates',service,'POST',settingsArgs)).status,409);
  assert.equal((await success('/email_template_audit?language=eq.en',service)).length,1);
  const sampleArgs={p_event_key:'jd-'+randomBytes(32).toString('hex'),p_recipient_key:'jd-'+randomBytes(32).toString('hex'),p_purpose:'template_test'};
+ const municipalArgs={...sampleArgs,p_event_key:'jd-'+randomBytes(32).toString('hex'),p_purpose:'municipal_test_documents'};
+ await denied('/rpc/security_reserve_mail',browser,'POST',municipalArgs);
+ assert.equal((await success('/rpc/security_reserve_mail',service,'POST',municipalArgs)).reserved,true);
+ assert.equal((await success('/rpc/security_reserve_mail',service,'POST',municipalArgs)).reserved,false);
+ const recoveryArgs={p_registration:randomUUID(),p_actor:421,p_request:randomUUID()};
+ await denied('/rpc/security_recover_registration_service',browser,'POST',recoveryArgs);
+ assert.equal((await api('/rpc/security_recover_registration_service',service,'POST',recoveryArgs)).status,404);
+ await psql("DELETE FROM mail_deliveries WHERE purpose='municipal_test_documents';");
  const sample=()=>success('/rpc/security_reserve_mail',service,'POST',sampleArgs);
  const attempts=await Promise.all([sample(),sample()]);
  assert.equal(attempts.filter(row=>row.reserved).length,1);

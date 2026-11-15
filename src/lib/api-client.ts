@@ -272,8 +272,9 @@ export const api = {
     return apiRequest<T>(url, { ...options, method: "GET" });
   },
 
-  post: <T = any>(endpoint: string, data?: any) =>
+  post: <T = any>(endpoint: string, data?: any, options?: RequestInit) =>
     apiRequest<T>(endpoint, {
+      ...options,
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
     }),

@@ -1289,6 +1289,13 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".email_template_settings` — [L25](../migrations/20261114_email_templates.sql#L25)
 - `"schema".email_template_audit` — [L34](../migrations/20261114_email_templates.sql#L34)
 
+## [migrations/20261115_chiron_onboarding.sql](../migrations/20261115_chiron_onboarding.sql)
+
+- `20261115_chiron_onboarding.sql` — [source](../migrations/20261115_chiron_onboarding.sql#)
+- `"schema".security_reserve_mail()` — [L7](../migrations/20261115_chiron_onboarding.sql#L7)
+- `"schema".security_invoice_activation_begin()` — [L32](../migrations/20261115_chiron_onboarding.sql#L32)
+- `"schema".security_recover_registration_service()` — [L53](../migrations/20261115_chiron_onboarding.sql#L53)
+
 ## [migrations/20261115_contact_approval_alerts.sql](../migrations/20261115_contact_approval_alerts.sql)
 
 - `20261115_contact_approval_alerts.sql` — [source](../migrations/20261115_contact_approval_alerts.sql#)
@@ -1840,6 +1847,8 @@ Links target the working tree, so line positions can move after changes.
 - `chiron-settings/page.tsx` — [L1](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx#L1)
 - `Company` — [L17](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx#L17)
 - `ChironSettingsPage()` — [L37](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx#L37)
+- `testConnection()` — [L109](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx#L109)
+- `connectionButton()` — [L129](../src/app/admin/companies/%5Bid%5D/chiron-settings/page.tsx#L129)
 
 ## [src/app/admin/companies/[id]/contracts/page.tsx](../src/app/admin/companies/%5Bid%5D/contracts/page.tsx)
 
@@ -1966,6 +1975,7 @@ Links target the working tree, so line positions can move after changes.
 - `Driver` — [L29](../src/app/admin/test-trips/page.tsx#L29)
 - `Vehicle` — [L37](../src/app/admin/test-trips/page.tsx#L37)
 - `AcceptanceTestPage()` — [L45](../src/app/admin/test-trips/page.tsx#L45)
+- `municipalDocuments()` — [L91](../src/app/admin/test-trips/page.tsx#L91)
 
 ## [src/app/admin/trips/page.tsx](../src/app/admin/trips/page.tsx)
 
@@ -2369,6 +2379,12 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L8](../src/app/next_api/chiron-settings/route.ts#L8)
 - `PUT` — [L45](../src/app/next_api/chiron-settings/route.ts#L45)
 
+## [src/app/next_api/chiron-settings/test/route.ts](../src/app/next_api/chiron-settings/test/route.ts)
+
+- `chiron-settings/test/route.ts` — [L1](../src/app/next_api/chiron-settings/test/route.ts#L1)
+- `connection` — [L7](../src/app/next_api/chiron-settings/test/route.ts#L7)
+- `POST` — [L16](../src/app/next_api/chiron-settings/test/route.ts#L16)
+
 ## [src/app/next_api/chiron-sync/retry/route.ts](../src/app/next_api/chiron-sync/retry/route.ts)
 
 - `retry/route.ts` — [L1](../src/app/next_api/chiron-sync/retry/route.ts#L1)
@@ -2491,6 +2507,12 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L29](../src/app/next_api/company-registrations/route.ts#L29)
 - `review` — [L36](../src/app/next_api/company-registrations/route.ts#L36)
 - `PUT` — [L37](../src/app/next_api/company-registrations/route.ts#L37)
+
+## [src/app/next_api/company-registrations/service/route.ts](../src/app/next_api/company-registrations/service/route.ts)
+
+- `service/route.ts` — [L1](../src/app/next_api/company-registrations/service/route.ts#L1)
+- `check` — [L7](../src/app/next_api/company-registrations/service/route.ts#L7)
+- `POST` — [L8](../src/app/next_api/company-registrations/service/route.ts#L8)
 
 ## [src/app/next_api/company-staff/route.ts](../src/app/next_api/company-staff/route.ts)
 
@@ -2861,7 +2883,7 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/app/next_api/push/test/route.ts](../src/app/next_api/push/test/route.ts)
 
-- `test/route.ts` — [L1](../src/app/next_api/push/test/route.ts#L1)
+- `push/test/route.ts` — [L1](../src/app/next_api/push/test/route.ts#L1)
 - `POST` — [L5](../src/app/next_api/push/test/route.ts#L5)
 
 ## [src/app/next_api/receipt-email-settings/route.ts](../src/app/next_api/receipt-email-settings/route.ts)
@@ -2887,12 +2909,19 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/test-trips/acceptance-test/route.ts](../src/app/next_api/test-trips/acceptance-test/route.ts)
 
 - `acceptance-test/route.ts` — [L1](../src/app/next_api/test-trips/acceptance-test/route.ts#L1)
-- `POST` — [L5](../src/app/next_api/test-trips/acceptance-test/route.ts#L5)
+- `POST` — [L6](../src/app/next_api/test-trips/acceptance-test/route.ts#L6)
 
 ## [src/app/next_api/test-trips/latest-report/route.ts](../src/app/next_api/test-trips/latest-report/route.ts)
 
 - `latest-report/route.ts` — [L1](../src/app/next_api/test-trips/latest-report/route.ts#L1)
 - `GET` — [L11](../src/app/next_api/test-trips/latest-report/route.ts#L11)
+
+## [src/app/next_api/test-trips/municipal-documents/route.ts](../src/app/next_api/test-trips/municipal-documents/route.ts)
+
+- `municipal-documents/route.ts` — [L1](../src/app/next_api/test-trips/municipal-documents/route.ts#L1)
+- `command` — [L9](../src/app/next_api/test-trips/municipal-documents/route.ts#L9)
+- `GET` — [L16](../src/app/next_api/test-trips/municipal-documents/route.ts#L16)
+- `POST` — [L34](../src/app/next_api/test-trips/municipal-documents/route.ts#L34)
 
 ## [src/app/next_api/test-trips/route.ts](../src/app/next_api/test-trips/route.ts)
 
@@ -3885,10 +3914,13 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationApprovals.tsx](../src/components/registration/CompanyRegistrationApprovals.tsx)
 
 - `CompanyRegistrationApprovals.tsx` — [L1](../src/components/registration/CompanyRegistrationApprovals.tsx#L1)
-- `Request` — [L10](../src/components/registration/CompanyRegistrationApprovals.tsx#L10)
-- `statusText` — [L11](../src/components/registration/CompanyRegistrationApprovals.tsx#L11)
-- `CompanyRegistrationApprovals()` — [L12](../src/components/registration/CompanyRegistrationApprovals.tsx#L12)
-- `review()` — [L16](../src/components/registration/CompanyRegistrationApprovals.tsx#L16)
+- `Request` — [L11](../src/components/registration/CompanyRegistrationApprovals.tsx#L11)
+- `statusText` — [L12](../src/components/registration/CompanyRegistrationApprovals.tsx#L12)
+- `serviceStates` — [L13](../src/components/registration/CompanyRegistrationApprovals.tsx#L13)
+- `CompanyServiceActions()` — [L24](../src/components/registration/CompanyRegistrationApprovals.tsx#L24)
+- `check()` — [L26](../src/components/registration/CompanyRegistrationApprovals.tsx#L26)
+- `CompanyRegistrationApprovals()` — [L47](../src/components/registration/CompanyRegistrationApprovals.tsx#L47)
+- `review()` — [L51](../src/components/registration/CompanyRegistrationApprovals.tsx#L51)
 
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
@@ -4610,14 +4642,15 @@ Links target the working tree, so line positions can move after changes.
 - `.getPlatformContract()` — [L13](../src/lib/chiron-service.ts#L13)
 - `.getPricingJson()` — [L16](../src/lib/chiron-service.ts#L16)
 - `.resolveEnvironment()` — [L21](../src/lib/chiron-service.ts#L21)
-- `.getAccessToken()` — [L31](../src/lib/chiron-service.ts#L31)
-- `.sendChironMessage()` — [L41](../src/lib/chiron-service.ts#L41)
-- `.sendEvent()` — [L64](../src/lib/chiron-service.ts#L64)
-- `.sendTripStart()` — [L117](../src/lib/chiron-service.ts#L117)
-- `.sendTripArrival()` — [L118](../src/lib/chiron-service.ts#L118)
-- `.runAcceptanceTest()` — [L119](../src/lib/chiron-service.ts#L119)
-- `.logSyncAttempt()` — [L151](../src/lib/chiron-service.ts#L151)
-- `.calculateProposedFare()` — [L154](../src/lib/chiron-service.ts#L154)
+- `.testConnection()` — [L31](../src/lib/chiron-service.ts#L31)
+- `.getAccessToken()` — [L52](../src/lib/chiron-service.ts#L52)
+- `.sendChironMessage()` — [L62](../src/lib/chiron-service.ts#L62)
+- `.sendEvent()` — [L90](../src/lib/chiron-service.ts#L90)
+- `.sendTripStart()` — [L143](../src/lib/chiron-service.ts#L143)
+- `.sendTripArrival()` — [L144](../src/lib/chiron-service.ts#L144)
+- `.runAcceptanceTest()` — [L145](../src/lib/chiron-service.ts#L145)
+- `.logSyncAttempt()` — [L200](../src/lib/chiron-service.ts#L200)
+- `.calculateProposedFare()` — [L203](../src/lib/chiron-service.ts#L203)
 
 ## [src/lib/chiron-test-result.ts](../src/lib/chiron-test-result.ts)
 
@@ -5122,6 +5155,11 @@ Links target the working tree, so line positions can move after changes.
 - `watchMobileLocation()` — [L110](../src/lib/mobile-location.ts#L110)
 - `clearNativeTripPoints()` — [L138](../src/lib/mobile-location.ts#L138)
 - `stopAllMobileLocationWatches()` — [L143](../src/lib/mobile-location.ts#L143)
+
+## [src/lib/municipal-test-documents.ts](../src/lib/municipal-test-documents.ts)
+
+- `municipal-test-documents.ts` — [L1](../src/lib/municipal-test-documents.ts#L1)
+- `municipalTestDocuments()` — [L10](../src/lib/municipal-test-documents.ts#L10)
 
 ## [src/lib/native-trip-contract.ts](../src/lib/native-trip-contract.ts)
 

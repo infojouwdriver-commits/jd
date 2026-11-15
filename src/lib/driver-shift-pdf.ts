@@ -6,7 +6,7 @@ import { shiftDurations, shiftKilometres, shiftTime } from "./driver-shifts";
 import type { ShiftDetail, ShiftStatus } from "./driver-shifts";
 
 // Independent Dutch service document. Customer receipts are a separate document.
-export function driverShiftPdf(detail: ShiftDetail) {
+export function driverShiftPdf(detail: ShiftDetail, sample = false) {
   const { shift: s, events, activity, summary } = detail;
   const doc = new jsPDF({ compress: true, putOnlyUsedFonts: true });
   configurePdfFonts(doc);
@@ -297,14 +297,19 @@ export function driverShiftPdf(detail: ShiftDetail) {
         8,
       );
   }
-  ensure(48);
-  drawPdfQr(doc, shiftDocumentUrl(s.id), 16, y, 34);
-  font(9, true);
-  doc.text("Open deze dienst in het portaal", 55, y + 10);
-  font(8, false, gray);
-  doc.text("Aanmelden vereist. PDF wordt op aanvraag gemaakt.", 55, y + 17);
-  doc.text(s.ended_at ? "Afgesloten dienst" : "Voorlopig: open dienst kan nog wijzigen.", 55, y + 24);
-  y += 40;
+  if (sample) {
+    ensure(16);
+    paragraph("Testomgeving. De tellerstanden in dit voorbeeld zijn fictief.");
+  } else {
+    ensure(48);
+    drawPdfQr(doc, shiftDocumentUrl(s.id), 16, y, 34);
+    font(9, true);
+    doc.text("Open deze dienst in het portaal", 55, y + 10);
+    font(8, false, gray);
+    doc.text("Aanmelden vereist. PDF wordt op aanvraag gemaakt.", 55, y + 17);
+    doc.text(s.ended_at ? "Afgesloten dienst" : "Voorlopig: open dienst kan nog wijzigen.", 55, y + 24);
+    y += 40;
+  }
   page();
   section("Tellerstanden en statussen");
   table(
@@ -352,6 +357,10 @@ export function driverShiftPdf(detail: ShiftDetail) {
     font(7, false, gray);
     doc.text(`Dienststaat ${shiftReference(s.id)}`, 16, 286);
     doc.text(`${p} / ${pages}`, 194, 286, { align: "right" });
+    if (sample) {
+      font(9, true);
+      doc.text("TESTOMGEVING · VOORBEELD", 105, 293, { align: "center" });
+    }
   }
   return doc;
 }

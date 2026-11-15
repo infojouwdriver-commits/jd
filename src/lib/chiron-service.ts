@@ -18,15 +18,36 @@ export class ChironService {
   }
 
 
- static resolveEnvironment(company:any){
-  if(process.env.CHIRON_TRANSMISSION_ENABLED!=='true')throw new ChironError('مزامنة Chiron غير مفعّلة على الخادم',409,'CHIRON_NOT_ENABLED');
+ static resolveEnvironment(company:any, connectionOnly=false){
+  if(!connectionOnly&&process.env.CHIRON_TRANSMISSION_ENABLED!=='true')throw new ChironError('مزامنة Chiron غير مفعّلة على الخادم',409,'CHIRON_NOT_ENABLED');
   const mode=company.chiron_mode;
   if(!['TEST','PRODUCTION'].includes(mode))throw new ChironError('اختر بيئة Chiron للشركة');
-  if(mode==='PRODUCTION'&&company.is_test===true)throw new ChironError('حساب الاختبار معزول عن إنتاج Chiron',409,'CHIRON_TEST_ONLY');
-  if(mode==='PRODUCTION'&&process.env.CHIRON_PRODUCTION_ENABLED!=='true')throw new ChironError('الإرسال الفعلي يحتاج نجاح اختبار القبول وإكمال تفعيل الإنتاج',409,'CHIRON_PRODUCTION_NOT_ENABLED');
+  if(!connectionOnly&&mode==='PRODUCTION'&&company.is_test===true)throw new ChironError('حساب الاختبار معزول عن إنتاج Chiron',409,'CHIRON_TEST_ONLY');
+  if(!connectionOnly&&mode==='PRODUCTION'&&process.env.CHIRON_PRODUCTION_ENABLED!=='true')throw new ChironError('الإرسال الفعلي يحتاج نجاح اختبار القبول وإكمال تفعيل الإنتاج',409,'CHIRON_PRODUCTION_NOT_ENABLED');
   const prefix=mode==='TEST'?'chiron_test_':'chiron_prod_';const host=mode==='TEST'?'mow-acc.api.vlaanderen.be':'mow.api.vlaanderen.be';
   if(!company[prefix+'client_id']||!company[prefix+'client_secret'])throw new ChironError('أدخل Client ID وClient Secret في إعدادات Chiron للشركة',422,'CHIRON_CREDENTIALS_REQUIRED');
   return {mode,clientId:company[prefix+'client_id'],clientSecret:company[prefix+'client_secret'],authUrl:chironDestination(company[prefix+'auth_url']||'https://'+host+'/oauth/token',mode,'auth'),apiUrl:chironDestination(company[prefix+'api_url']||'https://'+host+'/chiron/taxirit',mode,'trip')};
+ }
+ static async testConnection(companyId:number,mode:'TEST'|'PRODUCTION',input:{clientId?:string;clientSecret?:string;authUrl?:string;apiUrl?:string}){
+  const company=await this.getCompanyConfig(companyId);
+  const prefix=mode==='TEST'?'chiron_test_':'chiron_prod_';
+  const credentials={...company,chiron_mode:mode};
+  if(input.clientId!==undefined){
+   credentials[prefix+'client_id']=input.clientId;
+   if(input.clientId!==company[prefix+'client_id'])credentials[prefix+'client_secret']=null;
+  }
+  if(input.clientSecret)credentials[prefix+'client_secret']=input.clientSecret;
+  if(input.authUrl!==undefined)credentials[prefix+'auth_url']=input.authUrl;
+  if(input.apiUrl!==undefined)credentials[prefix+'api_url']=input.apiUrl;
+  const env=this.resolveEnvironment(credentials,true);
+  const token=await this.getAccessToken(env);
+  const url=chironDestination(new URL('/chiron/hello',env.apiUrl).href,mode,'hello');
+  let response:Response;
+  try{response=await fetch(url,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(10000)});}
+  catch{throw new ChironError('نجحت المصادقة، لكن لم يستجب رابط التحقق من Chiron',424,'CHIRON_HELLO_UNAVAILABLE');}
+  const result=await response.json().catch(()=>null);
+  if(!response.ok||result?.key!=='Hello taxirit user ;-).')throw new ChironError('نجحت المصادقة، لكن واجهة Chiron لم تؤكد الاتصال',424,'CHIRON_HELLO_REJECTED');
+  return {mode,connected:true,checkedAt:new Date().toISOString()};
  }
  private static async getAccessToken(env:ReturnType<typeof ChironService.resolveEnvironment>):Promise<string>{
   let response:Response;
@@ -38,7 +59,7 @@ export class ChironService {
   if(typeof body.access_token!=='string'||!body.access_token||body.access_token.length>8192)throw new ChironError('لم يصدر Chiron رمز اتصال صالحاً',424);
   return body.access_token;
  }
- private static async sendChironMessage(env:ReturnType<typeof ChironService.resolveEnvironment>,message:any,token:string){
+ private static async sendChironMessage(env:ReturnType<typeof ChironService.resolveEnvironment>,message:any,token:string,onRefresh?:(token:string)=>void){
   const uncertain=(receipt?:{httpStatus:number;errors:string[]})=>new ChironError('نتيجة الإرسال غير مؤكدة. راجع Chiron قبل إعادة الإرسال.',409,'CHIRON_DELIVERY_UNCERTAIN',true,receipt);
   const post=async(accessToken:string)=>{
    try{return await fetch(env.apiUrl,{method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+accessToken,Accept:'application/json'},body:JSON.stringify(message)});}
@@ -46,18 +67,23 @@ export class ChironService {
   };
   let response=await post(token);
   // A 401 explicitly rejects authentication. Renew once against the same pinned environment.
-  if(response.status===401)response=await post(await this.getAccessToken(env));
+  if(response.status===401){
+   const renewed=await this.getAccessToken(env);
+   onRefresh?.(renewed);
+   response=await post(renewed);
+  }
   if(response.status===401)throw new ChironError('تعذّر تجديد مصادقة Chiron',424,'CHIRON_AUTH_EXPIRED');
+  const body=await response.json().catch(()=>null);
+  const errors=Array.isArray(body?.fouten)
+   ? body.fouten.slice(0,25).map((item:any)=>item?.code).filter((code:unknown)=>typeof code==='string'&&/^CH[0-9]{4}$/.test(code))
+   : [];
+  const receipt={httpStatus:response.status,errors};
   if(!response.ok){
-   if(response.status>=500||[408,409].includes(response.status))throw uncertain();
-   throw new ChironError('رفض Chiron الرسالة. راجع بيانات الرحلة.',424,'CHIRON_MESSAGE_REJECTED',false,{httpStatus:response.status,errors:[]});
+   if(response.status>=500||[408,409].includes(response.status))throw uncertain(receipt);
+   throw new ChironError('رفض Chiron الرسالة. راجع بيانات الرحلة.',424,'CHIRON_MESSAGE_REJECTED',false,receipt);
   }
-  let body:any;try{body=await response.json();}catch{throw uncertain();}
   if(![200,201].includes(response.status)||body?.httpStatus!=='OK'||!Array.isArray(body.fouten))throw uncertain();
-  if(body.fouten.length){
-   const errors=body.fouten.slice(0,25).map((item:any)=>item?.code).filter((code:unknown)=>typeof code==='string'&&/^CH[0-9]{4}$/.test(code));
-   throw uncertain({httpStatus:response.status,errors});
-  }
+  if(body.fouten.length)throw uncertain(receipt);
   if(body.message!=='De taxirit is verwerkt.')throw uncertain();
   return {httpStatus:response.status,accepted:true};
  }
@@ -123,30 +149,53 @@ export class ChironService {
   const driver=await new CrudOperations('drivers',token).findById(driverId),vehicle=await new CrudOperations('vehicles',token).findById(vehicleId);
   if(!driver||!vehicle)throw new ChironError('السائق أو المركبة غير موجودة',404);
   const testDate=new Date().toISOString();
+  const batchId=randomUUID();
+  // Five distinct, chronologically ordered journeys on the Flemish side of the airport.
   const locations=[
-   {lat:50.8503,lon:4.3517,address:'Grand Place, 1000 Brussels, Belgium'},
-   {lat:50.8467,lon:4.3525,address:"Brussels Central Station, Carrefour de l’Europe 2, 1000 Brussels, Belgium"},
-   {lat:50.8798,lon:4.7005,address:'Brussels Airport, Leopoldlaan, 1930 Zaventem, Belgium'},
-   {lat:50.8476,lon:4.3572,address:"Manneken Pis, Rue de l’Étuve 46, 1000 Brussels, Belgium"},
-   {lat:50.8411,lon:4.3571,address:'Brussels South Station, Avenue Fonsny 47B, 1060 Brussels, Belgium'}
+   {lat:50.88552,lon:4.47218,address:'Stationsstraat, 1930 Zaventem'},
+   {lat:50.89886,lon:4.48202,address:'Leopoldlaan, 1930 Zaventem'},
+   {lat:50.9008,lon:4.45819,address:'Stationsstraat, 1830 Machelen'},
+   {lat:50.91668,lon:4.46405,address:'Station Vilvoorde, 1800 Vilvoorde'},
+   {lat:50.90182,lon:4.50865,address:'Kortenbergsesteenweg, 1820 Steenokkerzeel'},
   ];
-  const example={ritnummer:'TEST-'+randomUUID(),start_time:new Date(Date.now()-600000).toISOString(),end_time:new Date(Date.now()-300000).toISOString(),start_lat:50.850,start_lon:4.352,end_lat:50.847,end_lon:4.353,distance_km:1.25,price:12.5};
-  rideMessage('aankomst',company,driver,vehicle,example); // Validate everything before any transmission.
-  const results:any[]=[];const log=new CrudOperations('test_trips',token);
-  for(let i=0;i<5;i++){
-   const from=locations[i],to=locations[(i+1)%locations.length],start=Date.parse(testDate)-(90-i*15)*60000;
-   const trip={...example,ritnummer:'TEST-'+randomUUID(),start_time:new Date(start).toISOString(),end_time:new Date(start+10*60000).toISOString(),start_lat:from.lat,start_lon:from.lon,end_lat:to.lat,end_lon:to.lon,start_address:from.address,end_address:to.address};
-   const canonical=rideMessage('aankomst',company,driver,vehicle,trip).rit;
-   const details={startAddress:trip.start_address,endAddress:trip.end_address,startTime:trip.start_time,endTime:trip.end_time,startLat:canonical.vertrekpunt.breedtegraad,startLon:canonical.vertrekpunt.lengtegraad,endLat:canonical.aankomstpunt.breedtegraad,endLon:canonical.aankomstpunt.lengtegraad,distanceKm:trip.distance_km,price:trip.price};let startAccepted=false;
-   for(const [position,status] of (['vertrek','aankomst'] as const).entries()){
-    const sequence=i*2+position+1,message=rideMessage(status,company,driver,vehicle,trip);
-    const record=await log.create({company_id:companyId,driver_id:driverId,vehicle_id:vehicleId,chiron_driver_id:driver.bestuurderspas_number||driver.capacity_certificate_number,chiron_vehicle_id:vehicle.plate_number,ritnummer:trip.ritnummer+'-'+status,message_type:status,timestamp:new Date().toISOString(),test_sequence_number:sequence,start_address:trip.start_address,end_address:trip.end_address,start_time:trip.start_time,end_time:trip.end_time,start_lat:details.startLat,start_lon:details.startLon,end_lat:details.endLat,end_lon:details.endLon,distance_km:trip.distance_km,price:trip.price,sync_status:'pending'});
-    if(status==='aankomst'&&!startAccepted){await log.update(record.id,{sync_status:'failed',error_message:'Start not accepted'});results.push({...details,sequence,messageType:status,ritnummer:trip.ritnummer,success:false,deliveryState:'not_sent',error:'لم تُرسل رسالة الوصول لأن الانطلاق لم يُقبل'});continue;}
-    try{const response=await this.sendChironMessage(env,message,await this.getAccessToken(env));await log.update(record.id,{sync_status:'success',http_status_code:response.httpStatus});startAccepted=true;results.push({...details,sequence,messageType:status,ritnummer:trip.ritnummer,success:true,deliveryState:'accepted',httpStatus:response.httpStatus});}
-    catch(error){await log.update(record.id,{sync_status:error instanceof ChironError&&error.uncertain?'pending':'failed',error_message:error instanceof ChironError?error.code:'CHIRON_FAILED'});results.push({...details,sequence,messageType:status,ritnummer:trip.ritnummer,success:false,deliveryState:error instanceof ChironError&&error.uncertain?'uncertain':'failed',error:error instanceof ChironError?error.message:'تعذّر إرسال الرسالة'});}
+  const time=Date.parse(testDate);
+  const planned=locations.map((from,i)=>{
+   const to=locations[(i+1)%locations.length],start=time-(78-i*15)*60000;
+   const trip={ritnummer:'TEST-'+batchId+'-'+(i+1),start_time:new Date(start).toISOString(),end_time:new Date(start+10*60000).toISOString(),start_lat:from.lat,start_lon:from.lon,end_lat:to.lat,end_lon:to.lon,start_address:from.address,end_address:to.address,distance_km:[3.5,3.4,3.2,5.4,4.4][i],price:[12.5,13.5,12,17,15][i]};
+   const departure=rideMessage('vertrek',company,driver,vehicle,trip,undefined,undefined,testDate);
+   const arrival=rideMessage('aankomst',company,driver,vehicle,trip,undefined,departure,testDate);
+   return {trip,departure,arrival};
+  });
+  let accessToken=await this.getAccessToken(env);
+  const results=[];
+  const log=new CrudOperations('test_trips',token);
+  for(const [i,{trip,departure,arrival}] of planned.entries()){
+   const details={startAddress:trip.start_address,endAddress:trip.end_address,startTime:trip.start_time,endTime:trip.end_time,startLat:trip.start_lat,startLon:trip.start_lon,endLat:trip.end_lat,endLon:trip.end_lon,distanceKm:trip.distance_km,price:trip.price};
+   let startAccepted=false;
+   for(const [position,message] of [departure,arrival].entries()){
+    const status=message.status,sequence=i*2+position+1;
+    const result={...details,sequence,messageType:status,ritnummer:trip.ritnummer};
+    const record=await log.create({company_id:companyId,driver_id:driverId,vehicle_id:vehicleId,chiron_driver_id:driver.bestuurderspas_number||driver.capacity_certificate_number,chiron_vehicle_id:vehicle.plate_number,ritnummer:trip.ritnummer+'-'+status,message_type:status,timestamp:testDate,test_sequence_number:sequence,request_payload:message,start_address:trip.start_address,end_address:trip.end_address,start_time:trip.start_time,end_time:trip.end_time,start_lat:details.startLat,start_lon:details.startLon,end_lat:details.endLat,end_lon:details.endLon,distance_km:trip.distance_km,price:trip.price,sync_status:'pending'});
+    if(status==='aankomst'&&!startAccepted){
+     await log.update(record.id,{sync_status:'failed',error_message:'CHIRON_START_NOT_ACCEPTED'});
+     results.push({...result,success:false,deliveryState:'not_sent',error:'لم تُرسل رسالة الوصول لأن الانطلاق لم يُقبل'});
+     continue;
+    }
+    try{
+     const response=await this.sendChironMessage(env,message,accessToken,renewed=>{accessToken=renewed;});
+     await log.update(record.id,{sync_status:'success',http_status_code:response.httpStatus});
+     if(status==='vertrek')startAccepted=true;
+     results.push({...result,success:true,deliveryState:'accepted',httpStatus:response.httpStatus});
+    }catch(error){
+     const failure=error instanceof ChironError?error:new ChironError('تعذّر تأكيد الإرسال',409,'CHIRON_DELIVERY_UNCERTAIN',true);
+     const httpStatus=failure.receipt?.httpStatus;
+     const codes=failure.receipt?.errors??[];
+     await log.update(record.id,{sync_status:failure.uncertain?'pending':'failed',error_message:failure.code,http_status_code:httpStatus??null,validation_errors:codes});
+     results.push({...result,success:false,deliveryState:failure.uncertain?'uncertain':'failed',error:failure.message,httpStatus,codes});
+    }
    }
   }
-  const successCount=results.filter(r=>r.success).length;return {success:successCount===10,totalMessages:10,successCount,failedCount:10-successCount,results,reportContext:{testDate,environment:'TEST',company:{id:company.id,name:company.name,kbo_number:company.kbo_number,vat_number:company.vat_number,address:company.address,email:company.email,phone:company.phone},driver:{id:driver.id,full_name:driver.full_name,capacity_certificate_number:driver.bestuurderspas_number||driver.capacity_certificate_number,phone:driver.phone},vehicle:{id:vehicle.id,brand:vehicle.brand,model:vehicle.model,plate_number:vehicle.plate_number}}};
+  const successCount=results.filter(r=>r.success).length;return {batchId,success:successCount===10,totalMessages:10,successCount,failedCount:10-successCount,results,reportContext:{testDate,environment:'TEST',company:{id:company.id,name:company.name,kbo_number:company.kbo_number,vat_number:company.vat_number,address:company.address,email:company.email,phone:company.phone},driver:{id:driver.id,full_name:driver.full_name,capacity_certificate_number:driver.bestuurderspas_number||driver.capacity_certificate_number,phone:driver.phone},vehicle:{id:vehicle.id,brand:vehicle.brand,model:vehicle.model,plate_number:vehicle.plate_number}}};
  }
  static async logSyncAttempt(tripId:number,attemptNumber:number,status:'success'|'failed'|'pending',_request:any,_response?:any,error?:string,httpStatus?:number){
   await new CrudOperations('chiron_sync_log',await generateAdminUserToken()).create({trip_id:tripId,attempt_number:attemptNumber,status,error_message:error?'CHIRON_FAILED':null,http_status_code:httpStatus||null});
