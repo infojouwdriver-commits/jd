@@ -1,5 +1,6 @@
 
 'use client';
+import {approvalReturnPath} from '@/lib/approval-link';
 import {driverReturnPath} from '@/lib/driver-return-path';
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
@@ -123,7 +124,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ) {
       router.push('/company/dashboard');
     } else {
-      router.push('/dashboard');
+      const target=userData?.isAdmin?approvalReturnPath(new URLSearchParams(window.location.search).get('redirect')):null;
+      router.push(target||'/dashboard');
     }
   }, [router]);
 

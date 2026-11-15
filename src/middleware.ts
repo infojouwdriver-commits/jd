@@ -59,7 +59,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'geolocation=(self), camera=(), microphone=()');
   response.headers.set('Content-Security-Policy', csp);
   if (process.env.NODE_ENV === 'production') response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  if (api || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print|pay)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
+  if (api || request.nextUrl.pathname==='/contact/submit' || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print|pay)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   // Never index authenticated workflows, tokenized documents or the
   // legacy/application hosts even if a crawler ignores robots.txt.
   const publicMarketingRoute = request.nextUrl.pathname === '/' ||

@@ -4,7 +4,7 @@ import {createPostgrestClient} from './postgrest';
 import {mailConfiguration,mailEventKey} from './mail-policy';
 import {renderEmail,type EmailDesign} from './email/renderer';
 import {emailEdits,readEmailSettings} from './email/settings';
-type MailPurpose = 'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder'|'driver_receipt';
+type MailPurpose = 'verification'|'contract_invitation'|'contract_confirmation'|'subscription_invoice'|'subscription_credit'|'subscription_reminder'|'driver_receipt'|'public_contact'|'approval_alert';
 interface MailAttachment {filename:string;content:Buffer}
 type MailMessage = {to:string;design:EmailDesign;event:string;attachments?:MailAttachment[]} &
  ({purpose:MailPurpose;sample?:never}|{purpose:'template_test';sample:true});

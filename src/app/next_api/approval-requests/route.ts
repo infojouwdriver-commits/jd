@@ -31,6 +31,11 @@ export const GET = requestMiddleware(async (request, context) => {
       filters.distributor_id = parseInt(distributor_id);
     }
     
+    const id=request.nextUrl.searchParams.get('id');
+    if(id!==null&&context.payload?.isAdmin) {
+      if(!/^[1-9]\d{0,14}$/.test(id))return createErrorResponse({status:400,errorMessage:'Invalid request'});
+      filters.id=Number(id);
+    }
     if (status) {
       filters.status = status;
     }

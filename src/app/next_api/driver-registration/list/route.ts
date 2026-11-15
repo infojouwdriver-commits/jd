@@ -21,6 +21,11 @@ export const GET = requestMiddleware(async (request: NextRequest, context) => {
     const regRequestsCrud = new CrudOperations('driver_registration_requests', adminToken);
 
     const filters: Record<string, any> = {};
+    const id=request.nextUrl.searchParams.get('id');
+    if(id!==null) {
+      if(!/^[1-9]\d{0,14}$/.test(id))return createErrorResponse({status:400,errorMessage:'Invalid request'});
+      filters.id=Number(id);
+    }
     if (status) {
       filters.status = status;
     }

@@ -6,6 +6,7 @@ export const templateIds = [
   'invoice-reminder', 'trip-receipt', 'driver-report',
 ] as const;
 export type TemplateId = typeof templateIds[number];
+type EmailDesignId = TemplateId | 'public-contact' | 'approval-alert';
 
 export function resolveEmailLanguage(value: unknown, fallback: EmailLanguage = 'fr'): EmailLanguage {
   const language = typeof value === 'string' ? value.toLowerCase().split(/[-_]/)[0] : '';
@@ -28,7 +29,7 @@ const labels = {
 } as const;
 
 export interface EmailDesign {
-  id: TemplateId;
+  id: EmailDesignId;
   language: EmailLanguage;
   subject: string;
   title: string;
@@ -48,7 +49,7 @@ export interface EmailEdits {
 }
 
 export const editableTemplateIds = ['invoice', 'credit-note', 'invoice-reminder'] as const;
-export function isEditableTemplate(id: TemplateId) {
+export function isEditableTemplate(id: EmailDesignId) {
   return editableTemplateIds.some(template => template === id);
 }
 

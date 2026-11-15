@@ -191,6 +191,11 @@ export const changesGET = requestMiddleware(async (request, context) => {
       if (["manager", "fleet_manager"].includes(link.role))
         query = query.in("entity_type", ["driver", "vehicle"]);
     }
+    const id=request.nextUrl.searchParams.get('id');
+    if(context.payload?.isAdmin&&id!==null) {
+      if(!/^[1-9]\d{0,14}$/.test(id))return createErrorResponse({status:400,errorMessage:'Invalid request'});
+      query=query.eq('id',id);
+    }
     const result = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
