@@ -5,8 +5,9 @@ import {Alert} from 'react-native';
 import {router} from 'expo-router';
 import {useSession,useTrip} from './session';
 import {usePreferences} from './preferences';
-import {Button,Card,Choice,Field,Icon,Label,Notice,Row,RouteStops,Screen} from './ui';
+import {Button,Card,Choice,Field,Icon,Label,Notice,Row,Screen} from './ui';
 import DriverMap from '../DriverMap';
+import ActiveTripMap from './ActiveTripMap';
 import AddressField from './AddressField';
 import {ClassicDisplay,FareControls,useClassicFare,type FarePreview} from './ClassicFare';
 import {shareReceipt} from './receipt';
@@ -20,10 +21,11 @@ export default function ActiveTrip(){const s=useSession(),c=useTrip(),shift=useS
  const time=`${Math.floor(c.seconds/3600).toString().padStart(2,'0')}:${Math.floor(c.seconds/60%60).toString().padStart(2,'0')}:${(c.seconds%60).toString().padStart(2,'0')}`;
  const confirmEnd=()=>Alert.alert(t('endTitle'),t('endNote'),[{text:t('cancel'),style:'cancel'},{text:t('confirm'),style:'destructive',onPress:()=>{void c.end(finalPrice);}}]);
  async function invoice(){if(!c.receipt||invoiceBusy)return;setInvoiceBusy(true);setInvoiceError(false);try{await shareReceipt(s.profile!.driver.id,c.receipt.id);}catch{setInvoiceError(true);}finally{setInvoiceBusy(false);}}
- return <Screen title={t(c.trip?'active':'newTrip')}>
- {c.trip&&<>{c.trip.realtimeChiron&&<Notice>{t(c.chironDeparture==='accepted'?'chironStartAccepted':c.chironDeparture==='review'?'chironReview':'chironStartPending')}</Notice>}<DriverMap position={s.position} initialDestination={c.trip?.navigationDestination}/><Card><ClassicDisplay state="OCCUPÉ" amount={c.trip.proposedPrice} km={c.trip.meter.distanceKm} clock={time} tariff={c.trip.tariffQuote?.code} agreed/>
- {(!c.trip.platform||c.trip.platform==='INTERNAL')&&<Field label={t('price')} placeholder={c.trip.proposedPrice.toFixed(2)} value={finalValue} keyboardType="decimal-pad" editable={!disabled} onChangeText={value=>setAdjusted({key:c.trip!.key,value})}/>}
- <Row><Icon name={c.trip.paymentMethod==='card'?'card-outline':'cash-outline'}/><Label>{t(c.trip.paymentMethod==='card'?'card':'cash')} · {c.trip.platform&&c.trip.platform!=='INTERNAL'?c.trip.platform:t('meter')}</Label></Row><Label muted size={12}>{t(c.background?'background':'foreground')}</Label><Button danger label={t(c.busy?'endBusy':'end')} icon="stop-circle-outline" busy={c.busy} disabled={s.busy||!Number.isFinite(finalPrice)||Number(finalPrice)<=0||Number(finalPrice)>100000} onPress={confirmEnd}/></Card><Card><RouteStops from={c.trip.startAddress} to={c.trip.endAddress}/></Card></>}
+ if(c.trip)return <ActiveTripMap key={c.trip.key} trip={c.trip} position={s.position} clock={time} fare={finalPrice} fareInput={finalValue}
+  onFareInput={value=>setAdjusted({key:c.trip!.key,value})} onEnd={confirmEnd}
+  endDisabled={s.busy||!Number.isFinite(finalPrice)||Number(finalPrice)<=0||Number(finalPrice)>100000}
+  busy={c.busy} background={c.background} departure={c.chironDeparture} error={c.error?(language==='ar'?c.error:t('error')):''}/>;
+ return <Screen title={t('newTrip')}>
  {c.receipt&&!c.trip&&<Card><ClassicDisplay state="À PAYER" amount={c.receipt.price} agreed/><Row><Icon name="checkmark-circle" color={colors.icon}/><Label bold>{t('syncServer')} #{c.receipt.id}</Label></Row><Label muted>{t(c.receipt.chiron==='production'?'production':c.receipt.chiron==='test'?'test':c.receipt.chironDelivery==='review'?'chironReview':c.receipt.chironDelivery==='pending'?'chironArrivalPending':'unconfirmed')}</Label><Label muted size={12}>{t('syncChiron')}</Label><Button label={t('invoice')} icon="share-outline" busy={invoiceBusy} onPress={()=>void invoice()}/><Label muted size={12}>{t('invoiceNote')}</Label>{invoiceError&&<Notice error>{t('invoiceError')}</Notice>}<Button secondary label={t('trips')} onPress={()=>router.push('/trips')}/></Card>}
  {!!c.error&&<Notice error>{language==='ar'?c.error:t('error')}</Notice>}
  {!c.trip&&!canStart&&<Card><Notice>{nativeShiftCopy[language].selectVehicle} · {nativeShiftCopy[language].start}</Notice><Button label={nativeShiftCopy[language].title} onPress={()=>router.push('/')}/></Card>}

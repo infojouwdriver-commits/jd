@@ -19,6 +19,7 @@ export const managementMenu = [
   { title: 'طلبات الموافقة', description: 'مراجعة التعديلات المطلوبة', icon: CheckCircle, href: '/admin/approval-requests', group: 'الإدارة' },
   { title: 'المستخدمون', description: 'أمان الحسابات وصلاحيات الإدارة', icon: ShieldCheck, href: '/admin/users', group: 'الإدارة' },
   { title: 'الإعلانات', description: 'المحتوى والمساحات الإعلانية', icon: Megaphone, href: '/admin/ad-slots', group: 'الإدارة' },
+  { title: 'طلبات حذف الحسابات', description: 'مراجعة طلبات حذف الحسابات الشخصية وتنفيذها', icon: Shield, href: '/admin/account-deletions', group: 'الإدارة' },
   { title: 'الخصوصية', description: 'طلبات البيانات وسجل الامتثال', icon: Shield, href: '/admin/gdpr', group: 'الإدارة' },
   { title: 'مزامنة Chiron', description: 'متابعة الإرسال وإعادة المحاولة', icon: Settings, href: '/admin/chiron-sync', group: 'التكامل' },
   { title: 'اختبار Chiron', description: 'التحقق من الرحلات التجريبية', icon: TestTube, href: '/admin/test-trips', group: 'التكامل' },

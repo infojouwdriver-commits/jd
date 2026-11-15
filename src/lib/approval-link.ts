@@ -1,3 +1,5 @@
+export const accountDeletionPage = '/admin/account-deletions';
+const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 export const approvalPage = '/admin/approval-requests';
 export const approvalTabs = ['company-registration','company-changes','driver-registration','general'] as const;
 export type ApprovalTab = typeof approvalTabs[number];
@@ -6,7 +8,7 @@ export function approvalTarget(params:URLSearchParams) {
   const tab=approvalTabs.find(tab=>tab===params.get('tab'))??'company-registration';
   const id=params.get('request')??'';
   const valid=tab==='company-registration'
-    ? /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
+    ? uuid.test(id)
     : /^[1-9]\d{0,14}$/.test(id);
   return {tab,id:valid?id:undefined};
 }
@@ -16,6 +18,10 @@ export function approvalPath(tab:ApprovalTab,id:string) {
 }
 
 export function approvalReturnPath(value:string|null) {
+  if(value?.startsWith(accountDeletionPage+'?')) {
+    const id=new URLSearchParams(value.slice(accountDeletionPage.length+1)).get('request');
+    return id&&uuid.test(id)?accountDeletionPage+'?'+new URLSearchParams({request:id}):null;
+  }
   if(!value?.startsWith(approvalPage+'?'))return null;
   const {tab,id}=approvalTarget(new URLSearchParams(value.slice(approvalPage.length+1)));
   return id?approvalPath(tab,id):null;

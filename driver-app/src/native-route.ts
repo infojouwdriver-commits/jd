@@ -26,3 +26,49 @@ export function navigationUrl(provider:'google'|'waze',destination:RouteCoordina
  if(!validCoordinate(destination))throw Error('وجهة غير صالحة.');
  return provider==='google'?`https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lon}&travelmode=driving`:`https://www.waze.com/ul?ll=${destination.lat},${destination.lon}&navigate=yes`;
 }
+
+/** Distance to the closest segment, using a local metre projection around the fix. */
+export function distanceFromRoute(point: RouteCoordinate, route: NativeRoute): number {
+ const latitudeScale = 111_195;
+ const longitudeScale = latitudeScale * Math.cos(point.lat * Math.PI / 180);
+ let nearest = Infinity;
+ for (let index = 1; index < route.coordinates.length; index++) {
+  const [startLon, startLat] = route.coordinates[index - 1];
+  const [endLon, endLat] = route.coordinates[index];
+  const x = (startLon - point.lon) * longitudeScale;
+  const y = (startLat - point.lat) * latitudeScale;
+  const dx = (endLon - startLon) * longitudeScale;
+  const dy = (endLat - startLat) * latitudeScale;
+  const lengthSquared = dx * dx + dy * dy;
+  const progress = lengthSquared ? Math.max(0, Math.min(1, -(x * dx + y * dy) / lengthSquared)) : 0;
+  nearest = Math.min(nearest, Math.hypot(x + progress * dx, y + progress * dy));
+ }
+ return nearest;
+}
+
+function routeNeedsUpdate(fix: RouteCoordinate & {accuracy?: number}, route: NativeRoute): boolean {
+ return distanceFromRoute(fix, route) > Math.max(30, (fix.accuracy ?? 0) * 1.5);
+}
+
+export interface RouteTracking {
+ timestamp: number;
+ offRouteFixes: number;
+ lastRequestedAt: number;
+}
+
+export function trackRouteFix(
+ previous: RouteTracking,
+ fix: RouteCoordinate & {timestamp:number;accuracy?:number},
+ route: NativeRoute|null,
+ now: number,
+) {
+ if(fix.timestamp<=previous.timestamp)return {tracking:previous,refresh:false};
+ const offRoute=route!==null&&routeNeedsUpdate(fix,route);
+ const offRouteFixes=offRoute?(fix.timestamp-previous.timestamp<=30_000?previous.offRouteFixes+1:1):0;
+ const coolingDown=previous.lastRequestedAt>0&&now-previous.lastRequestedAt<12_000;
+ const refresh=!coolingDown&&(!route||offRouteFixes>=2);
+ return {
+  tracking:{timestamp:fix.timestamp,offRouteFixes:refresh?0:offRouteFixes,lastRequestedAt:refresh?now:previous.lastRequestedAt},
+  refresh,
+ };
+}

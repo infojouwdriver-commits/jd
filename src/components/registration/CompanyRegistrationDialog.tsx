@@ -8,14 +8,11 @@ import {Button,buttonVariants} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {useLanguage} from '@/contexts/LanguageContext';
-import {chironPortals,companyRegistrationSchema,type CompanyRegistration} from '@/lib/company-registration';
+import {blankRegistration as blank,chironPortals,companyRegistrationSchema,registrationFields as groups,type RegistrationField as Field,type CompanyRegistration} from '@/lib/company-registration';
 import {SUBSCRIPTION_OFFER,subscriptionOfferCopy} from '@/lib/subscription-offer';
 import {Checkbox} from '@/components/ui/checkbox';
 import {registrationCopy} from './copy';
 import './registration.css';
-type Field=Exclude<keyof CompanyRegistration,'request_id'|'language'|'website'|'subscription_offer'|'subscription_acknowledged'|'email_code'>;
-const groups:Field[][]=[['company_name','company_email','company_password','company_phone','company_address','vat_number','kbo_number'],['chiron_test_client_id','chiron_test_client_secret','chiron_prod_client_id','chiron_prod_client_secret'],['vehicle_brand','vehicle_model','plate_number','vin','chiron_vehicle_id'],['driver_name','driver_phone','driver_password','driver_license','bestuurderspas']];
-const blank=()=>Object.fromEntries(groups.flat().map(k=>[k,''])) as Record<Field,string>;
 function RegistrationField({name,label,value,onChange,error,disabled,hint,show,hide}:{name:Field;label:string;value:string;onChange:(v:string)=>void;error?:string;disabled:boolean;hint?:string;show:string;hide:string}){
  const [revealed,setRevealed]=useState(false);const secret=/password|client_/.test(name),optional=/chiron_prod|chiron_vehicle/.test(name);
  return <div className={`cr-field ${name==='company_address'?'cr-wide':''}`}><Label htmlFor={`registration-${name}`}>{label}{!optional&&<span aria-hidden="true"> *</span>}</Label><div className="cr-input"><Input id={`registration-${name}`} name={name} value={value} required={!optional} disabled={disabled} maxLength={secret?name.includes('password')?72:2048:name==='vin'?17:400} autoCapitalize={secret?'none':undefined} autoCorrect={secret?'off':undefined} autoComplete={name.includes('password')?'new-password':secret?'off':name==='company_email'?'email':name.includes('phone')?'tel':name==='company_address'?'street-address':'off'} type={secret&&!revealed?'password':name==='company_email'?'email':name.includes('phone')?'tel':'text'} dir={secret||/email|phone|vin|plate|number/.test(name)?'ltr':undefined} onChange={e=>onChange(e.target.value)} aria-invalid={!!error} aria-describedby={hint||error?`help-${name}`:undefined}/>{secret&&<Button type="button" variant="ghost" disabled={disabled} aria-label={`${revealed?hide:show} ${label}`} aria-pressed={revealed} onClick={()=>setRevealed(v=>!v)}>{revealed?hide:show}</Button>}</div>{(hint||error)&&<p id={`help-${name}`} className={error?'cr-field-error':'cr-hint'}>{error||hint}</p>}</div>;

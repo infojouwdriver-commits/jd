@@ -1,3 +1,4 @@
+import {appVersionLabel} from './app-version';
 import React,{useEffect,useState} from 'react';
 import {AppState,Text,View} from 'react-native';
 import Animated,{FadeIn} from 'react-native-reanimated';
@@ -16,7 +17,7 @@ export function JourneyLoading({label,fullScreen=false}:{label:string;fullScreen
  {fullScreen&&<View style={{width:'100%',maxWidth:400,gap:32,marginBottom:28}}><BrandMark/></View>}
  <Text style={{fontFamily:design.font.body,fontSize:fullScreen?18:13,fontWeight:fullScreen?'700':'400',lineHeight:28,textAlign:'center',color:fullScreen?design.brand.ink:colors.text}}>{label}</Text>
  <View accessible={false} style={{height:4,width:184,borderRadius:4,backgroundColor:colors.line,overflow:'hidden'}}><Animated.View testID="loading-beam" style={{width:52,height:4,borderRadius:4,backgroundColor:colors.icon,transform:[{translateX:66}],animationName:animate&&foreground?{from:{transform:[{translateX:-52}],opacity:.35},'50%':{opacity:1},to:{transform:[{translateX:184}],opacity:.35}}:undefined,animationDuration:1800,animationIterationCount:'infinite',animationTimingFunction:'linear'}}/></View>
- {fullScreen&&<><Text style={{fontFamily:design.font.body,fontSize:13,lineHeight:23,textAlign:'center',color:design.brand.muted}}>{t('openingNote')}</Text><Text style={{fontFamily:design.font.body,fontSize:11,lineHeight:20,textAlign:'center',color:design.brand.muted,marginTop:28}}>{t('version')}</Text></>}
+ {fullScreen&&<><Text style={{fontFamily:design.font.body,fontSize:13,lineHeight:23,textAlign:'center',color:design.brand.muted}}>{t('openingNote')}</Text><Text style={{fontFamily:design.font.body,fontSize:11,lineHeight:20,textAlign:'center',color:design.brand.muted,marginTop:28}}>{appVersionLabel(t('version'))}</Text></>}
  </View>;
  return fullScreen?<SafeAreaView style={{flex:1,backgroundColor:design.brand.background,justifyContent:'center'}}>{content}</SafeAreaView>:content;
 }

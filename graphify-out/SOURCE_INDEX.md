@@ -235,85 +235,91 @@ Links target the working tree, so line positions can move after changes.
 - `@rnmapbox/maps` — [L7](../driver-app/package.json#L7)
 - `expo` — [L8](../driver-app/package.json#L8)
 - `expo` — [L8](../driver-app/package.json#L8)
-- `expo-constants` — [L9](../driver-app/package.json#L9)
-- `expo-constants` — [L9](../driver-app/package.json#L9)
-- `expo-crypto` — [L10](../driver-app/package.json#L10)
-- `expo-crypto` — [L10](../driver-app/package.json#L10)
-- `expo-file-system` — [L11](../driver-app/package.json#L11)
-- `expo-file-system` — [L11](../driver-app/package.json#L11)
-- `expo-haptics` — [L12](../driver-app/package.json#L12)
-- `expo-haptics` — [L12](../driver-app/package.json#L12)
-- `expo-linking` — [L13](../driver-app/package.json#L13)
-- `expo-linking` — [L13](../driver-app/package.json#L13)
-- `expo-location` — [L14](../driver-app/package.json#L14)
-- `expo-location` — [L14](../driver-app/package.json#L14)
-- `expo-notifications` — [L15](../driver-app/package.json#L15)
-- `expo-notifications` — [L15](../driver-app/package.json#L15)
-- `expo-router` — [L16](../driver-app/package.json#L16)
-- `expo-router` — [L16](../driver-app/package.json#L16)
-- `expo-secure-store` — [L17](../driver-app/package.json#L17)
-- `expo-secure-store` — [L17](../driver-app/package.json#L17)
-- `expo-sharing` — [L18](../driver-app/package.json#L18)
-- `expo-sharing` — [L18](../driver-app/package.json#L18)
-- `expo-sqlite` — [L19](../driver-app/package.json#L19)
-- `expo-sqlite` — [L19](../driver-app/package.json#L19)
-- `expo-status-bar` — [L20](../driver-app/package.json#L20)
-- `expo-status-bar` — [L20](../driver-app/package.json#L20)
-- `expo-system-ui` — [L21](../driver-app/package.json#L21)
-- `expo-system-ui` — [L21](../driver-app/package.json#L21)
-- `expo-task-manager` — [L22](../driver-app/package.json#L22)
-- `expo-task-manager` — [L22](../driver-app/package.json#L22)
-- `react` — [L23](../driver-app/package.json#L23)
-- `react` — [L23](../driver-app/package.json#L23)
-- `react-dom` — [L24](../driver-app/package.json#L24)
-- `react-dom` — [L24](../driver-app/package.json#L24)
-- `react-native` — [L25](../driver-app/package.json#L25)
-- `react-native` — [L25](../driver-app/package.json#L25)
-- `react-native-reanimated` — [L26](../driver-app/package.json#L26)
-- `react-native-reanimated` — [L26](../driver-app/package.json#L26)
-- `react-native-safe-area-context` — [L27](../driver-app/package.json#L27)
-- `react-native-safe-area-context` — [L27](../driver-app/package.json#L27)
-- `react-native-screens` — [L28](../driver-app/package.json#L28)
-- `react-native-screens` — [L28](../driver-app/package.json#L28)
-- `react-native-svg` — [L29](../driver-app/package.json#L29)
-- `react-native-svg` — [L29](../driver-app/package.json#L29)
-- `react-native-web` — [L30](../driver-app/package.json#L30)
-- `react-native-web` — [L30](../driver-app/package.json#L30)
-- `react-native-worklets` — [L31](../driver-app/package.json#L31)
-- `react-native-worklets` — [L31](../driver-app/package.json#L31)
-- `devDependencies` — [L33](../driver-app/package.json#L33)
-- `@types/react` — [L34](../driver-app/package.json#L34)
-- `@types/react` — [L34](../driver-app/package.json#L34)
-- `eslint` — [L35](../driver-app/package.json#L35)
-- `eslint` — [L35](../driver-app/package.json#L35)
-- `eslint-config-expo` — [L36](../driver-app/package.json#L36)
-- `eslint-config-expo` — [L36](../driver-app/package.json#L36)
-- `typescript` — [L37](../driver-app/package.json#L37)
-- `typescript` — [L37](../driver-app/package.json#L37)
-- `scripts` — [L39](../driver-app/package.json#L39)
-- `start` — [L40](../driver-app/package.json#L40)
-- `android` — [L41](../driver-app/package.json#L41)
-- `ios` — [L42](../driver-app/package.json#L42)
-- `web` — [L43](../driver-app/package.json#L43)
-- `typecheck` — [L44](../driver-app/package.json#L44)
-- `test` — [L45](../driver-app/package.json#L45)
-- `prebuild` — [L46](../driver-app/package.json#L46)
-- `lint` — [L47](../driver-app/package.json#L47)
-- `private` — [L49](../driver-app/package.json#L49)
-- `overrides` — [L50](../driver-app/package.json#L50)
-- `decode-uri-component` — [L51](../driver-app/package.json#L51)
+- `expo-application` — [L9](../driver-app/package.json#L9)
+- `expo-application` — [L9](../driver-app/package.json#L9)
+- `expo-constants` — [L10](../driver-app/package.json#L10)
+- `expo-constants` — [L10](../driver-app/package.json#L10)
+- `expo-crypto` — [L11](../driver-app/package.json#L11)
+- `expo-crypto` — [L11](../driver-app/package.json#L11)
+- `expo-file-system` — [L12](../driver-app/package.json#L12)
+- `expo-file-system` — [L12](../driver-app/package.json#L12)
+- `expo-haptics` — [L13](../driver-app/package.json#L13)
+- `expo-haptics` — [L13](../driver-app/package.json#L13)
+- `expo-linking` — [L14](../driver-app/package.json#L14)
+- `expo-linking` — [L14](../driver-app/package.json#L14)
+- `expo-location` — [L15](../driver-app/package.json#L15)
+- `expo-location` — [L15](../driver-app/package.json#L15)
+- `expo-notifications` — [L16](../driver-app/package.json#L16)
+- `expo-notifications` — [L16](../driver-app/package.json#L16)
+- `expo-router` — [L17](../driver-app/package.json#L17)
+- `expo-router` — [L17](../driver-app/package.json#L17)
+- `expo-secure-store` — [L18](../driver-app/package.json#L18)
+- `expo-secure-store` — [L18](../driver-app/package.json#L18)
+- `expo-sharing` — [L19](../driver-app/package.json#L19)
+- `expo-sharing` — [L19](../driver-app/package.json#L19)
+- `expo-sqlite` — [L20](../driver-app/package.json#L20)
+- `expo-sqlite` — [L20](../driver-app/package.json#L20)
+- `expo-status-bar` — [L21](../driver-app/package.json#L21)
+- `expo-status-bar` — [L21](../driver-app/package.json#L21)
+- `expo-system-ui` — [L22](../driver-app/package.json#L22)
+- `expo-system-ui` — [L22](../driver-app/package.json#L22)
+- `expo-task-manager` — [L23](../driver-app/package.json#L23)
+- `expo-task-manager` — [L23](../driver-app/package.json#L23)
+- `react` — [L24](../driver-app/package.json#L24)
+- `react` — [L24](../driver-app/package.json#L24)
+- `react-dom` — [L25](../driver-app/package.json#L25)
+- `react-dom` — [L25](../driver-app/package.json#L25)
+- `react-native` — [L26](../driver-app/package.json#L26)
+- `react-native` — [L26](../driver-app/package.json#L26)
+- `react-native-reanimated` — [L27](../driver-app/package.json#L27)
+- `react-native-reanimated` — [L27](../driver-app/package.json#L27)
+- `react-native-safe-area-context` — [L28](../driver-app/package.json#L28)
+- `react-native-safe-area-context` — [L28](../driver-app/package.json#L28)
+- `react-native-screens` — [L29](../driver-app/package.json#L29)
+- `react-native-screens` — [L29](../driver-app/package.json#L29)
+- `react-native-svg` — [L30](../driver-app/package.json#L30)
+- `react-native-svg` — [L30](../driver-app/package.json#L30)
+- `react-native-web` — [L31](../driver-app/package.json#L31)
+- `react-native-web` — [L31](../driver-app/package.json#L31)
+- `react-native-worklets` — [L32](../driver-app/package.json#L32)
+- `react-native-worklets` — [L32](../driver-app/package.json#L32)
+- `zod` — [L33](../driver-app/package.json#L33)
+- `zod` — [L33](../driver-app/package.json#L33)
+- `devDependencies` — [L35](../driver-app/package.json#L35)
+- `@types/react` — [L36](../driver-app/package.json#L36)
+- `@types/react` — [L36](../driver-app/package.json#L36)
+- `eslint` — [L37](../driver-app/package.json#L37)
+- `eslint` — [L37](../driver-app/package.json#L37)
+- `eslint-config-expo` — [L38](../driver-app/package.json#L38)
+- `eslint-config-expo` — [L38](../driver-app/package.json#L38)
+- `typescript` — [L39](../driver-app/package.json#L39)
+- `typescript` — [L39](../driver-app/package.json#L39)
+- `scripts` — [L41](../driver-app/package.json#L41)
+- `start` — [L42](../driver-app/package.json#L42)
+- `android` — [L43](../driver-app/package.json#L43)
+- `ios` — [L44](../driver-app/package.json#L44)
+- `web` — [L45](../driver-app/package.json#L45)
+- `typecheck` — [L46](../driver-app/package.json#L46)
+- `test` — [L47](../driver-app/package.json#L47)
+- `prebuild` — [L48](../driver-app/package.json#L48)
+- `lint` — [L49](../driver-app/package.json#L49)
+- `private` — [L51](../driver-app/package.json#L51)
+- `overrides` — [L52](../driver-app/package.json#L52)
+- `decode-uri-component` — [L53](../driver-app/package.json#L53)
 
 ## [driver-app/src/DriverMap.tsx](../driver-app/src/DriverMap.tsx)
 
 - `DriverMap.tsx` — [L1](../driver-app/src/DriverMap.tsx#L1)
-- `token` — [L9](../driver-app/src/DriverMap.tsx#L9)
-- `DriverMapProps` — [L11](../driver-app/src/DriverMap.tsx#L11)
-- `DriverMap()` — [L12](../driver-app/src/DriverMap.tsx#L12)
-- `DriverMapView()` — [L13](../driver-app/src/DriverMap.tsx#L13)
-- `locate()` — [L49](../driver-app/src/DriverMap.tsx#L49)
-- `chooseDestination()` — [L50](../driver-app/src/DriverMap.tsx#L50)
-- `calculateRoute()` — [L51](../driver-app/src/DriverMap.tsx#L51)
-- `navigate()` — [L58](../driver-app/src/DriverMap.tsx#L58)
+- `token` — [L10](../driver-app/src/DriverMap.tsx#L10)
+- `DriverMapProps` — [L12](../driver-app/src/DriverMap.tsx#L12)
+- `RouteStatus` — [L13](../driver-app/src/DriverMap.tsx#L13)
+- `DriverMap()` — [L14](../driver-app/src/DriverMap.tsx#L14)
+- `DriverMapView()` — [L15](../driver-app/src/DriverMap.tsx#L15)
+- `locate()` — [L86](../driver-app/src/DriverMap.tsx#L86)
+- `chooseDestination()` — [L87](../driver-app/src/DriverMap.tsx#L87)
+- `calculateRoute()` — [L88](../driver-app/src/DriverMap.tsx#L88)
+- `navigate()` — [L95](../driver-app/src/DriverMap.tsx#L95)
+- `showWholeRoute()` — [L98](../driver-app/src/DriverMap.tsx#L98)
 
 ## [driver-app/src/FleetLocation.tsx](../driver-app/src/FleetLocation.tsx)
 
@@ -360,31 +366,33 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/api.ts](../driver-app/src/api.ts)
 
 - `api.ts` — [L1](../driver-app/src/api.ts#L1)
-- `DriverProfile` — [L5](../driver-app/src/api.ts#L5)
-- `DriverVehicle` — [L10](../driver-app/src/api.ts#L10)
-- `DriverTripSummary` — [L11](../driver-app/src/api.ts#L11)
-- `DriverMessage` — [L12](../driver-app/src/api.ts#L12)
-- `DriverReply` — [L13](../driver-app/src/api.ts#L13)
-- `DriverNotification` — [L14](../driver-app/src/api.ts#L14)
-- `AccountInfo` — [L15](../driver-app/src/api.ts#L15)
-- `DriverDetails` — [L16](../driver-app/src/api.ts#L16)
-- `ActivityTrip` — [L17](../driver-app/src/api.ts#L17)
-- `ActivityQuery` — [L18](../driver-app/src/api.ts#L18)
-- `ActivityPage` — [L19](../driver-app/src/api.ts#L19)
-- `RevenueSummary` — [L20](../driver-app/src/api.ts#L20)
-- `ApiError` — [L21](../driver-app/src/api.ts#L21)
-- `.constructor()` — [L23](../driver-app/src/api.ts#L23)
-- `apiConnectionKey()` — [L28](../driver-app/src/api.ts#L28)
-- `createDriverApi()` — [L31](../driver-app/src/api.ts#L31)
-- `requestOnce()` — [L32](../driver-app/src/api.ts#L32)
-- `request()` — [L52](../driver-app/src/api.ts#L52)
-- `loadProfile()` — [L62](../driver-app/src/api.ts#L62)
-- `profile()` — [L73](../driver-app/src/api.ts#L73)
-- `ownerRead()` — [L76](../driver-app/src/api.ts#L76)
-- `vehicles()` — [L86](../driver-app/src/api.ts#L86)
-- `tripAssignmentBody()` — [L94](../driver-app/src/api.ts#L94)
-- `startTrip()` — [L98](../driver-app/src/api.ts#L98)
-- `driverApi` — [L304](../driver-app/src/api.ts#L304)
+- `DriverProfile` — [L6](../driver-app/src/api.ts#L6)
+- `DriverVehicle` — [L11](../driver-app/src/api.ts#L11)
+- `DriverTripSummary` — [L12](../driver-app/src/api.ts#L12)
+- `DriverMessage` — [L13](../driver-app/src/api.ts#L13)
+- `DriverReply` — [L14](../driver-app/src/api.ts#L14)
+- `DriverNotification` — [L15](../driver-app/src/api.ts#L15)
+- `AccountDeletionStatus` — [L16](../driver-app/src/api.ts#L16)
+- `CompanyRegistrationReceipt` — [L17](../driver-app/src/api.ts#L17)
+- `AccountInfo` — [L18](../driver-app/src/api.ts#L18)
+- `DriverDetails` — [L19](../driver-app/src/api.ts#L19)
+- `ActivityTrip` — [L20](../driver-app/src/api.ts#L20)
+- `ActivityQuery` — [L21](../driver-app/src/api.ts#L21)
+- `ActivityPage` — [L22](../driver-app/src/api.ts#L22)
+- `RevenueSummary` — [L23](../driver-app/src/api.ts#L23)
+- `ApiError` — [L24](../driver-app/src/api.ts#L24)
+- `.constructor()` — [L26](../driver-app/src/api.ts#L26)
+- `apiConnectionKey()` — [L31](../driver-app/src/api.ts#L31)
+- `createDriverApi()` — [L34](../driver-app/src/api.ts#L34)
+- `requestOnce()` — [L35](../driver-app/src/api.ts#L35)
+- `request()` — [L55](../driver-app/src/api.ts#L55)
+- `loadProfile()` — [L65](../driver-app/src/api.ts#L65)
+- `profile()` — [L76](../driver-app/src/api.ts#L76)
+- `ownerRead()` — [L79](../driver-app/src/api.ts#L79)
+- `vehicles()` — [L89](../driver-app/src/api.ts#L89)
+- `tripAssignmentBody()` — [L97](../driver-app/src/api.ts#L97)
+- `startTrip()` — [L101](../driver-app/src/api.ts#L101)
+- `driverApi` — [L326](../driver-app/src/api.ts#L326)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -392,7 +400,6 @@ Links target the working tree, so line positions can move after changes.
 - `app-origin.ts` — [L1](../driver-app/src/app-origin.ts#L1)
 - `nativeAppOrigin()` — [L4](../driver-app/src/app-origin.ts#L4)
 - `APP_ORIGIN` — [L11](../driver-app/src/app-origin.ts#L11)
-- `companyRegistrationUrl()` — [L12](../driver-app/src/app-origin.ts#L12)
 
 ## [driver-app/src/app/_layout.tsx](../driver-app/src/app/_layout.tsx)
 
@@ -454,11 +461,31 @@ Links target the working tree, so line positions can move after changes.
 - `Account()` — [L9](../driver-app/src/experience/Account.tsx#L9)
 - `select()` — [L13](../driver-app/src/experience/Account.tsx#L13)
 
+## [driver-app/src/experience/AccountDeletion.tsx](../driver-app/src/experience/AccountDeletion.tsx)
+
+- `experience/AccountDeletion.tsx` — [L1](../driver-app/src/experience/AccountDeletion.tsx#L1)
+- `secureOptions` — [L11](../driver-app/src/experience/AccountDeletion.tsx#L11)
+- `AccountDeletion()` — [L13](../driver-app/src/experience/AccountDeletion.tsx#L13)
+- `run()` — [L25](../driver-app/src/experience/AccountDeletion.tsx#L25)
+- `open()` — [L35](../driver-app/src/experience/AccountDeletion.tsx#L35)
+- `submit()` — [L57](../driver-app/src/experience/AccountDeletion.tsx#L57)
+- `check()` — [L70](../driver-app/src/experience/AccountDeletion.tsx#L70)
+
 ## [driver-app/src/experience/ActiveTrip.tsx](../driver-app/src/experience/ActiveTrip.tsx)
 
 - `ActiveTrip.tsx` — [L1](../driver-app/src/experience/ActiveTrip.tsx#L1)
-- `ActiveTrip()` — [L13](../driver-app/src/experience/ActiveTrip.tsx#L13)
-- `invoice()` — [L22](../driver-app/src/experience/ActiveTrip.tsx#L22)
+- `ActiveTrip()` — [L14](../driver-app/src/experience/ActiveTrip.tsx#L14)
+- `invoice()` — [L23](../driver-app/src/experience/ActiveTrip.tsx#L23)
+
+## [driver-app/src/experience/ActiveTripMap.tsx](../driver-app/src/experience/ActiveTripMap.tsx)
+
+- `ActiveTripMap.tsx` — [L1](../driver-app/src/experience/ActiveTripMap.tsx#L1)
+- `guidance` — [L14](../driver-app/src/experience/ActiveTripMap.tsx#L14)
+- `Props` — [L21](../driver-app/src/experience/ActiveTripMap.tsx#L21)
+- `ActiveTripMap()` — [L36](../driver-app/src/experience/ActiveTripMap.tsx#L36)
+- `selectMapDestination()` — [L52](../driver-app/src/experience/ActiveTripMap.tsx#L52)
+- `openNavigation()` — [L59](../driver-app/src/experience/ActiveTripMap.tsx#L59)
+- `styles` — [L139](../driver-app/src/experience/ActiveTripMap.tsx#L139)
 
 ## [driver-app/src/experience/ActivityFilters.tsx](../driver-app/src/experience/ActivityFilters.tsx)
 
@@ -498,6 +525,22 @@ Links target the working tree, so line positions can move after changes.
 - `ClassicDisplay()` — [L55](../driver-app/src/experience/ClassicFare.tsx#L55)
 - `FareControls()` — [L78](../driver-app/src/experience/ClassicFare.tsx#L78)
 
+## [driver-app/src/experience/CompanyRegistration.tsx](../driver-app/src/experience/CompanyRegistration.tsx)
+
+- `CompanyRegistration.tsx` — [L1](../driver-app/src/experience/CompanyRegistration.tsx#L1)
+- `englishOffer` — [L13](../driver-app/src/experience/CompanyRegistration.tsx#L13)
+- `passwordField()` — [L20](../driver-app/src/experience/CompanyRegistration.tsx#L20)
+- `privateField()` — [L21](../driver-app/src/experience/CompanyRegistration.tsx#L21)
+- `CompanyRegistrationScreen()` — [L23](../driver-app/src/experience/CompanyRegistration.tsx#L23)
+- `close()` — [L48](../driver-app/src/experience/CompanyRegistration.tsx#L48)
+- `draft()` — [L56](../driver-app/src/experience/CompanyRegistration.tsx#L56)
+- `validate()` — [L60](../driver-app/src/experience/CompanyRegistration.tsx#L60)
+- `change()` — [L77](../driver-app/src/experience/CompanyRegistration.tsx#L77)
+- `sendCode()` — [L87](../driver-app/src/experience/CompanyRegistration.tsx#L87)
+- `advance()` — [L106](../driver-app/src/experience/CompanyRegistration.tsx#L106)
+- `field()` — [L141](../driver-app/src/experience/CompanyRegistration.tsx#L141)
+- `openReference()` — [L158](../driver-app/src/experience/CompanyRegistration.tsx#L158)
+
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
@@ -506,9 +549,9 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/JourneyLoading.tsx](../driver-app/src/experience/JourneyLoading.tsx)
 
 - `JourneyLoading.tsx` — [L1](../driver-app/src/experience/JourneyLoading.tsx#L1)
-- `JourneyMark()` — [L10](../driver-app/src/experience/JourneyLoading.tsx#L10)
-- `WelcomeHeader()` — [L11](../driver-app/src/experience/JourneyLoading.tsx#L11)
-- `JourneyLoading()` — [L12](../driver-app/src/experience/JourneyLoading.tsx#L12)
+- `JourneyMark()` — [L11](../driver-app/src/experience/JourneyLoading.tsx#L11)
+- `WelcomeHeader()` — [L12](../driver-app/src/experience/JourneyLoading.tsx#L12)
+- `JourneyLoading()` — [L13](../driver-app/src/experience/JourneyLoading.tsx#L13)
 
 ## [driver-app/src/experience/Messages.tsx](../driver-app/src/experience/Messages.tsx)
 
@@ -547,8 +590,8 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/Settings.tsx](../driver-app/src/experience/Settings.tsx)
 
 - `Settings.tsx` — [L1](../driver-app/src/experience/Settings.tsx#L1)
-- `Settings()` — [L8](../driver-app/src/experience/Settings.tsx#L8)
-- `change()` — [L11](../driver-app/src/experience/Settings.tsx#L11)
+- `Settings()` — [L10](../driver-app/src/experience/Settings.tsx#L10)
+- `change()` — [L13](../driver-app/src/experience/Settings.tsx#L13)
 
 ## [driver-app/src/experience/ShiftCard.tsx](../driver-app/src/experience/ShiftCard.tsx)
 
@@ -596,6 +639,11 @@ Links target the working tree, so line positions can move after changes.
 - `ActivityProvider()` — [L5](../driver-app/src/experience/activity-state.tsx#L5)
 - `useActivityFilters()` — [L6](../driver-app/src/experience/activity-state.tsx#L6)
 
+## [driver-app/src/experience/app-version.ts](../driver-app/src/experience/app-version.ts)
+
+- `app-version.ts` — [L1](../driver-app/src/experience/app-version.ts#L1)
+- `appVersionLabel()` — [L5](../driver-app/src/experience/app-version.ts#L5)
+
 ## [driver-app/src/experience/art.tsx](../driver-app/src/experience/art.tsx)
 
 - `art.tsx` — [L1](../driver-app/src/experience/art.tsx#L1)
@@ -613,6 +661,11 @@ Links target the working tree, so line positions can move after changes.
 - `copy` — [L4](../driver-app/src/experience/copy.ts#L4)
 - `Language` — [L10](../driver-app/src/experience/copy.ts#L10)
 - `CopyKey` — [L11](../driver-app/src/experience/copy.ts#L11)
+
+## [driver-app/src/experience/deletion-copy.ts](../driver-app/src/experience/deletion-copy.ts)
+
+- `deletion-copy.ts` — [L1](../driver-app/src/experience/deletion-copy.ts#L1)
+- `deletionCopy` — [L1](../driver-app/src/experience/deletion-copy.ts#L1)
 
 ## [driver-app/src/experience/inbox.tsx](../driver-app/src/experience/inbox.tsx)
 
@@ -678,17 +731,17 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/session.tsx](../driver-app/src/experience/session.tsx)
 
 - `session.tsx` — [L1](../driver-app/src/experience/session.tsx#L1)
-- `Context` — [L21](../driver-app/src/experience/session.tsx#L21)
-- `useSessionState()` — [L22](../driver-app/src/experience/session.tsx#L22)
-- `login()` — [L27](../driver-app/src/experience/session.tsx#L27)
-- `logout()` — [L28](../driver-app/src/experience/session.tsx#L28)
-- `accountChanged()` — [L29](../driver-app/src/experience/session.tsx#L29)
-- `useSession()` — [L32](../driver-app/src/experience/session.tsx#L32)
-- `TripContext` — [L33](../driver-app/src/experience/session.tsx#L33)
-- `useTrip()` — [L34](../driver-app/src/experience/session.tsx#L34)
-- `TripRuntime()` — [L35](../driver-app/src/experience/session.tsx#L35)
-- `Login()` — [L36](../driver-app/src/experience/session.tsx#L36)
-- `SessionProvider()` — [L37](../driver-app/src/experience/session.tsx#L37)
+- `Context` — [L23](../driver-app/src/experience/session.tsx#L23)
+- `useSessionState()` — [L24](../driver-app/src/experience/session.tsx#L24)
+- `login()` — [L29](../driver-app/src/experience/session.tsx#L29)
+- `logout()` — [L30](../driver-app/src/experience/session.tsx#L30)
+- `accountChanged()` — [L31](../driver-app/src/experience/session.tsx#L31)
+- `useSession()` — [L34](../driver-app/src/experience/session.tsx#L34)
+- `TripContext` — [L35](../driver-app/src/experience/session.tsx#L35)
+- `useTrip()` — [L36](../driver-app/src/experience/session.tsx#L36)
+- `TripRuntime()` — [L37](../driver-app/src/experience/session.tsx#L37)
+- `Login()` — [L38](../driver-app/src/experience/session.tsx#L38)
+- `SessionProvider()` — [L39](../driver-app/src/experience/session.tsx#L39)
 
 ## [driver-app/src/experience/shift-copy.ts](../driver-app/src/experience/shift-copy.ts)
 
@@ -781,6 +834,10 @@ Links target the working tree, so line positions can move after changes.
 - `fetchNativeRoute()` — [L12](../driver-app/src/native-route.ts#L12)
 - `routeBounds()` — [L22](../driver-app/src/native-route.ts#L22)
 - `navigationUrl()` — [L25](../driver-app/src/native-route.ts#L25)
+- `distanceFromRoute()` — [L31](../driver-app/src/native-route.ts#L31)
+- `routeNeedsUpdate()` — [L49](../driver-app/src/native-route.ts#L49)
+- `RouteTracking` — [L53](../driver-app/src/native-route.ts#L53)
+- `trackRouteFix()` — [L59](../driver-app/src/native-route.ts#L59)
 
 ## [driver-app/src/native-runtime.ts](../driver-app/src/native-runtime.ts)
 
@@ -812,6 +869,30 @@ Links target the working tree, so line positions can move after changes.
 
 - `push-pause.ts` — [L1](../driver-app/src/push-pause.ts#L1)
 - `pausePushInstallation()` — [L2](../driver-app/src/push-pause.ts#L2)
+
+## [driver-app/src/registration/copy.ts](../driver-app/src/registration/copy.ts)
+
+- `registrationCopy` — [L1](../driver-app/src/registration/copy.ts#L1)
+- `src/registration/copy.ts` — [L1](../driver-app/src/registration/copy.ts#L1)
+
+## [driver-app/src/registration/schema.ts](../driver-app/src/registration/schema.ts)
+
+- `schema.ts` — [L1](../driver-app/src/registration/schema.ts#L1)
+- `text()` — [L3](../driver-app/src/registration/schema.ts#L3)
+- `password` — [L4](../driver-app/src/registration/schema.ts#L4)
+- `optional` — [L5](../driver-app/src/registration/schema.ts#L5)
+- `companyRegistrationSchema` — [L6](../driver-app/src/registration/schema.ts#L6)
+- `CompanyRegistration` — [L13](../driver-app/src/registration/schema.ts#L13)
+- `chironPortals` — [L14](../driver-app/src/registration/schema.ts#L14)
+- `RegistrationField` — [L16](../driver-app/src/registration/schema.ts#L16)
+- `registrationFields` — [L17](../driver-app/src/registration/schema.ts#L17)
+- `blankRegistration()` — [L24](../driver-app/src/registration/schema.ts#L24)
+
+## [driver-app/src/registration/subscription-offer.ts](../driver-app/src/registration/subscription-offer.ts)
+
+- `SUBSCRIPTION_OFFER` — [L1](../driver-app/src/registration/subscription-offer.ts#L1)
+- `registration/subscription-offer.ts` — [L1](../driver-app/src/registration/subscription-offer.ts#L1)
+- `subscriptionOfferCopy` — [L2](../driver-app/src/registration/subscription-offer.ts#L2)
 
 ## [driver-app/src/report-error.ts](../driver-app/src/report-error.ts)
 
@@ -1288,6 +1369,15 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".security_reserve_mail()` — [L7](../migrations/20261114_email_templates.sql#L7)
 - `"schema".email_template_settings` — [L25](../migrations/20261114_email_templates.sql#L25)
 - `"schema".email_template_audit` — [L34](../migrations/20261114_email_templates.sql#L34)
+
+## [migrations/20261115_account_deletion.sql](../migrations/20261115_account_deletion.sql)
+
+- `20261115_account_deletion.sql` — [source](../migrations/20261115_account_deletion.sql#)
+- `"schema".account_deletion_requests` — [L2](../migrations/20261115_account_deletion.sql#L2)
+- `"schema".security_request_account_deletion()` — [L31](../migrations/20261115_account_deletion.sql#L31)
+- `"schema".security_complete_account_deletion()` — [L54](../migrations/20261115_account_deletion.sql#L54)
+- `"schema".security_clear_account_deletion_notice()` — [L127](../migrations/20261115_account_deletion.sql#L127)
+- `clear_account_deletion_notice` — [L135](../migrations/20261115_account_deletion.sql#L135)
 
 ## [migrations/20261115_chiron_onboarding.sql](../migrations/20261115_chiron_onboarding.sql)
 
@@ -1808,6 +1898,20 @@ Links target the working tree, so line positions can move after changes.
 - `metadata` — [L2](../src/app/about/page.tsx#L2)
 - `Page()` — [L3](../src/app/about/page.tsx#L3)
 
+## [src/app/account-deletion-status/page.tsx](../src/app/account-deletion-status/page.tsx)
+
+- `account-deletion-status/page.tsx` — [L1](../src/app/account-deletion-status/page.tsx#L1)
+- `DeletionStatusPage()` — [L3](../src/app/account-deletion-status/page.tsx#L3)
+
+## [src/app/admin/account-deletions/page.tsx](../src/app/admin/account-deletions/page.tsx)
+
+- `account-deletions/page.tsx` — [L1](../src/app/admin/account-deletions/page.tsx#L1)
+- `Request` — [L10](../src/app/admin/account-deletions/page.tsx#L10)
+- `formatDate()` — [L19](../src/app/admin/account-deletions/page.tsx#L19)
+- `AccountDeletionsPage()` — [L21](../src/app/admin/account-deletions/page.tsx#L21)
+- `load()` — [L32](../src/app/admin/account-deletions/page.tsx#L32)
+- `complete()` — [L48](../src/app/admin/account-deletions/page.tsx#L48)
+
 ## [src/app/admin/account/page.tsx](../src/app/admin/account/page.tsx)
 
 - `account/page.tsx` — [L1](../src/app/admin/account/page.tsx#L1)
@@ -2289,6 +2393,19 @@ Links target the working tree, so line positions can move after changes.
 - `executeApprovedRequest()` — [L204](../src/app/next_api/approval-requests/route.ts#L204)
 - `getTableName()` — [L235](../src/app/next_api/approval-requests/route.ts#L235)
 
+## [src/app/next_api/auth/account-deletion-status/route.ts](../src/app/next_api/auth/account-deletion-status/route.ts)
+
+- `account-deletion-status/route.ts` — [L1](../src/app/next_api/auth/account-deletion-status/route.ts#L1)
+- `schema` — [L8](../src/app/next_api/auth/account-deletion-status/route.ts#L8)
+- `POST` — [L10](../src/app/next_api/auth/account-deletion-status/route.ts#L10)
+
+## [src/app/next_api/auth/account-deletion/route.ts](../src/app/next_api/auth/account-deletion/route.ts)
+
+- `account-deletion/route.ts` — [L1](../src/app/next_api/auth/account-deletion/route.ts#L1)
+- `schema` — [L11](../src/app/next_api/auth/account-deletion/route.ts#L11)
+- `GET` — [L17](../src/app/next_api/auth/account-deletion/route.ts#L17)
+- `POST` — [L25](../src/app/next_api/auth/account-deletion/route.ts#L25)
+
 ## [src/app/next_api/auth/account/route.ts](../src/app/next_api/auth/account/route.ts)
 
 - `account/route.ts` — [L1](../src/app/next_api/auth/account/route.ts#L1)
@@ -2696,6 +2813,13 @@ Links target the working tree, so line positions can move after changes.
 
 - `fleet/route.ts` — [L1](../src/app/next_api/fleet/route.ts#L1)
 - `GET` — [L7](../src/app/next_api/fleet/route.ts#L7)
+
+## [src/app/next_api/gdpr/admin/account-deletions/route.ts](../src/app/next_api/gdpr/admin/account-deletions/route.ts)
+
+- `account-deletions/route.ts` — [L1](../src/app/next_api/gdpr/admin/account-deletions/route.ts#L1)
+- `schema` — [L6](../src/app/next_api/gdpr/admin/account-deletions/route.ts#L6)
+- `GET` — [L13](../src/app/next_api/gdpr/admin/account-deletions/route.ts#L13)
+- `POST` — [L27](../src/app/next_api/gdpr/admin/account-deletions/route.ts#L27)
 
 ## [src/app/next_api/gdpr/admin/breach-incidents/route.ts](../src/app/next_api/gdpr/admin/breach-incidents/route.ts)
 
@@ -3170,11 +3294,19 @@ Links target the working tree, so line positions can move after changes.
 - `VehicleSelectorProps` — [L20](../src/components/VehicleSelector.tsx#L20)
 - `VehicleSelector()` — [L28](../src/components/VehicleSelector.tsx#L28)
 
+## [src/components/account/AccountDeletion.tsx](../src/components/account/AccountDeletion.tsx)
+
+- `account/AccountDeletion.tsx` — [L1](../src/components/account/AccountDeletion.tsx#L1)
+- `copy` — [L11](../src/components/account/AccountDeletion.tsx#L11)
+- `Status` — [L17](../src/components/account/AccountDeletion.tsx#L17)
+- `AccountDeletion()` — [L19](../src/components/account/AccountDeletion.tsx#L19)
+- `submit()` — [L30](../src/components/account/AccountDeletion.tsx#L30)
+
 ## [src/components/account/AccountSettings.tsx](../src/components/account/AccountSettings.tsx)
 
 - `AccountSettings.tsx` — [L1](../src/components/account/AccountSettings.tsx#L1)
-- `labels` — [L13](../src/components/account/AccountSettings.tsx#L13)
-- `AccountSettings()` — [L18](../src/components/account/AccountSettings.tsx#L18)
+- `labels` — [L14](../src/components/account/AccountSettings.tsx#L14)
+- `AccountSettings()` — [L19](../src/components/account/AccountSettings.tsx#L19)
 
 ## [src/components/admin/GdprAdminClient.tsx](../src/components/admin/GdprAdminClient.tsx)
 
@@ -3925,20 +4057,16 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
 - `CompanyRegistrationDialog.tsx` — [L1](../src/components/registration/CompanyRegistrationDialog.tsx#L1)
-- `Field` — [L16](../src/components/registration/CompanyRegistrationDialog.tsx#L16)
-- `groups` — [L17](../src/components/registration/CompanyRegistrationDialog.tsx#L17)
-- `blank()` — [L18](../src/components/registration/CompanyRegistrationDialog.tsx#L18)
-- `RegistrationField()` — [L19](../src/components/registration/CompanyRegistrationDialog.tsx#L19)
-- `CompanyRegistrationDialog()` — [L23](../src/components/registration/CompanyRegistrationDialog.tsx#L23)
-- `sendEmailCode()` — [L27](../src/components/registration/CompanyRegistrationDialog.tsx#L27)
-- `close()` — [L33](../src/components/registration/CompanyRegistrationDialog.tsx#L33)
-- `validate()` — [L34](../src/components/registration/CompanyRegistrationDialog.tsx#L34)
-- `submit()` — [L35](../src/components/registration/CompanyRegistrationDialog.tsx#L35)
+- `RegistrationField()` — [L16](../src/components/registration/CompanyRegistrationDialog.tsx#L16)
+- `CompanyRegistrationDialog()` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
+- `sendEmailCode()` — [L24](../src/components/registration/CompanyRegistrationDialog.tsx#L24)
+- `close()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
+- `validate()` — [L31](../src/components/registration/CompanyRegistrationDialog.tsx#L31)
+- `submit()` — [L32](../src/components/registration/CompanyRegistrationDialog.tsx#L32)
 
 ## [src/components/registration/copy.ts](../src/components/registration/copy.ts)
 
-- `registration/copy.ts` — [L1](../src/components/registration/copy.ts#L1)
-- `registrationCopy` — [L1](../src/components/registration/copy.ts#L1)
+- `components/registration/copy.ts` — [L1](../src/components/registration/copy.ts#L1)
 
 ## [src/components/registration/registration.css](../src/components/registration/registration.css)
 
@@ -4497,6 +4625,13 @@ Links target the working tree, so line positions can move after changes.
 - `event()` — [L18](../src/lib/acceptance-report-pdf.ts#L18)
 - `coords()` — [L23](../src/lib/acceptance-report-pdf.ts#L23)
 
+## [src/lib/account-deletion.ts](../src/lib/account-deletion.ts)
+
+- `account-deletion.ts` — [L1](../src/lib/account-deletion.ts#L1)
+- `deletionReceipt` — [L4](../src/lib/account-deletion.ts#L4)
+- `deletionStatusFields` — [L5](../src/lib/account-deletion.ts#L5)
+- `deletionReceiptDigest()` — [L7](../src/lib/account-deletion.ts#L7)
+
 ## [src/lib/address-search.ts](../src/lib/address-search.ts)
 
 - `AddressSuggestion` — [L1](../src/lib/address-search.ts#L1)
@@ -4574,20 +4709,21 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/lib/approval-link.ts](../src/lib/approval-link.ts)
 
+- `accountDeletionPage` — [L1](../src/lib/approval-link.ts#L1)
 - `approval-link.ts` — [L1](../src/lib/approval-link.ts#L1)
-- `approvalPage` — [L1](../src/lib/approval-link.ts#L1)
-- `approvalTabs` — [L2](../src/lib/approval-link.ts#L2)
-- `ApprovalTab` — [L3](../src/lib/approval-link.ts#L3)
-- `approvalTarget()` — [L5](../src/lib/approval-link.ts#L5)
-- `approvalPath()` — [L14](../src/lib/approval-link.ts#L14)
-- `approvalReturnPath()` — [L18](../src/lib/approval-link.ts#L18)
+- `approvalPage` — [L3](../src/lib/approval-link.ts#L3)
+- `approvalTabs` — [L4](../src/lib/approval-link.ts#L4)
+- `ApprovalTab` — [L5](../src/lib/approval-link.ts#L5)
+- `approvalTarget()` — [L7](../src/lib/approval-link.ts#L7)
+- `approvalPath()` — [L16](../src/lib/approval-link.ts#L16)
+- `approvalReturnPath()` — [L20](../src/lib/approval-link.ts#L20)
 
 ## [src/lib/approval-mail-scheduler.ts](../src/lib/approval-mail-scheduler.ts)
 
 - `approval-mail-scheduler.ts` — [L1](../src/lib/approval-mail-scheduler.ts#L1)
-- `sendPendingApprovalAlerts()` — [L9](../src/lib/approval-mail-scheduler.ts#L9)
-- `startApprovalMailScheduler()` — [L25](../src/lib/approval-mail-scheduler.ts#L25)
-- `run()` — [L28](../src/lib/approval-mail-scheduler.ts#L28)
+- `sendPendingApprovalAlerts()` — [L10](../src/lib/approval-mail-scheduler.ts#L10)
+- `startApprovalMailScheduler()` — [L40](../src/lib/approval-mail-scheduler.ts#L40)
+- `run()` — [L43](../src/lib/approval-mail-scheduler.ts#L43)
 
 ## [src/lib/auth.ts](../src/lib/auth.ts)
 
@@ -4714,12 +4850,6 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/company-registration.ts](../src/lib/company-registration.ts)
 
 - `company-registration.ts` — [L1](../src/lib/company-registration.ts#L1)
-- `text()` — [L2](../src/lib/company-registration.ts#L2)
-- `password` — [L3](../src/lib/company-registration.ts#L3)
-- `optional` — [L4](../src/lib/company-registration.ts#L4)
-- `companyRegistrationSchema` — [L5](../src/lib/company-registration.ts#L5)
-- `CompanyRegistration` — [L12](../src/lib/company-registration.ts#L12)
-- `chironPortals` — [L13](../src/lib/company-registration.ts#L13)
 
 ## [src/lib/company-staff.ts](../src/lib/company-staff.ts)
 
@@ -4927,6 +5057,8 @@ Links target the working tree, so line positions can move after changes.
 - `contactEmailDesign()` — [L6](../src/lib/email/operational.ts#L6)
 - `ApprovalAlert` — [L14](../src/lib/email/operational.ts#L14)
 - `approvalEmailDesign()` — [L24](../src/lib/email/operational.ts#L24)
+- `deletedAccountCopy` — [L35](../src/lib/email/operational.ts#L35)
+- `accountDeletionEmailDesign()` — [L42](../src/lib/email/operational.ts#L42)
 
 ## [src/lib/email/receipt.ts](../src/lib/email/receipt.ts)
 
@@ -5372,9 +5504,7 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/lib/subscription-offer.ts](../src/lib/subscription-offer.ts)
 
-- `SUBSCRIPTION_OFFER` — [L1](../src/lib/subscription-offer.ts#L1)
-- `subscription-offer.ts` — [L1](../src/lib/subscription-offer.ts#L1)
-- `subscriptionOfferCopy` — [L2](../src/lib/subscription-offer.ts#L2)
+- `lib/subscription-offer.ts` — [L1](../src/lib/subscription-offer.ts#L1)
 
 ## [src/lib/subscription-scheduler.ts](../src/lib/subscription-scheduler.ts)
 

@@ -1,4 +1,5 @@
 'use client';
+import AccountDeletion from './AccountDeletion';
 import { useEffect, useState } from 'react';
 import { tripJournal } from '@/lib/trip-journal';
 import { api } from '@/lib/api-client';
@@ -56,6 +57,7 @@ export default function AccountSettings() {
    <Button type="button" variant="outline" disabled={busy||!available||!email||!current} onClick={()=>void submit('request_email_code')}>{t.send}</Button>
    {sent?<div className="space-y-2"><Label htmlFor="account-code">{t.code}</Label><Input id="account-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={event=>setCode(event.target.value)} /><Button type="button" disabled={busy||code.length!==6} onClick={()=>void submit('update_email')}>{t.change}</Button></div>:null}
   </div>
+  {user && !user.isAdmin && <div className="border-t pt-3"><AccountDeletion/></div>}
   <div className="border-t pt-3"><CookiePreferencesButton /></div>
   <Button type="button" variant="outline" disabled={busy} onClick={()=>void logout()}>{t.logout}</Button>
  </CardContent></Card>;
