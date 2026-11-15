@@ -3757,9 +3757,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/landing/PlatformLanding.tsx](../src/components/landing/PlatformLanding.tsx)
 
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
-- `PlatformLanding()` — [L24](../src/components/landing/PlatformLanding.tsx#L24)
-- `openRegistration()` — [L60](../src/components/landing/PlatformLanding.tsx#L60)
-- `closeRegistration()` — [L74](../src/components/landing/PlatformLanding.tsx#L74)
+- `downloadCopy` — [L28](../src/components/landing/PlatformLanding.tsx#L28)
+- `PlatformLanding()` — [L34](../src/components/landing/PlatformLanding.tsx#L34)
+- `openRegistration()` — [L71](../src/components/landing/PlatformLanding.tsx#L71)
+- `closeRegistration()` — [L85](../src/components/landing/PlatformLanding.tsx#L85)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 

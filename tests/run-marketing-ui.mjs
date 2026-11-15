@@ -198,6 +198,15 @@ try {
       const initialHtml = await response.text();
       assert.ok(initialHtml.includes('class="jd-cinema '), "Localized homepage content is rendered before hydration");
       assert.ok(initialHtml.includes('type="application/ld+json"'), "Structured data is rendered before hydration");
+      const downloads = p.locator("#driver-app-downloads");
+      const android = downloads.getByRole("link", { name: /Android.*APK/ });
+      assert.equal(await android.getAttribute("href"), "https://github.com/infojouwdriver-commits/jd/releases/download/android-direct/jouw-driver.apk");
+      assert.ok(await downloads.getByText({ar: "قريبًا على iPhone", fr: "Bientôt sur iPhone", nl: "Binnenkort op iPhone"}[lang], {exact: true}).isVisible());
+      assert.equal(await downloads.getByRole("link", { name: /App Store/ }).count(), 0);
+      assert.ok(await downloads.evaluate(el => {
+        const options = el.querySelector(".jd-app-download-options");
+        return options.scrollWidth <= options.clientWidth + 1;
+      }), "Download cards fit the viewport");
       await p.waitForSelector(".jd-static");
       await p.waitForFunction(() => {
         const image = document.querySelector(".jd-poster img");

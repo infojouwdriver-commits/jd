@@ -3,6 +3,7 @@ import { resourceHref } from '@/lib/marketing-resources';
 import "./cinematic/cinematic.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowUpRight,
   Car,
@@ -10,6 +11,8 @@ import {
   Building2,
   Check,
   Globe2,
+  Download,
+  Smartphone,
 } from "lucide-react";
 import { useLanguage, type AppLanguage } from "@/contexts/LanguageContext";
 import CompanyRegistrationDialog from "@/components/registration/CompanyRegistrationDialog";
@@ -20,6 +23,13 @@ import MarketingExplore from "./MarketingExplore";
 import Cinema from "./cinematic/Cinema";
 import { cinematicCopy } from "./cinematic/copy";
 const configuredPortal = process.env.NEXT_PUBLIC_PORTAL_ORIGIN;
+const androidDownload = "https://github.com/infojouwdriver-commits/jd/releases/download/android-direct/jouw-driver.apk";
+
+const downloadCopy = {
+  ar: {title: "تطبيق السائق", android: "تحميل Android", apk: "ملف APK مباشر", soon: "قريبًا على iPhone"},
+  fr: {title: "Application chauffeur", android: "Télécharger pour Android", apk: "APK en téléchargement direct", soon: "Bientôt sur iPhone"},
+  nl: {title: "Chauffeursapp", android: "Download voor Android", apk: "Directe APK-download", soon: "Binnenkort op iPhone"},
+} satisfies Record<AppLanguage, {title: string; android: string; apk: string; soon: string}>;
 
 export default function PlatformLanding({
   startRegistration = false,
@@ -30,6 +40,7 @@ export default function PlatformLanding({
   setLanguageRef.current = context.setLanguage;
   const language = locale || context.language;
   const t = cinematicCopy[language];
+  const downloads = downloadCopy[language];
   const rtl = language === "ar";
   const [registration, setRegistration] = useState(startRegistration);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -130,6 +141,24 @@ export default function PlatformLanding({
             <p className="jd-eyebrow">JOUW DRIVER / {t.drivers}</p>
             <h2>{t.driverTitle}</h2>
             <p>{t.driverText}</p>
+          </div>
+          <div className="jd-app-downloads" id="driver-app-downloads" aria-labelledby="driver-app-downloads-title">
+            <h3 id="driver-app-downloads-title">{downloads.title}</h3>
+            <div className="jd-app-download-options">
+              <a className="jd-app-download" href={androidDownload} rel="noreferrer">
+                <Image src="/cinematic/android-head.svg" alt="" width={40} height={30} unoptimized />
+                <span><strong>{downloads.android}</strong><small>{downloads.apk}</small></span>
+                <Download aria-hidden="true" size={18} />
+              </a>
+              <div className="jd-app-download jd-app-download-upcoming">
+                <Smartphone aria-hidden="true" size={31} />
+                <span><strong>App Store</strong><small>{downloads.soon}</small></span>
+              </div>
+            </div>
+            <small className="jd-app-credit" lang="en">
+              The Android robot is reproduced from work created and shared by Google and used under the{" "}
+              <a href="https://creativecommons.org/licenses/by/3.0/" rel="noreferrer">Creative Commons 3.0 Attribution License</a>.
+            </small>
           </div>
           <div className="jd-platform-grid">
             <div className="jd-instrument" aria-hidden="true">

@@ -1,0 +1,353 @@
+name: Publish driver app downloads
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-app-downloads.yml']
+permissions:
+  contents: read
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Verify the driver app downloads change scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          const baseline='4ade85613f38e49a166f43b0e65ca69d293177c9';
+          const result=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+baseline+'...'+process.env.GITHUB_SHA,{
+            headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)
+          });
+          if(!result.ok)throw Error('Cannot verify driver app downloads changes');
+          const comparison=await result.json();
+          const files=new Set([
+            '.github/workflows/publish-app-downloads.yml',
+            'src/components/landing/PlatformLanding.tsx','src/components/landing/cinematic/cinematic.css',
+            'public/cinematic/android-head.svg','tests/run-marketing-ui.mjs'
+          ]);
+          if(comparison.status!=='ahead'||comparison.merge_base_commit?.sha!==baseline||!comparison.files?.some(f=>f.filename==='src/components/landing/PlatformLanding.tsx')||
+            comparison.files.some(f=>f.status==='removed'||!files.has(f.filename)&&!f.filename.startsWith('graphify-out/')))throw Error('Unexpected release scope');
+          GATE
+  apk:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: production
+    permissions:
+      actions: read
+      contents: write
+    concurrency:
+      group: public-android-signing
+      cancel-in-progress: false
+    steps:
+      - name: Sign the reviewed Android build and publish its direct download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$work/ssh-key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$work/known_hosts"
+          args=(-i "$work/ssh-key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" -o ConnectTimeout=20)
+          host="$DEPLOY_USER@$DEPLOY_HOST"
+          tool=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -name apksigner -print | sort -V | tail -1)
+          test -x "$tool"
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/14163953045/zip" > "$work/preview.zip"
+          printf '%s  %s\n' c0dfd438e30be10790a95607089d8227eb662bd6bd0b4464cc867d22f80af918 "$work/preview.zip" | sha256sum --check
+          test "$(unzip -Z1 "$work/preview.zip")" = app-release.apk
+          unzip -p "$work/preview.zip" app-release.apk > "$work/preview.apk"
+          verify_package() {
+            local identity
+            identity=$("$(dirname "$tool")/aapt" dump badging "$1" | sed -n '1p')
+            [[ "$identity" == "package: name='be.jouwdriver.driver' versionCode='13' versionName='0.3.1'"* ]]
+          }
+          verify_package "$work/preview.apk"
+          "$tool" verify "$work/preview.apk"
+          signing=/srv/jouw-driver/android-release-signing
+          presence=$(ssh "${args[@]}" "$host" "if test -e '$signing'; then test -s '$signing/release.p12' && test -s '$signing/password' && printf present; else printf absent; fi")
+          if [[ "$presence" == absent ]]; then
+            openssl rand -hex 32 > "$work/password"
+            keytool -genkeypair -noprompt -storetype PKCS12 -keystore "$work/release.p12" \
+              -storepass:file "$work/password" -alias jouw-driver-android -keyalg RSA -keysize 3072 \
+              -validity 15000 -dname 'CN=JOUW DRIVER Android Release'
+            tar -C "$work" -cf - release.p12 password | ssh "${args[@]}" "$host" \
+              "set -eu; umask 077; staged=\$(mktemp -d /srv/jouw-driver/.android-signing.XXXXXX); trap 'rm -rf \"\$staged\"' EXIT; tar -xf - -C \"\$staged\"; chmod 600 \"\$staged\"/release.p12 \"\$staged\"/password; test ! -e '$signing'; mv -T \"\$staged\" '$signing'"
+          elif [[ "$presence" != present ]]; then
+            exit 1
+          fi
+          ssh "${args[@]}" "$host" "cat '$signing/release.p12'" > "$work/release.p12"
+          ssh "${args[@]}" "$host" "cat '$signing/password'" > "$work/password"
+          signer=$(keytool -exportcert -storetype PKCS12 -keystore "$work/release.p12" \
+            -storepass:file "$work/password" -alias jouw-driver-android | sha256sum | cut -d' ' -f1)
+          [[ "$signer" =~ ^[a-f0-9]{64}$ ]]
+          test "$signer" != fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c
+          verify_release() {
+            verify_package "$1"
+            "$tool" verify --print-certs "$1" > "$work/certificate.txt"
+            grep -Fx "Signer #1 certificate SHA-256 digest: $signer" "$work/certificate.txt"
+            python3 - "$work/preview.apk" "$1" <<'PY'
+          import hashlib, re, sys, zipfile
+
+          def payload(path):
+              with zipfile.ZipFile(path) as apk:
+                  return {
+                      item.filename: hashlib.sha256(apk.read(item)).digest()
+                      for item in apk.infolist()
+                      if not item.is_dir() and not re.fullmatch(r'META-INF/(?:MANIFEST\.MF|[^/]+\.(?:SF|RSA|DSA|EC))', item.filename, re.I)
+                  }
+
+          if payload(sys.argv[1]) != payload(sys.argv[2]):
+              raise SystemExit('APK signing changed the reviewed application payload')
+          PY
+          }
+          "$tool" sign --ks "$work/release.p12" --ks-type PKCS12 --ks-pass "file:$work/password" \
+            --ks-key-alias jouw-driver-android --out "$work/jouw-driver.apk" "$work/preview.apk"
+          verify_release "$work/jouw-driver.apk"
+          release=android-direct
+          if gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release download "$release" --repo "$GITHUB_REPOSITORY" --pattern jouw-driver.apk \
+              --output "$work/published.apk"
+            verify_release "$work/published.apk"
+            mv "$work/published.apk" "$work/jouw-driver.apk"
+          else
+            gh release create "$release" "$work/jouw-driver.apk" --repo "$GITHUB_REPOSITORY" \
+              --target 4ade85613f38e49a166f43b0e65ca69d293177c9 --latest=false \
+              --title 'JOUW DRIVER Android · 0.3.1 (13)' --notes 'Direct Android APK from the verified native driver build.'
+          fi
+          curl --fail --silent --show-error --location --retry 2 --max-time 75 \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/$release/jouw-driver.apk" \
+            --output "$work/public.apk"
+          cmp "$work/public.apk" "$work/jouw-driver.apk"
+          sha256sum "$work/public.apk" | cut -d' ' -f1 | sed 's/^/Public APK SHA-256: /'
+
+  checks:
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+  build:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build and publish the pinned source image
+        id: image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$MAPBOX_PUBLIC_TOKEN"
+          repo=ghcr.io/infojouwdriver-commits/jd
+          tag="$repo:app-downloads-$REVISION-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$REVISION" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            --tag "$tag" .
+          docker push "$tag"
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  image-acceptance:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Pull the exact accepted source image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker pull "$IMAGE"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = ${{ github.sha }}
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
+      - name: Install isolated test prerequisites
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+      - name: Install checksum-verified age
+        run: bash .github/scripts/install-age-linux.sh
+      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: app-downloads-image-proof
+          path: candidate-native-proof.json
+          retention-days: 14
+
+  backup:
+    needs: [checks, image-acceptance]
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [apk, build, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Publish the verified public marketing resources
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+          REVISION: ${{ github.sha }}
+          BASELINE: 4ade85613f38e49a166f43b0e65ca69d293177c9
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export DRIVER_IMAGE=$1 DRIVER_REVISION=$2 DRIVER_BASELINE=$3 DRIVER_BACKUP=$4
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DRIVER_IMAGE")" = "$DRIVER_REVISION"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$DRIVER_IMAGE")" = https://app.jouww.com
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.DRIVER_BASELINE)throw Error('Live release differs from verified production baseline; refusing to deploy');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.DRIVER_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover existing live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .app-downloads.XXXXXX)
+          cp private-app.yaml runtime-mode.json "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env compose.yaml Caddyfile > "$work/preserved.sha256"
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.DRIVER_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$DRIVER_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const app='https://app.jouww.com';
+          const get=async(url,method='GET')=>fetch(url,{method,...(method==='POST'?{headers:{Origin:app,'Content-Type':'application/json'},body:'{}'}:{}),redirect:'error',signal:AbortSignal.timeout(20000)});
+          for(const path of ['/login','/driver-login']){
+            const login=await get(app+path);
+            if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login or indexing guard failed: '+path);
+          }
+          for(const path of ['/next_api/trips/start','/next_api/trips/end','/next_api/trips/retry-sync']){
+            if((await get(app+path,'POST')).status!==401)throw Error('Trip authorization guard failed: '+path);
+          }
+          const marketing='https://jouww.com';
+          const labels={ar:'قريبًا على iPhone',fr:'Bientôt sur iPhone',nl:'Binnenkort op iPhone'};
+          const apk='https://github.com/infojouwdriver-commits/jd/releases/download/android-direct/jouw-driver.apk';
+          for(const [locale, label] of Object.entries(labels)){
+            const response=await get(marketing+'/'+locale);
+            const html=await response.text();
+            if(response.status!==200||!html.includes('id="driver-app-downloads"')||!html.includes('href="'+apk+'"')||!html.includes(label))
+              throw Error('Localized app download section missing: '+locale);
+          }
+          if((await get(marketing+'/cinematic/android-head.svg')).status!==200)throw Error('Android artwork unavailable');
+          console.log('Public APK link and iPhone coming-soon labels verified in all three languages.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.DRIVER_IMAGE,revision:process.env.DRIVER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.DRIVER_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Driver app downloads published to jouww.com.\n'
+          REMOTE
