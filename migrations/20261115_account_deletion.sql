@@ -20,6 +20,13 @@ ALTER TABLE :"schema".approval_mail_outbox DROP CONSTRAINT IF EXISTS approval_ma
 ALTER TABLE :"schema".approval_mail_outbox ADD CONSTRAINT approval_mail_outbox_source_check
  CHECK(source IN ('company-registration','driver-registration','company-changes','general','account-deletion','account-deletion-complete'));
 
+-- Fleet tracking can already be installed on an upgraded database.
+DO $$
+BEGIN
+ GRANT DELETE ON TABLE :"schema".driver_fleet_locations TO :"admin_role";
+EXCEPTION WHEN undefined_table THEN
+ NULL;
+END $$;
 
 CREATE OR REPLACE FUNCTION :"schema".security_request_account_deletion(
  p_user bigint,p_password_hash text,p_receipt_digest text,p_language text,p_due_at timestamptz

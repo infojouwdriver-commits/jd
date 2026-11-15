@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "532671d2d775411623f3f1dee22a55428dd60563",
+  "source_commit_context": "06cc73cfc2145d8e7eb77c18bd28e79dd4540f28",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -128,7 +128,7 @@
     "migrations/20261010_trip_invoice.sql": "99aff82c874d5663c69e084ed27065f1c46a232e95e8190fb36733b8fa983c61",
     "migrations/20261012_accounts_messages.sql": "6cd8a0ab1d57cb8203a26eb0eb44d9e8f4a7772bdec7b669b8593d0e61913730",
     "migrations/20261013_company_pricing.sql": "9100dae24880fa3d625434cc32e7713d11c48a3c45c91a0f1af83d96eb15f133",
-    "migrations/20261013_fleet_tracking.sql": "2b9ec82456062bd60fe17eb8d249795319885859c599d0643d68fd8c9dd51073",
+    "migrations/20261013_fleet_tracking.sql": "1ba26d6057399676ae8f150e52b8da8028c8dfe1eba816eacc0b8a9f5ad339f2",
     "migrations/20261013_mail_delivery.sql": "71660e8257a47213396091b3634f619cb3ea7babd702bc16676f70fa60e18325",
     "migrations/20261016_native_push.sql": "ee76020f2c0a8d269c9b98523e4aee902f9cc56b49ff704fef2123f63a717060",
     "migrations/20261017_company_registration.sql": "38be754d8785ebd50e582008d51b8bb68abf0a65feceed6d7d5ecb3cd9039079",
@@ -155,7 +155,7 @@
     "migrations/20261104_company_tariffs.sql": "2e6baf273bd903aba79ffa3143e57a8bf9c6469d1971edba532719586263f539",
     "migrations/20261109_chiron_realtime.sql": "77e33410e11d2e40b7d030b5da558378e77da718f76b23c9d504955dceb8b2d8",
     "migrations/20261114_email_templates.sql": "6c586fcfa2dddcb72a29f73e58f4b67839a2e72a5130365747808a003e3f4f0b",
-    "migrations/20261115_account_deletion.sql": "9885a0d407773806f28d3c272ee6fccc235a83adf33377fe3eaf482f97b580c6",
+    "migrations/20261115_account_deletion.sql": "e62b5f629afc17664e55dbd920f566f4cd6eb72a5a55dbdcef00b961faad204d",
     "migrations/20261115_chiron_onboarding.sql": "0c45e5c07f5867f5ef39df51192ae83d1356c3c4ecd45f7e9e9076ba2df97ed7",
     "migrations/20261115_contact_approval_alerts.sql": "2b8ea5fdf76ad8bfc76648ba7d77d86c922b6cdf7bf70df40567532245e0faad",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
@@ -686,9 +686,9 @@
   "artifacts": {
     "GRAPH_TREE.html": "69bbd190ff11f5e5f5fd94c48045f4edebcabb46c1226d9c50e735fdbeb8f231",
     "health.json": "6bd32385165447a3017564b79477284538448de20fb1db51f91dbd9bd7acd334",
-    "SOURCE_INDEX.md": "871e4c86ffcc21c3093533363af29b32aea2a2b6e2392cff991e2632b84dcec3",
-    "GRAPH_REPORT.md": "8e08fece049b6bd4a87b1a092ba6659efe6ff009412f446057bfbddf280b6422",
-    "graph.json": "3b3c2c11c4099a0ced749f0b0f646e1032e67f82884e8f24e4ac3a2e4484097a"
+    "SOURCE_INDEX.md": "20937e05b6edf5c7ab3b73e95d78b9b61a0b5ee1cd3238cb7a7b8733f60cdd66",
+    "GRAPH_REPORT.md": "9ac7d7bdefe43d0a18f4a38cba0dc1b79033b7a61009357273f3b5ba19697ff4",
+    "graph.json": "9a2a1ac470fab7e547902a266c068bb16d2de6a2538dfc39daea747759476cff"
   },
   "nodes": 3874,
   "edges": 13135,

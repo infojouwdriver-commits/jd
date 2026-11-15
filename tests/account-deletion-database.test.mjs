@@ -15,7 +15,7 @@ test('account deletion queues one alert, blocks active work, and revokes authent
     for (const migration of [
       '20261009_security','20261013_mail_delivery','20261013_fleet_tracking','20261016_native_push',
       '20261017_company_registration','20261018_company_lifecycle','20261019_email_identity',
-      '20261019_driver_shifts','20261018_web_change_approvals','20261115_contact_approval_alerts','20261115_account_deletion',
+      '20261019_driver_shifts','20261018_web_change_approvals','20261115_contact_approval_alerts',
     ]) await db.exec(sql('migrations/' + migration + '.sql'));
     await db.exec(`
       INSERT INTO users(id,email,password,is_active,user_type) VALUES
@@ -43,8 +43,10 @@ test('account deletion queues one alert, blocks active work, and revokes authent
         VALUES(gen_random_uuid(),'synthetic',1,1,1,2,1,'approved',true,false,'Synthetic Driver','321','owner@example.invalid',clock_timestamp());
       GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO service;
       GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO service;
-      SET ROLE browser;
+      REVOKE DELETE ON driver_fleet_locations FROM service;
     `);
+    await db.exec(sql('migrations/20261115_account_deletion.sql'));
+    await db.exec('SET ROLE browser');
     await assert.rejects(db.query('SELECT * FROM account_deletion_requests'), /permission denied/);
     const request = (user, hash, receipt) => db.query(
       "SELECT security_request_account_deletion($1,$2,$3,'fr',now()+interval '1 month') AS status", [user, hash, receipt],

@@ -1374,10 +1374,10 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261115_account_deletion.sql` — [source](../migrations/20261115_account_deletion.sql#)
 - `"schema".account_deletion_requests` — [L2](../migrations/20261115_account_deletion.sql#L2)
-- `"schema".security_request_account_deletion()` — [L24](../migrations/20261115_account_deletion.sql#L24)
-- `"schema".security_complete_account_deletion()` — [L47](../migrations/20261115_account_deletion.sql#L47)
-- `"schema".security_clear_account_deletion_notice()` — [L120](../migrations/20261115_account_deletion.sql#L120)
-- `clear_account_deletion_notice` — [L128](../migrations/20261115_account_deletion.sql#L128)
+- `"schema".security_request_account_deletion()` — [L31](../migrations/20261115_account_deletion.sql#L31)
+- `"schema".security_complete_account_deletion()` — [L54](../migrations/20261115_account_deletion.sql#L54)
+- `"schema".security_clear_account_deletion_notice()` — [L127](../migrations/20261115_account_deletion.sql#L127)
+- `clear_account_deletion_notice` — [L135](../migrations/20261115_account_deletion.sql#L135)
 
 ## [migrations/20261115_chiron_onboarding.sql](../migrations/20261115_chiron_onboarding.sql)
 
