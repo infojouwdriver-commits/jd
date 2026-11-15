@@ -6,7 +6,7 @@ export const templateIds = [
   'invoice-reminder', 'trip-receipt', 'driver-report',
 ] as const;
 export type TemplateId = typeof templateIds[number];
-type EmailDesignId = TemplateId | 'public-contact' | 'approval-alert' | 'municipal-test-documents';
+type EmailDesignId = TemplateId | 'public-contact' | 'approval-alert' | 'municipal-test-documents' | 'account-deletion-review' | 'account-deletion-complete';
 
 export function resolveEmailLanguage(value: unknown, fallback: EmailLanguage = 'fr'): EmailLanguage {
   const language = typeof value === 'string' ? value.toLowerCase().split(/[-_]/)[0] : '';

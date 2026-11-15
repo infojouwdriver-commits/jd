@@ -13,14 +13,14 @@ export function isPlatformAdmin(userId: string, configured = ''): boolean {
   return configured.split(',').map(s => s.trim()).filter(Boolean).includes(String(userId));
 }
 export function publicEndpoint(path: string, method: string): boolean {
-  return (method === 'POST' && ['/next_api/invoice-payment', '/next_api/contracts/verify-token', '/next_api/contracts/sign', '/next_api/company-registrations', '/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout'].includes(path)) ||
+  return (method === 'POST' && ['/next_api/invoice-payment', '/next_api/contracts/verify-token', '/next_api/contracts/sign', '/next_api/company-registrations', '/next_api/auth/login', '/next_api/auth/driver-login', '/next_api/company-portal/login', '/next_api/auth/refresh', '/next_api/auth/send-verification', '/next_api/auth/register', '/next_api/auth/reset-password', '/next_api/auth/logout', '/next_api/auth/account-deletion-status'].includes(path)) ||
     (method === 'GET' && ['/next_api/app-experience', '/next_api/gdpr/privacy-policy', '/next_api/gdpr/cookie-categories'].includes(path));
 }
 export function disabledEndpoint(path: string): boolean {
   return ['/next_api/ai-assistant', '/next_api/invoices/view', '/next_api/invoices/share-link', '/next_api/auth/google-login', '/next_api/example', '/next_api/websocket', '/next_api/zoer_health', '/next_api/company-portal/register', '/next_api/company-portal/set-password'].some(prefix => path === prefix || path.startsWith(prefix + '/'));
 }
 export function memberEndpoint(path: string, method: string, userType: string): boolean {
-  if (['/next_api/auth/user', '/next_api/auth/account', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;
+  if (['/next_api/auth/user', '/next_api/auth/account', '/next_api/auth/account-deletion', '/next_api/gdpr/consents', '/next_api/gdpr/data-subject-requests', '/next_api/gdpr/export'].includes(path)) return true;
   if (['manager', 'company', 'owner'].includes(userType)) return ['/next_api/company-portal', '/next_api/company-portal/drivers', '/next_api/company-portal/vehicles', '/next_api/company-portal/directory', '/next_api/company-portal/billing', '/next_api/company-portal/staff', '/next_api/company-portal/changes', '/next_api/company-portal/contracts'].includes(path) || (path === '/next_api/fleet' && method === 'GET');
   if (userType === 'distributor') return method === 'GET' && ['/next_api/distributors/my-companies','/next_api/invoices/my-invoices'].includes(path);
   if (userType !== 'driver') return false;

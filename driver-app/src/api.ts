@@ -1,4 +1,5 @@
 import {validShift,shiftUuid,type ShiftList,type ShiftDetail,type DriverShift,type ShiftCommand} from './shift-model.ts';
+import type {CompanyRegistration} from './registration/schema.ts';
 import type {MeterPoint} from './trip-meter';
 import {APP_ORIGIN as API_ORIGIN} from './app-origin.ts';
 export {APP_ORIGIN as API_ORIGIN} from './app-origin.ts';
@@ -12,6 +13,8 @@ export interface DriverTripSummary {id:number; driver_id:number; start_time:stri
 export interface DriverMessage {id:number;subject:string;message_body:string;sender_name?:string;sender_type?:string;is_read:boolean;is_locked?:boolean;created_at?:string;last_activity_at?:string}
 export interface DriverReply {id:number;reply_body:string;sender_name?:string;sender_type?:string;created_at?:string}
 export interface DriverNotification {id:number;title:string;message:string;notification_type?:string;is_read:boolean;created_at?:string}
+export interface AccountDeletionStatus {requested_at:string;due_at:string;completed_at:string|null}
+export interface CompanyRegistrationReceipt {request_id:string;status:'pending'|'approved'|'rejected'}
 export interface AccountInfo {id:number;email:string;display_name?:string;email_verification_available:boolean}
 export interface DriverDetails {hasProfile:boolean;driver:{id:number;full_name:string;phone?:string;national_id?:string;driver_license?:string;bestuurderspas_number?:string;status?:string;registration_status?:string;preferred_language?:string;created_at?:string};company:{id:number;name:string;vat_number?:string;kbo_number?:string;address?:string;email?:string;phone?:string;subscription_status?:string}|null;vehicle:{id:number;brand?:string;model?:string;plate_number:string;vin?:string;status:string}|null;all_vehicles:{id:number;brand?:string;model?:string;plate_number:string;status:string}[]}
 export type ActivityTrip=Omit<DriverTripSummary,'price'>&{price:number|null;status:string;ride_type?:string;external_source?:string|null;payment_method?:string|null};
@@ -29,15 +32,15 @@ export function apiConnectionKey(error:unknown){return error instanceof ApiError
 // Uses the OS cookie store with the existing HttpOnly session contract.
 // Native cookie persistence/refresh must pass device acceptance before release.
 export function createDriverApi(transport: typeof fetch = fetch) {
-  async function requestOnce<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, string|number>): Promise<T> {
+  async function requestOnce<T>(path: string, body?: object, method: 'GET' | 'POST' | 'PUT' = body ? 'POST' : 'GET', query?: Record<string, string|number>, credentials: RequestCredentials = 'include'): Promise<T> {
     if (!/^\/next_api\/[a-z0-9/-]+$/.test(path)) throw new Error('Invalid API path');
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+    const timer = setTimeout(() => controller.abort(), credentials === 'omit' ? 20000 : 15000);
     try {
       const params = new URLSearchParams();
       for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) || (typeof value==='number'?(!Number.isSafeInteger(value)||value<0):value.length>64)) throw new ApiError(400); params.set(key,String(value));}
       const response = await transport(API_ORIGIN + path + (params.size ? `?${params}` : ''), {
-        method, credentials: 'include', redirect: 'error',
+        method, credentials, redirect: 'error',
         headers: {Origin: API_ORIGIN, Accept: 'application/json', ...(body ? {'Content-Type': 'application/json'} : {})},
         ...(body ? {body: JSON.stringify(body)} : {}), signal: controller.signal,
       }).catch(() => {throw new ApiError(controller.signal.aborted ? 408 : 0);});
@@ -202,6 +205,16 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       if (!current.vehicles.some(vehicle => vehicle.id === current.profile.driver.current_vehicle_id)) throw Error('اختر مركبة نشطة من سيارات شركتك قبل بدء الرحلة.');
       return current.profile;
     },
+    async sendCompanyRegistrationCode(details: {email:string;request_id:string;language:CompanyRegistration['language']}) {
+      const result=await requestOnce<{data:boolean}>('/next_api/auth/send-verification',
+        {...details,type:'company-registration'},'POST',undefined,'omit');
+      if(result?.data!==true)throw new ApiError(502);
+    },
+    async registerCompany(details: CompanyRegistration) {
+      const receipt=await requestOnce<CompanyRegistrationReceipt>('/next_api/company-registrations', details,'POST',undefined,'omit');
+      if(receipt?.request_id!==details.request_id || !['pending','approved','rejected'].includes(receipt.status))throw new ApiError(502);
+      return receipt;
+    },
     async login(identity: string, password: string, otp = '') {
       const value = identity.trim();
       await request(value.includes('@') ? '/next_api/auth/login' : '/next_api/auth/driver-login',
@@ -270,6 +283,15 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       return request('/next_api/notifications/mark-read',{notification_id:id});
     },
     async account(){const current=await profile();return ownerRead<AccountInfo>(current.driver.id,'/next_api/auth/account');},
+    async accountDeletion(owner:number) {
+      if ((await profile()).driver.id !== owner) throw new ApiError(403);
+      return ownerRead<AccountDeletionStatus|null>(owner, '/next_api/auth/account-deletion');
+    },
+    async requestAccountDeletion(owner:number, body:{password:string;receipt:string;language:string}) {
+      if ((await profile()).driver.id !== owner) throw new ApiError(403);
+      return request<AccountDeletionStatus>('/next_api/auth/account-deletion', body);
+    },
+    accountDeletionStatus: (receipt:string) => request<AccountDeletionStatus|null>('/next_api/auth/account-deletion-status', {receipt}),
     async changeAccount(owner:number,body:{action:'request_email_code'|'update_email'|'update_password';current_password:string;email?:string;passcode?:string;password?:string}) {
       if((await profile()).driver.id!==owner)throw new ApiError(403);
       return request<{sent?:boolean;updated?:boolean;sign_in_required?:boolean}>('/next_api/auth/account',body);

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS :"schema".driver_fleet_locations(
 );
 CREATE INDEX IF NOT EXISTS idx_driver_fleet_locations_company ON :"schema".driver_fleet_locations(company_id);
 REVOKE ALL ON :"schema".driver_fleet_locations FROM PUBLIC, :"user_role";
-GRANT SELECT,INSERT,UPDATE ON :"schema".driver_fleet_locations TO :"admin_role";
+GRANT SELECT,INSERT,UPDATE,DELETE ON :"schema".driver_fleet_locations TO :"admin_role";
 
 CREATE OR REPLACE FUNCTION :"schema".security_update_driver_fleet_location(
   p_user_id bigint,p_shift_active boolean,p_sharing_enabled boolean,

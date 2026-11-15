@@ -9,7 +9,3 @@ export function nativeAppOrigin(configured: string | undefined): string {
   return configured;
 }
 export const APP_ORIGIN = nativeAppOrigin(process.env.EXPO_PUBLIC_APP_ORIGIN);
-export function companyRegistrationUrl(language: string): string {
-  const lang = ['ar', 'fr', 'nl'].includes(language) ? language : 'fr';
-  return `${APP_ORIGIN}/register-company?lang=${lang}`;
-}
