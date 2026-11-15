@@ -409,7 +409,7 @@ try {
         labels.add(await about.textContent());
         assert.equal(await main.getAttribute('dir'), locale === 'ar' ? 'rtl' : 'ltr');
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-        if (route !== '/about') {
+        if (route === '/privacy-policy') {
           const topic = main.getByRole('button', {pressed: false}).first();
           const topicName = (await topic.textContent()).trim();
           await topic.click();
@@ -417,7 +417,24 @@ try {
         }
       }
       assert.equal(labels.size, 4);
-      assert.equal(await main.locator('form').count(), 0);
+      assert.equal(await main.locator('form').count(), route === '/contact' ? 1 : 0);
+      if (route === '/contact') {
+        for (const href of ['mailto:jouw2023@gmail.com', 'tel:+32465555596', 'https://wa.me/32465555596'])
+          assert.ok(await main.locator(`a[href="${href}"]`).isVisible());
+        let submission;
+        await page.route('**/contact/submit', async request => {
+          submission=request.request().postDataJSON();
+          await request.fulfill({json:{success:true}});
+        });
+        await main.getByLabel('Nom',{exact:true}).fill('Synthetic Visitor');
+        await main.getByLabel('Adresse e-mail',{exact:true}).fill('visitor@example.invalid');
+        await main.getByLabel('Motif',{exact:true}).selectOption('billing');
+        await main.getByLabel('Votre message',{exact:true}).fill('Message de test sans données personnelles.');
+        await main.getByRole('button',{name:'Envoyer le message'}).click();
+        await main.getByRole('status').filter({hasText:'Nous avons reçu votre message.'}).waitFor();
+        assert.equal(submission.topic,'billing');
+        assert.equal(submission.language,'fr');
+      }
       await Promise.all([
         page.waitForURL(base + '/about'),
         main.getByRole('navigation', {name: 'Pages'}).getByRole('link', {name: 'À propos'}).click(),

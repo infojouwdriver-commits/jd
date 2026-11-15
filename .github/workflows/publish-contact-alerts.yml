@@ -31,7 +31,7 @@ jobs:
             'src/lib/approval-link.ts', 'src/lib/approval-mail-scheduler.ts', 'src/lib/company-changes.ts',
             'src/lib/email/operational.ts', 'src/lib/email/renderer.ts', 'src/lib/mail-service.ts',
             'src/lib/public-contact.ts', 'src/middleware.ts', 'tests/contact-approval-mail.test.mjs',
-            'tests/run-database-stack.mjs',
+            'tests/run-database-stack.mjs', 'tests/run-marketing-ui.mjs',
           ]);
           if(comparison.status!=='ahead'||comparison.merge_base_commit?.sha!==baseline||
             !comparison.files?.some(f=>f.filename==='migrations/20261115_contact_approval_alerts.sql')||
