@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "2d57a3a6cf8484e42440ca583ee172d7e46cc5b7",
+  "source_commit_context": "60b0b3a2cd200d267e4b1d5a223e33d463778dc1",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -558,7 +558,7 @@
     "src/hooks/useZoerIframe.ts": "ab6811bc69861cfc74f80863824b9b2511232b059b46cb2b5c83858d56965d1c",
     "src/instrumentation.ts": "484e0182686cc808915b68cac8ca11888ccf5dc09597eb53f89d548d5f456e4f",
     "src/legal/pdf-fonts.ts": "95ae6c30c3d945b6d8646416ea72563c599550ae9ecfe047cc2fda40e1aaa1f8",
-    "src/legal/vervoerbewijs.ts": "3be59d065616148ed004a8f951c9491bae7bcc3aeea549d21d0719c6e9ce16f9",
+    "src/legal/vervoerbewijs.ts": "9ccf23cd0135cd03d62e362ac28e0b433dc71cebd0263a0fce63c0e8da5f2f14",
     "src/lib/acceptance-report-pdf.ts": "155e083baf8aa10703bcfbaec4e62521f1f75c6462d36b4ae7df94c8738b7f3a",
     "src/lib/address-search.ts": "e1c3034b7de8cdf73a58e65e545f746211a1ecf1909eb4a9173e62424f924d54",
     "src/lib/admin-mfa.ts": "02724538b9ec5d5aed7eb65f9ce5259533a116597b90fd4d0b8fe93a8c2eceee",
@@ -626,7 +626,7 @@
     "src/lib/marketing-resources.ts": "69c3b413e115385b290515ec5e46f8d824901a9a6b95a41593bb5e3d97b71c4b",
     "src/lib/message-access.ts": "dad76d5db7679c669083d61fd18c3de794887bf147ca39b977d79bb1a0f37f94",
     "src/lib/mobile-location.ts": "e5b9af735a504401839958c2721d46ce13a1b5ccebe88b51a534142b191129b5",
-    "src/lib/municipal-test-documents.ts": "7a8eb92d6c5d67d1d886cc063b3cf44ebb156294738c7fb3170e5eec33191e70",
+    "src/lib/municipal-test-documents.ts": "35be5accc11ce34e7bced6ef32f486aed36e032ef8ed407d662641eb82ebc641",
     "src/lib/native-trip-contract.ts": "0ea664493b631c305f37719a4a99090be01905ff3a1d66422b7854219e27197e",
     "src/lib/operations-access.ts": "c33eb3b67ad4c3f99a10a0572c37e0675061e1973598da495f85ce02ab94489a",
     "src/lib/payment-reference.ts": "54dbec05024c9df5d62802fe8927997b8bf9901edb5b160ade2099938d783207",
@@ -670,9 +670,9 @@
   "artifacts": {
     "GRAPH_TREE.html": "233fc348790572d463cffb0ccc96c002d5a262bdcf535d4e7be35ccd0c5a4031",
     "health.json": "f355edb10b4309ed9811a73e044b1c2b49c10ca1248286f038a2c1d5079d1055",
-    "SOURCE_INDEX.md": "67797569294bac9ebd3c9c0d726a576fa964030378b881c0a5216b9e77527c50",
-    "GRAPH_REPORT.md": "cc354fc874078efead953441c8217fcb505c9b87ec02285871bb2459fae4511a",
-    "graph.json": "188f526d2b00bf6f20e0495a51ffc10188892534d63bf00d9a0ad4e58f728fff"
+    "SOURCE_INDEX.md": "791a8d6112f2ad32a765fde1af205fb40191f5e9728380f86c3aaadff007c4a1",
+    "GRAPH_REPORT.md": "e4062c85e5e17addad9b9845453c3cfcdae45c5facd915c572e0bfaaf59750d9",
+    "graph.json": "e9939946870deb47eac3bf5d976607cae9e50d82c30690101583c1727f02b7f0"
   },
   "nodes": 3789,
   "edges": 12767,

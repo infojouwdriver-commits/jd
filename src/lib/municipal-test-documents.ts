@@ -62,12 +62,8 @@ export async function municipalTestDocuments(companyId:number,batchId:string) {
     company:report.company,driver:report.driver,
     vehicle:{brand:report.vehicle.brand??'',model:report.vehicle.model??'',plate_number:report.vehicle.plate_number,chiron_vehicle_id:vehicle.data.chiron_vehicle_id},
     trip:{ritnummer:ride.ritnummer,trip_uuid:batchId,start_time:ride.startTime,end_time:ride.endTime,start_address:ride.startAddress,end_address:ride.endAddress,start_lat:ride.startLat,start_lon:ride.startLon,end_lat:ride.endLat,end_lon:ride.endLon,distance_km:ride.distanceKm,duration_minutes:(Date.parse(ride.endTime)-Date.parse(ride.startTime))/60000,price:ride.price,currency:'EUR'},
-    chiron:{sync_state:'completed'},document_number:'TEST-'+batchId.slice(0,8).toUpperCase(),document_date:ride.endTime,
+    chiron:{sync_state:'completed'},sample:true,document_number:'TEST-'+batchId.slice(0,8).toUpperCase(),document_date:ride.endTime,
   });
-  for(let page=1;page<=receipt.getNumberOfPages();page++){
-    receipt.setPage(page).setFont('helvetica','bold').setFontSize(8).setTextColor(125,39,32);
-    receipt.text('TESTOMGEVING - VOORBEELD - GEEN FISCALE FACTUUR',receipt.internal.pageSize.getWidth()/2,8,{align:'center'});
-  }
   const pdf=(filename:string,document:jsPDF)=>({filename,content:Buffer.from(document.output('arraybuffer'))});
   return {
     to:registration.data?.company_email??company.data.email,
