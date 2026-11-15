@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -56,6 +56,63 @@ export default function AcceptanceTestPage() {
   
   const [loading, setLoading] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
+
+  const [batches,setBatches]=useState<{id:string;date:string}[]>([]);
+  const [batchId,setBatchId]=useState('');
+  const [recipient,setRecipient]=useState('');
+  const [packageBusy,setPackageBusy]=useState(false);
+  const [packageFiles,setPackageFiles]=useState<{filename:string;url:string}[]>([]);
+
+  useEffect(()=>{
+    const company=new URLSearchParams(window.location.search).get('company');
+    if(company&&/^\d+$/.test(company))setSelectedCompany(company);
+  },[]);
+  useEffect(()=>{
+    let current=true;
+    setBatches([]);
+    setBatchId('');
+    if(selectedCompany){
+      api.get<{id:string;date:string}[]>('/test-trips/municipal-documents',{companyId:selectedCompany})
+        .then(items=>{if(current){setBatches(items);setBatchId(items[0]?.id??'');}})
+        .catch(()=>{if(current)toast.error('تعذّر تحميل دفعات الاختبار السابقة');});
+    }
+    return ()=>{current=false;};
+  },[selectedCompany]);
+  useEffect(()=>{
+    let current=true;
+    setRecipient('');
+    setPackageFiles([]);
+    if(batchId&&selectedCompany){
+      api.post<{to:string}>('/test-trips/municipal-documents',{companyId:Number(selectedCompany),batchId,action:'details'})
+        .then(result=>{if(current)setRecipient(result.to??'');})
+        .catch(()=>{if(current)toast.error('تعذّر تحميل بيانات دفعة الاختبار');});
+    }
+    return ()=>{current=false;};
+  },[selectedCompany,batchId]);
+
+  useEffect(()=>()=>packageFiles.forEach(file=>URL.revokeObjectURL(file.url)),[packageFiles]);
+
+  async function municipalDocuments(action:'download'|'send'){
+    if(!batchId||packageBusy||action==='send'&&!recipient)return;
+    if(action==='send'&&!window.confirm('إرسال ملفات الاختبار الثلاثة إلى '+recipient+'؟'))return;
+    setPackageBusy(true);
+    try{
+      type PackageResult={accepted?:boolean;status?:string;files?:{filename:string;base64:string}[]};
+      const result=await api.post<PackageResult>('/test-trips/municipal-documents',{
+        companyId:Number(selectedCompany),batchId,action,...(action==='send'?{expectedTo:recipient}:{}),
+      });
+      if(action==='send'){
+        if(result.accepted)toast.success(result.status==='delivered'?'تم تسليم الحزمة إلى بريد الشركة':'قَبِل مزود البريد الحزمة. التسليم قيد التحقق.');
+        else toast.warning('تعذّر تأكيد إرسال البريد ('+(result.status??'unknown')+')');
+        return;
+      }
+      setPackageFiles((result.files??[]).map(file=>{
+        const bytes=Uint8Array.from(atob(file.base64),character=>character.charCodeAt(0));
+        return {filename:file.filename,url:URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}))};
+      }));
+    }catch(error){toast.error(error instanceof Error?error.message:'تعذّر تجهيز الحزمة');}
+    finally{setPackageBusy(false);}
+  }
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -111,11 +168,12 @@ export default function AcceptanceTestPage() {
         company_id: parseInt(selectedCompany),
         driver_id: parseInt(selectedDriver),
         vehicle_id: parseInt(selectedVehicle)
-      });
+      }, {signal:AbortSignal.timeout(190_000)});
 
       setTestResult(result);
       
       if (result.success) {
+        if(result.batchId){setBatches(previous=>[{id:result.batchId,date:result.reportContext.testDate},...previous.filter(item=>item.id!==result.batchId)]);setBatchId(result.batchId);}
         toast.success('✅ تم إرسال جميع الرسائل التجريبية بنجاح!');
       } else {
         toast.warning('⚠️ تم إرسال الرسائل ولكن بعضها فشل');
@@ -423,7 +481,7 @@ export default function AcceptanceTestPage() {
                           </div>
                           {result.error && (
                             <AlertDescription className="mt-1 text-xs">
-                              {result.error}
+                              {result.error} {result.codes?.length ? '('+result.codes.join(', ')+')' : ''}
                             </AlertDescription>
                           )}
                         </div>
@@ -473,7 +531,28 @@ export default function AcceptanceTestPage() {
           <CardHeader>
             <CardTitle>ملاحظات مهمة</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+          {selectedCompany&&batches.length>0&&<Card className="my-6">
+          <CardHeader>
+            <CardTitle>ملف البلدية · Chiron TEST</CardTitle>
+            <CardDescription>تقرير الرسائل المقبولة، نموذج Dienststaat، ونموذج Vervoerbewijs للرحلة الاختبارية.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <label className="block text-sm">دفعة الاختبار
+              <select disabled={packageBusy} className="mt-2 block max-w-full rounded-lg border bg-background p-2" value={batchId} onChange={event=>setBatchId(event.target.value)}>
+                {batches.map(batch=><option key={batch.id} value={batch.id}>{new Intl.DateTimeFormat('ar-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(batch.date))}</option>)}
+              </select>
+            </label>
+            {recipient&&<p className="text-sm">بريد الشركة المسجّل <bdi>{recipient}</bdi></p>}
+            <div className="flex flex-wrap gap-3">
+              <Button disabled={!batchId||packageBusy} onClick={()=>void municipalDocuments('download')}><Download className="me-2 h-4 w-4"/> تجهيز روابط التنزيل</Button>
+              <Button disabled={!recipient||packageBusy} variant="outline" onClick={()=>void municipalDocuments('send')}><Send className="me-2 h-4 w-4"/> إرسال إلى بريد الشركة</Button>
+            </div>
+            {packageFiles.length>0&&<ul className="space-y-2">
+              {packageFiles.map(file=><li key={file.filename}><a className="inline-flex items-center gap-2 text-sm underline" href={file.url} download={file.filename} dir="ltr"><Download className="h-4 w-4"/>{file.filename}</a></li>)}
+            </ul>}
+          </CardContent>
+        </Card>}
+        <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
             <p>• يجب أن تكون الشركة في وضع TEST لتنفيذ الاختبار</p>
             <p>• سيتم إرسال 5 رسائل VERTREK (بدء رحلة) و 5 رسائل AANKOMST (وصول)</p>
             <p>• كل رسالة VERTREK مرتبطة برسالة AANKOMST بنفس ritnummer</p>

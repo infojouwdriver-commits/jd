@@ -1,0 +1,286 @@
+name: Publish Chiron onboarding and company activation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-chiron-onboarding.yml']
+permissions:
+  contents: read
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Verify the Chiron and onboarding release scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          const baseline='0cd40ba883b23c1731caddbdb830c4d2ddf13008';
+          const result=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/compare/'+baseline+'...'+process.env.GITHUB_SHA,{
+            headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN},signal:AbortSignal.timeout(20000)
+          });
+          if(!result.ok)throw Error('Cannot verify reviewed release changes');
+          const comparison=await result.json();
+          const files=new Set([
+            '.github/workflows/publish-chiron-onboarding.yml', 'migrations/20261115_chiron_onboarding.sql',
+            'scripts/apply-release.mjs', 'scripts/database-readiness.mjs',
+            'src/app/admin/companies/[id]/chiron-settings/page.tsx', 'src/app/admin/test-trips/page.tsx',
+            'src/app/next_api/chiron-settings/route.ts', 'src/app/next_api/chiron-settings/test/route.ts',
+            'src/app/next_api/company-registrations/service/route.ts',
+            'src/app/next_api/test-trips/acceptance-test/route.ts', 'src/app/next_api/test-trips/municipal-documents/route.ts',
+            'src/components/registration/CompanyRegistrationApprovals.tsx',
+            'src/lib/api-client.ts', 'src/lib/chiron-protocol.ts', 'src/lib/chiron-service.ts',
+            'src/lib/driver-shift-pdf.ts', 'src/lib/email/renderer.ts', 'src/lib/mail-service.ts',
+            'src/lib/municipal-test-documents.ts', 'src/legal/vervoerbewijs.ts', 'tests/chiron-flow.test.mjs', 'tests/invoice-checkout-database.test.mjs', 'tests/run-database-stack.mjs',
+            'tests/run-company-registration-ui.mjs', 'tests/run-portal-ui.mjs',
+          ]);
+          if(comparison.status!=='ahead'||comparison.merge_base_commit?.sha!==baseline||
+            !comparison.files?.some(f=>f.filename==='migrations/20261115_chiron_onboarding.sql')||
+            comparison.files.some(f=>f.status==='removed'||(!files.has(f.filename)&&!f.filename.startsWith('graphify-out/'))))
+            throw Error('Unexpected Chiron onboarding release scope');
+          GATE
+  checks:
+    uses: ./.github/workflows/ci.yml
+    with:
+      force_native_db: true
+  build:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Build and publish the pinned source image
+        id: image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test -n "$MAPBOX_PUBLIC_TOKEN"
+          repo=ghcr.io/infojouwdriver-commits/jd
+          tag="$repo:chiron-onboarding-$REVISION-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$REVISION" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            --tag "$tag" .
+          docker push "$tag"
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+
+  image-acceptance:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Pull the exact accepted source image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker pull "$IMAGE"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = ${{ github.sha }}
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
+      - name: Install isolated test prerequisites
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+      - name: Install checksum-verified age
+        run: bash .github/scripts/install-age-linux.sh
+      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: chiron-onboarding-image-proof
+          path: candidate-native-proof.json
+          retention-days: 14
+
+  backup:
+    needs: [checks, image-acceptance]
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [scope, checks, build, image-acceptance, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Publish Chiron onboarding and company activation
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+          REVISION: ${{ github.sha }}
+          BASELINE: 0cd40ba883b23c1731caddbdb830c4d2ddf13008
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          migration=migrations/20261115_chiron_onboarding.sql
+          migration_sha=$(sha256sum "$migration" | cut -d' ' -f1)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p /srv/jouw-driver/releases/$REVISION"
+          scp "${args[@]}" "$migration" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$REVISION/"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG' '$migration_sha'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export DRIVER_IMAGE=$1 DRIVER_REVISION=$2 DRIVER_BASELINE=$3 DRIVER_BACKUP=$4 DRIVER_MIGRATION_SHA=$5
+          cd /srv/jouw-driver/foundation
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DRIVER_IMAGE")" = "$DRIVER_REVISION"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$DRIVER_IMAGE")" = https://app.jouww.com
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.DRIVER_BASELINE)throw Error('Live release differs from verified production baseline; refusing to deploy');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.DRIVER_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover existing live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .chiron-onboarding.XXXXXX)
+          cp private-app.yaml runtime-mode.json "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env compose.yaml Caddyfile > "$work/preserved.sha256"
+          node --env-file=.database.env --input-type=module <<'MIGRATE'
+          import fs from 'node:fs';
+          import {spawnSync} from 'node:child_process';
+          import {createHash} from 'node:crypto';
+          const e=process.env;
+          if(e.POSTGREST_SCHEMA!=='public'||e.SCHEMA_ADMIN_USER!=='jouw_service'||e.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
+          const raw=fs.readFileSync('/srv/jouw-driver/releases/'+e.DRIVER_REVISION+'/20261115_chiron_onboarding.sql');
+          if(createHash('sha256').update(raw).digest('hex')!==e.DRIVER_MIGRATION_SHA)throw Error('Migration identity mismatch');
+          const sql=raw.toString('utf8').replaceAll(':"schema"','"public"').replaceAll(':"admin_role"','"jouw_service"').replaceAll(':"user_role"','"jouw_app_user"');
+          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
+          const apply=spawnSync('docker',args,{input:sql+"\nNOTIFY pgrst, 'reload schema';\n",encoding:'utf8'});
+          if(apply.status!==0)throw Error('Chiron onboarding migration rejected');
+          const verify="SELECT NOT has_function_privilege('jouw_app_user','public.security_recover_registration_service(uuid,bigint,uuid)','EXECUTE') AND has_function_privilege('jouw_service','public.security_recover_registration_service(uuid,bigint,uuid)','EXECUTE');";
+          const checked=spawnSync('docker',args,{input:verify,encoding:'utf8'});
+          if(checked.status!==0||checked.stdout.trim()!=='t')throw Error('Onboarding permission verification failed');
+          MIGRATE
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.DRIVER_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$DRIVER_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const app='https://app.jouww.com';
+          const get=async(url,method='GET')=>fetch(url,{method,...(method==='POST'?{headers:{Origin:app,'Content-Type':'application/json'},body:'{}'}:{}),redirect:'error',signal:AbortSignal.timeout(20000)});
+          for(const path of ['/login','/driver-login']){
+            const login=await get(app+path);
+            if(login.status!==200||!login.headers.get('x-robots-tag')?.includes('noindex'))throw Error('Portal login or indexing guard failed: '+path);
+          }
+          for(const path of ['/next_api/trips/start','/next_api/trips/end','/next_api/trips/retry-sync']){
+            if((await get(app+path,'POST')).status!==401)throw Error('Trip authorization guard failed: '+path);
+          }
+          if((await get('https://jouww.com/')).status!==200)throw Error('Marketing site failed smoke check');
+          const site='https://jouww.com';
+          const contact=await get(site+'/contact');
+          if(contact.status!==200)throw Error('Contact page unavailable');
+          const html=await contact.text();
+          if(!html.includes('mailto:jouw2023@gmail.com')||!html.includes('tel:+32465555596')||!html.includes('https://wa.me/32465555596'))throw Error('Public contact details missing');
+          const invalid=await fetch(site+'/contact/submit',{method:'POST',headers:{Origin:site,'Content-Type':'application/json'},body:'{}',redirect:'error',signal:AbortSignal.timeout(20000)});
+          if(invalid.status!==400)throw Error('Contact form ingress failed: '+invalid.status);
+          for(const path of ['/contact','/next_api/auth/login']){
+            const denied=await get(site+path,'POST');
+            if(denied.status!==405)throw Error('Marketing must reject unrelated POST routes');
+          }
+          for(const path of ['/next_api/chiron-settings/test','/next_api/test-trips/municipal-documents','/next_api/company-registrations/service']){
+            if((await get(app+path,'POST')).status!==401)throw Error('Admin-only route guard failed: '+path);
+          }
+          console.log('Verified public contact, portal entry points and unauthenticated route rejection.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.DRIVER_IMAGE,revision:process.env.DRIVER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.DRIVER_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          updated=true
+          printf 'Chiron onboarding and company activation published.\n'
+          REMOTE

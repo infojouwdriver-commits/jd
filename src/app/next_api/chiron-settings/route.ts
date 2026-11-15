@@ -111,6 +111,6 @@ export const PUT = requestMiddleware(async (request, context) => {
     updateData.chiron_prod_api_url = body.chiron_prod_api_url;
   }
   
-  const data = await companiesCrud.update(id, updateData);
-  return createSuccessResponse(data);
+  await companiesCrud.update(id, updateData);
+  return createSuccessResponse({id:Number(id),saved:true});
 }, true);

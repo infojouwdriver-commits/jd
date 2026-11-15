@@ -20,21 +20,32 @@ function numeric(value:unknown,minimum:number,maximum:number,digits:number,label
  return Number(Number(value).toFixed(digits));
 }
 function timestamp(value:unknown){const date=new Date(String(value));if(!Number.isFinite(date.getTime()))throw new ChironError('توقيت الرحلة غير صالح');return date.toISOString().replace(/\.\d{3}Z$/, 'Z');}
-export function rideMessage(status:'vertrek'|'aankomst',company:any,driver:any,vehicle:any,trip:any,contract?:any,departure?:{rit:Record<string,any>}){
+export function rideMessage(status:'vertrek'|'aankomst',company:any,driver:any,vehicle:any,trip:any,contract?:any,departure?:{rit:Record<string,any>;ritnummer?:string},createdAt?:string){
  const kbo=String(company.kbo_number||'').replace(/[.\s]/g,'');
- const driverPass=String(driver.bestuurderspas_number||'').trim()||String(driver.capacity_certificate_number||'').trim();
- const name=String(company.name||'').trim(),plate=String(vehicle.plate_number||'').trim();
- if(!departure&&(!/^\d{10}$/.test(kbo)||!name||!driverPass||!plate||!trip.ritnummer||String(trip.ritnummer).length>100))throw new ChironError('أكمل رقم KBO وبطاقة السائق ولوحة المركبة ومعرّف الرحلة');
+ const driverPass=(String(driver.bestuurderspas_number||'').trim()||String(driver.capacity_certificate_number||'').trim()).replace(/[\s-]+/g,'');
+ const name=String(company.name||'').trim(),plate=String(vehicle.plate_number||'').trim().replace(/[\s-]+/g,'').toUpperCase();
+ if(!departure&&(!/^\d{10}$/.test(kbo)||!name||!/^[A-Za-z0-9]+$/.test(driverPass)||!/^[A-Z0-9]{7,}$/.test(plate)||!trip.ritnummer||String(trip.ritnummer).length>100))throw new ChironError('أكمل رقم KBO وبطاقة السائق ولوحة المركبة ومعرّف الرحلة');
  if(!departure&&(String(driver.company_id)!==String(company.id)||String(vehicle.company_id)!==String(company.id)))throw new ChironError('السائق والمركبة يجب أن يتبعا الشركة نفسها');
  const rit:any=departure ? {...departure.rit} : {taxibedrijf:{aanbieder:{registratie:kbo,naam:name}},voertuig:{nummerplaat:plate},uitvoerder:{bestuurderspasnummer:driverPass},vertrektijdstip:timestamp(trip.start_time),vertrekpunt:{lengtegraad:numeric(trip.start_lon,-180,180,5,'خط طول الانطلاق'),breedtegraad:numeric(trip.start_lat,-90,90,5,'خط عرض الانطلاق')}};
  if(contract?.contract_number&&contract.contractor_name&&!departure)rit.taxibedrijf.contract={contractnummer:contract.contract_number,contractant:contract.contractor_name};
  if(status==='aankomst'){
-  rit.aankomsttijdstip=timestamp(trip.end_time);if(Date.parse(trip.end_time)<=Date.parse(trip.start_time))throw new ChironError('وقت الوصول يجب أن يلي وقت الانطلاق');
+  rit.aankomsttijdstip=timestamp(trip.end_time);if(Date.parse(trip.end_time)<=Date.parse(trip.start_time)||Date.parse(rit.aankomsttijdstip)<Date.parse(rit.vertrektijdstip))throw new ChironError('وقت الوصول يجب أن يلي وقت الانطلاق');
   rit.aankomstpunt={lengtegraad:numeric(trip.end_lon,-180,180,5,'خط طول الوصول'),breedtegraad:numeric(trip.end_lat,-90,90,5,'خط عرض الوصول')};
   rit.afstand={waarde:numeric(trip.distance_km,0,100000,3,'المسافة')};rit.kostprijs={waarde:numeric(trip.price,0,1000000,2,'السعر')};
   if(rit.kostprijs.waarde===0&&!rit.taxibedrijf.contract)throw new ChironError('الرحلة ذات السعر صفر تحتاج بيانات العقد');
  }else if(trip.chiron_agreed_price != null){
   rit.kostprijs={waarde:numeric(trip.chiron_agreed_price,0,1000000,2,'السعر المتفق عليه')};
  }
- return {status,ritnummer:String(trip.ritnummer),broncreatiedatum:timestamp(status==='vertrek'?trip.start_time:trip.end_time),rit};
+ return {status,ritnummer:departure?.ritnummer??String(trip.ritnummer),broncreatiedatum:timestamp(createdAt??(status==='vertrek'?trip.start_time:trip.end_time)),rit};
+}
+
+// Chiron validates decimal places in JSON coordinates (CH1204/1205/1207/1208).
+// Standard JSON.stringify drops trailing zeroes even after a numeric round.
+export function serializeRideMessage(message:ReturnType<typeof rideMessage>):string {
+ const rawNumber=(JSON as typeof JSON & {rawJSON:(source:string)=>unknown}).rawJSON;
+ return JSON.stringify(message,(key,value)=>{
+  if((key==='lengtegraad'||key==='breedtegraad')&&typeof value==='number'&&Number.isFinite(value))
+   return rawNumber(value.toFixed(5));
+  return value;
+ });
 }

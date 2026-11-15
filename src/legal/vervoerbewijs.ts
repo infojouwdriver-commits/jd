@@ -61,6 +61,7 @@ export interface VervoerbewijsData {
   document_number: string;
   document_date: string;
   vat_rate?: number;
+  sample?: boolean;
   qr_code_url?: string;
   document_url?: string;
 }
@@ -151,10 +152,19 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
 
   const kv = (label: string, value: string) => {
     setFont(8, false, GRAY);
+    const labelWidth=doc.getTextWidth(label);
     doc.text(label, MARGIN, y);
     setFont(8, false, DARK);
-    doc.text(value, RIGHT, y, { align: 'right' });
-    y += 4;
+    if(labelWidth+doc.getTextWidth(value)+3>CW){
+      y+=4;
+      for(const line of doc.splitTextToSize(value,CW) as string[]){
+        doc.text(line, MARGIN, y);
+        y+=4;
+      }
+    }else{
+      doc.text(value, RIGHT, y, { align: 'right' });
+      y+=4;
+    }
   };
 
   const ml = (str: string, size = 8, color: [number, number, number] = DARK) => {
@@ -169,10 +179,22 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
     y += 5;
   };
 
+  if(data.sample){
+    setFont(8,true,[125,39,32]);
+    doc.text('TESTOMGEVING – VOORBEELD',MID,y,{align:'center'});
+    y+=3.5;
+    setFont(7,false,[125,39,32]);
+    doc.text('GEEN FISCALE FACTUUR',MID,y,{align:'center'});
+    y+=6;
+  }
+
   // ── Company header ─────────────────────────────────────────────────────────
   setFont(13, true, BLACK);
-  doc.text(data.company.name, MID, y, { align: 'center' });
-  y += 6;
+  for(const line of doc.splitTextToSize(data.company.name,CW) as string[]){
+    doc.text(line, MID, y, { align: 'center' });
+    y+=5;
+  }
+  y+=1;
 
   setFont(7.5, false, GRAY);
   if (data.company.address) {
@@ -188,6 +210,7 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   hline(0.4, BLACK);
 
   // ── Document title ─────────────────────────────────────────────────────────
+  y+=2;
   setFont(13, true, BLACK);
   doc.text('VERVOERBEWIJS', MID, y, { align: 'center' });
   y += 5;
@@ -348,9 +371,9 @@ export function generateVervoerbewijs(data: VervoerbewijsData): jsPDF {
   // ── Legal footer ───────────────────────────────────────────────────────────
   setFont(6.5, false, GRAY);
   const footerLines = [
-    `BTW: ${data.vat_rate}% - tarief vermeld in dit document.`,
+    `BTW: ${vatRate}% - tarief vermeld in dit document.`,
     'Digitaal vervoerbewijs - JOUW DRIVER.',
-    'Bewaar dit document bij uw ritgegevens.',
+    data.sample ? 'Voorbeeld uit de Chiron-testomgeving.' : 'Bewaar dit document bij uw ritgegevens.',
   ];
   footerLines.forEach((l) => { doc.text(l, MID, y, { align: 'center' }); y += 3; });
 

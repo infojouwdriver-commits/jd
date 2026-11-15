@@ -25,3 +25,37 @@ test('bank partial payment reduces future checkout amount; unexpected late provi
 test('new signed annual contract auto-emails the first invoice, gates service until full settlement, and keeps monthly terms finite',async()=>{const db=await setup();try{const k=await annual(db);await sign(db,k);assert.equal((await db.query('SELECT paid_at FROM invoice_service_activation WHERE company_id=3')).rows[0].paid_at,null);await db.query('SELECT security_invoice_email_tick()');const d=(await db.query('SELECT * FROM subscription_documents WHERE company_id=3')).rows[0];assert.equal(d.state,'issued');assert.equal(d.exchange_reference,null);assert.equal(d.delivery_channel,'email_pdf');assert.equal(Number(d.gross_cents),5000);assert.equal(d.installment_number,1);assert.equal((await db.query('SELECT count(*)::int n FROM subscription_mail_queue WHERE document_id=$1',[d.id])).rows[0].n,1);const q=await begin(db,'subscription',d.id);await state(db,q);await settle(db,q);assert.ok((await db.query('SELECT paid_at FROM invoice_service_activation WHERE company_id=3')).rows[0].paid_at);await db.query('SELECT security_invoice_email_tick()');assert.equal((await db.query('SELECT count(*)::int n FROM subscription_documents WHERE company_id=3')).rows[0].n,1);assert.equal((await db.query('SELECT contract_end_date::text d FROM company_contracts WHERE id=$1',[k.id])).rows[0].d,new Date(k.contract_end_date).toISOString().slice(0,10));}finally{await db.close();}});
 test('rollout reruns do not rewrite historical documents or opt existing companies into the new service gate',async()=>{const db=await setup();try{const d=await manual(db);await issue(db,'manual',d.id);await db.exec(sql('migrations/20261026_invoice_checkout.sql'));assert.equal((await db.query('SELECT count(*)::int n FROM invoice_service_activation')).rows[0].n,0);assert.equal((await db.query('SELECT document_number FROM manual_invoices WHERE id=$1',[d.id])).rows[0].document_number,d.document_number);const q=await begin(db,'manual',d.id);await state(db,q);await settle(db,q);}finally{await db.close();}});
 test('first-invoice gate blocks new shifts and trips while preserving saved completed history',async()=>{const db=await setup();try{await db.exec("INSERT INTO companies(id,name,email,subscription_status) VALUES(50,'Synthetic new company','new@example.invalid','active')");assert.equal((await db.query('SELECT paid_at FROM invoice_service_activation WHERE company_id=50')).rows[0].paid_at,null);await assert.rejects(db.exec("INSERT INTO trips(company_id,status) VALUES(50,'in_progress')"),/First subscription invoice/);await assert.rejects(db.exec("INSERT INTO driver_shifts(company_id) VALUES(50)"),/First subscription invoice/);await db.exec("INSERT INTO trips(company_id,status) VALUES(50,'completed')");assert.equal((await db.query("SELECT count(*)::int n FROM trips WHERE company_id=50 AND status='completed'")).rows[0].n,1);}finally{await db.close();}});
+
+test('approved public registration links the correct contract after recorded test history and repairs only the first payable invoice',async()=>{
+ const db=await setup();
+ try {
+  await db.exec(sql('migrations/20261115_chiron_onboarding.sql'));
+  for(const table of ['companies','users','vehicles','drivers'])await db.query("SELECT setval(pg_get_serial_sequence($1,'id'),coalesce((SELECT max(id) FROM "+table+"),1))",[table]);
+  const key=randomUUID(),payload={subscription_offer:'annual-50-v1',subscription_acknowledged:true,company:{name:'New Customer',email:'new@example.invalid',phone:'+32470000999',address:'Synthetic address',vat_number:'BE0444444444',kbo_number:'0444444444',chiron_test_client_secret:'enc:v1:'+randomUUID(),chiron_prod_client_secret:''},vehicle:{brand:'Demo',model:'Car',plate_number:'NEW-001',vin:'WVWZZZ1JZXW000001'},driver:{full_name:'Demo Driver',phone:'+32470000888',driver_license:'DEMO',bestuurderspas_number:'DEMO',preferred_language:'fr'},manager_hash:'$2'+randomUUID(),driver_hash:'$2'+randomUUID(),user_role:'browser'};
+  await db.query('SELECT security_submit_company_subscription($1,$2,$3)',[key,'a'.repeat(64),payload]);
+  await db.query("SELECT security_review_company_subscription($1,'approve','Verified',999,$2,$3::date,($3::date+interval '12 months')::date)",[key,'Synthetic HTML contract '.repeat(10),today()]);
+  const recover=async()=> (await db.query('SELECT security_recover_registration_service($1,999,$2) data',[key,randomUUID()])).rows[0].data;
+  assert.equal((await recover()).status,'awaiting_signature');
+  const r=(await db.query('SELECT * FROM company_registrations WHERE request_id=$1',[key])).rows[0];
+  await db.query("INSERT INTO trips(company_id,status) VALUES($1,'completed')",[r.company_id]);
+  await db.exec('UPDATE subscription_billing_settings SET issuer_company_id=NULL');
+  const k=(await db.query('SELECT * FROM company_contracts WHERE registration_request_id=$1',[key])).rows[0];
+  await db.query("SELECT security_sign_company_contract($1,$2,$3,$4,'Synthetic Owner','Director','127.0.0.1','Synthetic browser',$5)",[r.company_id,k.id,r.manager_user_id,randomUUID(),k.updated_at]);
+  assert.equal((await db.query('SELECT contract_id FROM invoice_service_activation WHERE company_id=$1',[r.company_id])).rows[0].contract_id,k.id);
+  assert.equal((await recover()).status,'invoice_blocked');
+  await db.exec('UPDATE subscription_billing_settings SET issuer_company_id=2');
+  const prepared=await recover();
+  assert.equal(prepared.status,'invoice_prepared');
+  assert.equal((await recover()).document_id,prepared.document_id);
+  assert.equal((await db.query('SELECT count(*)::int n FROM subscription_documents WHERE company_id=$1',[r.company_id])).rows[0].n,1);
+  await issue(db,'subscription',prepared.document_id);
+  assert.equal((await recover()).status,'awaiting_payment');
+  const checkout=await begin(db,'subscription',prepared.document_id);
+  await state(db,checkout);
+  await db.query('UPDATE invoice_service_activation SET contract_id=NULL WHERE company_id=$1',[r.company_id]);
+  await settle(db,checkout);
+  assert.equal((await db.query('SELECT paid_at FROM invoice_service_activation WHERE company_id=$1',[r.company_id])).rows[0].paid_at,null);
+  assert.equal((await recover()).status,'active');
+  assert.ok((await db.query('SELECT paid_at FROM invoice_service_activation WHERE company_id=$1',[r.company_id])).rows[0].paid_at);
+ }finally{await db.close();}
+});

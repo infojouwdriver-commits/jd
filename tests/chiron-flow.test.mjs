@@ -14,7 +14,7 @@ function fixture(options={}){
  class Crud {constructor(table){this.table=table;}async findById(id){return rows[this.table].find(r=>String(r.id)===String(id))||null;}async findMany(filters){return rows[this.table].filter(r=>Object.entries(filters||{}).every(([k,v])=>r[k]===v));}async create(body){const row={id:rows[this.table].length+1,...body};rows[this.table].push(row);return row;}async update(id,body){const row=await this.findById(id);Object.assign(row,body);return row;}}
  const client=()=>({from:table=>({update:body=>{const filters=[];const query={eq(k,v){filters.push([k,v]);return query;},is(k,v){filters.push([k,v]);return query;},async select(){const found=rows[table].filter(r=>filters.every(([k,v])=>(r[k]??null)===v));found.forEach(r=>Object.assign(r,body));return {data:found.map(r=>({id:r.id})),error:null};}};return query;}})});
  const messages=[],requests=[];
- const fetch=async(url,init)=>{requests.push({url,init});assert.equal(init.redirect,'error');assert.ok(init.signal);if(url.endsWith('/oauth/token')&&options.authUnavailable)throw Error('synthetic auth timeout');if(url.endsWith('/oauth/token'))return Response.json({access_token:'test-only-token'});const message=JSON.parse(init.body);messages.push(message);if(options.networkFailure)throw Error('test network timeout');if(options.failArrival&&message.status==='aankomst')return new Response('{}',{status:400});if(options.authExpired && messages.length===1)return new Response('{}',{status:401});
+ const fetch=async(url,init)=>{requests.push({url,init});assert.equal(init.redirect,'error');assert.ok(init.signal);if(url.endsWith('/oauth/token')&&options.authUnavailable)throw Error('synthetic auth timeout');if(url.endsWith('/oauth/token'))return Response.json({access_token:'test-only-token'});if(url.endsWith('/chiron/hello'))return Response.json({key:options.helloRejected?'Unexpected':'Hello taxirit user ;-).'});const message=JSON.parse(init.body);messages.push(message);if(options.networkFailure)throw Error('test network timeout');if(options.failArrival&&message.status==='aankomst')return new Response('{}',{status:400});if(options.authExpired400 && messages.length===1)return Response.json({message:' Access token invalid',status:'400'},{status:400});if(options.authExpired && messages.length===1)return new Response('{}',{status:401});
  if(options.serverError)return new Response('{}',{status:503});
  if(options.invalidReceipt)return Response.json({accepted:true});
  return Response.json({message:'De taxirit is verwerkt.',httpStatus:'OK',fouten:options.bodyErrors?[{code:'CH1102'}]:[]},{status:options.receiptStatus??200});};
@@ -26,7 +26,7 @@ test('retry uses original events, zero coordinates and price without creating an
 test('parallel start claims emit only one departure',async()=>{const f=fixture();const results=await Promise.allSettled([f.service.sendTripStart(1,1,{}),f.service.sendTripStart(1,1,{})]);assert.equal(f.messages.length,1);assert.ok(results.some(r=>r.status==='fulfilled'));assert.equal(f.rows.trips[0].chiron_sync_state,'START_ACCEPTED');});
 test('arrival rejection preserves accepted departure; retry does not resend start',async()=>{const f=fixture({failArrival:true});await f.service.sendTripStart(1,1,{});await assert.rejects(f.service.sendTripArrival(1,1,{}));assert.equal(f.rows.trips[0].chiron_sync_state,'START_ACCEPTED');await f.service.sendTripStart(1,1,{});assert.equal(f.messages.filter(m=>m.status==='vertrek').length,1);});
 test('lost receipt preserves uncertain state and prevents automatic duplicate',async()=>{const f=fixture({networkFailure:true});await assert.rejects(f.service.sendTripStart(1,1,{}),e=>e.code==='CHIRON_DELIVERY_UNCERTAIN');assert.equal(f.rows.trips[0].chiron_sync_state,'START_SENT');await assert.rejects(f.service.sendTripStart(1,1,{}));assert.equal(f.messages.length,1);});
-test('acceptance creates five test-only pairs, ten receipts and no business trips',async()=>{const f=fixture(),before=structuredClone(f.rows.trips);const result=await f.service.runAcceptanceTest(1,1,1);assert.equal(result.success,true);assert.equal(result.totalMessages,10);assert.equal(result.successCount,10);assert.equal(f.messages.length,10);for(let i=0;i<10;i+=2){assert.equal(f.messages[i].status,'vertrek');assert.equal(f.messages[i+1].status,'aankomst');assert.equal(f.messages[i].ritnummer,f.messages[i+1].ritnummer);}assert.equal(new Set(f.messages.map(m=>m.ritnummer)).size,5);assert.equal(f.rows.test_trips.length,10);assert.deepEqual(f.rows.trips,before);assert.equal(JSON.stringify(f.rows.test_trips).includes('test-only-secret'),false);});
+test('acceptance creates five test-only pairs, ten receipts and no business trips',async()=>{const f=fixture(),before=structuredClone(f.rows.trips);const result=await f.service.runAcceptanceTest(1,1,1);assert.equal(result.success,true);assert.equal(result.totalMessages,10);assert.equal(result.successCount,10);assert.equal(f.messages.length,10);assert.equal(f.requests.filter(r=>r.url.endsWith('/oauth/token')).length,1);for(let i=0;i<10;i+=2){assert.equal(f.messages[i].status,'vertrek');assert.equal(f.messages[i+1].status,'aankomst');assert.equal(f.messages[i].ritnummer,f.messages[i+1].ritnummer);}assert.equal(new Set(f.messages.map(m=>m.ritnummer)).size,5);assert.equal(f.rows.test_trips.length,10);assert.deepEqual(f.rows.trips,before);assert.equal(JSON.stringify(f.rows.test_trips).includes('test-only-secret'),false);});
 test('production acceptance, cross-company mappings and missing credentials send nothing',async()=>{for(const mode of ['production','crossCompany','credentials']){const f=fixture();if(mode==='production')f.rows.companies[0].chiron_mode='PRODUCTION';if(mode==='crossCompany')f.rows.drivers[0].company_id=2;if(mode==='credentials')f.rows.companies[0].chiron_test_client_secret='';await assert.rejects(f.service.runAcceptanceTest(1,1,1));assert.equal(f.requests.length,0);assert.equal(f.rows.test_trips.length,0);}});
 test('legacy uppercase PRODUCTION trip sends to its same production company and persists canonical receipts',async()=>{
  const f=fixture();f.env.CHIRON_PRODUCTION_ENABLED='true';Object.assign(f.rows.companies[0],{chiron_mode:'PRODUCTION',chiron_prod_client_id:'synthetic-production-id',chiron_prod_client_secret:'synthetic-production-key'});f.rows.trips[0].chiron_environment='PRODUCTION';
@@ -59,7 +59,7 @@ test('arrival requires a completed trip and an acknowledged departure',async()=>
  f.rows.vehicles[0].plate_number='CHANGED';
  await f.service.sendTripArrival(1,1,{});
  assert.equal(f.messages[1].status,'aankomst');
- assert.equal(f.messages[1].rit.voertuig.nummerplaat,'TEST-PLATE');
+ assert.equal(f.messages[1].rit.voertuig.nummerplaat,'TESTPLATE');
  assert.equal(f.messages[1].broncreatiedatum,'2026-10-11T10:11:02Z');
  assert.equal(f.messages[1].ritnummer,f.messages[0].ritnummer);
 });
@@ -120,4 +120,42 @@ test('another company or trial account cannot transmit this trip to production',
  f.env.CHIRON_PRODUCTION_ENABLED='true';
  Object.assign(f.rows.companies[0],{is_test:true,chiron_mode:'PRODUCTION'});
  await assert.rejects(f.service.sendTripStart(1,1,{}),e=>e.code==='CHIRON_TEST_ONLY');assert.equal(f.requests.length,0);
+});
+
+test('checking entered credentials probes the selected environment without sending a ride',async()=>{
+ const f=fixture();
+ f.env.CHIRON_TRANSMISSION_ENABLED='false';
+ const result=await f.service.testConnection(1,'PRODUCTION',{clientId:'new-id',clientSecret:'new-secret'});
+ assert.equal(result.connected,true);
+ assert.equal(result.mode,'PRODUCTION');
+ assert.equal(f.requests.length,2);
+ assert.ok(f.requests.every(r=>r.url.startsWith('https://mow.api.vlaanderen.be/')));
+ assert.ok(f.requests[1].url.endsWith('/chiron/hello'));
+ assert.equal(f.requests[1].init.headers.Authorization,'Bearer test-only-token');
+ assert.equal(f.messages.length,0);
+ assert.equal(f.rows.companies[0].chiron_mode,'TEST');
+ await assert.rejects(f.service.testConnection(1,'TEST',{clientId:'another-id'}),e=>e.code==='CHIRON_CREDENTIALS_REQUIRED');
+ const rejected=fixture({helloRejected:true});
+ await assert.rejects(rejected.service.testConnection(1,'TEST',{}),e=>e.code==='CHIRON_HELLO_REJECTED');
+});
+
+test('wire JSON retains five coordinate decimals and normalizes human-formatted identifiers',async()=>{
+ const f=fixture();
+ f.rows.vehicles[0].plate_number='1-ABC-123';
+ Object.assign(f.rows.trips[0],{start_lat:50.8503,start_lon:4.35});
+ await f.service.sendTripStart(1,1,{});
+ const wire=f.requests.find(request=>request.url.endsWith('/chiron/taxirit')).init.body;
+ assert.match(wire,/"breedtegraad":50\.85030/);
+ assert.match(wire,/"lengtegraad":4\.35000/);
+ assert.equal(JSON.parse(wire).rit.voertuig.nummerplaat,'1ABC123');
+ assert.equal(JSON.parse(wire).rit.uitvoerder.bestuurderspasnummer,'TESTPASS');
+});
+
+test('the documented Chiron 400 invalid token response renews exactly once',async()=>{
+ const f=fixture({authExpired400:true});
+ await f.service.runAcceptanceTest(1,1,1);
+ assert.equal(f.requests.filter(request=>request.url.endsWith('/oauth/token')).length,2);
+ assert.deepEqual(f.messages[0],f.messages[1]);
+ assert.equal(f.messages.length,11);
+ assert.equal(f.rows.test_trips.length,10);
 });
