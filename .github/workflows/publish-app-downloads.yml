@@ -49,7 +49,8 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
-          set -euo pipefail
+          set -Eeuo pipefail
+          trap 'printf "APK publishing failed at script line %s\n" "$LINENO" >&2' ERR
           umask 077
           [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
           test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
@@ -70,6 +71,7 @@ jobs:
           verify_package() {
             local identity
             identity=$("$(dirname "$tool")/aapt" dump badging "$1" | sed -n '1p')
+            printf 'APK identity: %s\n' "$identity"
             [[ "$identity" == "package: name='be.jouwdriver.driver' versionCode='13' versionName='0.3.1'"* ]]
           }
           verify_package "$work/preview.apk"
@@ -88,16 +90,47 @@ jobs:
           fi
           ssh "${args[@]}" "$host" "cat '$signing/release.p12'" > "$work/release.p12"
           ssh "${args[@]}" "$host" "cat '$signing/password'" > "$work/password"
+          echo 'Retrieved the protected Android release key.'
           signer=$(keytool -exportcert -storetype PKCS12 -keystore "$work/release.p12" \
             -storepass:file "$work/password" -alias jouw-driver-android | sha256sum | cut -d' ' -f1)
           [[ "$signer" =~ ^[a-f0-9]{64}$ ]]
           test "$signer" != fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c
           verify_release() {
             verify_package "$1"
-            "$tool" verify --print-certs "$1" > "$work/certificate.txt"
-            grep -Fx "Signer #1 certificate SHA-256 digest: $signer" "$work/certificate.txt"
-            python3 - "$work/preview.apk" "$1" <<'PY'
-          import hashlib, re, sys, zipfile
+            "$tool" verify --verbose --print-certs "$1"
+            python3 - "$work/preview.apk" "$1" "$signer" <<'PY'
+          import hashlib, re, struct, sys, zipfile
+          from pathlib import Path
+
+          def certificate(path):
+              apk = Path(path).read_bytes()
+              eocd = apk.rfind(b'PK\x05\x06')
+              directory = struct.unpack_from('<I', apk, eocd + 16)[0]
+              if apk[directory - 16:directory] != b'APK Sig Block 42':
+                  raise ValueError('APK signature block missing')
+              end = directory - 24
+              offset = directory - struct.unpack_from('<Q', apk, end)[0]
+
+              def read_field(data, start=0):
+                  size = struct.unpack_from('<I', data, start)[0]
+                  stop = start + 4 + size
+                  return data[start + 4:stop], stop
+
+              while offset < end:
+                  size, block_id = struct.unpack_from('<QI', apk, offset)
+                  block = apk[offset + 12:offset + 8 + size]
+                  offset += 8 + size
+                  if block_id == 0x7109871a:
+                      signers, _ = read_field(block)
+                      signer, stop = read_field(signers)
+                      if stop != len(signers):
+                          raise ValueError('Expected a single Android release signer')
+                      signed_data, _ = read_field(signer)
+                      _, offset = read_field(signed_data)
+                      certificates, _ = read_field(signed_data, offset)
+                      certificate, _ = read_field(certificates)
+                      return hashlib.sha256(certificate).hexdigest()
+              raise ValueError('APK v2 signature missing')
 
           def payload(path):
               with zipfile.ZipFile(path) as apk:
@@ -109,10 +142,15 @@ jobs:
 
           if payload(sys.argv[1]) != payload(sys.argv[2]):
               raise SystemExit('APK signing changed the reviewed application payload')
+          fingerprint = certificate(sys.argv[2])
+          if fingerprint != sys.argv[3]:
+              raise SystemExit('Unexpected release certificate: ' + fingerprint)
+          print('Verified release certificate: ' + fingerprint)
           PY
           }
           "$tool" sign --ks "$work/release.p12" --ks-type PKCS12 --ks-pass "file:$work/password" \
-            --ks-key-alias jouw-driver-android --out "$work/jouw-driver.apk" "$work/preview.apk"
+            --ks-key-alias jouw-driver-android --v2-signing-enabled true --v4-signing-enabled false \
+            --out "$work/jouw-driver.apk" "$work/preview.apk"
           verify_release "$work/jouw-driver.apk"
           release=android-direct
           if gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
