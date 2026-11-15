@@ -67,14 +67,16 @@ export class ChironService {
    catch{throw uncertain();}
   };
   let response=await post(token);
-  // A 401 explicitly rejects authentication. Renew once against the same pinned environment.
-  if(response.status===401){
+  let body=await response.json().catch(()=>null);
+  // The OAuth gateway can explicitly reject an access token with 401 or its documented 400 response.
+  const expired=()=>response.status===401||(response.status===400&&typeof body?.message==='string'&&/^access token invalid$/i.test(body.message.trim()));
+  if(expired()){
    const renewed=await this.getAccessToken(env);
    onRefresh?.(renewed);
    response=await post(renewed);
+   body=await response.json().catch(()=>null);
   }
-  if(response.status===401)throw new ChironError('تعذّر تجديد مصادقة Chiron',424,'CHIRON_AUTH_EXPIRED');
-  const body=await response.json().catch(()=>null);
+  if(expired())throw new ChironError('تعذّر تجديد مصادقة Chiron',424,'CHIRON_AUTH_EXPIRED');
   const errors=Array.isArray(body?.fouten)
    ? body.fouten.slice(0,25).map((item:any)=>item?.code).filter((code:unknown)=>typeof code==='string'&&/^CH[0-9]{4}$/.test(code))
    : [];

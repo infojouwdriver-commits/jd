@@ -14,7 +14,7 @@ function fixture(options={}){
  class Crud {constructor(table){this.table=table;}async findById(id){return rows[this.table].find(r=>String(r.id)===String(id))||null;}async findMany(filters){return rows[this.table].filter(r=>Object.entries(filters||{}).every(([k,v])=>r[k]===v));}async create(body){const row={id:rows[this.table].length+1,...body};rows[this.table].push(row);return row;}async update(id,body){const row=await this.findById(id);Object.assign(row,body);return row;}}
  const client=()=>({from:table=>({update:body=>{const filters=[];const query={eq(k,v){filters.push([k,v]);return query;},is(k,v){filters.push([k,v]);return query;},async select(){const found=rows[table].filter(r=>filters.every(([k,v])=>(r[k]??null)===v));found.forEach(r=>Object.assign(r,body));return {data:found.map(r=>({id:r.id})),error:null};}};return query;}})});
  const messages=[],requests=[];
- const fetch=async(url,init)=>{requests.push({url,init});assert.equal(init.redirect,'error');assert.ok(init.signal);if(url.endsWith('/oauth/token')&&options.authUnavailable)throw Error('synthetic auth timeout');if(url.endsWith('/oauth/token'))return Response.json({access_token:'test-only-token'});if(url.endsWith('/chiron/hello'))return Response.json({key:options.helloRejected?'Unexpected':'Hello taxirit user ;-).'});const message=JSON.parse(init.body);messages.push(message);if(options.networkFailure)throw Error('test network timeout');if(options.failArrival&&message.status==='aankomst')return new Response('{}',{status:400});if(options.authExpired && messages.length===1)return new Response('{}',{status:401});
+ const fetch=async(url,init)=>{requests.push({url,init});assert.equal(init.redirect,'error');assert.ok(init.signal);if(url.endsWith('/oauth/token')&&options.authUnavailable)throw Error('synthetic auth timeout');if(url.endsWith('/oauth/token'))return Response.json({access_token:'test-only-token'});if(url.endsWith('/chiron/hello'))return Response.json({key:options.helloRejected?'Unexpected':'Hello taxirit user ;-).'});const message=JSON.parse(init.body);messages.push(message);if(options.networkFailure)throw Error('test network timeout');if(options.failArrival&&message.status==='aankomst')return new Response('{}',{status:400});if(options.authExpired400 && messages.length===1)return Response.json({message:' Access token invalid',status:'400'},{status:400});if(options.authExpired && messages.length===1)return new Response('{}',{status:401});
  if(options.serverError)return new Response('{}',{status:503});
  if(options.invalidReceipt)return Response.json({accepted:true});
  return Response.json({message:'De taxirit is verwerkt.',httpStatus:'OK',fouten:options.bodyErrors?[{code:'CH1102'}]:[]},{status:options.receiptStatus??200});};
@@ -149,4 +149,13 @@ test('wire JSON retains five coordinate decimals and normalizes human-formatted 
  assert.match(wire,/"lengtegraad":4\.35000/);
  assert.equal(JSON.parse(wire).rit.voertuig.nummerplaat,'1ABC123');
  assert.equal(JSON.parse(wire).rit.uitvoerder.bestuurderspasnummer,'TESTPASS');
+});
+
+test('the documented Chiron 400 invalid token response renews exactly once',async()=>{
+ const f=fixture({authExpired400:true});
+ await f.service.runAcceptanceTest(1,1,1);
+ assert.equal(f.requests.filter(request=>request.url.endsWith('/oauth/token')).length,2);
+ assert.deepEqual(f.messages[0],f.messages[1]);
+ assert.equal(f.messages.length,11);
+ assert.equal(f.rows.test_trips.length,10);
 });

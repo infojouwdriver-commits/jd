@@ -31,7 +31,7 @@ jobs:
             'src/components/registration/CompanyRegistrationApprovals.tsx',
             'src/lib/api-client.ts', 'src/lib/chiron-protocol.ts', 'src/lib/chiron-service.ts',
             'src/lib/driver-shift-pdf.ts', 'src/lib/email/renderer.ts', 'src/lib/mail-service.ts',
-            'src/lib/municipal-test-documents.ts', 'tests/chiron-flow.test.mjs', 'tests/run-database-stack.mjs',
+            'src/lib/municipal-test-documents.ts', 'tests/chiron-flow.test.mjs', 'tests/invoice-checkout-database.test.mjs', 'tests/run-database-stack.mjs',
           ]);
           if(comparison.status!=='ahead'||comparison.merge_base_commit?.sha!==baseline||
             !comparison.files?.some(f=>f.filename==='migrations/20261115_chiron_onboarding.sql')||

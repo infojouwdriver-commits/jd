@@ -76,7 +76,7 @@ BEGIN
  SELECT * INTO p FROM subscription_billing_profiles WHERE company_id=c.id FOR UPDATE;
  IF p.contract_id IS DISTINCT FROM k.id THEN RETURN jsonb_build_object('status','billing_conflict','contract_id',k.id);END IF;
  IF a.contract_id IS NULL THEN UPDATE invoice_service_activation SET contract_id=k.id WHERE company_id=c.id;END IF;
- SELECT * INTO d FROM subscription_documents WHERE company_id=c.id AND contract_id=k.id AND installment_number=1 AND kind='invoice' AND state<>'void' FOR UPDATE;
+ SELECT * INTO d FROM subscription_documents WHERE company_id=c.id AND contract_id=k.id AND installment_number=1 AND kind='invoice' AND state<>'void';
  IF d.id IS NOT NULL THEN
   SELECT max(created_at) INTO evidence_at FROM subscription_payments WHERE invoice_id=d.id AND company_id=c.id;
   IF d.state='issued' AND NOT d.is_test AND evidence_at IS NOT NULL AND security_subscription_document_balance(d.id)<=0 THEN

@@ -4646,12 +4646,12 @@ Links target the working tree, so line positions can move after changes.
 - `.testConnection()` — [L31](../src/lib/chiron-service.ts#L31)
 - `.getAccessToken()` — [L52](../src/lib/chiron-service.ts#L52)
 - `.sendChironMessage()` — [L62](../src/lib/chiron-service.ts#L62)
-- `.sendEvent()` — [L91](../src/lib/chiron-service.ts#L91)
-- `.sendTripStart()` — [L144](../src/lib/chiron-service.ts#L144)
-- `.sendTripArrival()` — [L145](../src/lib/chiron-service.ts#L145)
-- `.runAcceptanceTest()` — [L146](../src/lib/chiron-service.ts#L146)
-- `.logSyncAttempt()` — [L201](../src/lib/chiron-service.ts#L201)
-- `.calculateProposedFare()` — [L204](../src/lib/chiron-service.ts#L204)
+- `.sendEvent()` — [L93](../src/lib/chiron-service.ts#L93)
+- `.sendTripStart()` — [L146](../src/lib/chiron-service.ts#L146)
+- `.sendTripArrival()` — [L147](../src/lib/chiron-service.ts#L147)
+- `.runAcceptanceTest()` — [L148](../src/lib/chiron-service.ts#L148)
+- `.logSyncAttempt()` — [L203](../src/lib/chiron-service.ts#L203)
+- `.calculateProposedFare()` — [L206](../src/lib/chiron-service.ts#L206)
 
 ## [src/lib/chiron-test-result.ts](../src/lib/chiron-test-result.ts)
 
