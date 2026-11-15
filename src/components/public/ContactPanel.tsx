@@ -48,7 +48,7 @@ export default function ContactPanel({locale,policy}:{locale:EmailLanguage;polic
             <label className="space-y-2 text-sm"><span>{t.name}</span><input name="name" autoComplete="name" required maxLength={100} dir="auto" className={control}/></label>
             <label className="space-y-2 text-sm"><span>{t.email}</span><input name="email" type="email" autoComplete="email" required maxLength={254} dir="ltr" className={control}/></label>
           </div>
-          <label className="block space-y-2 text-sm"><span>{t.topic}</span><select name="topic" required className={control}>{contactTopics.map(topic=><option key={topic} value={topic}>{t.topics[topic]}</option>)}</select></label>
+          <div className="space-y-2 text-sm"><label htmlFor="contact-topic">{t.topic}</label><select id="contact-topic" name="topic" required className={control}>{contactTopics.map(topic=><option key={topic} value={topic}>{t.topics[topic]}</option>)}</select></div>
           <label className="block space-y-2 text-sm"><span>{t.message}</span><textarea name="message" required minLength={10} maxLength={2000} rows={5} dir="auto" aria-describedby="contact-note" className={control+' min-h-32 resize-y'}/></label>
           <div hidden><label>Website <input name="website" tabIndex={-1} autoComplete="off"/></label></div>
           <p id="contact-note" className="text-sm text-slate-300">{t.note} <Link href="/privacy-policy" className="text-[#e6c17e] underline">{policy}</Link></p>

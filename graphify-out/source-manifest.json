@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "8ac202bcf42e294985178a360f23489ee6bc3be0",
+  "source_commit_context": "da01cfc5ea492846170aa552f92922da06b638ef",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -487,7 +487,7 @@
     "src/components/operations/operations-copy.ts": "6e54c3232cd3f2787dc17846bb9a18de72f50bc2ad572de3ce8edc96d8b496fd",
     "src/components/operations/useCompanyDirectory.ts": "69e4f17d1706e322c803f2099bec4307517d937b90fa02191d7f1c7be54eda4d",
     "src/components/operations/useOperationData.ts": "9454e0f03ea390c3969aea1b242c877408638413078b7426e24886b941b31529",
-    "src/components/public/ContactPanel.tsx": "5bdcb0e5130f2e72ec990d6712db8a80e86f9107fe2ce761c3b40ee7f4d04aa1",
+    "src/components/public/ContactPanel.tsx": "f6f0147cfabc2dafc54a414bc6a4456a38c9b94c35b3aa4cfa330a70eea718d7",
     "src/components/public/PublicInfo.tsx": "d9831c83d553e5a3c4effdd2ab80002e2f0ad80d1dbf64581718866d618198ad",
     "src/components/registration/CompanyRegistrationApprovals.tsx": "f17ebbd7ef272a8230c3a4c2fa80c49abf87ed4aa59c4afbb099028679e043f3",
     "src/components/registration/CompanyRegistrationDialog.tsx": "b6a5b1c578bba8f2c549b6995e254f8a34860e5a3e77fae143c304f7df1c34f0",
@@ -666,8 +666,8 @@
     "GRAPH_TREE.html": "2cca22a9a51ce55b34d750cde0dd1f2b514476ba0ecc785e297d53bd51a79747",
     "health.json": "a0a536e789dbe9cd54eb2f6e845c91399d9d63dd85dfa09291c85b25e0ce0195",
     "SOURCE_INDEX.md": "ee38411b012a1b15b6f116f886d51873ecf3798cfb81e15a5718c9aa2eb1a598",
-    "GRAPH_REPORT.md": "1322d60134b6d4811fe39427caa371bdad43fe85c2fd3eac5d9cea5c5c62a34b",
-    "graph.json": "8f749795064b60a742afc161a44347f456ac7f0d67c5e31e6955d3e119023aea"
+    "GRAPH_REPORT.md": "ce5c01f330c86cb249a9610c9184f729f10bb7f0e4ca965b923878ce45d37f34",
+    "graph.json": "52bb1483717a9e81298903ecb6893d6a4887409e93eb98f98943bbe577cb96d8"
   },
   "nodes": 3762,
   "edges": 12652,
