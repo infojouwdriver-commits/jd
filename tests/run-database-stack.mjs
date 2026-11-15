@@ -101,7 +101,8 @@ try {
  assert.equal((await success('/rpc/security_reserve_mail',service,'POST',municipalArgs)).reserved,false);
  const recoveryArgs={p_registration:randomUUID(),p_actor:421,p_request:randomUUID()};
  await denied('/rpc/security_recover_registration_service',browser,'POST',recoveryArgs);
- assert.equal((await api('/rpc/security_recover_registration_service',service,'POST',recoveryArgs)).status,404);
+ const missingRegistration=await api('/rpc/security_recover_registration_service',service,'POST',recoveryArgs);
+ assert.equal(missingRegistration.data?.code,'P0002');
  await psql("DELETE FROM mail_deliveries WHERE purpose='municipal_test_documents';");
  const sample=()=>success('/rpc/security_reserve_mail',service,'POST',sampleArgs);
  const attempts=await Promise.all([sample(),sample()]);
