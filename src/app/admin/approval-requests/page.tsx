@@ -1,11 +1,12 @@
 
 'use client';
 
+import {approvalPage,approvalTarget} from '@/lib/approval-link';
 import CompanyChangesPanel from '@/components/operations/CompanyChangesPanel';
 import CompanyRegistrationApprovals from '@/components/registration/CompanyRegistrationApprovals';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -84,6 +85,10 @@ interface DriverRegistrationRequest {
 export default function ApprovalRequestsPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const params = useSearchParams();
+  const target = approvalTarget(new URLSearchParams(params.toString()));
+  const generalId = target.tab==='general'?target.id:undefined;
+  const driverId = target.tab==='driver-registration'?target.id:undefined;
 
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [driverRequests, setDriverRequests] = useState<DriverRegistrationRequest[]>([]);
@@ -102,14 +107,13 @@ export default function ApprovalRequestsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) router.push('/login');
     if (!isLoading && user && !user.isAdmin) router.push('/');
   }, [user, isLoading, router]);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<ApprovalRequest[]>('/approval-requests');
+      const data = await api.get<ApprovalRequest[]>(generalId ? '/approval-requests?id='+generalId : '/approval-requests');
       const parsed = data.map((req: any) => ({
         ...req,
         request_data: typeof req.request_data === 'string' ? JSON.parse(req.request_data) : req.request_data,
@@ -121,19 +125,19 @@ export default function ApprovalRequestsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [generalId]);
 
   const fetchDriverRequests = useCallback(async () => {
     setDriverLoading(true);
     try {
-      const data = await api.get<DriverRegistrationRequest[]>('/driver-registration/list');
+      const data = await api.get<DriverRegistrationRequest[]>(driverId ? '/driver-registration/list?id='+driverId : '/driver-registration/list');
       setDriverRequests(data || []);
     } catch (error: any) {
       toast.error(error.message || 'فشل تحميل طلبات تسجيل السائقين');
     } finally {
       setDriverLoading(false);
     }
-  }, []);
+  }, [driverId]);
 
   useEffect(() => {
     if (user?.isAdmin === true) {
@@ -254,7 +258,8 @@ export default function ApprovalRequestsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Tabs defaultValue="company-registration">
+        {target.id&&<Link href={approvalPage} className="mb-4 inline-block text-sm font-semibold text-primary underline">عرض جميع طلبات الموافقة</Link>}
+        <Tabs key={params.toString()} defaultValue={target.tab}>
           <TabsList className="grid h-auto grid-cols-1 gap-1 sm:grid-cols-4 w-full mb-6 rounded-2xl bg-white dark:bg-slate-800 shadow-md p-1">
             <TabsTrigger value="company-changes" className="rounded-xl">طلبات الشركات</TabsTrigger>
             <TabsTrigger value="company-registration" className="flex-1 rounded-xl gap-2"><Building2 className="w-4 h-4"/>تسجيل الشركات</TabsTrigger>
@@ -278,8 +283,8 @@ export default function ApprovalRequestsPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="company-changes"><CompanyChangesPanel admin /></TabsContent>
-          <TabsContent value="company-registration"><CompanyRegistrationApprovals/></TabsContent>
+          <TabsContent value="company-changes"><CompanyChangesPanel admin requestId={target.tab==='company-changes'?target.id:undefined} /></TabsContent>
+          <TabsContent value="company-registration"><CompanyRegistrationApprovals requestId={target.tab==='company-registration'?target.id:undefined}/></TabsContent>
           {/* ── تبويب تسجيل السائقين ── */}
           <TabsContent value="driver-registration">
             {driverLoading ? (

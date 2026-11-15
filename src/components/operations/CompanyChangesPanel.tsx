@@ -21,9 +21,11 @@ interface Change {
 export default function CompanyChangesPanel({
   companyId,
   admin = false,
+  requestId,
 }: {
   companyId?: number;
   admin?: boolean;
+  requestId?: string;
 }) {
   const { language } = useLanguage(),
     c = operationsCopy[language];
@@ -36,7 +38,7 @@ export default function CompanyChangesPanel({
     rows: Change[];
     total: number;
   }>(
-    `${admin ? "/company-changes" : "/company-portal/changes"}?offset=${offset}&limit=25${companyId ? "&company_id=" + companyId : ""}`,
+    `${admin ? "/company-changes" : "/company-portal/changes"}?offset=${offset}&limit=25${companyId ? "&company_id=" + companyId : ""}${admin && requestId ? "&id=" + requestId : ""}`,
   );
   return (
     <section className="space-y-4" dir={language === "ar" ? "rtl" : "ltr"}>

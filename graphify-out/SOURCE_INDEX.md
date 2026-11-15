@@ -73,6 +73,11 @@ Links target the working tree, so line positions can move after changes.
 - `encoded()` — [L34](../deploy/configure-stripe.mjs#L34)
 - `main()` — [L35](../deploy/configure-stripe.mjs#L35)
 
+## [deploy/contact-edge.mjs](../deploy/contact-edge.mjs)
+
+- `contact-edge.mjs` — [L1](../deploy/contact-edge.mjs#L1)
+- `allowContactSubmission()` — [L4](../deploy/contact-edge.mjs#L4)
+
 ## [deploy/enroll-initial-owner.sql](../deploy/enroll-initial-owner.sql)
 
 - `enroll-initial-owner.sql` — [source](../deploy/enroll-initial-owner.sql#)
@@ -1284,6 +1289,14 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".email_template_settings` — [L25](../migrations/20261114_email_templates.sql#L25)
 - `"schema".email_template_audit` — [L34](../migrations/20261114_email_templates.sql#L34)
 
+## [migrations/20261115_contact_approval_alerts.sql](../migrations/20261115_contact_approval_alerts.sql)
+
+- `20261115_contact_approval_alerts.sql` — [source](../migrations/20261115_contact_approval_alerts.sql#)
+- `"schema".security_reserve_mail()` — [L7](../migrations/20261115_contact_approval_alerts.sql#L7)
+- `"schema".approval_mail_outbox` — [L30](../migrations/20261115_contact_approval_alerts.sql#L30)
+- `approval_mail_ready` — [L44](../migrations/20261115_contact_approval_alerts.sql#L44)
+- `approval_mail` — [L79](../migrations/20261115_contact_approval_alerts.sql#L79)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -1809,12 +1822,12 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/approval-requests/page.tsx](../src/app/admin/approval-requests/page.tsx)
 
 - `approval-requests/page.tsx` — [L1](../src/app/admin/approval-requests/page.tsx#L1)
-- `ApprovalRequest` — [L41](../src/app/admin/approval-requests/page.tsx#L41)
-- `DriverRegistrationRequest` — [L58](../src/app/admin/approval-requests/page.tsx#L58)
-- `ApprovalRequestsPage()` — [L84](../src/app/admin/approval-requests/page.tsx#L84)
-- `DriverRequestCard()` — [L472](../src/app/admin/approval-requests/page.tsx#L472)
-- `GeneralRequestCard()` — [L619](../src/app/admin/approval-requests/page.tsx#L619)
-- `EmptyState()` — [L701](../src/app/admin/approval-requests/page.tsx#L701)
+- `ApprovalRequest` — [L42](../src/app/admin/approval-requests/page.tsx#L42)
+- `DriverRegistrationRequest` — [L59](../src/app/admin/approval-requests/page.tsx#L59)
+- `ApprovalRequestsPage()` — [L85](../src/app/admin/approval-requests/page.tsx#L85)
+- `DriverRequestCard()` — [L477](../src/app/admin/approval-requests/page.tsx#L477)
+- `GeneralRequestCard()` — [L624](../src/app/admin/approval-requests/page.tsx#L624)
+- `EmptyState()` — [L706](../src/app/admin/approval-requests/page.tsx#L706)
 
 ## [src/app/admin/chiron-sync/page.tsx](../src/app/admin/chiron-sync/page.tsx)
 
@@ -1983,6 +1996,13 @@ Links target the working tree, so line positions can move after changes.
 - `contact/page.tsx` — [L1](../src/app/contact/page.tsx#L1)
 - `metadata` — [L2](../src/app/contact/page.tsx#L2)
 - `Page()` — [L3](../src/app/contact/page.tsx#L3)
+
+## [src/app/contact/submit/route.ts](../src/app/contact/submit/route.ts)
+
+- `submit/route.ts` — [L1](../src/app/contact/submit/route.ts#L1)
+- `sites` — [L9](../src/app/contact/submit/route.ts#L9)
+- `result()` — [L10](../src/app/contact/submit/route.ts#L10)
+- `POST()` — [L12](../src/app/contact/submit/route.ts#L12)
 
 ## [src/app/contract-print/[id]/page.tsx](../src/app/contract-print/%5Bid%5D/page.tsx)
 
@@ -2254,10 +2274,10 @@ Links target the working tree, so line positions can move after changes.
 
 - `approval-requests/route.ts` — [L1](../src/app/next_api/approval-requests/route.ts#L1)
 - `GET` — [L9](../src/app/next_api/approval-requests/route.ts#L9)
-- `POST` — [L61](../src/app/next_api/approval-requests/route.ts#L61)
-- `PUT` — [L128](../src/app/next_api/approval-requests/route.ts#L128)
-- `executeApprovedRequest()` — [L199](../src/app/next_api/approval-requests/route.ts#L199)
-- `getTableName()` — [L230](../src/app/next_api/approval-requests/route.ts#L230)
+- `POST` — [L66](../src/app/next_api/approval-requests/route.ts#L66)
+- `PUT` — [L133](../src/app/next_api/approval-requests/route.ts#L133)
+- `executeApprovedRequest()` — [L204](../src/app/next_api/approval-requests/route.ts#L204)
+- `getTableName()` — [L235](../src/app/next_api/approval-requests/route.ts#L235)
 
 ## [src/app/next_api/auth/account/route.ts](../src/app/next_api/auth/account/route.ts)
 
@@ -2469,8 +2489,8 @@ Links target the working tree, so line positions can move after changes.
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
 - `POST` — [L14](../src/app/next_api/company-registrations/route.ts#L14)
 - `GET` — [L29](../src/app/next_api/company-registrations/route.ts#L29)
-- `review` — [L35](../src/app/next_api/company-registrations/route.ts#L35)
-- `PUT` — [L36](../src/app/next_api/company-registrations/route.ts#L36)
+- `review` — [L36](../src/app/next_api/company-registrations/route.ts#L36)
+- `PUT` — [L37](../src/app/next_api/company-registrations/route.ts#L37)
 
 ## [src/app/next_api/company-staff/route.ts](../src/app/next_api/company-staff/route.ts)
 
@@ -3204,12 +3224,12 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/auth/AuthProvider.tsx](../src/components/auth/AuthProvider.tsx)
 
 - `AuthProvider.tsx` — [L1](../src/components/auth/AuthProvider.tsx#L1)
-- `AuthContextType` — [L14](../src/components/auth/AuthProvider.tsx#L14)
-- `AuthContext` — [L24](../src/components/auth/AuthProvider.tsx#L24)
-- `useAuth()` — [L26](../src/components/auth/AuthProvider.tsx#L26)
-- `AuthProviderProps` — [L34](../src/components/auth/AuthProvider.tsx#L34)
-- `attemptSilentRefresh()` — [L38](../src/components/auth/AuthProvider.tsx#L38)
-- `AuthProvider()` — [L54](../src/components/auth/AuthProvider.tsx#L54)
+- `AuthContextType` — [L15](../src/components/auth/AuthProvider.tsx#L15)
+- `AuthContext` — [L25](../src/components/auth/AuthProvider.tsx#L25)
+- `useAuth()` — [L27](../src/components/auth/AuthProvider.tsx#L27)
+- `AuthProviderProps` — [L35](../src/components/auth/AuthProvider.tsx#L35)
+- `attemptSilentRefresh()` — [L39](../src/components/auth/AuthProvider.tsx#L39)
+- `AuthProvider()` — [L55](../src/components/auth/AuthProvider.tsx#L55)
 
 ## [src/components/auth/CompanyLoginForm.tsx](../src/components/auth/CompanyLoginForm.tsx)
 
@@ -3708,7 +3728,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/navigation/ManagementShell.tsx](../src/components/navigation/ManagementShell.tsx)
 
 - `ManagementShell.tsx` — [L1](../src/components/navigation/ManagementShell.tsx#L1)
-- `ManagementShell()` — [L11](../src/components/navigation/ManagementShell.tsx#L11)
+- `ManagementShell()` — [L12](../src/components/navigation/ManagementShell.tsx#L12)
 
 ## [src/components/navigation/management-menu.ts](../src/components/navigation/management-menu.ts)
 
@@ -3849,12 +3869,18 @@ Links target the working tree, so line positions can move after changes.
 - `useOperationData.ts` — [L1](../src/components/operations/useOperationData.ts#L1)
 - `useOperationData()` — [L4](../src/components/operations/useOperationData.ts#L4)
 
+## [src/components/public/ContactPanel.tsx](../src/components/public/ContactPanel.tsx)
+
+- `ContactPanel.tsx` — [L1](../src/components/public/ContactPanel.tsx#L1)
+- `ContactPanel()` — [L10](../src/components/public/ContactPanel.tsx#L10)
+- `submit()` — [L15](../src/components/public/ContactPanel.tsx#L15)
+
 ## [src/components/public/PublicInfo.tsx](../src/components/public/PublicInfo.tsx)
 
 - `PublicInfo.tsx` — [L1](../src/components/public/PublicInfo.tsx#L1)
-- `Locale` — [L4](../src/components/public/PublicInfo.tsx#L4)
-- `translations` — [L5](../src/components/public/PublicInfo.tsx#L5)
-- `PublicInfo()` — [L11](../src/components/public/PublicInfo.tsx#L11)
+- `Locale` — [L6](../src/components/public/PublicInfo.tsx#L6)
+- `translations` — [L7](../src/components/public/PublicInfo.tsx#L7)
+- `PublicInfo()` — [L13](../src/components/public/PublicInfo.tsx#L13)
 
 ## [src/components/registration/CompanyRegistrationApprovals.tsx](../src/components/registration/CompanyRegistrationApprovals.tsx)
 
@@ -4514,6 +4540,23 @@ Links target the working tree, so line positions can move after changes.
 - `welcomeImageValid()` — [L12](../src/lib/app-experience.ts#L12)
 - `parseWelcomeSave()` — [L34](../src/lib/app-experience.ts#L34)
 
+## [src/lib/approval-link.ts](../src/lib/approval-link.ts)
+
+- `approval-link.ts` — [L1](../src/lib/approval-link.ts#L1)
+- `approvalPage` — [L1](../src/lib/approval-link.ts#L1)
+- `approvalTabs` — [L2](../src/lib/approval-link.ts#L2)
+- `ApprovalTab` — [L3](../src/lib/approval-link.ts#L3)
+- `approvalTarget()` — [L5](../src/lib/approval-link.ts#L5)
+- `approvalPath()` — [L14](../src/lib/approval-link.ts#L14)
+- `approvalReturnPath()` — [L18](../src/lib/approval-link.ts#L18)
+
+## [src/lib/approval-mail-scheduler.ts](../src/lib/approval-mail-scheduler.ts)
+
+- `approval-mail-scheduler.ts` — [L1](../src/lib/approval-mail-scheduler.ts#L1)
+- `sendPendingApprovalAlerts()` — [L9](../src/lib/approval-mail-scheduler.ts#L9)
+- `startApprovalMailScheduler()` — [L25](../src/lib/approval-mail-scheduler.ts#L25)
+- `run()` — [L28](../src/lib/approval-mail-scheduler.ts#L28)
+
 ## [src/lib/auth.ts](../src/lib/auth.ts)
 
 - `lib/auth.ts` — [L1](../src/lib/auth.ts#L1)
@@ -4602,7 +4645,7 @@ Links target the working tree, so line positions can move after changes.
 - `changeFingerprint()` — [L62](../src/lib/company-changes.ts#L62)
 - `fleetChange()` — [L76](../src/lib/company-changes.ts#L76)
 - `changesGET` — [L165](../src/lib/company-changes.ts#L165)
-- `changesPUT` — [L204](../src/lib/company-changes.ts#L204)
+- `changesPUT` — [L209](../src/lib/company-changes.ts#L209)
 
 ## [src/lib/company-lifecycle.ts](../src/lib/company-lifecycle.ts)
 
@@ -4844,6 +4887,13 @@ Links target the working tree, so line positions can move after changes.
 - `InvoiceEmailData` — [L12](../src/lib/email/invoice.ts#L12)
 - `invoiceDesign()` — [L27](../src/lib/email/invoice.ts#L27)
 
+## [src/lib/email/operational.ts](../src/lib/email/operational.ts)
+
+- `operational.ts` — [L1](../src/lib/email/operational.ts#L1)
+- `contactEmailDesign()` — [L6](../src/lib/email/operational.ts#L6)
+- `ApprovalAlert` — [L14](../src/lib/email/operational.ts#L14)
+- `approvalEmailDesign()` — [L24](../src/lib/email/operational.ts#L24)
+
 ## [src/lib/email/receipt.ts](../src/lib/email/receipt.ts)
 
 - `email/receipt.ts` — [L1](../src/lib/email/receipt.ts#L1)
@@ -4858,17 +4908,18 @@ Links target the working tree, so line positions can move after changes.
 - `EmailLanguage` — [L2](../src/lib/email/renderer.ts#L2)
 - `templateIds` — [L3](../src/lib/email/renderer.ts#L3)
 - `TemplateId` — [L8](../src/lib/email/renderer.ts#L8)
-- `resolveEmailLanguage()` — [L10](../src/lib/email/renderer.ts#L10)
-- `emailBrand` — [L17](../src/lib/email/renderer.ts#L17)
-- `labels` — [L23](../src/lib/email/renderer.ts#L23)
-- `EmailDesign` — [L30](../src/lib/email/renderer.ts#L30)
-- `EmailEdits` — [L44](../src/lib/email/renderer.ts#L44)
-- `editableTemplateIds` — [L50](../src/lib/email/renderer.ts#L50)
-- `isEditableTemplate()` — [L51](../src/lib/email/renderer.ts#L51)
-- `escapeEmail()` — [L55](../src/lib/email/renderer.ts#L55)
-- `safeEmailUrl()` — [L61](../src/lib/email/renderer.ts#L61)
-- `emailMessageHtml()` — [L71](../src/lib/email/renderer.ts#L71)
-- `renderEmail()` — [L80](../src/lib/email/renderer.ts#L80)
+- `EmailDesignId` — [L9](../src/lib/email/renderer.ts#L9)
+- `resolveEmailLanguage()` — [L11](../src/lib/email/renderer.ts#L11)
+- `emailBrand` — [L18](../src/lib/email/renderer.ts#L18)
+- `labels` — [L24](../src/lib/email/renderer.ts#L24)
+- `EmailDesign` — [L31](../src/lib/email/renderer.ts#L31)
+- `EmailEdits` — [L45](../src/lib/email/renderer.ts#L45)
+- `editableTemplateIds` — [L51](../src/lib/email/renderer.ts#L51)
+- `isEditableTemplate()` — [L52](../src/lib/email/renderer.ts#L52)
+- `escapeEmail()` — [L56](../src/lib/email/renderer.ts#L56)
+- `safeEmailUrl()` — [L62](../src/lib/email/renderer.ts#L62)
+- `emailMessageHtml()` — [L72](../src/lib/email/renderer.ts#L72)
+- `renderEmail()` — [L81](../src/lib/email/renderer.ts#L81)
 
 ## [src/lib/email/samples.ts](../src/lib/email/samples.ts)
 
@@ -5129,6 +5180,18 @@ Links target the working tree, so line positions can move after changes.
 
 - `postgrest.ts` — [L1](../src/lib/postgrest.ts#L1)
 - `createPostgrestClient()` — [L7](../src/lib/postgrest.ts#L7)
+
+## [src/lib/public-contact.ts](../src/lib/public-contact.ts)
+
+- `public-contact.ts` — [L1](../src/lib/public-contact.ts#L1)
+- `supportEmail` — [L4](../src/lib/public-contact.ts#L4)
+- `supportPhone` — [L5](../src/lib/public-contact.ts#L5)
+- `supportPhoneLabel` — [L6](../src/lib/public-contact.ts#L6)
+- `supportWhatsApp` — [L7](../src/lib/public-contact.ts#L7)
+- `contactTopics` — [L8](../src/lib/public-contact.ts#L8)
+- `singleLine()` — [L10](../src/lib/public-contact.ts#L10)
+- `ContactSubmission` — [L20](../src/lib/public-contact.ts#L20)
+- `contactCopy` — [L22](../src/lib/public-contact.ts#L22)
 
 ## [src/lib/public-driver-settlement-pdf.ts](../src/lib/public-driver-settlement-pdf.ts)
 

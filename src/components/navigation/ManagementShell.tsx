@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Menu, X, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import {approvalPage,approvalReturnPath} from '@/lib/approval-link';
 import { managementMenu } from './management-menu';
 
 export default function ManagementShell({ children }: { children: React.ReactNode }) {
@@ -16,9 +17,12 @@ export default function ManagementShell({ children }: { children: React.ReactNod
   const [signingOut, setSigningOut] = useState(false);
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
-    if (!isLoading && !user) router.replace('/login');
+    if (!isLoading && !user) {
+      const target=pathname===approvalPage?approvalReturnPath(pathname+window.location.search):null;
+      router.replace(target?'/login?'+new URLSearchParams({redirect:target}):'/login');
+    }
     else if (!isLoading && user && !user.isAdmin) router.replace('/dashboard');
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, pathname]);
   if (isLoading || !user?.isAdmin) return <div role="status" className="flex min-h-screen items-center justify-center gap-3"><Loader2 className="animate-spin" /> جارٍ التحقق من الحساب…</div>;
   const selected = managementMenu.find(item => pathname.startsWith(item.href));
   return <div className="management-workspace" dir="rtl">

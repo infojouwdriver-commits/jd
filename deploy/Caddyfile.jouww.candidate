@@ -36,7 +36,17 @@ jouw-driver.duckdns.org, app.jouww.com {
 }
 jouww.com, www.jouww.com {
   import jouww_headers
-  # Public site must never accept credentials or forward API/webhook mutations.
+  # Forward only the public contact form; portal and webhook mutations stay blocked.
+  @public_contact {
+    path /contact/submit
+    method POST
+  }
+  handle @public_contact {
+    request_body {
+      max_size 16KB
+    }
+    import jouww_proxy
+  }
   @unsafe not method GET HEAD
   handle @unsafe {
     respond "Method not allowed" 405

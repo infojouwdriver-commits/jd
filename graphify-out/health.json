@@ -1,26 +1,26 @@
 {
-  "node_count": 3641,
+  "node_count": 3683,
   "unverified_node_count": 0,
-  "raw_edge_count": 12795,
+  "raw_edge_count": 12921,
   "non_object_edges": 0,
   "missing_endpoint_edges": 0,
   "dangling_endpoint_edges": 174,
-  "external_reference_edges": 289,
+  "external_reference_edges": 294,
   "self_loop_edges": 22,
-  "valid_candidate_edges": 12332,
+  "valid_candidate_edges": 12453,
   "exact_duplicate_edges": 4,
-  "directed_unique_endpoint_pairs": 12073,
-  "directed_same_endpoint_collapsed_edges": 259,
-  "undirected_unique_endpoint_pairs": 12068,
-  "undirected_same_endpoint_collapsed_edges": 264,
-  "same_endpoint_group_count": 225,
-  "relation_variant_groups": 122,
+  "directed_unique_endpoint_pairs": 12187,
+  "directed_same_endpoint_collapsed_edges": 266,
+  "undirected_unique_endpoint_pairs": 12182,
+  "undirected_same_endpoint_collapsed_edges": 271,
+  "same_endpoint_group_count": 229,
+  "relation_variant_groups": 123,
   "source_file_variant_groups": 0,
-  "source_location_variant_groups": 103,
+  "source_location_variant_groups": 106,
   "context_variant_groups": 4,
   "post_build_graph_type": "DiGraph",
-  "post_build_node_count": 3720,
-  "post_build_edge_count": 12533,
+  "post_build_node_count": 3762,
+  "post_build_edge_count": 12652,
   "post_build_error": "",
   "producer_suppression": {
     "path": "graphify/extract.py",
@@ -103,6 +103,27 @@
   },
   "examples": [
     {
+      "source": "migrations_20261115_contact_approval_alerts_schema_security_reserve_mail",
+      "target": "migrations_20261115_contact_approval_alerts_sql_mail_deliveries",
+      "edge_count": 5,
+      "relations": [
+        "reads_from"
+      ],
+      "source_files": [
+        "migrations/20261115_contact_approval_alerts.sql"
+      ],
+      "source_locations": [
+        "L13",
+        "L19",
+        "L20",
+        "L23",
+        "L24"
+      ],
+      "contexts": [
+        ""
+      ]
+    },
+    {
       "source": "migrations_20261018_company_lifecycle_schema_security_archive_company",
       "target": "migrations_20261018_company_lifecycle_sql_drivers",
       "edge_count": 4,
@@ -177,25 +198,6 @@
         "L283",
         "L287",
         "L298"
-      ],
-      "contexts": [
-        ""
-      ]
-    },
-    {
-      "source": "migrations_20261018_web_billing_schema_security_issue_subscription_demo",
-      "target": "migrations_20261018_web_billing_sql_subscription_documents",
-      "edge_count": 4,
-      "relations": [
-        "reads_from"
-      ],
-      "source_files": [
-        "migrations/20261018_web_billing.sql"
-      ],
-      "source_locations": [
-        "L27",
-        "L33",
-        "L45"
       ],
       "contexts": [
         ""
