@@ -1975,7 +1975,7 @@ Links target the working tree, so line positions can move after changes.
 - `Driver` — [L29](../src/app/admin/test-trips/page.tsx#L29)
 - `Vehicle` — [L37](../src/app/admin/test-trips/page.tsx#L37)
 - `AcceptanceTestPage()` — [L45](../src/app/admin/test-trips/page.tsx#L45)
-- `municipalDocuments()` — [L91](../src/app/admin/test-trips/page.tsx#L91)
+- `municipalDocuments()` — [L95](../src/app/admin/test-trips/page.tsx#L95)
 
 ## [src/app/admin/trips/page.tsx](../src/app/admin/trips/page.tsx)
 
@@ -4620,6 +4620,7 @@ Links target the working tree, so line positions can move after changes.
 - `numeric()` — [L18](../src/lib/chiron-protocol.ts#L18)
 - `timestamp()` — [L22](../src/lib/chiron-protocol.ts#L22)
 - `rideMessage()` — [L23](../src/lib/chiron-protocol.ts#L23)
+- `serializeRideMessage()` — [L44](../src/lib/chiron-protocol.ts#L44)
 
 ## [src/lib/chiron-retry.ts](../src/lib/chiron-retry.ts)
 
@@ -4645,12 +4646,12 @@ Links target the working tree, so line positions can move after changes.
 - `.testConnection()` — [L31](../src/lib/chiron-service.ts#L31)
 - `.getAccessToken()` — [L52](../src/lib/chiron-service.ts#L52)
 - `.sendChironMessage()` — [L62](../src/lib/chiron-service.ts#L62)
-- `.sendEvent()` — [L90](../src/lib/chiron-service.ts#L90)
-- `.sendTripStart()` — [L143](../src/lib/chiron-service.ts#L143)
-- `.sendTripArrival()` — [L144](../src/lib/chiron-service.ts#L144)
-- `.runAcceptanceTest()` — [L145](../src/lib/chiron-service.ts#L145)
-- `.logSyncAttempt()` — [L200](../src/lib/chiron-service.ts#L200)
-- `.calculateProposedFare()` — [L203](../src/lib/chiron-service.ts#L203)
+- `.sendEvent()` — [L91](../src/lib/chiron-service.ts#L91)
+- `.sendTripStart()` — [L144](../src/lib/chiron-service.ts#L144)
+- `.sendTripArrival()` — [L145](../src/lib/chiron-service.ts#L145)
+- `.runAcceptanceTest()` — [L146](../src/lib/chiron-service.ts#L146)
+- `.logSyncAttempt()` — [L201](../src/lib/chiron-service.ts#L201)
+- `.calculateProposedFare()` — [L204](../src/lib/chiron-service.ts#L204)
 
 ## [src/lib/chiron-test-result.ts](../src/lib/chiron-test-result.ts)
 

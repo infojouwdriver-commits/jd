@@ -2,7 +2,7 @@ import {randomUUID} from 'node:crypto';
 import CrudOperations from './crud-operations';
 import {generateAdminUserToken} from './auth';
 import {createPostgrestClient} from './postgrest';
-import {ChironError,chironDestination,rideMessage,canonicalChironEnvironment} from './chiron-protocol';
+import {ChironError,chironDestination,rideMessage,serializeRideMessage,canonicalChironEnvironment} from './chiron-protocol';
 import {driverPricing} from './company-pricing';
 
 export class ChironService {
@@ -61,8 +61,9 @@ export class ChironService {
  }
  private static async sendChironMessage(env:ReturnType<typeof ChironService.resolveEnvironment>,message:any,token:string,onRefresh?:(token:string)=>void){
   const uncertain=(receipt?:{httpStatus:number;errors:string[]})=>new ChironError('نتيجة الإرسال غير مؤكدة. راجع Chiron قبل إعادة الإرسال.',409,'CHIRON_DELIVERY_UNCERTAIN',true,receipt);
+  const payload=serializeRideMessage(message);
   const post=async(accessToken:string)=>{
-   try{return await fetch(env.apiUrl,{method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+accessToken,Accept:'application/json'},body:JSON.stringify(message)});}
+   try{return await fetch(env.apiUrl,{method:'POST',redirect:'error',signal:AbortSignal.timeout(10000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+accessToken,Accept:'application/json'},body:payload});}
    catch{throw uncertain();}
   };
   let response=await post(token);

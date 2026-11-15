@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "0cd40ba883b23c1731caddbdb830c4d2ddf13008",
+  "source_commit_context": "b09c5962483c73397704502df7c94e81a544c42c",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -207,7 +207,7 @@
     "src/app/admin/notifications/page.tsx": "579ecbe950762e1796b394b909c813e1f103834169ab2f50e4b2b53de4bd0bf8",
     "src/app/admin/operations/page.tsx": "da3a00b5f50d7191d7a6cc98318a7ca0076fe18258b539b123b235e180016fc3",
     "src/app/admin/receipt-email/page.tsx": "939677ba2f864879603157494150382c78d0907ed76b131530782028652b973a",
-    "src/app/admin/test-trips/page.tsx": "70df590188ddf1b2c3d1660c60da1c5588e6994c55f7a03fc07ab6040b198b2f",
+    "src/app/admin/test-trips/page.tsx": "fa8e22d8b1ead076f36284353f05589143178d596916c8b579303b900fd03e9c",
     "src/app/admin/trips/page.tsx": "5941bea81300ec187ecc89fc38f1658b5e860573426d5bc1be64410362434b26",
     "src/app/admin/users/page.tsx": "e744d3bbe73b63ffec253d1dc2a77f341fa987f118ff82fd6c869ae02f0afc8f",
     "src/app/admin/vehicles/page.tsx": "8a11fc6a7fe03c8ab70d636535b2647febe0decccdd9594231140d3a861935cf",
@@ -569,9 +569,9 @@
     "src/lib/approval-mail-scheduler.ts": "fcd7374531261bd0af058f2282af078b9b169a7a13e940c1beed8e27750d2432",
     "src/lib/auth.ts": "f7ec20261dbe0760a80f6f4622921260c7c174f411342bf88f6d72000f442ccb",
     "src/lib/brevo-mail.ts": "c75d775c0df6c07ff909bfaa1a2339421344fb7dd91d27f89f9ee66e320aa220",
-    "src/lib/chiron-protocol.ts": "a7ae1b8149c2f74a71a2b3457b1d7cfcd43342b80680dc5d7d161f69e67a1b7c",
+    "src/lib/chiron-protocol.ts": "27d91ce87a34f3e244fc4d0e37e86dcbf15962701d66ca8d7f318d30a794e288",
     "src/lib/chiron-retry.ts": "c865f4c35fc5d1cceb93edf05f227af2b9a31e6059292f5a6cafa5a2280f581c",
-    "src/lib/chiron-service.ts": "0eee621705ed77166a5f4eea8b7effaba88cd4e7bb4c396d8d9551d3f56d71b3",
+    "src/lib/chiron-service.ts": "019a9e505c176980c16675698ce86220ba2bf16065f52bcf616b676bc939a652",
     "src/lib/chiron-test-result.ts": "21f68a187b4279912d32a483b610d23b00eaeffed2d2e997171911d03d45b971",
     "src/lib/company-account.ts": "233fb1e9ed15359e40210b4d55cb816206433295dddb3de4beff76476b70985d",
     "src/lib/company-changes.ts": "bda3a5842c415de7ad9a0bd185fc8245c2e16b1b331f07e52dffcd8772cd6084",
@@ -668,18 +668,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "82e315a1b85e8f096cb70527e22532166fca9e632421ea5516fbb8358d6b7459",
-    "health.json": "7a014b3f6b5f9f4e10d81cd2a05e8a2c1944c827a68305405a1308341106a27d",
-    "SOURCE_INDEX.md": "77384db2310a5fb79d998efe70457e5890222f3d2b107cda7b6cc9bf71c63c8f",
-    "GRAPH_REPORT.md": "87e35f1569872ced2e34277c70a6f3f4d6bcaebc3846da5c949273d9687e253e",
-    "graph.json": "78d7575508c342857334673142660c34d36b9eff840e7d1dde2f5e4280ee52ce"
+    "GRAPH_TREE.html": "233fc348790572d463cffb0ccc96c002d5a262bdcf535d4e7be35ccd0c5a4031",
+    "health.json": "f355edb10b4309ed9811a73e044b1c2b49c10ca1248286f038a2c1d5079d1055",
+    "SOURCE_INDEX.md": "ae7f33b0b8602d6a466f10ec93cb812b1488619c6f2e20120578f48ec083fa02",
+    "GRAPH_REPORT.md": "b054728d522a66fc895b619bf322683324c2c39b84733ae64028af36aee7ff9d",
+    "graph.json": "1b9c51eb41e4c3c6296635722e265a46d523875052b3cd5241df5b3274d41b7e"
   },
-  "nodes": 3788,
-  "edges": 12764,
-  "raw_edges": 13040,
-  "communities": 205,
+  "nodes": 3789,
+  "edges": 12767,
+  "raw_edges": 13043,
+  "communities": 199,
   "confidence_counts": {
-    "EXTRACTED": 12794,
+    "EXTRACTED": 12797,
     "INFERRED": 246
   }
 }

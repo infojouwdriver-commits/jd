@@ -59,7 +59,7 @@ test('arrival requires a completed trip and an acknowledged departure',async()=>
  f.rows.vehicles[0].plate_number='CHANGED';
  await f.service.sendTripArrival(1,1,{});
  assert.equal(f.messages[1].status,'aankomst');
- assert.equal(f.messages[1].rit.voertuig.nummerplaat,'TEST-PLATE');
+ assert.equal(f.messages[1].rit.voertuig.nummerplaat,'TESTPLATE');
  assert.equal(f.messages[1].broncreatiedatum,'2026-10-11T10:11:02Z');
  assert.equal(f.messages[1].ritnummer,f.messages[0].ritnummer);
 });
@@ -137,4 +137,16 @@ test('checking entered credentials probes the selected environment without sendi
  await assert.rejects(f.service.testConnection(1,'TEST',{clientId:'another-id'}),e=>e.code==='CHIRON_CREDENTIALS_REQUIRED');
  const rejected=fixture({helloRejected:true});
  await assert.rejects(rejected.service.testConnection(1,'TEST',{}),e=>e.code==='CHIRON_HELLO_REJECTED');
+});
+
+test('wire JSON retains five coordinate decimals and normalizes human-formatted identifiers',async()=>{
+ const f=fixture();
+ f.rows.vehicles[0].plate_number='1-ABC-123';
+ Object.assign(f.rows.trips[0],{start_lat:50.8503,start_lon:4.35});
+ await f.service.sendTripStart(1,1,{});
+ const wire=f.requests.find(request=>request.url.endsWith('/chiron/taxirit')).init.body;
+ assert.match(wire,/"breedtegraad":50\.85030/);
+ assert.match(wire,/"lengtegraad":4\.35000/);
+ assert.equal(JSON.parse(wire).rit.voertuig.nummerplaat,'1ABC123');
+ assert.equal(JSON.parse(wire).rit.uitvoerder.bestuurderspasnummer,'TESTPASS');
 });

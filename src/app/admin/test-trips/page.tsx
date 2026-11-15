@@ -61,6 +61,7 @@ export default function AcceptanceTestPage() {
   const [batchId,setBatchId]=useState('');
   const [recipient,setRecipient]=useState('');
   const [packageBusy,setPackageBusy]=useState(false);
+  const [packageFiles,setPackageFiles]=useState<{filename:string;url:string}[]>([]);
 
   useEffect(()=>{
     const company=new URLSearchParams(window.location.search).get('company');
@@ -80,6 +81,7 @@ export default function AcceptanceTestPage() {
   useEffect(()=>{
     let current=true;
     setRecipient('');
+    setPackageFiles([]);
     if(batchId&&selectedCompany){
       api.post<{to:string}>('/test-trips/municipal-documents',{companyId:Number(selectedCompany),batchId,action:'details'})
         .then(result=>{if(current)setRecipient(result.to??'');})
@@ -87,6 +89,8 @@ export default function AcceptanceTestPage() {
     }
     return ()=>{current=false;};
   },[selectedCompany,batchId]);
+
+  useEffect(()=>()=>packageFiles.forEach(file=>URL.revokeObjectURL(file.url)),[packageFiles]);
 
   async function municipalDocuments(action:'download'|'send'){
     if(!batchId||packageBusy||action==='send'&&!recipient)return;
@@ -102,14 +106,10 @@ export default function AcceptanceTestPage() {
         else toast.warning('تعذّر تأكيد إرسال البريد ('+(result.status??'unknown')+')');
         return;
       }
-      for(const file of result.files??[]){
+      setPackageFiles((result.files??[]).map(file=>{
         const bytes=Uint8Array.from(atob(file.base64),character=>character.charCodeAt(0));
-        const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
-        const link=document.createElement('a');
-        link.href=url;link.download=file.filename;
-        document.body.append(link);link.click();link.remove();
-        window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
-      }
+        return {filename:file.filename,url:URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}))};
+      }));
     }catch(error){toast.error(error instanceof Error?error.message:'تعذّر تجهيز الحزمة');}
     finally{setPackageBusy(false);}
   }
@@ -538,15 +538,18 @@ export default function AcceptanceTestPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <label className="block text-sm">دفعة الاختبار
-              <select className="mt-2 block max-w-full rounded-lg border bg-background p-2" value={batchId} onChange={event=>setBatchId(event.target.value)}>
+              <select disabled={packageBusy} className="mt-2 block max-w-full rounded-lg border bg-background p-2" value={batchId} onChange={event=>setBatchId(event.target.value)}>
                 {batches.map(batch=><option key={batch.id} value={batch.id}>{new Intl.DateTimeFormat('ar-BE',{dateStyle:'short',timeStyle:'short',timeZone:'Europe/Brussels'}).format(new Date(batch.date))}</option>)}
               </select>
             </label>
             {recipient&&<p className="text-sm">بريد الشركة المسجّل <bdi>{recipient}</bdi></p>}
             <div className="flex flex-wrap gap-3">
-              <Button disabled={!batchId||packageBusy} onClick={()=>void municipalDocuments('download')}><Download className="me-2 h-4 w-4"/> تنزيل المستندات الثلاثة</Button>
+              <Button disabled={!batchId||packageBusy} onClick={()=>void municipalDocuments('download')}><Download className="me-2 h-4 w-4"/> تجهيز روابط التنزيل</Button>
               <Button disabled={!recipient||packageBusy} variant="outline" onClick={()=>void municipalDocuments('send')}><Send className="me-2 h-4 w-4"/> إرسال إلى بريد الشركة</Button>
             </div>
+            {packageFiles.length>0&&<ul className="space-y-2">
+              {packageFiles.map(file=><li key={file.filename}><a className="inline-flex items-center gap-2 text-sm underline" href={file.url} download={file.filename} dir="ltr"><Download className="h-4 w-4"/>{file.filename}</a></li>)}
+            </ul>}
           </CardContent>
         </Card>}
         <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
