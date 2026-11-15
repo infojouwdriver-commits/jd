@@ -1,0 +1,110 @@
+name: Verify and complete internal TestFlight build 1.75.1
+on:
+  push:
+    branches: ['ops/testflight-1-75-1']
+    paths: ['.github/workflows/complete-testflight-1-75-1.yml']
+permissions:
+  contents: read
+concurrency:
+  group: testflight-1-75-1
+  cancel-in-progress: false
+jobs:
+  complete:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      IOS_SIGNING_JSON: ${{ secrets.IOS_TESTFLIGHT_SIGNING_JSON }}
+    steps:
+      - name: Reuse the previous build's Apple-recorded setting and internal groups
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {sign} from 'node:crypto';
+
+          const {key, key_id, issuer_id} = JSON.parse(process.env.IOS_SIGNING_JSON);
+          const origin = 'https://api.appstoreconnect.apple.com';
+          const encode = data => Buffer.from(JSON.stringify(data)).toString('base64url');
+          const previousVersion = '1.67.2';
+          const currentVersion = '1.75.1';
+
+          async function request(path, {params, method = 'GET', body} = {}) {
+            const url = new URL(path, origin);
+            assert.equal(url.origin, origin);
+            if (params) url.search = new URLSearchParams(params).toString();
+            const time = Math.floor(Date.now() / 1000);
+            const header = encode({alg: 'ES256', kid: key_id, typ: 'JWT'});
+            const claims = encode({iss: issuer_id, iat: time, exp: time + 120, aud: 'appstoreconnect-v1'});
+            const message = header + '.' + claims;
+            const signature = sign('sha256', Buffer.from(message), {key, dsaEncoding: 'ieee-p1363'}).toString('base64url');
+            const response = await fetch(url, {
+              method, headers: {Authorization: 'Bearer ' + message + '.' + signature, 'Content-Type': 'application/json'},
+              body: body ? JSON.stringify(body) : undefined, redirect: 'error', signal: AbortSignal.timeout(15000),
+            });
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({}));
+              const codes = (error.errors ?? []).map(item => item.code).filter(code => /^[A-Z0-9_.-]+$/.test(code)).join(', ');
+              throw Error(method + ' ' + url.pathname.replace(/\/[a-f0-9-]{32,}/gi, '/[id]') + ' returned HTTP ' + response.status + ' ' + codes);
+            }
+            return response.status === 204 ? undefined : response.json();
+          }
+
+          const {data: apps} = await request('/v1/apps', {params: {'filter[bundleId]': 'be.jouwdriver.driver'}});
+          assert.equal(apps.length, 1);
+
+          async function exactBuild(version) {
+            const {data: builds} = await request('/v1/builds', {params: {'filter[app]': apps[0].id, 'filter[version]': version}});
+            const matches = builds.filter(build => build.attributes.version === version);
+            assert.equal(matches.length, 1, 'Expected one build for ' + version);
+            assert.equal(matches[0].attributes.processingState, 'VALID', 'Build must be processed');
+            return matches[0];
+          }
+
+          const [previous, current] = await Promise.all([exactBuild(previousVersion), exactBuild(currentVersion)]);
+          const oldSetting = previous.attributes.usesNonExemptEncryption;
+          const newSetting = current.attributes.usesNonExemptEncryption;
+          console.log('Previous build encryption exemption status: ' + (oldSetting === false ? 'EXEMPT' : 'REVIEW_REQUIRED'));
+          assert.equal(oldSetting, false, 'Previous build must already record the encryption exemption');
+          assert.ok(newSetting === null || newSetting === undefined || newSetting === false, 'New build already has a different setting');
+          if (newSetting !== false) {
+            await request('/v1/builds/' + current.id, {
+              method: 'PATCH',
+              body: {data: {id: current.id, type: 'builds', attributes: {usesNonExemptEncryption: false}}},
+            });
+          }
+          assert.equal((await exactBuild(currentVersion)).attributes.usesNonExemptEncryption, false);
+          console.log('Build ' + currentVersion + ' now matches the previous build encryption exemption.');
+
+          async function groupIds(build) {
+            const {data, links} = await request('/v1/builds/' + build.id + '/relationships/betaGroups', {params: {limit: 200}});
+            assert.ok(!links?.next, 'Too many groups to safely compare');
+            return new Set(data.map(group => group.id));
+          }
+
+          const [{data: groups, links}, previousGroups, currentGroups] = await Promise.all([
+            request('/v1/apps/' + apps[0].id + '/betaGroups', {params: {limit: 200}}),
+            groupIds(previous),
+            groupIds(current),
+          ]);
+          assert.ok(!links?.next, 'Too many groups to safely compare');
+          const internal = groups.filter(group => group.attributes.isInternalGroup &&
+            (previousGroups.has(group.id) || group.attributes.hasAccessToAllBuilds));
+          assert.ok(internal.length > 0, 'No existing internal group identified for the previous build');
+          const missing = internal.filter(group => !group.attributes.hasAccessToAllBuilds && !currentGroups.has(group.id));
+          if (missing.length > 0) {
+            await request('/v1/builds/' + current.id + '/relationships/betaGroups', {
+              method: 'POST', body: {data: missing.map(group => ({id: group.id, type: 'betaGroups'}))},
+            });
+          }
+          const verifiedGroups = await groupIds(current);
+          const available = internal.filter(group => group.attributes.hasAccessToAllBuilds || verifiedGroups.has(group.id));
+          assert.equal(available.length, internal.length, 'Existing internal group assignments must be verified');
+          console.log('Verified internal groups with access: ' + available.length);
+          for (let attempt = 0; attempt < 6; attempt++) {
+            const {data} = await request('/v1/builds/' + current.id + '/buildBetaDetail');
+            const status = data.attributes.internalBuildState;
+            console.log('Internal TestFlight state: ' + status);
+            if (status === 'IN_BETA_TESTING') break;
+            if (attempt === 5) throw Error('Internal TestFlight did not confirm distribution');
+            await new Promise(resolve => setTimeout(resolve, 10000));
+          }
+          NODE
