@@ -385,6 +385,78 @@ html:has(.jd) {
   max-width: 620px;
   margin-top: 24px;
 }
+.jd-app-downloads {
+  margin: 0 0 clamp(2.25rem, 5vw, 4rem);
+}
+.jd-app-downloads h3 {
+  font-size: 1.15rem;
+  color: var(--jd-ink, #f2f2ea);
+  margin: 0 0 .8rem;
+}
+.jd-app-download-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+  max-width: 43rem;
+}
+.jd-app-download {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-height: 4.2rem;
+  padding: .72rem .9rem;
+  border: 1px solid #6b5c35;
+  border-radius: .85rem;
+  background: #1b1c16;
+  color: #faf5e6;
+  text-decoration: none;
+}
+a.jd-app-download:hover {
+  border-color: #eacb73;
+  background: #262319;
+}
+a.jd-app-download:focus-visible {
+  outline: 2px solid #eacb73;
+  outline-offset: 3px;
+}
+.jd-app-download > :first-child {
+  flex: 0 0 40px;
+  object-fit: contain;
+}
+.jd-app-download > svg:last-child {
+  flex-shrink: 0;
+  margin-inline-start: auto;
+}
+.jd-app-download strong,
+.jd-app-download small {
+  display: block;
+}
+.jd-app-download small {
+  color: #d5c9ac;
+  font-size: .75rem;
+  line-height: 1.4;
+}
+.jd-app-download-upcoming {
+  border-color: #45453b;
+  background: #161711;
+}
+.jd-app-credit {
+  display: block;
+  max-width: 43rem;
+  margin-block-start: .65rem;
+  color: #b4ae99;
+  font-size: .68rem;
+  line-height: 1.5;
+}
+.jd-app-credit a {
+  color: inherit;
+  text-decoration: underline;
+}
+@media (max-width: 550px) {
+  .jd-app-download-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .jd-platform-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

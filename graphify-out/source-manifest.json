@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "06cc73cfc2145d8e7eb77c18bd28e79dd4540f28",
+  "source_commit_context": "4ade85613f38e49a166f43b0e65ca69d293177c9",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -468,10 +468,10 @@
     "src/components/landing/MarketingEditorial.tsx": "d65a89b9cf4ef063bf2378e39eade17993b5184744e8f5d78bd8a9716338fa9a",
     "src/components/landing/MarketingExplore.tsx": "3810f91725d43c5f76f4c55f3c9cc8aac64d71900e6dbf735be8b3c3e4315981",
     "src/components/landing/ParallaxSection.tsx": "8b09cd46492c731317d6dd9f2f9f40fc727fc7f632c56149afefa64729d1fec7",
-    "src/components/landing/PlatformLanding.tsx": "7d20776a50a42d4e3c88877e86fc59d6031a3869cedb1cddc8b7ff2a763f1446",
+    "src/components/landing/PlatformLanding.tsx": "30d40469e591399fc628a20c200bf958aef757c95d280c6a802506466b616f70",
     "src/components/landing/StatCounter.tsx": "3575c910ec95914bad39d24c10d09df3675997547a09398c740cd1820b3eef93",
     "src/components/landing/cinematic/Cinema.tsx": "e151e61fc9a7116d5c1a70d9a464ba6b892c3b19c8a3e8cbe8374f2e2a991b6a",
-    "src/components/landing/cinematic/cinematic.css": "5233302e4ced60d996109eeda669bd1a47f4a84066e78f1e2e4c23191bbf3da3",
+    "src/components/landing/cinematic/cinematic.css": "e8f0550b81c90db82c245ce1684a3926ad88003d96669c2100bcd10b6bc27069",
     "src/components/landing/cinematic/copy.ts": "3872dfecf89a0ba1e3b9cdd9f987f76b00f8374389fcd7e22b87db33fe302e07",
     "src/components/landing/cinematic/engine.ts": "8bf05eb1e7ab2e8f7caa93de1642764fd1de4b68082bcf68b79820e62f941a03",
     "src/components/landing/cinematic/models.ts": "a9e99a4b8fe9151ccbcf5661d21a2252776f59533b52b2c8688c7bf83a271188",
@@ -684,18 +684,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "69bbd190ff11f5e5f5fd94c48045f4edebcabb46c1226d9c50e735fdbeb8f231",
-    "health.json": "6bd32385165447a3017564b79477284538448de20fb1db51f91dbd9bd7acd334",
-    "SOURCE_INDEX.md": "20937e05b6edf5c7ab3b73e95d78b9b61a0b5ee1cd3238cb7a7b8733f60cdd66",
-    "GRAPH_REPORT.md": "9ac7d7bdefe43d0a18f4a38cba0dc1b79033b7a61009357273f3b5ba19697ff4",
-    "graph.json": "9a2a1ac470fab7e547902a266c068bb16d2de6a2538dfc39daea747759476cff"
+    "GRAPH_TREE.html": "0ad8d0dd08eb759896553a4bf0cbd77511938c5d7950e59762d6bb644d77cc1d",
+    "health.json": "3dadc3521968760e9c0a721438bf06e0271231c7c7096b0314cc1901553b6c16",
+    "SOURCE_INDEX.md": "f07c06c81b2dbd2b7c84d6fa71420fd7e35d56d2bd404c4bf0616f5d4fa8c898",
+    "GRAPH_REPORT.md": "e8d0b67dd11a033dde455c5252171527cf905b5fe65aaacec71a35f164355efa",
+    "graph.json": "4aeb33f3ef107ef7c8fbef40ca707cabdda5932c81d792337c2f3448df66058a"
   },
-  "nodes": 3874,
-  "edges": 13135,
-  "raw_edges": 13424,
-  "communities": 201,
+  "nodes": 3875,
+  "edges": 13136,
+  "raw_edges": 13426,
+  "communities": 207,
   "confidence_counts": {
-    "EXTRACTED": 13175,
+    "EXTRACTED": 13177,
     "INFERRED": 249
   }
 }
