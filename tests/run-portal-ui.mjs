@@ -20,7 +20,7 @@ try {
     if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
     return url.origin===base?route.continue():route.abort();
   });
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[],chironWrites=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
+  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[],chironWrites=[],connectionTests=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
@@ -29,6 +29,7 @@ try {
     else{accountPosts.push(request.postDataJSON());data={updated:true,sign_in_required:true};}
    }
    else if(url.pathname==='/next_api/auth/logout'){loggedIn=false;data=true;}
+   else if(url.pathname==='/next_api/chiron-settings/test'){const check=request.postDataJSON();connectionTests.push(check);data={mode:check.mode,connected:true};}
    else if(url.pathname==='/next_api/chiron-settings'){
     if(request.method()==='PUT'){chironWrites.push(request.postDataJSON());data={id:1};}
     else data={id:1,name:'Company One',chiron_mode:'TEST',transmissionEnabled:true,productionEnabled:false,testCredentialsConfigured:true,productionCredentialsConfigured:productionKeyConfigured,testKeyConfigured:true,productionKeyConfigured,chiron_test_client_id:'synthetic-test-id',chiron_prod_client_id:'synthetic-production-id'};
@@ -111,6 +112,18 @@ try {
   await page.goto(base+'/admin/companies/1/chiron-settings');
   await page.getByTestId('chiron-test-key-status').getByText(/مفتاح الاختبار محفوظ ومخفي/).waitFor();
   assert.equal(await page.locator('#chiron_test_client_secret').inputValue(),'');
+  await page.locator('#chiron_test_client_id').fill('unsaved-synthetic-id');
+  await page.locator('#chiron_test_client_secret').fill('unsaved-synthetic-secret');
+  await page.getByRole('button',{name:'اختبار الاتصال',exact:true}).click();
+  await page.getByText('نجحت المصادقة وأكّدت واجهة Chiron الاتصال.',{exact:true}).waitFor();
+  assert.equal(connectionTests.length,1);
+  assert.equal(connectionTests[0].mode,'TEST');
+  assert.equal(connectionTests[0].clientId,'unsaved-synthetic-id');
+  assert.equal(connectionTests[0].clientSecret,'unsaved-synthetic-secret');
+  assert.deepEqual(chironWrites,[]);
+  await page.locator('#chiron_test_client_id').fill('synthetic-test-id');
+  await page.locator('#chiron_test_client_secret').fill('');
+
   await page.getByRole('tab',{name:'بيئة الإنتاج',exact:true}).click();
   await page.getByTestId('chiron-production-key-status').getByText(/مفتاح الإنتاج محفوظ ومخفي/).waitFor();
   assert.equal(await page.locator('#chiron_prod_client_secret').inputValue(),'');
