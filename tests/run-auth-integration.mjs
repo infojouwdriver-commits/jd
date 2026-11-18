@@ -53,6 +53,11 @@ const mock=http.createServer(async(req,res)=>{
      res.end(JSON.stringify({code:'22023',message:'Select an active company vehicle'}));
      return;
     }
+    if(body.p_shift_id==='33333333-3333-4333-8333-333333333333'){
+     res.writeHead(400,{'Content-Type':'application/json'});
+     res.end(JSON.stringify({code:'23514',message:'First subscription invoice payment required before service activation'}));
+     return;
+    }
     data={id:body.p_shift_id,version:1};
    }
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
@@ -180,6 +185,20 @@ try {
  const missingVehicle=await request('/next_api/drivers/shifts','POST',{...shiftDeclaration,shift_id:'22222222-2222-4222-8222-222222222222',odometer:100},driverToken);
  assert.equal(missingVehicle.status,400);
  assert.equal((await missingVehicle.json()).errorCode,'SHIFT_VEHICLE_REQUIRED');
+ const validWholeReading={...shiftDeclaration,odometer:218345};
+ const acceptedWholeReading=await request('/next_api/drivers/shifts','POST',validWholeReading,driverToken);
+ assert.equal(acceptedWholeReading.status,200);
+ assert.equal(shiftCalls.at(-1).p_odometer,218345);
+ const paymentRequired=await request('/next_api/drivers/shifts','POST',{...validWholeReading,shift_id:'33333333-3333-4333-8333-333333333333'},driverToken);
+ assert.equal(paymentRequired.status,402);
+ assert.equal((await paymentRequired.json()).errorCode,'SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED');
+ checks.push('A whole odometer reading is accepted and unpaid first invoices report service activation, not a reading error');
+ const invalidIds=await request('/next_api/drivers/shifts','POST',{...validWholeReading,shift_id:'invalid'},driverToken);
+ assert.equal((await invalidIds.json()).errorCode,'SHIFT_START_INVALID');
+ const invalidReading=await request('/next_api/drivers/shifts','POST',{...validWholeReading,odometer:218345.123},driverToken);
+ assert.equal((await invalidReading.json()).errorCode,'SHIFT_READINGS');
+ checks.push('Invalid shift identifiers and invalid odometer readings have distinct error codes');
+
  checks.push('Starting a shift with a valid reading and no active vehicle reports the vehicle error');
  const shiftCount=shiftCalls.length;await status('Driver cannot submit another user identifier',request('/next_api/drivers/shifts','POST',{...shiftDeclaration,user_id:999},driverToken),400);assert.equal(shiftCalls.length,shiftCount);
  await status('One-click break self-scopes and never accepts counters',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break'},driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_status,'break');
