@@ -1,5 +1,7 @@
 export const shiftCopy = {
   ar: {
+    subscriptionPaymentRequired: "بدء الوردية بانتظار تسوية فاتورة الاشتراك الأولى للشركة. تواصل مع إدارة شركتك.",
+    invalidStartRequest: "تعذّر قبول طلب بدء الوردية. أغلق النافذة وافتحها من جديد ثم أعد المحاولة.",
     confirmStartReading: "هل تود بدء الوردية بآخر قراءة عدّاد مسجّلة لهذه المركبة؟ يمكنك تعديل القراءة قبل البدء.",
     confirmEndReading: "اقترحنا آخر قراءتين محفوظتين في الوردية. قارنهما بعدّاد المركبة والمسافة الفعلية مع الركاب، وعدّلهما قبل التأكيد عند الحاجة.",
     profile: "الملف الشخصي",
@@ -66,6 +68,8 @@ export const shiftCopy = {
     select: "اختر وردية لعرض سجلها.",
   },
   fr: {
+    subscriptionPaymentRequired: "Le démarrage du service nécessite le règlement de la première facture d’abonnement. Contactez votre entreprise.",
+    invalidStartRequest: "La demande de démarrage a été refusée. Fermez et rouvrez la fenêtre, puis réessayez.",
     confirmStartReading: "Commencer le service avec le dernier relevé de ce véhicule ? Vous pouvez modifier la valeur avant de commencer.",
     confirmEndReading: "Les derniers relevés du service sont proposés. Comparez-les au compteur et à la distance réelle avec passagers, puis corrigez-les si nécessaire.",
     profile: "Profil chauffeur",
@@ -133,6 +137,8 @@ export const shiftCopy = {
     select: "Choisissez un service pour consulter son historique.",
   },
   nl: {
+    subscriptionPaymentRequired: "U kunt de dienst beginnen zodra uw bedrijf de eerste abonnementsfactuur heeft betaald. Neem contact op met uw bedrijf.",
+    invalidStartRequest: "De aanvraag om de dienst te starten is geweigerd. Sluit het venster, open het opnieuw en probeer het nogmaals.",
     confirmStartReading: "De dienst beginnen met de laatste tellerstand van dit voertuig? U kunt deze vóór de start aanpassen.",
     confirmEndReading: "De laatste dienststanden zijn ingevuld. Vergelijk ze met de kilometerteller en de werkelijk gereden passagierskilometers en pas ze zo nodig aan.",
     profile: "Chauffeursprofiel",

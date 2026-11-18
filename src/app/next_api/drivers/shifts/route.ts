@@ -14,7 +14,7 @@ function failure(code?: string) {
       ? 403
       : ["40001", "23505"].includes(code || "")
         ? 409
-        : ["22023", "23514"].includes(code || "")
+        : code === "22023"
           ? 400
           : 503;
   return createErrorResponse({
@@ -122,7 +122,16 @@ export const POST = requestMiddleware(async (request, context) => {
     return error ? failure(error.code) : createSuccessResponse(data);
   }
   const parsed = shiftDeclaration.safeParse(body);
-  if (!parsed.success) return failure("22023");
+  if (!parsed.success) {
+    if (body.action === "start" && !parsed.error.issues.some((issue) => issue.path[0] === "odometer")) {
+      return createErrorResponse({
+        status: 400,
+        errorMessage: "The shift start request is invalid. Close the form and try again.",
+        errorCode: "SHIFT_START_INVALID",
+      });
+    }
+    return failure("22023");
+  }
   const b = parsed.data;
   const { data, error } = await createPostgrestClient(
     await generateAdminUserToken(),
@@ -147,5 +156,17 @@ export const POST = requestMiddleware(async (request, context) => {
       errorCode: "SHIFT_VEHICLE_REQUIRED",
     });
   }
+  if (
+    b.action === "start" &&
+    error?.code === "23514" &&
+    error.message === "First subscription invoice payment required before service activation"
+  ) {
+    return createErrorResponse({
+      status: 402,
+      errorMessage: "The company must settle the first subscription invoice before shifts can start.",
+      errorCode: "SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED",
+    });
+  }
+  if (b.action === "start" && error?.code === "22023") return failure();
   return error ? failure(error.code) : createSuccessResponse(data);
 }, true);

@@ -216,15 +216,17 @@ export default function DriverShiftWorkspace({
           ]}
           initial={{ odometer: startForm.odometer == null ? "" : String(startForm.odometer) }}
           onClose={() => setStartForm(null)}
-          errorMessage={(e) =>
-            e instanceof ApiError && e.errorCode === "SHIFT_VEHICLE_REQUIRED"
-              ? c.vehicleRequired
-              : e instanceof ApiError && e.status === 409
-                ? c.conflict
-                : e instanceof ApiError && e.status === 400
-                  ? c.invalidStart
-                  : operationsCopy[language].failure
-          }
+          errorMessage={(e) => {
+            if (!(e instanceof ApiError)) return operationsCopy[language].failure;
+            if (e.status === 409) return c.conflict;
+            switch (e.errorCode) {
+              case "SHIFT_VEHICLE_REQUIRED": return c.vehicleRequired;
+              case "SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED": return c.subscriptionPaymentRequired;
+              case "SHIFT_READINGS": return c.invalidStart;
+              case "SHIFT_START_INVALID": return c.invalidStartRequest;
+              default: return operationsCopy[language].failure;
+            }
+          }}
           onSubmit={async (values, requestId) => {
             setStartPending(true);
             let shift: DriverShift;
