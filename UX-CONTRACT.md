@@ -204,7 +204,11 @@ part of the existing release stack gate.
 ## Shift-first portal and activity — 19 October 2026
 
 `DriverShiftWorkspace` uses the existing dp tokens and OperationForm. The portal
-home starts with one odometer field; taximeter content waits for an active shift.
+home opens a confirmation dialog with the last closing odometer the driver
+declared for the selected vehicle, if available. The driver can edit the value
+before submitting. The close dialog proposes the latest readings recorded for
+the active shift for the driver to confirm or correct. Taximeter content waits
+for an active shift.
 Profile, history and messages remain accessible. A persistent work-status card
 provides one-click pause/resume, a busy lock, localized failures, an idempotent
 retry, focus refresh and a 20-second status refresh. A pause keeps the same shift

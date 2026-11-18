@@ -233,6 +233,8 @@ try {
                 }),
               });
             }
+          } else if (u.searchParams.get("startReading") === "1") {
+            data = { plate: "TEST-1", odometer: lang === "ar" ? null : lang === "nl" ? 100.10 : 99.50 };
           } else
             data = (
               await db.query("SELECT security_driver_shifts($1,$2,$3) v", [
@@ -258,17 +260,21 @@ try {
       await page.getByRole("link", {name:c.start,exact:true}).waitFor();
       assert.equal(await page.locator("#operation-odometer").count(),0);
       await page.getByRole("link", {name:c.start,exact:true}).click();
-      await page.getByRole("form", {name:c.start,exact:true}).waitFor();
+      await page.getByRole("button", {name:c.start,exact:true}).click();
+      await page.getByRole("dialog", {name:c.start,exact:true}).waitFor();
       if (lang === "ar" && theme === "light")
         await page.screenshot({
           path: path.join(qa, "shift-first-start-ar.png"),
           fullPage: true,
         });
-      assert.equal(await page.getByRole("dialog").count(),0,"Start reading is inline in the shift card");
-      await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
-      assert.equal(writes.length,0,"An explicit odometer is mandatory");
-      assert.equal(await page.locator("#operation-odometer").evaluate(el => el === document.activeElement),true);
-      await page.locator("#operation-odometer").fill("100.10");
+      const odometer = page.locator("#operation-odometer");
+      assert.equal(await odometer.inputValue(), lang === "ar" ? "" : lang === "nl" ? "100.1" : "99.5");
+      if (lang === "ar") {
+        await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
+        assert.equal(writes.length,0,"The first shift needs an explicit odometer");
+        assert.equal(await odometer.evaluate(el => el === document.activeElement),true);
+      }
+      if (lang !== "nl") await odometer.fill("100.10");
       await page.getByRole("form",{name:c.start,exact:true}).getByRole("button",{name:c.start,exact:true}).click();
       if (lang === "ar" && theme === "dark") {
         for(let i=0;i<100&&!releaseStart;i++) await new Promise(resolve=>setTimeout(resolve,10));
@@ -281,7 +287,7 @@ try {
         const startForm=page.getByRole("form",{name:c.start,exact:true});
         await startForm.getByRole("alert").waitFor();
         assert.equal(await page.locator("#operation-odometer").isDisabled(),true);
-        // Ambiguous inline submission keeps the exact original identity and readings.
+        // Ambiguous dialog submission keeps the exact original identity and readings.
         await startForm.getByRole("button", {name:/Réessayer/}).click();
       }
       console.log("Shift start confirmed", lang, theme);
@@ -338,6 +344,8 @@ try {
       await page.reload();
       await page.getByRole("button", { name: c.end, exact: true }).waitFor();
       await page.getByRole("button", { name: c.end, exact: true }).click();
+      assert.equal(await page.locator("#operation-odometer").inputValue(), "110.5");
+      assert.equal(await page.locator("#operation-passenger_km").inputValue(), "5.25");
       await page.locator("#operation-odometer").fill("120.35");
       await page.locator("#operation-passenger_km").fill("10.25");
       await page

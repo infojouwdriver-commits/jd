@@ -26,6 +26,7 @@ const registrationCalls=[];rows.company_registrations=[];
 const claims=new Set();let unavailable=false;const databaseTokens=[];
 rows.drivers=[{id:1,user_id:2,status:'active',company_id:1,full_name:'Synthetic Driver'}];
 rows.companies=[{id:1,name:'Synthetic Company',chiron_mode:'TEST'}];rows.vehicles=[];
+rows.driver_shifts=[];
 const mock=http.createServer(async(req,res)=>{
  try {
   const token=req.headers.authorization?.replace(/^Bearer /,'');
@@ -45,7 +46,15 @@ const mock=http.createServer(async(req,res)=>{
    else if(url.pathname==='/rpc/security_save_app_experience'){assert.equal(body.p_actor,1);if(body.p_expected!==rows.app_experience_settings[0].version){res.writeHead(409,{'Content-Type':'application/json'});res.end(JSON.stringify({code:'PT409'}));return;}welcomeWrites++;Object.assign(rows.app_experience_settings[0],body.p_data,{version:body.p_expected+1});const {id,...config}=rows.app_experience_settings[0];data=config;}
    else if(url.pathname==='/rpc/security_driver_shifts'){shiftCalls.push(body);if(body.p_shift_id){if(body.p_shift_id!=='11111111-1111-4111-8111-111111111111'||body.p_user_id!==2){res.writeHead(403);res.end(JSON.stringify({code:'42501',message:'Shift unavailable'}));return;}data={shift:{id:body.p_shift_id,driver_id:1,company_id:1,vehicle_id:1,driver_name:'Synthetic Driver',company_name:'Synthetic Company',plate_number:'DEMO',started_at:'2026-10-22T08:00:00Z',ended_at:null,start_odometer:217000,odometer:217000,passenger_km:0,work_status:'available',version:1},events:[{version:1,action:'start',recorded_at:'2026-10-22T08:00:00Z',odometer:217000,passenger_km:0,work_status:'available'}],activity:[],summary:{trip_count:0,activity_count:1,payments:[]}};}else data={active:null,shifts:[]};}
    else if(url.pathname==='/rpc/security_shift_status'){shiftCalls.push(body);data={id:body.p_shift_id,version:2,work_status:body.p_status};}
-   else if(url.pathname==='/rpc/security_record_driver_shift'){shiftCalls.push(body);data={id:body.p_shift_id,version:1};}
+   else if(url.pathname==='/rpc/security_record_driver_shift'){
+    shiftCalls.push(body);
+    if(body.p_shift_id==='22222222-2222-4222-8222-222222222222'){
+     res.writeHead(400,{'Content-Type':'application/json'});
+     res.end(JSON.stringify({code:'22023',message:'Select an active company vehicle'}));
+     return;
+    }
+    data={id:body.p_shift_id,version:1};
+   }
    else if(url.pathname==='/rpc/security_fleet_locations')data=[{driver_id:1,company_id:1},{driver_id:2,company_id:2}];
    else if(url.pathname==='/rpc/security_claim_mfa'){const key=`${body.p_user_id}:${body.p_step}`;data=!claims.has(key);claims.add(key);}
    else if(url.pathname==='/rpc/security_claim_refresh'){const row=rows.refresh_tokens.find(r=>r.id===body.p_id&&!r.revoked);data=!!row;if(row)row.revoked=true;}
@@ -57,11 +66,15 @@ const mock=http.createServer(async(req,res)=>{
   } else {
    const table=rows[url.pathname.slice(1)];if(!table)throw Error('Unhandled table');
    const matches=row=>[...url.searchParams].filter(([key])=>!['select','order','limit','offset','columns'].includes(key)).every(([key,value])=>{
-    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(op==='is')return arg==='null'?row[key]==null:arg==='true'?row[key]===true:row[key]===false;if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
+    const op=value.slice(0,value.indexOf('.')),arg=value.slice(value.indexOf('.')+1);if(value==='not.is.null')return row[key]!=null;if(op==='is')return arg==='null'?row[key]==null:arg==='true'?row[key]===true:row[key]===false;if(op==='gte')return row[key]!=null&&String(row[key])>=arg;if(op==='lt')return row[key]!=null&&String(row[key])<arg;if(op==='in')return arg.slice(1,-1).split(',').includes(String(row[key]));return String(row[key])===arg;
    });
    if(req.method==='POST'){const record={...(Array.isArray(body)?body[0]:body),id:table.length+1,created_at:new Date().toISOString(),revoked:false};table.push(record);data=record;}
    else {let found=table.filter(matches);if(req.method==='PATCH')found.forEach(row=>Object.assign(row,body));
     if(req.method==='GET'&&req.headers.prefer?.includes('count=exact')){const total=found.length;const offset=Number(url.searchParams.get('offset')||0),limit=Number(url.searchParams.get('limit')||1000);found=found.slice(offset,offset+limit);res.setHeader('Content-Range',`${offset}-${offset+found.length-1}/${total}`);}
+    if(url.pathname==='/driver_shifts'){
+     assert.equal(url.searchParams.get('order'),'ended_at.desc,id.desc');
+     found=found.sort((a,b)=>b.ended_at.localeCompare(a.ended_at)||b.id-a.id).slice(0,1);
+    }
     const columns=url.searchParams.get('select');if(columns&&columns!=='*')found=found.map(row=>Object.fromEntries(columns.split(',').filter(k=>k in row).map(k=>[k,row[k]])));
     data=req.headers.accept?.includes('vnd.pgrst.object')?found[0]:found;}
 
@@ -146,8 +159,28 @@ try {
  await assert.rejects(native.invoice(1,104),error=>error.status===404);checks.push('Native PDF still denies another driver trip');
 
  await status('Driver shift history self-scopes through actual middleware',request('/next_api/drivers/shifts?user_id=999','GET',null,driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);
+ const suggestion=()=>request('/next_api/drivers/shifts?startReading=1','GET',null,driverToken);
+ assert.equal((await (await suggestion()).json()).data,null);
+ rows.drivers[0].assigned_vehicle_id=501;
+ rows.vehicles.push({id:501,company_id:1,status:'active',plate_number:'TEST-501'});
+ assert.deepEqual((await (await suggestion()).json()).data,{plate:'TEST-501',odometer:null});
+ rows.driver_shifts.push(
+  {id:1,user_id:2,company_id:1,vehicle_id:501,ended_at:'2026-10-22',odometer:100},
+  {id:2,user_id:2,company_id:1,vehicle_id:501,ended_at:'2026-10-23',odometer:110.5},
+  {id:3,user_id:2,company_id:1,vehicle_id:502,ended_at:'2026-10-24',odometer:200},
+  {id:4,user_id:3,company_id:1,vehicle_id:501,ended_at:'2026-10-24',odometer:300},
+  {id:5,user_id:2,company_id:1,vehicle_id:501,ended_at:null,odometer:400},
+ );
+ assert.deepEqual((await (await suggestion()).json()).data,{plate:'TEST-501',odometer:110.5});
+ rows.vehicles.pop();
+ delete rows.drivers[0].assigned_vehicle_id;
+ checks.push('Start suggestion uses the latest closed shift for the selected vehicle and authenticated driver');
  const shiftDeclaration={request_id:'11111111-1111-4111-8111-111111111111',shift_id:'11111111-1111-4111-8111-111111111111',action:'start',expected_version:0,odometer:217000.35,passenger_km:0,work_status:'available'};
  await status('Driver explicit decimal declaration reaches service RPC with session owner',request('/next_api/drivers/shifts','POST',shiftDeclaration,driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_odometer,217000.35);
+ const missingVehicle=await request('/next_api/drivers/shifts','POST',{...shiftDeclaration,shift_id:'22222222-2222-4222-8222-222222222222',odometer:100},driverToken);
+ assert.equal(missingVehicle.status,400);
+ assert.equal((await missingVehicle.json()).errorCode,'SHIFT_VEHICLE_REQUIRED');
+ checks.push('Starting a shift with a valid reading and no active vehicle reports the vehicle error');
  const shiftCount=shiftCalls.length;await status('Driver cannot submit another user identifier',request('/next_api/drivers/shifts','POST',{...shiftDeclaration,user_id:999},driverToken),400);assert.equal(shiftCalls.length,shiftCount);
  await status('One-click break self-scopes and never accepts counters',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break'},driverToken),200);assert.equal(shiftCalls.at(-1).p_user_id,2);assert.equal(shiftCalls.at(-1).p_status,'break');
  await status('Status rejects explicit counter injection',request('/next_api/drivers/shifts','POST',{action:'status',request_id:shiftDeclaration.request_id,shift_id:shiftDeclaration.shift_id,expected_version:1,work_status:'break',odometer:0},driverToken),400);

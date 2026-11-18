@@ -1,5 +1,8 @@
 export const shiftCopy = {
   ar: {
+    confirmStartReading: "هل تود بدء الوردية بآخر قراءة عدّاد مسجّلة لهذه المركبة؟ يمكنك تعديل القراءة قبل البدء.",
+    confirmEndReading: "اقترحنا آخر قراءتين محفوظتين في الوردية. قارنهما بعدّاد المركبة والمسافة الفعلية مع الركاب، وعدّلهما قبل التأكيد عند الحاجة.",
+    profile: "الملف الشخصي",
     pause: "استراحة",
     resume: "استئناف العمل",
     keepOpen: "الاستراحة لا تُغلق الوردية.",
@@ -12,6 +15,8 @@ export const shiftCopy = {
     trip_cancel: "إلغاء رحلة",
     stateChange: "تغيير الحالة",
     trip: "الرحلة",
+    invalidStart: "أدخل قراءة عداد صحيحة بالكيلومتر، بمنزلتين عشريتين كحد أقصى.",
+    vehicleRequired: "اختر مركبة نشطة من الملف الشخصي للسائق. إذا لم تظهر المركبة، اطلب من الإدارة التحقق من اعتمادها.",
     invalid:
       "تحقق من المركبة المختارة والقراءات: لا يجوز أن تتناقص، أو أن تتجاوز زيادة مسافة الركاب زيادة العداد.",
     conflict:
@@ -61,6 +66,9 @@ export const shiftCopy = {
     select: "اختر وردية لعرض سجلها.",
   },
   fr: {
+    confirmStartReading: "Commencer le service avec le dernier relevé de ce véhicule ? Vous pouvez modifier la valeur avant de commencer.",
+    confirmEndReading: "Les derniers relevés du service sont proposés. Comparez-les au compteur et à la distance réelle avec passagers, puis corrigez-les si nécessaire.",
+    profile: "Profil chauffeur",
     pause: "Pause",
     resume: "Reprendre le travail",
     keepOpen: "La pause garde le service ouvert.",
@@ -73,6 +81,8 @@ export const shiftCopy = {
     trip_cancel: "Course annulée",
     stateChange: "Changement d’état",
     trip: "Course",
+    invalidStart: "Saisissez une valeur de compteur valide en kilomètres, avec deux décimales au maximum.",
+    vehicleRequired: "Choisissez un véhicule actif dans le profil chauffeur. Si le véhicule ne figure pas dans la liste, demandez à l’administration de vérifier son approbation.",
     invalid:
       "Vérifiez le véhicule et les compteurs : aucune diminution ; la hausse des kilomètres avec passagers ne peut pas dépasser celle du compteur.",
     conflict:
@@ -123,6 +133,9 @@ export const shiftCopy = {
     select: "Choisissez un service pour consulter son historique.",
   },
   nl: {
+    confirmStartReading: "De dienst beginnen met de laatste tellerstand van dit voertuig? U kunt deze vóór de start aanpassen.",
+    confirmEndReading: "De laatste dienststanden zijn ingevuld. Vergelijk ze met de kilometerteller en de werkelijk gereden passagierskilometers en pas ze zo nodig aan.",
+    profile: "Chauffeursprofiel",
     pause: "Pauze",
     resume: "Werk hervatten",
     keepOpen: "De dienst blijft open tijdens een pauze.",
@@ -135,6 +148,8 @@ export const shiftCopy = {
     trip_cancel: "Rit geannuleerd",
     stateChange: "Statuswijziging",
     trip: "Rit",
+    invalidStart: "Voer een geldige kilometerstand in met maximaal twee decimalen.",
+    vehicleRequired: "Kies een actief voertuig in het chauffeursprofiel. Staat het voertuig niet in de lijst, vraag dan de beheerder om de goedkeuring te controleren.",
     invalid:
       "Controleer voertuig en tellerstanden: geen daling; de toename met passagiers mag niet groter zijn dan de tellertoename.",
     conflict:

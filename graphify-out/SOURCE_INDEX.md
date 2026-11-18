@@ -2763,7 +2763,7 @@ Links target the working tree, so line positions can move after changes.
 - `shifts/route.ts` — [L1](../src/app/next_api/drivers/shifts/route.ts#L1)
 - `failure()` — [L11](../src/app/next_api/drivers/shifts/route.ts#L11)
 - `GET` — [L38](../src/app/next_api/drivers/shifts/route.ts#L38)
-- `POST` — [L68](../src/app/next_api/drivers/shifts/route.ts#L68)
+- `POST` — [L105](../src/app/next_api/drivers/shifts/route.ts#L105)
 
 ## [src/app/next_api/drivers/trips/route.ts](../src/app/next_api/drivers/trips/route.ts)
 
@@ -3588,7 +3588,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `DriverShiftWorkspace.tsx` — [L1](../src/components/driver/DriverShiftWorkspace.tsx#L1)
 - `DriverShiftWorkspace()` — [L19](../src/components/driver/DriverShiftWorkspace.tsx#L19)
-- `toggle()` — [L81](../src/components/driver/DriverShiftWorkspace.tsx#L81)
+- `toggle()` — [L84](../src/components/driver/DriverShiftWorkspace.tsx#L84)
+- `openStart()` — [L120](../src/components/driver/DriverShiftWorkspace.tsx#L120)
 
 ## [src/components/driver/DriverShifts.tsx](../src/components/driver/DriverShifts.tsx)
 
