@@ -1,5 +1,8 @@
 name: Publish verified driver shift odometer update
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-shift-odometer.yml']
   workflow_dispatch:
     inputs:
       image:
@@ -31,6 +34,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   update:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
