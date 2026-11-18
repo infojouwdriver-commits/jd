@@ -34,6 +34,9 @@ export default function DriverShiftWorkspace({
   const [lastReceiptTrip,setLastReceiptTrip]=useState<number|null>(null);
   const [data, setData] = useState<ShiftList | null>(null);
   const [startPending, setStartPending] = useState(false);
+  const [loadingStart, setLoadingStart] = useState(false);
+  const [startForm, setStartForm] = useState<{ plate: string; odometer: number | null } | null>(null);
+  const [startError, setStartError] = useState("");
   const [localActive, setLocalActive] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -114,6 +117,21 @@ export default function DriverShiftWorkspace({
     if (transitionTimer.current) clearTimeout(transitionTimer.current);
   }, [pathname]);
   const active = data?.active;
+  async function openStart() {
+    if (loadingStart || startForm) return;
+    setLoadingStart(true);
+    setStartError("");
+    try {
+      const reading = await api.get<{ plate: string; odometer: number | null } | null>("/drivers/shifts?startReading=1");
+      if (reading) setStartForm(reading);
+      else if (startPending) setStartForm({ plate: "", odometer: null });
+      else setStartError(c.vehicleRequired);
+    } catch {
+      setStartForm({ plate: "", odometer: null });
+    } finally {
+      setLoadingStart(false);
+    }
+  }
   const blocked = localActive || startPending || active?.work_status === "with_passenger";
   // Profile and history remain reachable to select a vehicle or inspect old services.
   const needsStart =
@@ -170,11 +188,19 @@ export default function DriverShiftWorkspace({
               </Link>
             </div>
           </div>}
-          {blocked && <p role="status">{c.endNotice}</p>}
+          {active && blocked && <p role="status">{c.endNotice}</p>}
           {data && (!active || startPending) && !localActive && !ignition && (
-        <OperationForm inline
+            <div className="space-y-3">
+              <Button className="dp-btn-primary w-full" disabled={loadingStart || !!startForm} onClick={() => void openStart()}>
+                {loadingStart ? operationsCopy[language].loading : c.start}
+              </Button>
+              {startError && <p role="alert">{startError} <Link className="underline" href="/driver/profile">{c.profile}</Link></p>}
+            </div>
+          )}
+          {startForm && (
+        <OperationForm
           title={c.start}
-          description={c.firstStep}
+          description={[startForm.plate, startForm.odometer == null ? c.firstStep : c.confirmStartReading].filter(Boolean).join(" · ")}
           c={operationsCopy[language]}
           submitLabel={c.start}
           intentKey={`driver-shift-${user?.sub}-start-start`}
@@ -188,10 +214,16 @@ export default function DriverShiftWorkspace({
               step: 0.01,
             },
           ]}
-          initial={{ odometer: "" }}
-          onClose={() => {}}
+          initial={{ odometer: startForm.odometer == null ? "" : String(startForm.odometer) }}
+          onClose={() => setStartForm(null)}
           errorMessage={(e) =>
-            e instanceof ApiError && e.status === 409 ? c.conflict : c.invalid
+            e instanceof ApiError && e.errorCode === "SHIFT_VEHICLE_REQUIRED"
+              ? c.vehicleRequired
+              : e instanceof ApiError && e.status === 409
+                ? c.conflict
+                : e instanceof ApiError && e.status === 400
+                  ? c.invalidStart
+                  : operationsCopy[language].failure
           }
           onSubmit={async (values, requestId) => {
             setStartPending(true);
@@ -243,7 +275,7 @@ export default function DriverShiftWorkspace({
       {needsStart && <section className="dp-card m-4 space-y-3 p-5" role="status"><p>{error || (data ? c.firstStep : operationsCopy[language].loading)}</p><Link className="dp-text underline" href="/driver/home">{c.start}</Link></section>}
       <div hidden={needsStart}>{children}</div>
       {form && <OperationForm
-        title={c[form.action]} description={form.action === "end" ? c.endNotice : c.intro}
+        title={c[form.action]} description={form.action === "end" ? c.confirmEndReading : c.intro}
         c={operationsCopy[language]} submitLabel={c[form.action]}
         intentKey={`driver-shift-${user?.sub}-${form.action}-${form.shift.id}`}
         fields={[
@@ -251,7 +283,7 @@ export default function DriverShiftWorkspace({
           {key:"passenger_km",label:c.passenger,type:"number",min:Number(form.shift.passenger_km),max:9999999.99,step:.01},
           ...(form.action === "record" ? [{key:"work_status",label:c.status,options:(["available","driving_empty","with_passenger","break"] as const).map(value=>({value,label:c[value]}))}] : [])
         ]}
-        initial={{_shift_id:form.shift.id,_version:String(form.shift.version),odometer:"",passenger_km:"",work_status:form.shift.work_status}}
+        initial={{_shift_id:form.shift.id,_version:String(form.shift.version),odometer:form.action === "end" ? String(form.shift.odometer) : "",passenger_km:form.action === "end" ? String(form.shift.passenger_km) : "",work_status:form.shift.work_status}}
         errorMessage={e => e instanceof ApiError && e.status === 409 ? c.conflict : e instanceof ApiError && e.status === 400 ? c.invalid : operationsCopy[language].failure}
         onClose={() => setForm(null)}
         onSubmit={async (values,requestId) => {

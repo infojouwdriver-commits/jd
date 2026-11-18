@@ -39,6 +39,43 @@ export const GET = requestMiddleware(async (request, context) => {
   const userId = Number(context.payload?.sub);
   if (!Number.isSafeInteger(userId) || userId < 1) return failure("42501");
   const params = request.nextUrl.searchParams;
+  if (params.get("startReading") === "1") {
+    const client = createPostgrestClient(await generateAdminUserToken());
+    const { data: driver, error: driverError } = await client
+      .from("drivers")
+      .select("company_id,current_vehicle_id,assigned_vehicle_id")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+    if (driverError) return failure(driverError.code);
+    if (!driver) return failure("42501");
+    const vehicleId = driver.current_vehicle_id ?? driver.assigned_vehicle_id;
+    if (!vehicleId) return createSuccessResponse(null);
+
+    const { data: vehicle, error: vehicleError } = await client
+      .from("vehicles")
+      .select("plate_number")
+      .eq("id", vehicleId)
+      .eq("company_id", driver.company_id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (vehicleError) return failure(vehicleError.code);
+    if (!vehicle) return createSuccessResponse(null);
+
+    const { data: previous, error: historyError } = await client
+      .from("driver_shifts")
+      .select("odometer")
+      .eq("user_id", userId)
+      .eq("company_id", driver.company_id)
+      .eq("vehicle_id", vehicleId)
+      .not("ended_at", "is", null)
+      .order("ended_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (historyError) return failure(historyError.code);
+    return createSuccessResponse({ plate: vehicle.plate_number, odometer: previous?.odometer ?? null });
+  }
   const id = params.get("id");
   const offset = Number(params.get("offset") || 0);
   if (
@@ -99,5 +136,16 @@ export const POST = requestMiddleware(async (request, context) => {
     p_passenger_km: b.passenger_km,
     p_work_status: b.work_status,
   });
+  if (
+    b.action === "start" &&
+    error?.code === "22023" &&
+    error.message === "Select an active company vehicle"
+  ) {
+    return createErrorResponse({
+      status: 400,
+      errorMessage: "Select an active company vehicle in your driver profile.",
+      errorCode: "SHIFT_VEHICLE_REQUIRED",
+    });
+  }
   return error ? failure(error.code) : createSuccessResponse(data);
 }, true);

@@ -1,5 +1,5 @@
 {
-  "passed": 97,
+  "passed": 99,
   "checks": [
     "Administrator password alone is rejected",
     "Administrator password and OTP succeeds",
@@ -44,7 +44,9 @@
     "Native end-trip/history PDF requests pass real middleware and return a PDF with one durable invoice",
     "Native PDF still denies another driver trip",
     "Driver shift history self-scopes through actual middleware",
+    "Start suggestion uses the latest closed shift for the selected vehicle and authenticated driver",
     "Driver explicit decimal declaration reaches service RPC with session owner",
+    "Starting a shift with a valid reading and no active vehicle reports the vehicle error",
     "Driver cannot submit another user identifier",
     "One-click break self-scopes and never accepts counters",
     "Status rejects explicit counter injection",
