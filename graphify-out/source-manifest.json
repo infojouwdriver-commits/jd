@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "cf540229e065fd4c1ee27691202d77e629b7f443",
+  "source_commit_context": "1a1bcde6e218f9e66fdfbd5a5c8c14ca135a8585",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -31,7 +31,7 @@
     "driver-app/App.tsx": "676b02b35ebf9c379e3d5f7fcb3e87e8cfcd8e02dae6b5a966a7503c747e12b7",
     "driver-app/app.config.js": "4ea97de30d7250bad05ab19c4deae5069cc28c4a6f134b04dd7c350bddf0fbe8",
     "driver-app/package.json": "fd788895a2c07a2ea202d8d9bd0527a06fa9df8dbc3314209eb60e8dc03d6b37",
-    "driver-app/src/DriverMap.tsx": "85fd131f996900b304c7fdf3296cfe65e684226df08185b68dba3820b9c743ab",
+    "driver-app/src/DriverMap.tsx": "8997a91026361554e1329b13085c63451cc638e142062dbe39a41cc74f953343",
     "driver-app/src/FleetLocation.tsx": "f4376a21b1b37a6cdeb5d325304d30c9594a914f4ace53571187cf231324762b",
     "driver-app/src/TripHistory.tsx": "6a413bb9bcfaed91779d9163171acd8992244db0e7b8fe05035faaeffdff22a5",
     "driver-app/src/TripPanel.tsx": "a8fb3c089b9996f64d8a4815a6c331b8150ac0fc23c64d9b6f7a570b722d8f89",
@@ -54,7 +54,7 @@
     "driver-app/src/experience/Account.tsx": "647ceed95995ef46867134df16087fdb868b02c6e66c7168d22f08c4a27622e5",
     "driver-app/src/experience/AccountDeletion.tsx": "ef7e8c820d851e318bf095e0ad5422c7a9c0f7cbbff4caef637cd4deef1b647e",
     "driver-app/src/experience/ActiveTrip.tsx": "f872cbf0baa7e314d5f459c48690bde19581f4bee4239e23c3201cce904a7006",
-    "driver-app/src/experience/ActiveTripMap.tsx": "7bf6711e9eb3ebfc0fe7369542b056cd31f32edc0668f087079f00f0f49795aa",
+    "driver-app/src/experience/ActiveTripMap.tsx": "11e854548059dfe8a7e98730fb152dcbb69b83c7fb518d6c19078c6b565bb444",
     "driver-app/src/experience/ActivityFilters.tsx": "2100eb055abb9c5fe506d744fa7f7fac5ebdec713c2ff1a8597a039cd23554a3",
     "driver-app/src/experience/AddressField.tsx": "00b428f3f1a7d84fe31132ea4259b4a4269dd25725e0e34611f63d855b553105",
     "driver-app/src/experience/BillingReminder.tsx": "d06c97110ffaab595cd9b3e854f9f1d906af1e7dc915d37629329b34c5d04a2d",
@@ -114,9 +114,9 @@
     "driver-app/src/shift-trip.ts": "0905d1959acf007579b545f7dc98aa7806fc530aea8e4b52fc96f8fa2a650467",
     "driver-app/src/trip-engine.ts": "53b5884b151b2e581f44cdafdb09bb6ba9c12051fac66fd62ca53fff2509582c",
     "driver-app/src/trip-error.ts": "679f9930e9fa7d4ba2e959c41f3279d65df171edd6b7137581afc3789c46b76b",
-    "driver-app/src/trip-meter.ts": "fb4ab8f9a813ad6478fc1ef37123ac7262edee51eece4886995e821250cebaf9",
+    "driver-app/src/trip-meter.ts": "ff20cfed95dec84a53fad1b30ca7821f0cc838225ef7ceca224cd015be42af9a",
     "driver-app/src/trip-store.ts": "be479e6fc9501aee082f11626aa2cded8abea5007145ee6adcbcb94a3d47fef6",
-    "driver-app/src/useTripController.ts": "e2dfee59d5767594555a577ebad2342e6ba00783c4c4a8028b419da247b97b64",
+    "driver-app/src/useTripController.ts": "b87bb63c517572c323e6a66c9b3f7cf4b6840200ff3c30e83655654b4e0a5cf6",
     "driver-app/src/welcome-config.ts": "237ddd38fe0a7133dc2fa3823c2ae6ac01052016aa8109d4ec52c595dadaf7ef",
     "driver-app/src/welcome-loader.ts": "fd3017776500b611706faf82a7afb8dc4dbdca11b63fcd8652e152c5b5e2d896",
     "driver-app/tsconfig.json": "e5e2088483e932c0ec6cf35dee4a6e1d363a381810db3f8f7b6176526caf9fc9",
@@ -685,18 +685,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "e32b1ff6eb5f2a922d2f3719aab42ee700907c33be3606c057efd4703686ae86",
-    "health.json": "64a8931d02a5e0159c9d5f35953ecee873212c26bf22e3d4e1185e374b86228a",
-    "SOURCE_INDEX.md": "23e9b29486a0bc785f556d5073a38ee9556608506578fd4979717655fb0931a3",
-    "GRAPH_REPORT.md": "af81734d55d55c72aa1c9919e601c29cdde5eeab17d15d25e0d4ce7afed5b66b",
-    "graph.json": "1e00c3102973f1b1a72cac70b1b94d79fd75b05e3fc9b915997df2b4a7042962"
+    "GRAPH_TREE.html": "a348178c8ee47ceebe7d4e86409a439ab3d87f82163bb2217d2e759f57ee713b",
+    "health.json": "d905ed32207fb6fd8a31339abae79e578a60be186377be289d2ec4eb45c9af36",
+    "SOURCE_INDEX.md": "dd3c63d99352839cc3a772b571044bfd67cc0aa29bb07861b4849351fe31d195",
+    "GRAPH_REPORT.md": "6458fb64056daf8292644c01a2ebf0f399718a83182d6c9acc86e5e28f297087",
+    "graph.json": "ff0fa085f20e60d97a778efeab81913ce39b26237f19bd7290915c3bc246a141"
   },
-  "nodes": 3877,
-  "edges": 13138,
-  "raw_edges": 13429,
-  "communities": 200,
+  "nodes": 3879,
+  "edges": 13140,
+  "raw_edges": 13431,
+  "communities": 205,
   "confidence_counts": {
-    "EXTRACTED": 13180,
+    "EXTRACTED": 13182,
     "INFERRED": 249
   }
 }

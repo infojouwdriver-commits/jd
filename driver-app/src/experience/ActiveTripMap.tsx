@@ -44,7 +44,7 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
  const [details,setDetails]=useState(false);
  const [navigationError,setNavigationError]=useState(false);
  const [topHeight,setTopHeight]=useState(90);
- const [bottomHeight,setBottomHeight]=useState(174);
+ const [bottomHeight,setBottomHeight]=useState(130);
  const currency=new Intl.NumberFormat(`${language}-BE`,{style:'currency',currency:'EUR'});
  const distance=new Intl.NumberFormat(`${language}-BE`,{maximumFractionDigits:2}).format(trip.meter.distanceKm);
  const lastPosition=position??trip.meter.lastPoint??trip.start;
@@ -86,24 +86,22 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
   </View>
   <View pointerEvents="box-none" style={[styles.overlay,{bottom:insets.bottom+8,left:Math.max(12,insets.left),right:Math.max(12,insets.right)}]}
    onLayout={event=>setBottomHeight(event.nativeEvent.layout.height)}>
-   <Card style={{padding:12,gap:9}}>
+   <Card style={{padding:10,gap:8}}>
     <ScrollView bounces={false} style={{maxHeight:Math.max(70,height*.25)}} contentContainerStyle={{gap:8}}>
-     <Row style={{justifyContent:'space-between',gap:8}}>
-      <View style={{flex:1,gap:2}}>
+     <Row style={{alignItems:'stretch',flexWrap:'wrap',gap:8}}>
+      <View style={styles.metric}>
        <Label muted size={12}>{t('price')}</Label>
-       <Label bold numeric size={27}>{Number.isFinite(fare)?currency.format(fare!):'—'}</Label>
+       <Label bold numeric size={18}>{Number.isFinite(fare)?currency.format(fare!):'—'}</Label>
       </View>
-      {trip.tariffQuote?.code&&<Label size={13} bold color={colors.icon}>{trip.tariffQuote.code}</Label>}
-     </Row>
-     <Row style={{borderTopWidth:1,borderTopColor:colors.line,paddingTop:8,gap:10}}>
-      <View style={{flex:1,gap:2}}>
+      <View style={styles.metric}>
        <Label muted size={12}>{t('duration')}</Label>
-       <Label bold numeric size={18}>{clock}</Label>
+       <Label bold numeric size={16}>{clock}</Label>
       </View>
-      <View style={{flex:1,gap:2}}>
+      <View style={styles.metric}>
        <Label muted size={12}>{t('distance')}</Label>
-       <Label bold numeric size={18}>{distance} {t('km')}</Label>
+       <Label bold numeric size={16}>{distance} {t('km')}</Label>
       </View>
+      {trip.tariffQuote?.code&&<View style={{justifyContent:'center'}}><Label size={12} bold color={colors.icon}>{trip.tariffQuote.code}</Label></View>}
      </Row>
      {!!error&&<Notice error>{error}</Notice>}
      {departure==='review'&&departureLabel&&<Notice>{departureLabel}</Notice>}
@@ -136,4 +134,7 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
  </View>;
 }
 
-const styles=StyleSheet.create({overlay:{position:'absolute'}});
+const styles=StyleSheet.create({
+ overlay:{position:'absolute'},
+ metric:{flexGrow:1,flexShrink:1,flexBasis:'24%',minWidth:74,gap:2},
+});
