@@ -1,16 +1,16 @@
-# Graph Report - JOUW DRIVER  (2026-11-18)
+# Graph Report - JOUW DRIVER  (2026-11-19)
 
 ## Corpus Check
-- 677 files · ~286,736 words
+- 678 files · ~286,771 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3876 nodes · 13138 edges · 199 communities (138 shown, 61 thin omitted)
+- 3877 nodes · 13138 edges · 200 communities (138 shown, 62 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 249 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f9901ec9`
+- Built from commit: `cf540229`
 - Source hashes are authoritative: run `python3 scripts/code-map.py --check`.
 - Rebuild using the pinned environment: `python scripts/code-map.py` (local AST only).
 
@@ -206,15 +206,15 @@
 ## Import Cycles
 - 2-file cycle: `src/lib/api-utils.ts -> src/lib/create-response.ts -> src/lib/api-utils.ts`
 - 2-file cycle: `driver-app/src/experience/session.tsx -> driver-app/src/experience/shift-state.tsx -> driver-app/src/experience/session.tsx`
-- 3-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
+- 3-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/api-utils.ts`
 - 3-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
-- 4-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/rate-limit.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
+- 4-file cycle: `src/lib/api-utils.ts -> src/lib/mail-service.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 - 4-file cycle: `src/lib/api-utils.ts -> src/lib/security-guard.ts -> src/lib/auth.ts -> src/lib/crud-operations.ts -> src/lib/api-utils.ts`
 
-## Communities (199 total, 61 thin omitted)
+## Communities (200 total, 62 thin omitted)
 
 ### Community 0 - "createErrorResponse"
 Cohesion: 0.08
@@ -770,23 +770,23 @@ Nodes (3): PortalEnum, ADMIN, COMPANY
 
 ## Knowledge Gaps
 - **820 isolated node(s):** `activate-chiron-production.sh script`, `CHIRON_ACTIVATION_REVISION`, `VERIFIED_BACKUP_TAG`, `CHIRON_ACTIVATION_PROOF`, `backup-foundation.sh script` (+815 more)
-  These have ≤1 connection - possible missing edges. (Counts symbols only; 1181 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **61 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges. (Counts symbols only; 1182 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **62 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `PlatformLanding()` connect `PlatformLanding.tsx` to `[resource]/page.tsx`, `Button`, `CookieBanner.tsx`, `Input`?**
+- **Why does `Cinema()` connect `PlatformLanding.tsx` to `engine.ts`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **What connects `activate-chiron-production.sh script`, `CHIRON_ACTIVATION_REVISION`, `VERIFIED_BACKUP_TAG` to the rest of the system?**
   _820 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `createErrorResponse` be split into smaller, more focused modules?**
   _Cohesion score 0.07623362552940018 - nodes in this community are weakly interconnected._
-- **Why does `Cinema()` connect `PlatformLanding.tsx` to `engine.ts`?**
+- **Why does `useTripController()` connect `useTripController.ts` to `api.ts`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Should `createPostgrestClient` be split into smaller, more focused modules?**
   _Cohesion score 0.050997425997425995 - nodes in this community are weakly interconnected._
-- **Why does `useTripController()` connect `useTripController.ts` to `api.ts`?**
+- **Why does `CompanyRegistrationScreen()` connect `CompanyRegistration.tsx` to `CompanyLoginForm.tsx`, `usePreferences`?**
   _High betweenness centrality (0.000) - this node is a cross-community bridge._
 - **Should `api-utils.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.05691471287801563 - nodes in this community are weakly interconnected._
