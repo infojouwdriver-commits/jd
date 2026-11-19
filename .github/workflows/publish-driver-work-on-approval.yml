@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  VERIFIED_IMAGE: ghcr.io/infojouwdriver-commits/jd@sha256:a4cae357f494479f49b37ea3789c5ecf10d90f034cf580ccb120458d9374137c
   REVIEWED_REVISION: c361e570c460ae02e6b89b72e85642b4d1cf899b
 jobs:
   scope:
@@ -46,6 +47,27 @@ jobs:
           }
           const jobs=await api('/actions/runs/44489237099/jobs?per_page=100');
           for(const name of ['verify','native-database'])if(!jobs.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Native and browser checks required');
+          const prior=await api('/actions/runs/44490671282');
+          const age=Date.now()-Date.parse(prior.updated_at);
+          if(prior.head_sha!=='ff8ca35728905d61ac1b53f51dd102187caaa65f'||prior.path!==workflow||prior.run_attempt!==1||prior.status!=='completed'||!Number.isFinite(age)||age<0||age>86400000)throw Error('Verified rollout and fresh recovery required');
+          const priorJobs=await api('/actions/runs/44490671282/jobs?per_page=100');
+          for(const name of ['scope','inspect','build','domain / candidate','image-acceptance','backup / backup'])if(!priorJobs.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Prior image and recovery checks did not pass');
+          const artifacts=await api('/actions/runs/44490671282/artifacts');
+          const proof=artifacts.artifacts.find(x=>x.name==='driver-approval-image-proof'&&!x.expired);
+          if(!proof)throw Error('Exact image proof unavailable');
+          const {execFileSync}=await import('node:child_process');
+          const fs=await import('node:fs');
+          const os=await import('node:os');
+          const dir=fs.mkdtempSync(os.tmpdir()+'/driver-approval-proof-');
+          try {
+            const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+'/actions/artifacts/'+proof.id+'/zip',{headers,signal:AbortSignal.timeout(30000)});
+            if(!r.ok)throw Error('Exact image proof download failed');
+            fs.writeFileSync(dir+'/proof.zip',Buffer.from(await r.arrayBuffer()),{mode:0o600});
+            const result=JSON.parse(execFileSync('unzip',['-p',dir+'/proof.zip','candidate-native-proof.json'],{encoding:'utf8'}));
+            if(result.candidateImage!==process.env.VERIFIED_IMAGE||result.passed!==result.checks?.length||!result.checks.includes('An approved public registration can start and close a shift before contract signature and first invoice payment'))throw Error('The verified image and expected driver work test are required');
+          } finally {
+            fs.rmSync(dir,{recursive:true,force:true});
+          }
           console.log('Exact reviewed merge tree and production baseline verified.');
           GATE
 
@@ -91,103 +113,8 @@ jobs:
           REMOTE
           echo 'Reviewed live baseline verified; protected tests and backup may proceed.'
 
-  domain:
-    needs: inspect
-    uses: ./.github/workflows/domain-candidate.yml
-
-  build:
-    needs: [scope, inspect]
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      digest: ${{ steps.image.outputs.digest }}
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          persist-credentials: false
-          ref: ${{ env.REVIEWED_REVISION }}
-      - name: Build and publish immutable reviewed website image
-        id: image
-        env:
-          REGISTRY_TOKEN: ${{ github.token }}
-          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
-        run: |
-          set -euo pipefail
-          test -n "$MAPBOX_PUBLIC_TOKEN"
-          image=ghcr.io/infojouwdriver-commits/jd
-          tag="driver-approval-$REVIEWED_REVISION-$GITHUB_RUN_ID"
-          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker build \
-            --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
-            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
-            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-            --label "org.opencontainers.image.revision=$REVIEWED_REVISION" \
-            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
-            -t "$image:$tag" .
-          docker push "$image:$tag" >/dev/null
-          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$tag")
-          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
-          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
-          printf 'Verified driver approval image: %s\n' "$digest" >> "$GITHUB_STEP_SUMMARY"
-
-  image-acceptance:
-    needs: build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          persist-credentials: false
-          ref: ${{ env.REVIEWED_REVISION }}
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
-        with:
-          node-version: '22.18.0'
-          package-manager-cache: false
-      - name: Pull the exact accepted source image
-        env:
-          GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.build.outputs.digest }}
-        run: |
-          set -euo pipefail
-          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
-          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker pull "$IMAGE"
-          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = "$REVIEWED_REVISION"
-          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
-      - name: Install isolated test prerequisites
-        run: |
-          npm install --global pnpm@11.25.0
-          pnpm install --frozen-lockfile
-          sudo apt-get update -qq
-          sudo apt-get install --yes age
-      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
-        env:
-          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
-        run: |
-          set -o pipefail
-          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: driver-approval-image-proof
-          path: candidate-native-proof.json
-          retention-days: 14
-
-  backup:
-    needs: inspect
-    uses: ./.github/workflows/backup-foundation.yml
-    with:
-      include_restore_tool: true
-    secrets: inherit
-
   publish:
-    needs: [scope, inspect, domain, build, image-acceptance, backup]
+    needs: [scope, inspect]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
@@ -209,10 +136,10 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           REGISTRY_TOKEN: ${{ github.token }}
-          IMAGE: ${{ needs.build.outputs.digest }}
+          IMAGE: ${{ env.VERIFIED_IMAGE }}
           REVISION: ${{ env.REVIEWED_REVISION }}
           BASELINE: de03edaa21000ed3be34c9b5891121308e271fab
-          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+          BACKUP_TAG: 44490671282-1
         run: |
           set -euo pipefail
           umask 077
@@ -322,10 +249,13 @@ jobs:
           const source=raw.toString('utf8');
           if(!/COMMIT;\s*$/.test(source))throw Error('Transactional driver migration required');
           const verify="DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='invoice_service_guard' AND NOT tgisinternal AND tgrelid IN ('public.driver_shifts'::regclass,'public.trips'::regclass)) THEN RAISE EXCEPTION 'Driver billing gate still active'; END IF; END $$;";
-          const sql=source.replaceAll(':"schema"','"public"').replace(/COMMIT;\s*$/,verify+'\nCOMMIT;\n');
-          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
+          const sql=source.replaceAll(':"schema"','"public"').replace(/COMMIT;\s*$/,()=>verify+'\nCOMMIT;\n');
+          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-Atq'];
           const processResult=spawnSync('docker',args,{input:sql,encoding:'utf8',timeout:30000});
-          if(processResult.status!==0)throw Error('Driver work migration failed and needs operator review');
+          if(processResult.status!==0){
+            const state=/ERROR:\s+([0-9A-Z]{5}):/.exec(processResult.stderr||'')?.[1];
+            throw Error('Driver work migration failed'+(state?' (SQLSTATE '+state+')':''));
+          }
           console.log('Production schema verified: both invoice guard triggers removed.');
           MIGRATE
           updated=true
