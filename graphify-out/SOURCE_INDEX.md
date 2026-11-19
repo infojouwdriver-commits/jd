@@ -457,6 +457,11 @@ Links target the working tree, so line positions can move after changes.
 - `completed-batch-receipt.ts` — [L1](../driver-app/src/completed-batch-receipt.ts#L1)
 - `completedBatchReceipt()` — [L5](../driver-app/src/completed-batch-receipt.ts#L5)
 
+## [driver-app/src/driver-balance.ts](../driver-app/src/driver-balance.ts)
+
+- `driver-balance.ts` — [L1](../driver-app/src/driver-balance.ts#L1)
+- `estimateDriverBalance()` — [L5](../driver-app/src/driver-balance.ts#L5)
+
 ## [driver-app/src/experience/Account.tsx](../driver-app/src/experience/Account.tsx)
 
 - `Account.tsx` — [L1](../driver-app/src/experience/Account.tsx#L1)
@@ -543,6 +548,12 @@ Links target the working tree, so line positions can move after changes.
 - `field()` — [L141](../driver-app/src/experience/CompanyRegistration.tsx#L141)
 - `openReference()` — [L158](../driver-app/src/experience/CompanyRegistration.tsx#L158)
 
+## [driver-app/src/experience/DriverBalanceEstimate.tsx](../driver-app/src/experience/DriverBalanceEstimate.tsx)
+
+- `DriverBalanceEstimate.tsx` — [L1](../driver-app/src/experience/DriverBalanceEstimate.tsx#L1)
+- `copy` — [L8](../driver-app/src/experience/DriverBalanceEstimate.tsx#L8)
+- `DriverBalanceEstimate()` — [L15](../driver-app/src/experience/DriverBalanceEstimate.tsx#L15)
+
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
 - `Home.tsx` — [L1](../driver-app/src/experience/Home.tsx#L1)
@@ -587,7 +598,7 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/Revenues.tsx](../driver-app/src/experience/Revenues.tsx)
 
 - `Revenues.tsx` — [L1](../driver-app/src/experience/Revenues.tsx#L1)
-- `Revenues()` — [L12](../driver-app/src/experience/Revenues.tsx#L12)
+- `Revenues()` — [L13](../driver-app/src/experience/Revenues.tsx#L13)
 
 ## [driver-app/src/experience/Settings.tsx](../driver-app/src/experience/Settings.tsx)
 
