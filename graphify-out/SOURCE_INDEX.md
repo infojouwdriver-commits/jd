@@ -311,15 +311,17 @@ Links target the working tree, so line positions can move after changes.
 
 - `DriverMap.tsx` — [L1](../driver-app/src/DriverMap.tsx#L1)
 - `token` — [L10](../driver-app/src/DriverMap.tsx#L10)
-- `DriverMapProps` — [L12](../driver-app/src/DriverMap.tsx#L12)
-- `RouteStatus` — [L13](../driver-app/src/DriverMap.tsx#L13)
-- `DriverMap()` — [L14](../driver-app/src/DriverMap.tsx#L14)
-- `DriverMapView()` — [L15](../driver-app/src/DriverMap.tsx#L15)
-- `locate()` — [L86](../driver-app/src/DriverMap.tsx#L86)
-- `chooseDestination()` — [L87](../driver-app/src/DriverMap.tsx#L87)
-- `calculateRoute()` — [L88](../driver-app/src/DriverMap.tsx#L88)
-- `navigate()` — [L95](../driver-app/src/DriverMap.tsx#L95)
-- `showWholeRoute()` — [L98](../driver-app/src/DriverMap.tsx#L98)
+- `taxiImages` — [L12](../driver-app/src/DriverMap.tsx#L12)
+- `navigationBasemap` — [L14](../driver-app/src/DriverMap.tsx#L14)
+- `DriverMapProps` — [L18](../driver-app/src/DriverMap.tsx#L18)
+- `RouteStatus` — [L19](../driver-app/src/DriverMap.tsx#L19)
+- `DriverMap()` — [L20](../driver-app/src/DriverMap.tsx#L20)
+- `DriverMapView()` — [L21](../driver-app/src/DriverMap.tsx#L21)
+- `locate()` — [L92](../driver-app/src/DriverMap.tsx#L92)
+- `chooseDestination()` — [L93](../driver-app/src/DriverMap.tsx#L93)
+- `calculateRoute()` — [L94](../driver-app/src/DriverMap.tsx#L94)
+- `navigate()` — [L101](../driver-app/src/DriverMap.tsx#L101)
+- `showWholeRoute()` — [L104](../driver-app/src/DriverMap.tsx#L104)
 
 ## [driver-app/src/FleetLocation.tsx](../driver-app/src/FleetLocation.tsx)
 
@@ -381,18 +383,18 @@ Links target the working tree, so line positions can move after changes.
 - `ActivityPage` — [L22](../driver-app/src/api.ts#L22)
 - `RevenueSummary` — [L23](../driver-app/src/api.ts#L23)
 - `ApiError` — [L24](../driver-app/src/api.ts#L24)
-- `.constructor()` — [L26](../driver-app/src/api.ts#L26)
-- `apiConnectionKey()` — [L31](../driver-app/src/api.ts#L31)
-- `createDriverApi()` — [L34](../driver-app/src/api.ts#L34)
-- `requestOnce()` — [L35](../driver-app/src/api.ts#L35)
-- `request()` — [L55](../driver-app/src/api.ts#L55)
-- `loadProfile()` — [L65](../driver-app/src/api.ts#L65)
-- `profile()` — [L76](../driver-app/src/api.ts#L76)
-- `ownerRead()` — [L79](../driver-app/src/api.ts#L79)
-- `vehicles()` — [L89](../driver-app/src/api.ts#L89)
-- `tripAssignmentBody()` — [L97](../driver-app/src/api.ts#L97)
-- `startTrip()` — [L101](../driver-app/src/api.ts#L101)
-- `driverApi` — [L326](../driver-app/src/api.ts#L326)
+- `.constructor()` — [L27](../driver-app/src/api.ts#L27)
+- `apiConnectionKey()` — [L33](../driver-app/src/api.ts#L33)
+- `createDriverApi()` — [L36](../driver-app/src/api.ts#L36)
+- `requestOnce()` — [L37](../driver-app/src/api.ts#L37)
+- `request()` — [L61](../driver-app/src/api.ts#L61)
+- `loadProfile()` — [L71](../driver-app/src/api.ts#L71)
+- `profile()` — [L82](../driver-app/src/api.ts#L82)
+- `ownerRead()` — [L85](../driver-app/src/api.ts#L85)
+- `vehicles()` — [L95](../driver-app/src/api.ts#L95)
+- `tripAssignmentBody()` — [L103](../driver-app/src/api.ts#L103)
+- `startTrip()` — [L107](../driver-app/src/api.ts#L107)
+- `driverApi` — [L343](../driver-app/src/api.ts#L343)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -485,7 +487,7 @@ Links target the working tree, so line positions can move after changes.
 - `ActiveTripMap()` — [L36](../driver-app/src/experience/ActiveTripMap.tsx#L36)
 - `selectMapDestination()` — [L52](../driver-app/src/experience/ActiveTripMap.tsx#L52)
 - `openNavigation()` — [L59](../driver-app/src/experience/ActiveTripMap.tsx#L59)
-- `styles` — [L139](../driver-app/src/experience/ActiveTripMap.tsx#L139)
+- `styles` — [L137](../driver-app/src/experience/ActiveTripMap.tsx#L137)
 
 ## [driver-app/src/experience/ActivityFilters.tsx](../driver-app/src/experience/ActivityFilters.tsx)
 
@@ -596,9 +598,11 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/ShiftCard.tsx](../driver-app/src/experience/ShiftCard.tsx)
 
 - `ShiftCard.tsx` — [L1](../driver-app/src/experience/ShiftCard.tsx#L1)
-- `shiftDate()` — [L12](../driver-app/src/experience/ShiftCard.tsx#L12)
-- `ShiftCard()` — [L13](../driver-app/src/experience/ShiftCard.tsx#L13)
-- `start()` — [L17](../driver-app/src/experience/ShiftCard.tsx#L17)
+- `shiftDate()` — [L13](../driver-app/src/experience/ShiftCard.tsx#L13)
+- `StartForm` — [L14](../driver-app/src/experience/ShiftCard.tsx#L14)
+- `ShiftCard()` — [L15](../driver-app/src/experience/ShiftCard.tsx#L15)
+- `openStart()` — [L23](../driver-app/src/experience/ShiftCard.tsx#L23)
+- `start()` — [L32](../driver-app/src/experience/ShiftCard.tsx#L32)
 
 ## [driver-app/src/experience/ShiftDocumentQr.tsx](../driver-app/src/experience/ShiftDocumentQr.tsx)
 
@@ -747,6 +751,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `experience/shift-copy.ts` — [L1](../driver-app/src/experience/shift-copy.ts#L1)
 - `nativeShiftCopy` — [L1](../driver-app/src/experience/shift-copy.ts#L1)
+- `shiftReadingCopy` — [L7](../driver-app/src/experience/shift-copy.ts#L7)
 
 ## [driver-app/src/experience/shift-state.tsx](../driver-app/src/experience/shift-state.tsx)
 
@@ -754,8 +759,8 @@ Links target the working tree, so line positions can move after changes.
 - `Context` — [L7](../driver-app/src/experience/shift-state.tsx#L7)
 - `useShiftState()` — [L8](../driver-app/src/experience/shift-state.tsx#L8)
 - `submit()` — [L20](../driver-app/src/experience/shift-state.tsx#L20)
-- `ShiftProvider()` — [L31](../driver-app/src/experience/shift-state.tsx#L31)
-- `useShifts()` — [L32](../driver-app/src/experience/shift-state.tsx#L32)
+- `ShiftProvider()` — [L40](../driver-app/src/experience/shift-state.tsx#L40)
+- `useShifts()` — [L41](../driver-app/src/experience/shift-state.tsx#L41)
 
 ## [driver-app/src/experience/tokens.ts](../driver-app/src/experience/tokens.ts)
 
@@ -989,12 +994,12 @@ Links target the working tree, so line positions can move after changes.
 
 - `useTripController.ts` — [L1](../driver-app/src/useTripController.ts#L1)
 - `pointOf()` — [L18](../driver-app/src/useTripController.ts#L18)
-- `currentPoint()` — [L24](../driver-app/src/useTripController.ts#L24)
-- `useTripController()` — [L32](../driver-app/src/useTripController.ts#L32)
-- `start()` — [L101](../driver-app/src/useTripController.ts#L101)
-- `end()` — [L180](../driver-app/src/useTripController.ts#L180)
-- `changeVehicle()` — [L194](../driver-app/src/useTripController.ts#L194)
-- `retrySync()` — [L207](../driver-app/src/useTripController.ts#L207)
+- `currentPoint()` — [L26](../driver-app/src/useTripController.ts#L26)
+- `useTripController()` — [L34](../driver-app/src/useTripController.ts#L34)
+- `start()` — [L103](../driver-app/src/useTripController.ts#L103)
+- `end()` — [L182](../driver-app/src/useTripController.ts#L182)
+- `changeVehicle()` — [L196](../driver-app/src/useTripController.ts#L196)
+- `retrySync()` — [L209](../driver-app/src/useTripController.ts#L209)
 
 ## [driver-app/src/welcome-config.ts](../driver-app/src/welcome-config.ts)
 

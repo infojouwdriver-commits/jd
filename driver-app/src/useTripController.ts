@@ -17,7 +17,9 @@ import type {NativeAddress} from './native-addresses';
 const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
-  const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity};
+  const {latitude, longitude, accuracy, heading} = value.coords;
+  const point: MeterPoint = {lat: latitude, lon: longitude, timestamp: value.timestamp, accuracy: accuracy ?? Infinity};
+  if (heading !== null && Number.isFinite(heading) && heading >= 0 && heading <= 360) point.heading = heading % 360;
   if (!validPoint(point)) throw Error('انتظر موقع GPS حديثاً ودقيقاً.');
   return point;
 }

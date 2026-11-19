@@ -8,7 +8,7 @@ import {declaration,shiftMetrics,shiftMinutes,type ShiftDetail,type ShiftList,ty
 import {useSession} from './session';
 import {usePreferences} from './preferences';
 import {useShifts} from './shift-state';
-import {nativeShiftCopy} from './shift-copy';
+import {nativeShiftCopy,shiftReadingCopy} from './shift-copy';
 import {shareShiftReport} from './receipt';
 import {shiftDate} from './ShiftCard';
 import {Button,Card,Choice,Field,Icon,Label,Loading,Notice,Row,Screen,SectionHeading} from './ui';
@@ -23,7 +23,7 @@ export default function Shifts(){
  useEffect(()=>{const timer=setTimeout(()=>void load(),0);return()=>clearTimeout(timer);},[q.active?.version,q.saved,load]);
  const disabled=q.busy||q.blocked||!!q.pending||!q.ready||loading;
  async function save(){if(!form||!q.active)return;try{setInvalid(false);const body=declaration(form,odometer,passenger,q.active,Crypto.randomUUID());if(body.action!=='status'&&form==='record')body.work_status=status;if(await q.submit(body))clearForm();}catch{setInvalid(true);}}
- function commit(){if(form==='end')Alert.alert(c.confirmEnd,c.endNote,[{text:c.cancel,style:'cancel'},{text:c.end,style:'destructive',onPress:()=>void save()}]);else void save();}
+ function commit(){if(form==='end')Alert.alert(c.confirmEnd,`${c.odometer}: ${odometer}\n${c.passenger}: ${passenger}\n\n${c.endNote}`,[{text:c.cancel,style:'cancel'},{text:c.end,style:'destructive',onPress:()=>void save()}]);else void save();}
  function clearForm(){setForm(null);setOdometer('');setPassenger('');}
  async function retry(){if(await q.submit())clearForm();}
  async function pdf(){if(!detail||sharing.current)return;sharing.current=true;setPdfBusy(true);setPdfError(false);try{await shareShiftReport(owner,detail.shift.id);}catch{setPdfError(true);}finally{sharing.current=false;setPdfBusy(false);}}
@@ -31,10 +31,10 @@ export default function Shifts(){
  return <Screen title={c.sheet}>
  <Notice>{c.notice}</Notice>
  <Card><Row style={{justifyContent:'space-between'}}><Icon name="time-outline" color={colors.icon}/><View style={{flex:1}}><Label bold size={20}>{q.active?c[q.active.work_status]:c.empty}</Label>{q.active&&<Label muted>{q.active.plate_number}</Label>}</View></Row>
- {q.active&&!form&&<><Button label={c.record} disabled={disabled} onPress={()=>{setForm('record');setStatus(q.active!.work_status);setInvalid(false);}}/><Button secondary label={c.end} disabled={disabled} onPress={()=>{setForm('end');setInvalid(false);}}/></>}
+ {q.active&&!form&&<><Button label={c.record} disabled={disabled} onPress={()=>{setForm('record');setStatus(q.active!.work_status);setInvalid(false);}}/><Button secondary label={c.end} disabled={disabled} onPress={()=>{if(!q.active)return;setOdometer(String(q.active.odometer));setPassenger(String(q.active.passenger_km));setForm('end');setInvalid(false);}}/></>}
  {!q.active&&<Label muted>{c.newShift}</Label>}
  {form&&q.active&&<><Label bold size={19}>{c[form]}</Label><Label muted size={13}>{c.last}: {number(q.active.odometer)} km · {number(q.active.passenger_km)} km</Label><Field label={c.odometer} value={odometer} onChangeText={setOdometer} keyboardType="decimal-pad" editable={!disabled} maxLength={12}/><Field label={c.passenger} value={passenger} onChangeText={setPassenger} keyboardType="decimal-pad" editable={!disabled} maxLength={12}/>{form==='record'&&!disabled&&<><Label bold>{c.state}</Label><Row style={{flexWrap:'wrap'}}>{(['available','driving_empty','with_passenger','break'] as ShiftStatus[]).map(value=><Choice key={value} label={c[value]} selected={status===value} onPress={()=>setStatus(value)}/>)}</Row></>}{form==='end'&&<Notice>{c.endNote}</Notice>}{invalid&&<Notice error>{c.invalid}</Notice>}<Button label={form==='end'?c.end:c.save} danger={form==='end'} busy={q.busy} disabled={disabled||!odometer.trim()||!passenger.trim()} onPress={commit}/><Button secondary label={c.cancel} disabled={q.busy||!!q.pending} onPress={()=>{setForm(null);setOdometer('');setPassenger('');}}/></>}
- {q.blocked&&<Notice>{c.blocked}</Notice>}{q.pending&&<><Notice>{c.uncertain}</Notice><Button label={c.retry} busy={q.busy} disabled={q.blocked} onPress={()=>void retry()}/></>}{q.error&&<Notice error>{c[q.error as 'failed']||c.failed}</Notice>}{q.saved&&<Notice>{c.saved}</Notice>}
+ {q.blocked&&<Notice>{c.blocked}</Notice>}{q.pending&&<><Notice>{c.uncertain}</Notice><Button label={c.retry} busy={q.busy} disabled={q.blocked} onPress={()=>void retry()}/></>}{q.error&&<Notice error>{q.error==='payment'?shiftReadingCopy[language].payment:c[q.error as 'failed']||c.failed}</Notice>}{q.saved&&<Notice>{c.saved}</Notice>}
  </Card>
  <Button secondary label={c.refresh} disabled={q.busy||loading} onPress={()=>{void q.refresh();void load();}}/>
  {loading&&!rows&&<Loading label={t('loading')}/>}{failed&&<Notice error>{c.failed}</Notice>}
