@@ -383,18 +383,18 @@ Links target the working tree, so line positions can move after changes.
 - `ActivityPage` — [L22](../driver-app/src/api.ts#L22)
 - `RevenueSummary` — [L23](../driver-app/src/api.ts#L23)
 - `ApiError` — [L24](../driver-app/src/api.ts#L24)
-- `.constructor()` — [L26](../driver-app/src/api.ts#L26)
-- `apiConnectionKey()` — [L31](../driver-app/src/api.ts#L31)
-- `createDriverApi()` — [L34](../driver-app/src/api.ts#L34)
-- `requestOnce()` — [L35](../driver-app/src/api.ts#L35)
-- `request()` — [L55](../driver-app/src/api.ts#L55)
-- `loadProfile()` — [L65](../driver-app/src/api.ts#L65)
-- `profile()` — [L76](../driver-app/src/api.ts#L76)
-- `ownerRead()` — [L79](../driver-app/src/api.ts#L79)
-- `vehicles()` — [L89](../driver-app/src/api.ts#L89)
-- `tripAssignmentBody()` — [L97](../driver-app/src/api.ts#L97)
-- `startTrip()` — [L101](../driver-app/src/api.ts#L101)
-- `driverApi` — [L326](../driver-app/src/api.ts#L326)
+- `.constructor()` — [L27](../driver-app/src/api.ts#L27)
+- `apiConnectionKey()` — [L33](../driver-app/src/api.ts#L33)
+- `createDriverApi()` — [L36](../driver-app/src/api.ts#L36)
+- `requestOnce()` — [L37](../driver-app/src/api.ts#L37)
+- `request()` — [L61](../driver-app/src/api.ts#L61)
+- `loadProfile()` — [L71](../driver-app/src/api.ts#L71)
+- `profile()` — [L82](../driver-app/src/api.ts#L82)
+- `ownerRead()` — [L85](../driver-app/src/api.ts#L85)
+- `vehicles()` — [L95](../driver-app/src/api.ts#L95)
+- `tripAssignmentBody()` — [L103](../driver-app/src/api.ts#L103)
+- `startTrip()` — [L107](../driver-app/src/api.ts#L107)
+- `driverApi` — [L343](../driver-app/src/api.ts#L343)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -598,9 +598,11 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/ShiftCard.tsx](../driver-app/src/experience/ShiftCard.tsx)
 
 - `ShiftCard.tsx` — [L1](../driver-app/src/experience/ShiftCard.tsx#L1)
-- `shiftDate()` — [L12](../driver-app/src/experience/ShiftCard.tsx#L12)
-- `ShiftCard()` — [L13](../driver-app/src/experience/ShiftCard.tsx#L13)
-- `start()` — [L17](../driver-app/src/experience/ShiftCard.tsx#L17)
+- `shiftDate()` — [L13](../driver-app/src/experience/ShiftCard.tsx#L13)
+- `StartForm` — [L14](../driver-app/src/experience/ShiftCard.tsx#L14)
+- `ShiftCard()` — [L15](../driver-app/src/experience/ShiftCard.tsx#L15)
+- `openStart()` — [L23](../driver-app/src/experience/ShiftCard.tsx#L23)
+- `start()` — [L32](../driver-app/src/experience/ShiftCard.tsx#L32)
 
 ## [driver-app/src/experience/ShiftDocumentQr.tsx](../driver-app/src/experience/ShiftDocumentQr.tsx)
 
@@ -749,6 +751,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `experience/shift-copy.ts` — [L1](../driver-app/src/experience/shift-copy.ts#L1)
 - `nativeShiftCopy` — [L1](../driver-app/src/experience/shift-copy.ts#L1)
+- `shiftReadingCopy` — [L7](../driver-app/src/experience/shift-copy.ts#L7)
 
 ## [driver-app/src/experience/shift-state.tsx](../driver-app/src/experience/shift-state.tsx)
 
@@ -756,8 +759,8 @@ Links target the working tree, so line positions can move after changes.
 - `Context` — [L7](../driver-app/src/experience/shift-state.tsx#L7)
 - `useShiftState()` — [L8](../driver-app/src/experience/shift-state.tsx#L8)
 - `submit()` — [L20](../driver-app/src/experience/shift-state.tsx#L20)
-- `ShiftProvider()` — [L31](../driver-app/src/experience/shift-state.tsx#L31)
-- `useShifts()` — [L32](../driver-app/src/experience/shift-state.tsx#L32)
+- `ShiftProvider()` — [L40](../driver-app/src/experience/shift-state.tsx#L40)
+- `useShifts()` — [L41](../driver-app/src/experience/shift-state.tsx#L41)
 
 ## [driver-app/src/experience/tokens.ts](../driver-app/src/experience/tokens.ts)
 

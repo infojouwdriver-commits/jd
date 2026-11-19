@@ -37,6 +37,28 @@ test('shift APIs reject another driver/company, malformed pages and injected det
 test('shift mutation checks ownership and never automatically repeats an ambiguous write',async()=>{
  let writes=0;const api=createDriverApi(async(url,opts)=>{if(url.endsWith('/drivers/me'))return ok(profile);writes++;throw Error('lost')});await assert.rejects(api.shiftCommand(1,{action:'status',request_id:key,shift_id:id,expected_version:3,work_status:'break'}),e=>e.status===0);assert.equal(writes,1);
 });
+test('shift start suggestions use the portal endpoint and preserve a declared zero',async()=>{
+ let reads=0;
+ const api=createDriverApi(async(url,options)=>{
+  if(url.endsWith('/drivers/me'))return ok(profile);
+  reads++;assert.equal(options.method,'GET');assert.equal(new URL(url).searchParams.get('startReading'),'1');
+  return ok({plate:'DEMO',odometer:0});
+ });
+ await assert.rejects(api.shiftStartReading(9,3),e=>e.status===403);
+ await assert.rejects(api.shiftStartReading(1,4),e=>e.status===409);
+ assert.equal(reads,0);
+ assert.deepEqual(await api.shiftStartReading(1,3),{plate:'DEMO',odometer:0});
+});
+test('shift mutation preserves a specific server error without retrying the write',async()=>{
+ let writes=0;
+ const api=createDriverApi(async url=>{
+  if(url.endsWith('/drivers/me'))return ok(profile);
+  writes++;return Response.json({success:false,errorCode:'SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED'},{status:403});
+ });
+ await assert.rejects(api.shiftCommand(1,declaration('start','100','',null,id)),
+  e=>e.status===403&&e.errorCode==='SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED');
+ assert.equal(writes,1);
+});
 test('new native passenger publication matches frozen vehicle/company/time and reuses completion UUID',async()=>{
  const trip={key,shiftId:id,companyId:2,vehicleId:3,startTime:'2026-10-22T08:01:00Z'};const sent=[];await publishNativeTripStatus({shifts:async()=>({active:shift}),shiftCommand:async(_,b)=>{sent.push(b);return shift}},1,trip);
  assert.equal(sent[0].request_id,key);assert.equal(sent[0].work_status,'with_passenger');assert.equal('odometer' in sent[0],false);

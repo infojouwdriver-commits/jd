@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "1a1bcde6e218f9e66fdfbd5a5c8c14ca135a8585",
+  "source_commit_context": "e48aab8d07b43ab76f0d757107b3228832361ddd",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -37,7 +37,7 @@
     "driver-app/src/TripPanel.tsx": "a8fb3c089b9996f64d8a4815a6c331b8150ac0fc23c64d9b6f7a570b722d8f89",
     "driver-app/src/action-gate.ts": "5c79a018dc8711a5d9511dbb4033c7d386b5e4d1f658a4af5243cfbace3ee632",
     "driver-app/src/activity-filters.ts": "42e3b5d6a902694efd7807280016b401af78f5656470a28ad4c935beeb147cde",
-    "driver-app/src/api.ts": "7a43abb8b771e4e8b23be2c86c8917dc8a6097e7aa50f849936e8b2dd4d9c500",
+    "driver-app/src/api.ts": "cb299d4a3cb16f6c5f39ae4ab05cef29d381fa646de82ccadfecbeb25b9d67ee",
     "driver-app/src/app-origin.ts": "19b33a2b83498e037f49baed370a3622503587b6432929cc26457d9861283f5e",
     "driver-app/src/app/_layout.tsx": "1cca68abcf191cbf24a1504c614a61a032056cbd7f13d313573173e151194269",
     "driver-app/src/app/account.tsx": "8598b266d32bb86683135e212f465d727db7686373842347cc73c2c6dcf73948",
@@ -69,9 +69,9 @@
     "driver-app/src/experience/PickupLocation.tsx": "6070d8db86c5a7087dff3770fc8798e0dc581ed93f2756f2e86fc6d24e504db5",
     "driver-app/src/experience/Revenues.tsx": "464aa365e1db747129c4f24e3836b22034db36e2a954098e02d1c3953eddf8d9",
     "driver-app/src/experience/Settings.tsx": "fc09495aa4f1a2013cf232a25aaf790da3001772147dd42064a669c9105df85c",
-    "driver-app/src/experience/ShiftCard.tsx": "b58822f61d13a0ff0e0f0ea2a72071183390ba8e8aeaafe6c17bf640b66e881a",
+    "driver-app/src/experience/ShiftCard.tsx": "695f01403441487ad9f9d8b82731ac12abf3034225fa868c4d2c9dfc7a76ce6e",
     "driver-app/src/experience/ShiftDocumentQr.tsx": "5a2f246a496e33459054e9d2641bae55cff39eaf6c4b21467bd6668e90c1c205",
-    "driver-app/src/experience/Shifts.tsx": "58121a1f8e582bc3421364396b64d6976536fa850a762babdae7765b3530404f",
+    "driver-app/src/experience/Shifts.tsx": "b8cc18fb0545ec39d392ddfbd3a0acb102d59330af457cc8776b51e660b22f62",
     "driver-app/src/experience/Trips.tsx": "b0169530c6b71ba690afcdca5a48c44c3a3bde1ed7d1ca5834738ca049ddec2f",
     "driver-app/src/experience/WelcomeScreen.tsx": "4e884a6d5175366e54fb4877a4d484ad89b768ddd29504a7d648a10e423cbd4c",
     "driver-app/src/experience/activity-state.tsx": "3db2aec0b2636877748024eb65bc85f720d2d0fa2c47090ca523082da6cb6b52",
@@ -89,8 +89,8 @@
     "driver-app/src/experience/recovery-copy.ts": "f7cc90855bc39e5510b51ed32ae74cfcce9ea4ce7547b5a68e54462928e5cf61",
     "driver-app/src/experience/reporting-ui.tsx": "aef33769ed31a25fef705e1ac634d30cc54fb0f6dd876ffaec39e57cc22d624d",
     "driver-app/src/experience/session.tsx": "186d17190bee0afcdc6f93c68fdda3c092bf97ef5a4f7d636bcd1d438f20f300",
-    "driver-app/src/experience/shift-copy.ts": "243db77fa35252f4b4f4c6e10881f7b4449069803bd3d98f419ba6f2bbf5104c",
-    "driver-app/src/experience/shift-state.tsx": "89d36a51c1461058b5be121d8e39cea2b6077c567e264411bca271a688e3d261",
+    "driver-app/src/experience/shift-copy.ts": "fc227dce127791c904f5478eeadb8ac42349313ecfd121d6319bbc8ccfe7e8f1",
+    "driver-app/src/experience/shift-state.tsx": "f3c383bc6e32db1e767962cd05be3d899f9193212f08bd851465ae991b4173a9",
     "driver-app/src/experience/tokens.ts": "da9636c082a9fb20bff7185d63b70ef22e88cb0a3616b700e0515c70b35ce6a7",
     "driver-app/src/experience/ui.tsx": "2f803c8e5de0a028b5c5ac19529dff7a9bbad531937a9e9f47b93c878b297286",
     "driver-app/src/journal-bytes.ts": "efc294953e8a8ef4b084b51e519a9fede8900fc33502674cef30996aa0d4d906",
@@ -685,18 +685,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "a348178c8ee47ceebe7d4e86409a439ab3d87f82163bb2217d2e759f57ee713b",
-    "health.json": "d905ed32207fb6fd8a31339abae79e578a60be186377be289d2ec4eb45c9af36",
-    "SOURCE_INDEX.md": "dd3c63d99352839cc3a772b571044bfd67cc0aa29bb07861b4849351fe31d195",
-    "GRAPH_REPORT.md": "6458fb64056daf8292644c01a2ebf0f399718a83182d6c9acc86e5e28f297087",
-    "graph.json": "ff0fa085f20e60d97a778efeab81913ce39b26237f19bd7290915c3bc246a141"
+    "GRAPH_TREE.html": "36b37c5e5f49cd2d93d5ff2d5d83c5622384efa26874d730dee0866faa5b9759",
+    "health.json": "ace1c4b1aaa836cc73f1e0942c0346b233c1b427d720cdd90f4cadfda4857e76",
+    "SOURCE_INDEX.md": "f61a3fc0cd6554b084d13218fde477e0e786f2ca1dbe3f2b58e09af34a1422ea",
+    "GRAPH_REPORT.md": "2904a731b01cf1555028329bdd4f5240fb145bf676b3db738eacb2e3dab5523b",
+    "graph.json": "fa755b742f63ee8da006472503932e3ee5e996df7d340b35699b0c0efaef29bf"
   },
-  "nodes": 3879,
-  "edges": 13140,
-  "raw_edges": 13431,
-  "communities": 205,
+  "nodes": 3882,
+  "edges": 13149,
+  "raw_edges": 13441,
+  "communities": 197,
   "confidence_counts": {
-    "EXTRACTED": 13182,
+    "EXTRACTED": 13192,
     "INFERRED": 249
   }
 }
