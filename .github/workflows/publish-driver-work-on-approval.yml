@@ -1,0 +1,333 @@
+name: Publish verified driver work on approval
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-driver-work-on-approval.yml']
+permissions:
+  contents: read
+concurrency:
+  group: driver-work-on-approval
+  cancel-in-progress: false
+
+env:
+  REVIEWED_REVISION: c361e570c460ae02e6b89b72e85642b4d1cf899b
+jobs:
+  scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Confirm the exact tested source and reviewed production delta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'GATE'
+          const revision=process.env.REVIEWED_REVISION;
+          const live='de03edaa21000ed3be34c9b5891121308e271fab', baseline='cf540229e065fd4c1ee27691202d77e629b7f443', tested='1fba2eebe70271aa6985904a63853182f67818c3';
+          const workflow='.github/workflows/publish-driver-work-on-approval.yml';
+          const files=["UX-CONTRACT.md", "docs/STRIPE_BILLING_AR.md", "graphify-out/GRAPH_REPORT.md", "graphify-out/GRAPH_TREE.html", "graphify-out/SOURCE_INDEX.md", "graphify-out/graph.json", "graphify-out/health.json", "graphify-out/source-manifest.json", "migrations/20261119_driver_work_on_approval.sql", "scripts/apply-release.mjs", "src/components/operations/InvoiceDeliveryActions.tsx", "tests/invoice-checkout-database.test.mjs", "tests/run-database-stack.mjs"];
+          if(process.env.GITHUB_REF!=='refs/heads/main')throw Error('Protected main required');
+          const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+process.env.GH_TOKEN};
+          const api=async path=>{const r=await fetch('https://api.github.com/repos/'+process.env.GITHUB_REPOSITORY+path,{headers,signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Review metadata unavailable');return r.json();};
+          const exact=async(from,to,expected)=>{
+            const c=await api('/compare/'+from+'...'+to);
+            if(c.status!=='ahead'||c.files?.length!==expected.length||c.files.some(f=>!expected.includes(f.filename)||!['modified','added'].includes(f.status)))throw Error('Unreviewed source difference');
+          };
+          await exact(live,baseline,['.github/workflows/publish-shift-odometer.yml']);
+          await exact(baseline,revision,files);
+          await exact(revision,process.env.GITHUB_SHA,[workflow]);
+          const a=await api('/commits/'+revision), b=await api('/commits/'+tested);
+          if(a.commit.tree.sha!==b.commit.tree.sha||a.parents.length!==1||a.parents[0].sha!==baseline)throw Error('Merged source differs from CI-tested source');
+          for (const [id,path] of [[44489237099,'ci.yml'],[44489237260,'code-map.yml']]) {
+            const run=await api('/actions/runs/'+id);
+            if(run.head_sha!==tested||run.status!=='completed'||run.conclusion!=='success'||!run.path.endsWith('/'+path))throw Error('Source checks did not pass');
+          }
+          const jobs=await api('/actions/runs/44489237099/jobs?per_page=100');
+          for(const name of ['verify','native-database'])if(!jobs.jobs.some(j=>j.name===name&&j.conclusion==='success'))throw Error('Native and browser checks required');
+          console.log('Exact reviewed merge tree and production baseline verified.');
+          GATE
+
+  inspect:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Read existing production revision without changing services
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /srv/jouw-driver/foundation
+          node --input-type=module <<'INSPECT'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          console.log('Production read-only diagnosis:',JSON.stringify({
+            mode:s.mode,
+            runtimeRevision:s.revision,
+            releaseRevision:r.revision,
+            imagesConsistent:s.image===r.image,
+            revisionsConsistent:s.revision===r.revision,
+            deployedAt:s.deployedAt,
+          }));
+          if(s.mode!=='public'||s.revision!=='de03edaa21000ed3be34c9b5891121308e271fab'||r.revision!==s.revision||r.image!==s.image)throw Error('Live release changed or state inconsistent; publication blocked');
+          INSPECT
+          REMOTE
+          echo 'Reviewed live baseline verified; protected tests and backup may proceed.'
+
+  domain:
+    needs: inspect
+    uses: ./.github/workflows/domain-candidate.yml
+
+  build:
+    needs: [scope, inspect]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ env.REVIEWED_REVISION }}
+      - name: Build and publish immutable reviewed website image
+        id: image
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$MAPBOX_PUBLIC_TOKEN"
+          image=ghcr.io/infojouwdriver-commits/jd
+          tag="driver-approval-$REVIEWED_REVISION-$GITHUB_RUN_ID"
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker build \
+            --build-arg NEXT_PUBLIC_PORTAL_ORIGIN=https://app.jouww.com \
+            --build-arg NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="$MAPBOX_PUBLIC_TOKEN" \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$REVIEWED_REVISION" \
+            --label "com.jouwdriver.portal-origin=https://app.jouww.com" \
+            -t "$image:$tag" .
+          docker push "$image:$tag" >/dev/null
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$image:$tag")
+          [[ "$digest" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
+          printf 'Verified driver approval image: %s\n' "$digest" >> "$GITHUB_STEP_SUMMARY"
+
+  image-acceptance:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+          ref: ${{ env.REVIEWED_REVISION }}
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: '22.18.0'
+          package-manager-cache: false
+      - name: Pull the exact accepted source image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker pull "$IMAGE"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$IMAGE")" = "$REVIEWED_REVISION"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$IMAGE")" = https://app.jouww.com
+      - name: Install isolated test prerequisites
+        run: |
+          npm install --global pnpm@11.25.0
+          pnpm install --frozen-lockfile
+          sudo apt-get update -qq
+          sudo apt-get install --yes age
+      - name: Exercise exact image against synthetic PostgreSQL and trusted origins
+        env:
+          ACCEPTANCE_APP_IMAGE: ${{ needs.build.outputs.digest }}
+        run: |
+          set -o pipefail
+          node --experimental-strip-types tests/run-database-stack.mjs | tee candidate-native-proof.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: driver-approval-image-proof
+          path: candidate-native-proof.json
+          retention-days: 14
+
+  backup:
+    needs: inspect
+    uses: ./.github/workflows/backup-foundation.yml
+    with:
+      include_restore_tool: true
+    secrets: inherit
+
+  publish:
+    needs: [scope, inspect, domain, build, image-acceptance, backup]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ env.REVIEWED_REVISION }}
+          persist-credentials: false
+      - name: Deploy the exact image and enable approved driver work
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.build.outputs.digest }}
+          REVISION: ${{ env.REVIEWED_REVISION }}
+          BASELINE: de03edaa21000ed3be34c9b5891121308e271fab
+          BACKUP_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$IMAGE" =~ ^ghcr.io/infojouwdriver-commits/jd@sha256:[a-f0-9]{64}$ ]]
+          [[ "$REVISION" =~ ^[a-f0-9]{40}$ && "$BASELINE" =~ ^[a-f0-9]{40}$ && "$BACKUP_TAG" =~ ^[0-9]+-[0-9]+$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          keydir=$(mktemp -d)
+          trap 'rm -rf "$keydir"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
+          args=(-i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20)
+          printf '%s\n' "$REGISTRY_TOKEN" | ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "set -eu; umask 077; read -r token; config=\$(mktemp -d); export DOCKER_CONFIG=\"\$config\"; trap 'rm -rf \"\$config\"' EXIT; printf '%s' \"\$token\" | docker login ghcr.io -u infojouwdriver-commits --password-stdin >/dev/null 2>&1; unset token; docker pull '$IMAGE'"
+          migration=migrations/20261119_driver_work_on_approval.sql
+          migration_sha=$(sha256sum "$migration" | cut -d' ' -f1)
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "umask 077; mkdir -p /srv/jouw-driver/releases/$REVISION"
+          scp "${args[@]}" "$migration" "$DEPLOY_USER@$DEPLOY_HOST:/srv/jouw-driver/releases/$REVISION/"
+          ssh "${args[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$IMAGE' '$REVISION' '$BASELINE' '$BACKUP_TAG' '$migration_sha'" <<'REMOTE'
+          set -euo pipefail
+          umask 077
+          export DRIVER_IMAGE=$1 DRIVER_REVISION=$2 DRIVER_BASELINE=$3 DRIVER_BACKUP=$4 DRIVER_MIGRATION_SHA=$5
+          cd /srv/jouw-driver/foundation
+          test "$(grep -c '^APP_ORIGIN=https://app.jouww.com$' .app-staging.env)" = 1
+          test ! -e /srv/jouw-driver/.env
+          test -s "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age"
+          test "$(sha256sum "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.tar.age" | awk '{print $1}')" = "$(cat "/srv/jouw-driver/backups/foundation-$DRIVER_BACKUP.sha256")"
+          test "$(docker inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$DRIVER_IMAGE")" = "$DRIVER_REVISION"
+          test "$(docker inspect --format '{{index .Config.Labels "com.jouwdriver.portal-origin"}}' "$DRIVER_IMAGE")" = https://app.jouww.com
+          mkdir /srv/jouw-driver/.deployment-lock
+          work=''
+          changed=false
+          updated=false
+          cleanup(){
+            status=$?
+            trap - EXIT
+            if test "$changed" = true && test "$updated" != true; then
+              cat "$work/private-app.yaml" > private-app.yaml
+              cat "$work/runtime-mode.json" > runtime-mode.json
+              cat "$work/release.json" > /srv/jouw-driver/release.json
+              docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null || printf 'Previous application requires operator recovery\n' >&2
+            fi
+            test -z "$work" || rm -rf "$work"
+            rmdir /srv/jouw-driver/.deployment-lock
+            exit "$status"
+          }
+          trap cleanup EXIT
+          node --input-type=module <<'BEFORE'
+          import fs from 'node:fs';
+          const s=JSON.parse(fs.readFileSync('runtime-mode.json')),r=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
+          if(s.mode!=='public'||s.image!==r.image||s.revision!==r.revision||s.revision!==process.env.DRIVER_BASELINE)throw Error('Live release differs from the reviewed live driver approval baseline');
+          if(fs.statSync('/srv/jouw-driver/backups/foundation-'+process.env.DRIVER_BACKUP+'.tar.age').mtimeMs<Date.parse(s.deployedAt))throw Error('Backup must cover the live release');
+          const c=fs.readFileSync('private-app.yaml','utf8'),images=c.match(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/g);
+          if(images?.length!==1||images[0]!==s.image)throw Error('Live application image mismatch');
+          BEFORE
+          work=$(mktemp -d .native-driver-update.XXXXXX)
+          cp private-app.yaml runtime-mode.json "$work/"
+          cp /srv/jouw-driver/release.json "$work/release.json"
+          sha256sum .app-staging.env .database.env Caddyfile compose.yaml > "$work/preserved.sha256"
+          changed=true
+          node --input-type=module <<'IMAGE'
+          import fs from 'node:fs';
+          const c=fs.readFileSync('private-app.yaml','utf8');
+          fs.writeFileSync('private-app.yaml',c.replace(/ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}/,process.env.DRIVER_IMAGE),{mode:0o600});
+          IMAGE
+          docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml up -d --no-deps --wait --wait-timeout 180 app </dev/null
+          app=$(docker compose --env-file .app-staging.env --project-name jouw-driver --file private-app.yaml ps -q app)
+          test "$(docker inspect --format '{{.Config.Image}}' "$app")" = "$DRIVER_IMAGE"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$app")" = true
+          test "$(docker inspect --format '{{.State.Health.Status}}' "$app")" = healthy
+          docker exec "$app" node scripts/preflight.mjs
+          docker exec "$app" node scripts/database-readiness.mjs
+          sha256sum --status --check "$work/preserved.sha256"
+          node --input-type=module <<'ACCEPT'
+          const base='https://app.jouww.com';
+          for(const path of ['/','/login','/driver-login','/register-company','/privacy-policy']){
+            const r=await fetch(base+path,{redirect:'error',signal:AbortSignal.timeout(20000)});
+            if(r.status!==200||!r.headers.get('content-security-policy')?.includes("default-src 'self'"))throw Error('HTTPS page or security policy failed');
+            if(path==='/'){
+              const html=await r.text();
+              if(!html.includes('id="driver-app-downloads"')||!html.includes('releases/download/android-direct/jouw-driver.apk'))throw Error('Verified app download section absent');
+            }
+          }
+          for(const [path,status,headers] of [['/next_api/drivers/shifts/pdf?id=11111111-1111-4111-8111-111111111111',401,{}],['/next_api/drivers/shifts',401,{}],['/next_api/drivers/shifts?startReading=1',401,{}],['/next_api/auth/user',401,{}],['/next_api/trips',401,{}],['/next_api/companies',401,{}],['/next_api/auth/user',403,{Origin:'https://untrusted.example'}],['/admin-setup',404,{}]]){
+            if((await fetch(base+path,{headers,redirect:'error',signal:AbortSignal.timeout(15000)})).status!==status)throw Error('Access guard failed');
+          }
+          for(const origin of ['https://jouww.com','https://www.jouww.com'])if((await fetch(base+'/next_api/auth/user',{headers:{Origin:origin},redirect:'error',signal:AbortSignal.timeout(15000)})).status!==403)throw Error('Marketing origin accepted');
+          if((await fetch(base+'/next_api/auth/user',{headers:{Origin:'https://jouw-driver.duckdns.org'},redirect:'error',signal:AbortSignal.timeout(15000)})).status!==401)throw Error('Legacy client origin rejected');
+          if((await fetch(base+'/documents/receipts/invalid',{redirect:'error',signal:AbortSignal.timeout(15000)})).status!==404)throw Error('Invalid document capability accepted');
+          for(const host of ['https://jouww.com','https://www.jouww.com','https://jouw-driver.duckdns.org'])if((await fetch(host+'/privacy-policy',{redirect:'error',signal:AbortSignal.timeout(15000)})).status!==200)throw Error('Preserved HTTPS host failed');
+          console.log('Driver QR access, exact application origin, legacy compatibility and preserved HTTPS hosts verified.');
+          ACCEPT
+          node --input-type=module <<'STATE'
+          import fs from 'node:fs';
+          const old=JSON.parse(fs.readFileSync('runtime-mode.json'));
+          const state={...old,image:process.env.DRIVER_IMAGE,revision:process.env.DRIVER_REVISION,deployedAt:new Date().toISOString(),previousImage:old.image,verifiedPrelaunchBackup:process.env.DRIVER_BACKUP};
+          for(const p of ['runtime-mode.json','/srv/jouw-driver/release.json'])fs.writeFileSync(p,JSON.stringify(state,null,2)+'\n',{mode:0o600});
+          STATE
+          node --env-file=.database.env --input-type=module <<'MIGRATE'
+          import fs from 'node:fs';
+          import {spawnSync} from 'node:child_process';
+          import {createHash} from 'node:crypto';
+          const env=process.env;
+          if(env.POSTGREST_SCHEMA!=='public'||env.POSTGRES_DB!=='jouw_driver')throw Error('Unexpected database scope');
+          const raw=fs.readFileSync('/srv/jouw-driver/releases/'+env.DRIVER_REVISION+'/20261119_driver_work_on_approval.sql');
+          if(createHash('sha256').update(raw).digest('hex')!==env.DRIVER_MIGRATION_SHA)throw Error('Migration identity mismatch');
+          const source=raw.toString('utf8');
+          if(!/COMMIT;\s*$/.test(source))throw Error('Transactional driver migration required');
+          const verify="DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='invoice_service_guard' AND NOT tgisinternal AND tgrelid IN ('public.driver_shifts'::regclass,'public.trips'::regclass)) THEN RAISE EXCEPTION 'Driver billing gate still active'; END IF; END $$;";
+          const sql=source.replaceAll(':"schema"','"public"').replace(/COMMIT;\s*$/,verify+'\nCOMMIT;\n');
+          const args=['compose','--env-file','.database.env','--project-name','jouw-driver','--file','compose.yaml','exec','-T','db','psql','-U','postgres','-d','jouw_driver','-v','ON_ERROR_STOP=1','-Atq'];
+          const processResult=spawnSync('docker',args,{input:sql,encoding:'utf8',timeout:30000});
+          if(processResult.status!==0)throw Error('Driver work migration failed and needs operator review');
+          console.log('Production schema verified: both invoice guard triggers removed.');
+          MIGRATE
+          updated=true
+          printf 'Approved driver work deployed; database, credentials, mail, Chiron, DNS and TLS configuration preserved.\n'
+          REMOTE
