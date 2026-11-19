@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "f9901ec9ef64529cee596e4747472618aceb3437",
+  "source_commit_context": "cf540229e065fd4c1ee27691202d77e629b7f443",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -158,6 +158,7 @@
     "migrations/20261115_account_deletion.sql": "e62b5f629afc17664e55dbd920f566f4cd6eb72a5a55dbdcef00b961faad204d",
     "migrations/20261115_chiron_onboarding.sql": "0c45e5c07f5867f5ef39df51192ae83d1356c3c4ecd45f7e9e9076ba2df97ed7",
     "migrations/20261115_contact_approval_alerts.sql": "2b8ea5fdf76ad8bfc76648ba7d77d86c922b6cdf7bf70df40567532245e0faad",
+    "migrations/20261119_driver_work_on_approval.sql": "d35f79467246553f7bd68aed1f93f9f419ce7bed7113fa25384fca9f47af0f40",
     "mobile/config.mjs": "b27621e86b94053d8f2feaf1314aa92bf7393870ea05eb362ac7e7912077e0f7",
     "mobile/package.json": "40aee03ff72ed5bafad1a679e6a019b22989dae4f215042703e794b2c7aa50d5",
     "mobile/plugins/background-geolocation/Package.swift": "856e9b12db8d9499d30a655955838104ec135fc809c772a31dd6d75b07923ec4",
@@ -174,7 +175,7 @@
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
     "package.json": "bd92cfccaa9d23345dc0bd76a0d1a481cd966aebe1abf20e5f9af4da20a20cdb",
     "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
-    "scripts/apply-release.mjs": "8afb2c4820da178d093fd6d7fa3d71c8abbcf51e810415752386ad9edfd5fad2",
+    "scripts/apply-release.mjs": "3a3553e3689900bf0a74ebb83b9ea18716df20ddb250b6f31828f7d01b690b94",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
     "scripts/code-map.py": "a4d5f75b9f7a0b2c7e9ea064a10d9664d5d976fee9fac63a1ecbab9aeb046837",
     "scripts/convert-database.mjs": "3e5a46b4690231100db6d318a1ba53d1c3daff8a96e00808ab47db64c697a4ca",
@@ -496,7 +497,7 @@
     "src/components/operations/DirectoryToolbar.tsx": "9aa5c938a9df1f6e1dab8e26d1d5428720acb3a5ca1140015ad24d429d7f78d7",
     "src/components/operations/EmailTemplatesPanel.tsx": "0f982d2c7b5a7f575aa2f7bbf045c641e55a939b48624d03e8dc9a732e8d5b37",
     "src/components/operations/FleetRecordsTab.tsx": "ca3de36c9d3c9026a419fdb9ce0dbf50277cb608772bb22155db3b2950873dbd",
-    "src/components/operations/InvoiceDeliveryActions.tsx": "7af3c93e2fb8e0da5372f0d4baf92b585386db812dfa05d35b63ab498626066a",
+    "src/components/operations/InvoiceDeliveryActions.tsx": "9db4f8214725f9374d729c05a552a22b3fda05300511ab439fdb4e1132e82907",
     "src/components/operations/InvoiceWorkspace.tsx": "141a8820d6ce58fb4f44d6f8759c63dc4a4ef1707359296908cb6732cff4d91b",
     "src/components/operations/OperationForm.tsx": "a00a1f836c8de80f4909a4ec23034e256e4edd741cd2ad6ee69d3810a58b0099",
     "src/components/operations/OperationsCentre.tsx": "18bf3acea9ef522803c2b3fe95f60ff6583cc39167e7b759b5b6c2b44733d2d7",
@@ -684,16 +685,16 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "8a5845ed27a8d6793b7263e8bc649e2d906014abdc8fd5200b92b4eb2e0b9cea",
-    "health.json": "42f8087ba0ed1d8130279c372f3798eaf0efafe25ac135a960896079110f20c1",
-    "SOURCE_INDEX.md": "4d7cb915cf669144774fa9e5c8b867fa84f5f5ada97a3c124cffff208484ed14",
-    "GRAPH_REPORT.md": "062d3a23f7f47c13c43c59f5378fd6779f770a5533062f324219881ab0e6e958",
-    "graph.json": "c570f6f977f11e52223f0eb38547305b7dab0a0f94780567105b195a29ebbdc6"
+    "GRAPH_TREE.html": "e32b1ff6eb5f2a922d2f3719aab42ee700907c33be3606c057efd4703686ae86",
+    "health.json": "64a8931d02a5e0159c9d5f35953ecee873212c26bf22e3d4e1185e374b86228a",
+    "SOURCE_INDEX.md": "23e9b29486a0bc785f556d5073a38ee9556608506578fd4979717655fb0931a3",
+    "GRAPH_REPORT.md": "af81734d55d55c72aa1c9919e601c29cdde5eeab17d15d25e0d4ce7afed5b66b",
+    "graph.json": "1e00c3102973f1b1a72cac70b1b94d79fd75b05e3fc9b915997df2b4a7042962"
   },
-  "nodes": 3876,
+  "nodes": 3877,
   "edges": 13138,
   "raw_edges": 13429,
-  "communities": 199,
+  "communities": 200,
   "confidence_counts": {
     "EXTRACTED": 13180,
     "INFERRED": 249

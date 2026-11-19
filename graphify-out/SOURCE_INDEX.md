@@ -1394,6 +1394,10 @@ Links target the working tree, so line positions can move after changes.
 - `approval_mail_ready` — [L44](../migrations/20261115_contact_approval_alerts.sql#L44)
 - `approval_mail` — [L79](../migrations/20261115_contact_approval_alerts.sql#L79)
 
+## [migrations/20261119_driver_work_on_approval.sql](../migrations/20261119_driver_work_on_approval.sql)
+
+- `20261119_driver_work_on_approval.sql` — [source](../migrations/20261119_driver_work_on_approval.sql#)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
