@@ -476,8 +476,8 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/ActiveTrip.tsx](../driver-app/src/experience/ActiveTrip.tsx)
 
 - `ActiveTrip.tsx` — [L1](../driver-app/src/experience/ActiveTrip.tsx#L1)
-- `ActiveTrip()` — [L14](../driver-app/src/experience/ActiveTrip.tsx#L14)
-- `invoice()` — [L23](../driver-app/src/experience/ActiveTrip.tsx#L23)
+- `ActiveTrip()` — [L16](../driver-app/src/experience/ActiveTrip.tsx#L16)
+- `invoice()` — [L25](../driver-app/src/experience/ActiveTrip.tsx#L25)
 
 ## [driver-app/src/experience/ActiveTripMap.tsx](../driver-app/src/experience/ActiveTripMap.tsx)
 
@@ -619,12 +619,19 @@ Links target the working tree, so line positions can move after changes.
 - `retry()` — [L28](../driver-app/src/experience/Shifts.tsx#L28)
 - `pdf()` — [L29](../driver-app/src/experience/Shifts.tsx#L29)
 
+## [driver-app/src/experience/TripProof.tsx](../driver-app/src/experience/TripProof.tsx)
+
+- `TripProof.tsx` — [L1](../driver-app/src/experience/TripProof.tsx#L1)
+- `tripProofCopy` — [L7](../driver-app/src/experience/TripProof.tsx#L7)
+- `Props` — [L14](../driver-app/src/experience/TripProof.tsx#L14)
+- `TripProof()` — [L16](../driver-app/src/experience/TripProof.tsx#L16)
+
 ## [driver-app/src/experience/Trips.tsx](../driver-app/src/experience/Trips.tsx)
 
 - `Trips.tsx` — [L1](../driver-app/src/experience/Trips.tsx#L1)
-- `Trips()` — [L13](../driver-app/src/experience/Trips.tsx#L13)
-- `more()` — [L18](../driver-app/src/experience/Trips.tsx#L18)
-- `invoice()` — [L19](../driver-app/src/experience/Trips.tsx#L19)
+- `Trips()` — [L15](../driver-app/src/experience/Trips.tsx#L15)
+- `more()` — [L20](../driver-app/src/experience/Trips.tsx#L20)
+- `invoice()` — [L21](../driver-app/src/experience/Trips.tsx#L21)
 
 ## [driver-app/src/experience/WelcomeScreen.tsx](../driver-app/src/experience/WelcomeScreen.tsx)
 
@@ -971,6 +978,13 @@ Links target the working tree, so line positions can move after changes.
 - `emptyMeter()` — [L3](../driver-app/src/trip-meter.ts#L3)
 - `distanceKm()` — [L5](../driver-app/src/trip-meter.ts#L5)
 - `addMeterPoint()` — [L10](../driver-app/src/trip-meter.ts#L10)
+
+## [driver-app/src/trip-proof.ts](../driver-app/src/trip-proof.ts)
+
+- `trip-proof.ts` — [L1](../driver-app/src/trip-proof.ts#L1)
+- `ChironProof` — [L3](../driver-app/src/trip-proof.ts#L3)
+- `receiptProof()` — [L5](../driver-app/src/trip-proof.ts#L5)
+- `historyProof()` — [L9](../driver-app/src/trip-proof.ts#L9)
 
 ## [driver-app/src/trip-store.ts](../driver-app/src/trip-store.ts)
 
