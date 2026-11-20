@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "d57356758ef189d22cea779cf8311c99fb1804f9",
+  "source_commit_context": "eb53549051d8bb47f43b62b2e931273e9714b8dc",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -174,7 +174,7 @@
     "mobile/scripts/configure.mjs": "0e193908b5eb052442f0de05db3da412f2a9506e623b76efce4d0a914bb9c5e5",
     "mobile/scripts/native-permissions.mjs": "b4f45791f4def7873ad98e19a1e56e3c48e937f756fe448598835e5b54e72d14",
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
-    "package.json": "bd92cfccaa9d23345dc0bd76a0d1a481cd966aebe1abf20e5f9af4da20a20cdb",
+    "package.json": "1b06e631eab87d888f7921f835fd3465d684ea2b4be3fc309c39df5f6cff5984",
     "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
     "scripts/apply-release.mjs": "3b24c822a0451317c4ad184bd3fa522610378b1385cb1e4442a778de96b1dafc",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
@@ -689,8 +689,8 @@
     "GRAPH_TREE.html": "9dbe6d880a8d61dd9fb0b3e6542ab1dd4eac25ff31d25f73e96d02bdc8b7ca70",
     "health.json": "c1c3afa75f226f7c784c105f9c52779479b0f9bf1ffe95c678440940df4c8090",
     "SOURCE_INDEX.md": "8ca96255f0409c454c60d5083fe2fa47e3f3611caa4a0578371ec3f641404106",
-    "GRAPH_REPORT.md": "8a6ad83a5eb674797612371a393db1e0a86a3047c4db36a6d979c4e7f9501e03",
-    "graph.json": "8047f5d1fd7ce1f9edd8e37ccb228702489182da23cb6be5bb30c41430c07a24"
+    "GRAPH_REPORT.md": "d8ba720b1014907a7d707e341feadc7bc582c5cdcc9861ba2e21946b8b465b48",
+    "graph.json": "4606d406b1d2113d4ce5ad1d8768dfaa1d9b4cfdd33ebf7ba6f3f39e4e604033"
   },
   "nodes": 3881,
   "edges": 13141,
