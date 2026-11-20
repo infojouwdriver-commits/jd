@@ -23,6 +23,7 @@ jobs:
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -Eeuo pipefail
+          trap 'printf "APK signing failed at script line %s\n" "$LINENO" >&2' ERR
           umask 077
           [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
           test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
@@ -43,6 +44,7 @@ jobs:
           unzip -p "$work/preview.zip" app-release.apk > "$preview"
           output="$RUNNER_TEMP/JOUW-DRIVER-Android-0.3.2.apk"
           package_id=$("$(dirname "$tool")/aapt" dump badging "$preview" | sed -n '1p')
+          printf 'Candidate %s\n' "$package_id"
           [[ "$package_id" == "package: name='be.jouwdriver.driver' versionCode='14' versionName='0.3.2'"* ]]
           "$tool" verify "$preview"
           signing=/srv/jouw-driver/android-release-signing
@@ -52,14 +54,17 @@ jobs:
             "https://github.com/$GITHUB_REPOSITORY/releases/download/android-direct/jouw-driver.apk" \
             --output "$work/published.apk"
           certificate() {
-            "$tool" verify --print-certs "$1" | awk -F ': ' '/certificate SHA-256 digest:/ {print $2}'
+            "$tool" verify --print-certs "$1" | awk -F ': ' '/^Signer #[0-9]+ certificate SHA-256 digest:/ {print tolower($2)}'
           }
           published_cert=$(certificate "$work/published.apk")
+          printf 'Published certificate %s\n' "$published_cert"
           [[ "$published_cert" =~ ^[a-f0-9]{64}$ ]]
           "$tool" sign --ks "$work/release.p12" --ks-type PKCS12 --ks-pass "file:$work/password" \
             --ks-key-alias jouw-driver-android --v2-signing-enabled true --v4-signing-enabled false \
             --out "$output" "$preview"
-          test "$(certificate "$output")" = "$published_cert"
+          signed_cert=$(certificate "$output")
+          printf 'Candidate certificate %s\n' "$signed_cert"
+          test "$signed_cert" = "$published_cert"
           python3 - "$preview" "$output" <<'PYCODE'
           import hashlib, re, sys, zipfile
 
