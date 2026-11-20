@@ -93,7 +93,7 @@ export const POST = requestMiddleware(async (request, context) => {
     const newCompany = await saveCompanyAccount(adminToken, null, {
       name, vat_number, kbo_number, address: address || null,
       email: email || null, phone: phone || null, logo_url: logo_url || null,
-    }, password, Number(context.payload.sub));
+    }, password, { adminActor: Number(context.payload.sub) });
 
     return createSuccessResponse(newCompany, 201);
   } catch (error: any) {
@@ -168,11 +168,16 @@ export const PUT = requestMiddleware(async (request, context) => {
       });
     }
 
+    if (Object.hasOwn(updateData, 'email')) {
+      const saved = await saveCompanyAccount(adminToken, Number(id), updateData, password, { syncLoginEmail: true });
+      return createSuccessResponse(saved);
+    }
+
     if (password !== undefined && password !== '') {
       const updated = await saveCompanyAccount(adminToken, Number(id), {
         name: updateData.name ?? existing.name, vat_number: updateData.vat_number ?? existing.vat_number,
         kbo_number: updateData.kbo_number ?? existing.kbo_number, address: updateData.address ?? existing.address,
-        email: updateData.email ?? existing.email, phone: updateData.phone ?? existing.phone,
+        email: existing.email, phone: updateData.phone ?? existing.phone,
         logo_url: updateData.logo_url ?? existing.logo_url, chiron_mode: updateData.chiron_mode ?? existing.chiron_mode,
       }, password);
       return createSuccessResponse(updated);

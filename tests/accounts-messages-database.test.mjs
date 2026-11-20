@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const {PGlite} = await import(process.env.PGLITE_MODULE_PATH || '@electric-sql/pglite');
 const hash = '$2b$12$' + 'a'.repeat(53), newHash = '$2b$12$' + 'b'.repeat(53);
-async function database() {
+async function database(extraMigrations = []) {
  const db = new PGlite(); await db.waitReady;
  await db.exec(fs.readFileSync(new URL('../schema/reconstructed-staging.sql',import.meta.url),'utf8'));
  await db.exec('CREATE ROLE service_role; CREATE ROLE browser_role;');
- for(const file of ['20261009_security.sql','20261012_accounts_messages.sql']) await db.exec(fs.readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8').replaceAll(':"schema"','public').replaceAll(':"admin_role"','service_role'));
+ for(const file of ['20261009_security.sql','20261012_accounts_messages.sql',...extraMigrations]) await db.exec(fs.readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8').replaceAll(':"schema"','public').replaceAll(':"admin_role"','service_role').replaceAll(':"user_role"','browser_role'));
  return db;
 }
 test('company provision creates the login identity and link atomically, refuses reused email and revokes old sessions on reset',async()=>{
@@ -30,6 +30,37 @@ test('company provision creates the login identity and link atomically, refuses 
   const record=(await save(null,{...company,email:null},{})).rows[0].result;assert.equal(record.portal_login_enabled,false);
   await db.exec('SET ROLE browser_role');await assert.rejects(save(null,company,account));await db.exec('RESET ROLE');
  } finally {await db.close();}
+});
+test('company email changes free the previous login and roll back when the new email is already used', async () => {
+ const db = await database(['20261018_company_lifecycle.sql','20261018_subscription_billing.sql','20261120_company_email_sync.sql']);
+ try {
+  const oldEmail = 'old@example.invalid', newEmail = 'new@example.invalid';
+  const company = {name:'Synthetic company',vat_number:'BE0000000001',kbo_number:'0000000001',email:oldEmail};
+  const provision = (data, email) => db.query('SELECT security_save_company_account(NULL,$1,$2) result', [data,{email,password:hash,role:'browser_role'}]);
+  const existing = (await provision(company, oldEmail)).rows[0].result;
+  const newCompany = {...company, name:'Second company', vat_number:'BE0000000002', kbo_number:'0000000002'};
+  const ownerId = (await db.query('SELECT user_id FROM company_users WHERE company_id=$1', [existing.id])).rows[0].user_id;
+  const sync = patch => db.query('SELECT security_save_company_email($1,$2,$3) result', [existing.id,patch,{}]);
+  await db.query("INSERT INTO refresh_tokens(user_id,token,revoked) VALUES($1,'old-session',false)", [ownerId]);
+  await db.query(`INSERT INTO subscription_billing_profiles(company_id,billing_email,language,net_cents,vat_bps,tax_category,billing_day,next_invoice_date,due_days,reminder_days,updated_by)
+    VALUES($1,$2,'fr',4132,2100,'S',1,'2026-12-01',7,3,$3)`, [existing.id,oldEmail,ownerId]);
+  await assert.rejects(provision(newCompany, oldEmail), {code:'23505'});
+
+  const changed = (await sync({email:' NEW@EXAMPLE.INVALID ', client_name:'Updated contact'})).rows[0].result;
+  assert.equal(changed.email, newEmail);
+  assert.equal(changed.portal_login_email, newEmail);
+  assert.equal(changed.client_name, 'Updated contact');
+  assert.deepEqual((await db.query('SELECT email,password FROM users WHERE id=$1', [ownerId])).rows[0], {email:newEmail,password:hash});
+  assert.equal((await db.query('SELECT revoked FROM refresh_tokens WHERE user_id=$1', [ownerId])).rows[0].revoked, true);
+  assert.equal((await db.query('SELECT billing_email FROM subscription_billing_profiles WHERE company_id=$1', [existing.id])).rows[0].billing_email, newEmail);
+  await provision(newCompany, oldEmail);
+
+  await assert.rejects(sync({email:oldEmail, name:'Must roll back'}), {code:'23505'});
+  assert.deepEqual((await db.query('SELECT email,name FROM companies WHERE id=$1', [existing.id])).rows[0], {email:newEmail,name:company.name});
+  assert.equal((await db.query('SELECT email FROM users WHERE id=$1', [ownerId])).rows[0].email, newEmail);
+  await db.exec('SET ROLE browser_role');
+  await assert.rejects(sync({email:'blocked@example.invalid'}), {code:'42501'});
+ } finally { await db.close(); }
 });
 test('driver messages reach management, replies check ownership and locks, recipient flags and all writes roll back on error',async()=>{
  const db=await database();

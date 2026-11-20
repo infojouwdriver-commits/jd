@@ -40,6 +40,7 @@ export default function EditCompanyPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
+  const [originalEmail, setOriginalEmail] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -66,6 +67,7 @@ export default function EditCompanyPage() {
         }
 
         setCompany(found);
+        setOriginalEmail(found.email || '');
       } catch (error: any) {
         toast.error(error.message || 'فشل تحميل بيانات الشركة');
       } finally {
@@ -95,7 +97,7 @@ export default function EditCompanyPage() {
         vat_number: company.vat_number,
         kbo_number: company.kbo_number,
         address: company.address,
-        email: company.email,
+        email: (company.email || '') !== originalEmail ? company.email : undefined,
         phone: company.phone,
         logo_url: company.logo_url
       });
