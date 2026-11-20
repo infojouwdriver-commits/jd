@@ -63,7 +63,7 @@ function CompaniesPageContent() {
   const [newCompany, setNewCompany] = useState(emptyNew);
   const [editCompany, setEditCompany] = useState({
     id: 0, name: '', vat_number: '', kbo_number: '',
-    address: '', email: '', phone: '', new_password: '', login_email: '',
+    address: '', email: '', original_email: '', phone: '', new_password: '', login_email: '', sync_login_email: false,
   });
 
   useEffect(() => {
@@ -110,7 +110,8 @@ function CompaniesPageContent() {
     setEditCompany({
       id: company.id, name: company.name, vat_number: company.vat_number,
       kbo_number: company.kbo_number, address: company.address || '',
-      email: company.email || '', phone: company.phone || '', new_password: '', login_email: company.portal_login_email || company.email || '',
+      email: company.email || '', original_email: company.email || '', phone: company.phone || '',
+      new_password: '', login_email: company.portal_login_email || '', sync_login_email: false,
     });
     setShowEditDialog(true);
   };
@@ -133,7 +134,7 @@ function CompaniesPageContent() {
         vat_number: editCompany.vat_number,
         kbo_number: editCompany.kbo_number,
         address: editCompany.address,
-        email: editCompany.email,
+        email: editCompany.sync_login_email || editCompany.email !== editCompany.original_email ? editCompany.email : undefined,
         phone: editCompany.phone,
         password: editCompany.new_password || undefined,
       });
@@ -279,8 +280,16 @@ function CompaniesPageContent() {
                 placeholder="اتركه فارغاً للإبقاء على كلمة المرور الحالية"
                 className="rounded-2xl"
               />
-              <p id="company-login-note" className="mt-2 text-xs text-muted-foreground">حساب الدخول: {editCompany.login_email || 'أدخل بريداً للشركة لإنشاء حسابها'}. بريد التواصل منفصل عن بريد الدخول الحالي.</p>
+              <p id="company-login-note" className="mt-2 text-xs text-muted-foreground">
+                حساب الدخول الحالي {editCompany.login_email || 'غير مفعّل'}. تغيير بريد الشركة يحدّث بريد دخول المالك أيضاً.
+              </p>
             </div>
+            {editCompany.login_email && editCompany.email && editCompany.email.trim().toLowerCase() !== editCompany.login_email.trim().toLowerCase() && (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={editCompany.sync_login_email} onChange={(e) => setEditCompany({ ...editCompany, sync_login_email: e.target.checked })} />
+                استخدام بريد الشركة لتسجيل دخول المالك
+              </label>
+            )}
             <Button disabled={saving} aria-busy={saving} onClick={handleUpdateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
               حفظ التغييرات
             </Button>

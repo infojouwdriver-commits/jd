@@ -1398,6 +1398,11 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261119_driver_work_on_approval.sql` — [source](../migrations/20261119_driver_work_on_approval.sql#)
 
+## [migrations/20261120_company_email_sync.sql](../migrations/20261120_company_email_sync.sql)
+
+- `20261120_company_email_sync.sql` — [source](../migrations/20261120_company_email_sync.sql#)
+- `"schema".security_save_company_email()` — [L3](../migrations/20261120_company_email_sync.sql#L3)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -2003,7 +2008,7 @@ Links target the working tree, so line positions can move after changes.
 - `Company` — [L32](../src/app/admin/companies/page.tsx#L32)
 - `emptyNew` — [L50](../src/app/admin/companies/page.tsx#L50)
 - `CompaniesPageContent()` — [L52](../src/app/admin/companies/page.tsx#L52)
-- `CompaniesPage()` — [L376](../src/app/admin/companies/page.tsx#L376)
+- `CompaniesPage()` — [L385](../src/app/admin/companies/page.tsx#L385)
 
 ## [src/app/admin/distributors/page.tsx](../src/app/admin/distributors/page.tsx)
 
@@ -2535,7 +2540,7 @@ Links target the working tree, so line positions can move after changes.
 - `GET` — [L11](../src/app/next_api/companies/route.ts#L11)
 - `POST` — [L75](../src/app/next_api/companies/route.ts#L75)
 - `PUT` — [L106](../src/app/next_api/companies/route.ts#L106)
-- `DELETE` — [L198](../src/app/next_api/companies/route.ts#L198)
+- `DELETE` — [L203](../src/app/next_api/companies/route.ts#L203)
 
 ## [src/app/next_api/company-changes/route.ts](../src/app/next_api/company-changes/route.ts)
 
