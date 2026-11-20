@@ -1,0 +1,83 @@
+name: Sign JOUW DRIVER Android 0.3.2
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/sign-driver-apk-0-3-2.yml']
+permissions:
+  actions: read
+jobs:
+  android-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: production
+    concurrency:
+      group: public-android-signing
+      cancel-in-progress: false
+    steps:
+      - name: Sign APK and verify compatibility with the published Android app
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$work/ssh-key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$work/known_hosts"
+          args=(-i "$work/ssh-key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" -o ConnectTimeout=20)
+          host="$DEPLOY_USER@$DEPLOY_HOST"
+          tool=$(find "$ANDROID_HOME/build-tools" -mindepth 2 -maxdepth 2 -name apksigner -print | sort -V | tail -1)
+          test -x "$tool"
+          export JAVA_HOME="${JAVA_HOME_17_X64:?Java 17 is required}"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/14580633631/zip" > "$work/preview.zip"
+          printf '%s  %s\n' dcaded6328bb6cff247f18b5a6193f40bbd88ac5e1973b3e0128af1551b8de47 "$work/preview.zip" | sha256sum --check
+          test "$(unzip -Z1 "$work/preview.zip")" = app-release.apk
+          preview="$work/preview.apk"
+          unzip -p "$work/preview.zip" app-release.apk > "$preview"
+          output="$RUNNER_TEMP/JOUW-DRIVER-Android-0.3.2.apk"
+          package_id=$("$(dirname "$tool")/aapt" dump badging "$preview" | sed -n '1p')
+          [[ "$package_id" == "package: name='be.jouwdriver.driver' versionCode='14' versionName='0.3.2'"* ]]
+          "$tool" verify "$preview"
+          signing=/srv/jouw-driver/android-release-signing
+          ssh "${args[@]}" "$host" "cat '$signing/release.p12'" > "$work/release.p12"
+          ssh "${args[@]}" "$host" "cat '$signing/password'" > "$work/password"
+          curl --fail --silent --show-error --location --retry 2 --max-time 75 \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/android-direct/jouw-driver.apk" \
+            --output "$work/published.apk"
+          certificate() {
+            "$tool" verify --print-certs "$1" | awk -F ': ' '/certificate SHA-256 digest:/ {print $2}'
+          }
+          published_cert=$(certificate "$work/published.apk")
+          [[ "$published_cert" =~ ^[a-f0-9]{64}$ ]]
+          "$tool" sign --ks "$work/release.p12" --ks-type PKCS12 --ks-pass "file:$work/password" \
+            --ks-key-alias jouw-driver-android --v2-signing-enabled true --v4-signing-enabled false \
+            --out "$output" "$preview"
+          test "$(certificate "$output")" = "$published_cert"
+          python3 - "$preview" "$output" <<'PYCODE'
+          import hashlib, re, sys, zipfile
+
+          def payload(path):
+              with zipfile.ZipFile(path) as apk:
+                  return {
+                      item.filename: hashlib.sha256(apk.read(item)).digest()
+                      for item in apk.infolist()
+                      if not item.is_dir() and not re.fullmatch(r'META-INF/(?:MANIFEST\.MF|[^/]+\.(?:SF|RSA|DSA|EC))', item.filename, re.I)
+                  }
+
+          if payload(sys.argv[1]) != payload(sys.argv[2]):
+              raise SystemExit('APK signing changed the reviewed application payload')
+          PYCODE
+          sha256sum "$output"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: driver-android-release-0.3.2-9c1b390b
+          path: ${{ runner.temp }}/JOUW-DRIVER-Android-0.3.2.apk
+          if-no-files-found: error
+          retention-days: 14
