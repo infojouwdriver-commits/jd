@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "d89c2399845ffd06f9004d7d4ea58780dd768ee1",
+  "source_commit_context": "3e191c534fa05e6142ad55a7f04e55344d4243ba",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -175,7 +175,7 @@
     "mobile/scripts/configure.mjs": "0e193908b5eb052442f0de05db3da412f2a9506e623b76efce4d0a914bb9c5e5",
     "mobile/scripts/native-permissions.mjs": "b4f45791f4def7873ad98e19a1e56e3c48e937f756fe448598835e5b54e72d14",
     "next.config.ts": "4ea61b454328ca867b817e2b30481d6386025b8bac9b95e9269b93fa5b271467",
-    "package.json": "1b06e631eab87d888f7921f835fd3465d684ea2b4be3fc309c39df5f6cff5984",
+    "package.json": "62213e2f982d79b326161b22979ee1e88a5abb6cf385aa9b95a4e7654bc0d983",
     "pnpm-workspace.yaml": "ab1b6a8f74c2cd7ee18c8e474be4385e5d7f80ce7a8d074f7519225600305d4a",
     "scripts/apply-release.mjs": "065d1f87a5c2f8c95fa4d13a7c44b0d85ed074bcc47d1b4da96bedbcbcdae63b",
     "scripts/audit-independent.mjs": "3e20fc03ad4d58177fb2b70b280206da0a00ae4f65ed5b97caa18c5c608a6ea9",
@@ -288,6 +288,7 @@
     "src/app/next_api/chiron/sync/route.ts": "80d3c952220ee059caa9bb9ce9809738482b008b3b23faca746694252b08df2c",
     "src/app/next_api/companies/[id]/pricing/documents/route.ts": "4c82d1e93eec3cfc87ea7315c3ecb2fd03fc8eefc5c862319c38b406b639b59e",
     "src/app/next_api/companies/[id]/pricing/route.ts": "f224c7cc9d7884c8219b771b1530366dccc5c95b68d482a5e73a53af85bd78dd",
+    "src/app/next_api/companies/cbe/route.ts": "8005587b12a2a863a2e2e8da490402cddb90536c4b3e4440858cc79b8a63b696",
     "src/app/next_api/companies/onboarding/route.ts": "0056919c926e666b79d6f223336d0b842700ff522e310b5572ea041463073083",
     "src/app/next_api/companies/route.ts": "f1cef8ed79f90917ba95ca7c62f053f9bfc51fcfaa6e562eb3b9b67832504f12",
     "src/app/next_api/company-changes/route.ts": "1772c9e2754a68927080b2691269feaea0ed04b2a4cdc0d8ed241f55646e07d8",
@@ -492,7 +493,7 @@
     "src/components/landing/platform.css": "4f83e775ab69c9dc4c011d0261c2080be7001a1535961326ccf5e8e76e4232cb",
     "src/components/navigation/ManagementShell.tsx": "fcdf934cb5270df3076a8c7d4c49222bdd74bc4dc29e10f1a08cb2ca27feaf0a",
     "src/components/navigation/management-menu.ts": "417cb29f745326f5ff833a5748f346f1f33444a54583f4172a04b667f8795905",
-    "src/components/operations/AdminCompanyRegistration.tsx": "0714acf6b73710cef94979ff5d8eb018c525c6b48b5181216b50a9925378cb36",
+    "src/components/operations/AdminCompanyRegistration.tsx": "8209b11a382f976250ee164a8d1ef57c4c33e06ebebe39dae2d1652e258e3905",
     "src/components/operations/BillingPanel.tsx": "b4887fe8a9a0f9b42114c965003a5da55357648c2eeb2f9cbc9b3c788f6c49df",
     "src/components/operations/CompanyChangesPanel.tsx": "493d58d840808616f4c2b238c070527b42c93b1fb6486dde2ddf086cf1f00f85",
     "src/components/operations/CompanyLifecycleAction.tsx": "ca2f4e840d6782ae2c98ffd06c6db39e9786a73054c5c8250778aac43b5532e1",
@@ -590,6 +591,7 @@
     "src/lib/approval-mail-scheduler.ts": "d8db900b022f60ef8b762c227cae0bb9618b3f78c5b6e399812f6f83ec4b6c94",
     "src/lib/auth.ts": "f7ec20261dbe0760a80f6f4622921260c7c174f411342bf88f6d72000f442ccb",
     "src/lib/brevo-mail.ts": "c75d775c0df6c07ff909bfaa1a2339421344fb7dd91d27f89f9ee66e320aa220",
+    "src/lib/cbe-public-search.ts": "dee556e784ab16b16714533c2f30e2e2c4cabd7645e48c9ef74687187c8ff282",
     "src/lib/chiron-protocol.ts": "27d91ce87a34f3e244fc4d0e37e86dcbf15962701d66ca8d7f318d30a794e288",
     "src/lib/chiron-retry.ts": "c865f4c35fc5d1cceb93edf05f227af2b9a31e6059292f5a6cafa5a2280f581c",
     "src/lib/chiron-service.ts": "4e33b6f5eb105f0f95759989852b384f6116ed5cb340370f941389e50238cf38",
@@ -689,18 +691,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "b3c87c6145a94d65d3274978ef5e5b684fadea927f2c50c99f2f7a90f4b9270f",
-    "health.json": "df2d0e48627f00204973efb44f366089cbea96a35e65e32ca01a3758b4e19954",
-    "SOURCE_INDEX.md": "6559f279fce32276685af79ef7fba40dc1eebea34f9142d5081dd5a100ac5692",
-    "GRAPH_REPORT.md": "acca4a69f7e2ac41e515bb444bf498831fd04f0ac9e9bf370ea6dfcd60664abb",
-    "graph.json": "585c99dce8433015da301eb9c94ab4ffd72244be366d817bca3acf8481a17b89"
+    "GRAPH_TREE.html": "b2edf6b6896d08d4f28d1bda57ea4d4e347a2e96226ac68bcd38638bf1d317df",
+    "health.json": "40cf67af211014ea4cbdada8502fdb274730a4c92c9180caa28f35c09d06352e",
+    "SOURCE_INDEX.md": "49f8bb31f83287cf85836142288503bccefd5e6e166f0f3a7c78f55ca90a08c0",
+    "GRAPH_REPORT.md": "5d4f7960ef659fc19df6f194f704bb6fa6ab059bc8eb7c8dab615174a415c911",
+    "graph.json": "208167007467f0f8b058ba1753d0d128ec7644de654d6c73817e61f02e0ded44"
   },
-  "nodes": 3901,
-  "edges": 13215,
-  "raw_edges": 13506,
-  "communities": 196,
+  "nodes": 3934,
+  "edges": 13296,
+  "raw_edges": 13588,
+  "communities": 203,
   "confidence_counts": {
-    "EXTRACTED": 13257,
+    "EXTRACTED": 13339,
     "INFERRED": 249
   }
 }

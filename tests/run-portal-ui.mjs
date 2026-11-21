@@ -20,7 +20,7 @@ try {
     if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
     return url.origin===base?route.continue():route.abort();
   });
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[],chironWrites=[],connectionTests=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
+  const accountPosts=[],tripRequests=[],created=[],cbeLookups=[],pricingWrites=[],chironWrites=[],connectionTests=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
@@ -33,6 +33,11 @@ try {
    else if(url.pathname==='/next_api/chiron-settings'){
     if(request.method()==='PUT'){chironWrites.push(request.postDataJSON());data={id:1};}
     else data={id:1,name:'Company One',chiron_mode:'TEST',transmissionEnabled:true,productionEnabled:false,testCredentialsConfigured:true,productionCredentialsConfigured:productionKeyConfigured,testKeyConfigured:true,productionKeyConfigured,chiron_test_client_id:'synthetic-test-id',chiron_prod_client_id:'synthetic-production-id'};
+   }
+   else if(url.pathname==='/next_api/companies/cbe'){
+    cbeLookups.push(request.postDataJSON());
+    if(cbeLookups.length===1)status=503;
+    data={kbo_number:'0314595348',name:'Synced Registry Company',address:'Rue Exemple 1, 1000 Bruxelles',status:'AC',environment:'test'};
    }
    else if(url.pathname==='/next_api/companies/onboarding'){
     created.push(request.postDataJSON());
@@ -87,10 +92,21 @@ try {
   await page.goto(base+'/admin/companies');await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
   const dialog=page.getByRole('dialog');
   for(const [field,value] of Object.entries({
-    'company-name':'Synthetic company','company-vat_number':'BE0000000003','company-kbo_number':'0000000003',
+    'company-name':'Synthetic company','company-vat_number':'BE0000000003','company-kbo_number':'0314.595.348',
     'company-password':'company-password-123','driver-full_name':'Synthetic driver','driver-phone':'+32470000000',
     'driver-password':'synthetic-driver-123','vehicle-plate_number':'SYN-150','vehicle-brand':'Synthetic','vehicle-model':'Car',
   })) await dialog.locator('#admin-registration-'+field).fill(value);
+  const lookup=dialog.getByRole('button',{name:'بحث في BCE/KBO',exact:true});
+  await lookup.click();
+  await dialog.getByRole('status').filter({hasText:'تعذر البحث'}).waitFor();
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synthetic company');
+  await lookup.click();
+  await dialog.getByText('نتيجة BCE/KBO من البيئة التجريبية', {exact:true}).waitFor();
+  assert.deepEqual(cbeLookups,[{number:'0314.595.348',language:'fr'},{number:'0314.595.348',language:'fr'}]);
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synthetic company');
+  await dialog.getByRole('button',{name:'استخدام بيانات السجل'}).click();
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synced Registry Company');
+  assert.equal(await dialog.locator('#admin-registration-company-vat_number').inputValue(),'BE0000000003');
   const save=dialog.getByRole('button',{name:'حفظ الشركة والسائق والمركبة',exact:true});
   await save.click();
   await dialog.getByRole('alert').filter({hasText:'أدخل البريد الإلكتروني لإنشاء حساب دخول الشركة.'}).waitFor();
@@ -104,13 +120,15 @@ try {
   await companyLink.waitFor();
   assert.equal(await companyLink.getAttribute('href'),'/admin/companies/3');
   assert.deepEqual(created[0],created[1]);
+  assert.equal(created[0].company.kbo_number,'0314595348');
+  assert.equal(created[0].company.address,'Rue Exemple 1, 1000 Bruxelles');
   assert.equal(created[0].company.email,'owner@example.invalid');
   assert.equal(created[0].company.password,'company-password-123');
   assert.equal(created[0].fleet.driver.phone,'+32470000000');
   assert.equal(created[0].fleet.vehicle.plate_number,'SYN-150');
   assert.ok(await dialog.evaluate(element=>element.scrollWidth<=element.clientWidth+1));
   assert.equal(errors.length,0,errors.join('\n'));
-  checks.push(name+': company, driver and vehicle submit together with frozen retry and a company link');
+  checks.push(name+': CBE lookup, manual review, and unified onboarding retry work');
   await page.goto(base+'/admin/companies/1/settings');
   await page.getByRole('link',{name:/إعدادات التسعير/}).click();
   await page.waitForURL(base+'/admin/companies/1/pricing');
