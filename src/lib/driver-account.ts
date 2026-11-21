@@ -24,12 +24,17 @@ export function parseDriverFields(body: unknown, create = false) {
   return result;
 }
 
-export async function mutateDriverAccount(token: string, action: 'create' | 'update' | 'deactivate', input: {id?: string; companyId?: number; fields?: ReturnType<typeof parseDriverFields>; distributorId?: number | null}) {
-  const { password, ...driver } = input.fields || {};
+export async function prepareDriverAccount(fields: ReturnType<typeof parseDriverFields> | undefined, creating: boolean) {
+  const { password, ...driver } = fields || {};
   const account: Record<string, unknown> = {};
   if (driver.phone) account.email = `${driver.phone}@driver.local`;
   if (password) account.password = await hashString(password);
-  if (action === 'create') account.role = getAuthRoles().userRole;
+  if (creating) account.role = getAuthRoles().userRole;
+  return {account, driver};
+}
+
+export async function mutateDriverAccount(token: string, action: 'create' | 'update' | 'deactivate', input: {id?: string; companyId?: number; fields?: ReturnType<typeof parseDriverFields>; distributorId?: number | null}) {
+  const {account, driver} = await prepareDriverAccount(input.fields, action === 'create');
   const args = action === 'create' ? {
     p_company_id: input.companyId, p_account: account,
     p_driver: {...driver, status: 'active', created_by_distributor_id: input.distributorId || null},

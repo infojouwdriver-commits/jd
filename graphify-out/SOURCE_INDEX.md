@@ -1403,6 +1403,11 @@ Links target the working tree, so line positions can move after changes.
 - `20261120_company_email_sync.sql` — [source](../migrations/20261120_company_email_sync.sql#)
 - `"schema".security_save_company_email()` — [L3](../migrations/20261120_company_email_sync.sql#L3)
 
+## [migrations/20261121_admin_company_onboarding.sql](../migrations/20261121_admin_company_onboarding.sql)
+
+- `20261121_admin_company_onboarding.sql` — [source](../migrations/20261121_admin_company_onboarding.sql#)
+- `"schema".admin_company_onboarding` — [L3](../migrations/20261121_admin_company_onboarding.sql#L3)
+
 ## [mobile/config.mjs](../mobile/config.mjs)
 
 - `config.mjs` — [L1](../mobile/config.mjs#L1)
@@ -2005,10 +2010,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/admin/companies/page.tsx](../src/app/admin/companies/page.tsx)
 
 - `companies/page.tsx` — [L1](../src/app/admin/companies/page.tsx#L1)
-- `Company` — [L32](../src/app/admin/companies/page.tsx#L32)
-- `emptyNew` — [L50](../src/app/admin/companies/page.tsx#L50)
-- `CompaniesPageContent()` — [L52](../src/app/admin/companies/page.tsx#L52)
-- `CompaniesPage()` — [L385](../src/app/admin/companies/page.tsx#L385)
+- `Company` — [L33](../src/app/admin/companies/page.tsx#L33)
+- `CompaniesPageContent()` — [L51](../src/app/admin/companies/page.tsx#L51)
+- `CompaniesPage()` — [L302](../src/app/admin/companies/page.tsx#L302)
 
 ## [src/app/admin/distributors/page.tsx](../src/app/admin/distributors/page.tsx)
 
@@ -2533,6 +2537,15 @@ Links target the working tree, so line positions can move after changes.
 - `handlePricing` — [L10](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L10)
 - `GET` — [L69](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L69)
 - `PUT` — [L70](../src/app/next_api/companies/%5Bid%5D/pricing/route.ts#L70)
+
+## [src/app/next_api/companies/onboarding/route.ts](../src/app/next_api/companies/onboarding/route.ts)
+
+- `onboarding/route.ts` — [L1](../src/app/next_api/companies/onboarding/route.ts#L1)
+- `requiredText()` — [L8](../src/app/next_api/companies/onboarding/route.ts#L8)
+- `optionalText()` — [L9](../src/app/next_api/companies/onboarding/route.ts#L9)
+- `driverInput` — [L10](../src/app/next_api/companies/onboarding/route.ts#L10)
+- `registration` — [L14](../src/app/next_api/companies/onboarding/route.ts#L14)
+- `POST` — [L38](../src/app/next_api/companies/onboarding/route.ts#L38)
 
 ## [src/app/next_api/companies/route.ts](../src/app/next_api/companies/route.ts)
 
@@ -3907,6 +3920,20 @@ Links target the working tree, so line positions can move after changes.
 - `management-menu.ts` — [L1](../src/components/navigation/management-menu.ts#L1)
 - `managementMenu` — [L4](../src/components/navigation/management-menu.ts#L4)
 
+## [src/components/operations/AdminCompanyRegistration.tsx](../src/components/operations/AdminCompanyRegistration.tsx)
+
+- `AdminCompanyRegistration.tsx` — [L1](../src/components/operations/AdminCompanyRegistration.tsx#L1)
+- `Field` — [L13](../src/components/operations/AdminCompanyRegistration.tsx#L13)
+- `companyFields` — [L21](../src/components/operations/AdminCompanyRegistration.tsx#L21)
+- `driverFields` — [L31](../src/components/operations/AdminCompanyRegistration.tsx#L31)
+- `vehicleFields` — [L39](../src/components/operations/AdminCompanyRegistration.tsx#L39)
+- `Receipt` — [L47](../src/components/operations/AdminCompanyRegistration.tsx#L47)
+- `fieldValues()` — [L49](../src/components/operations/AdminCompanyRegistration.tsx#L49)
+- `fieldsFor()` — [L56](../src/components/operations/AdminCompanyRegistration.tsx#L56)
+- `AdminCompanyRegistration()` — [L70](../src/components/operations/AdminCompanyRegistration.tsx#L70)
+- `changeOpen()` — [L80](../src/components/operations/AdminCompanyRegistration.tsx#L80)
+- `submit()` — [L91](../src/components/operations/AdminCompanyRegistration.tsx#L91)
+
 ## [src/components/operations/BillingPanel.tsx](../src/components/operations/BillingPanel.tsx)
 
 - `BillingPanel.tsx` — [L1](../src/components/operations/BillingPanel.tsx#L1)
@@ -4816,7 +4843,8 @@ Links target the working tree, so line positions can move after changes.
 
 - `company-account.ts` — [L1](../src/lib/company-account.ts#L1)
 - `credentials` — [L6](../src/lib/company-account.ts#L6)
-- `saveCompanyAccount()` — [L10](../src/lib/company-account.ts#L10)
+- `prepareCompanyLogin()` — [L10](../src/lib/company-account.ts#L10)
+- `saveCompanyAccount()` — [L16](../src/lib/company-account.ts#L16)
 
 ## [src/lib/company-changes.ts](../src/lib/company-changes.ts)
 
@@ -4988,8 +5016,9 @@ Links target the working tree, so line positions can move after changes.
 - `optionalText` — [L6](../src/lib/driver-account.ts#L6)
 - `driverFieldsSchema` — [L7](../src/lib/driver-account.ts#L7)
 - `parseDriverFields()` — [L19](../src/lib/driver-account.ts#L19)
-- `mutateDriverAccount()` — [L27](../src/lib/driver-account.ts#L27)
-- `driverValidationError()` — [L46](../src/lib/driver-account.ts#L46)
+- `prepareDriverAccount()` — [L27](../src/lib/driver-account.ts#L27)
+- `mutateDriverAccount()` — [L36](../src/lib/driver-account.ts#L36)
+- `driverValidationError()` — [L51](../src/lib/driver-account.ts#L51)
 
 ## [src/lib/driver-activity.ts](../src/lib/driver-activity.ts)
 

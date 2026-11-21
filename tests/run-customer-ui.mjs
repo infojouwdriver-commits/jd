@@ -78,10 +78,17 @@ try{
    await context.route(base+'/next_api/**',async route=>{
     const request=route.request(),url=new URL(request.url());let data=[];
     if(url.pathname==='/next_api/auth/user')data={sub:'9001',id:9001,email:'admin@ui.example',isAdmin:true,userType:'admin',role:'jouw_app_user'};
-    else if(url.pathname==='/next_api/companies'){
-     if(request.method()==='POST'){const body=request.postDataJSON();created.push(body);companies.push({id:93,...body,chiron_mode:'TEST',subscription_status:'pending_contract'});data=companies.at(-1);}
-     else data=companies; // Current API returns a list; settings must select the requested id.
+    else if(url.pathname==='/next_api/companies/onboarding'){
+     const body=request.postDataJSON();
+     created.push(body);
+     const {password,...company}=body.company;
+     companies.push({id:93,...company,chiron_mode:'TEST',subscription_status:'active'});
+     data={company_id:93,driver_id:null,vehicle_id:null};
     }
+    else if(url.pathname==='/next_api/company-directory'){
+     data={rows:companies,total:companies.length,active:1,suspended:0,limit:25,offset:0};
+    }
+    else if(url.pathname==='/next_api/companies')data=companies;
     await route.fulfill({status:request.method()==='POST'?201:200,contentType:'application/json',body:JSON.stringify({success:true,data})});
    });
    // Start authenticated fixture in a fresh document, after the anonymous form checks.
@@ -99,14 +106,17 @@ try{
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin controls must fit the viewport');
    checks.push(name+': signed-in admin reaches companies in the same window');
    await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
-   const dialog=page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true});
-   await dialog.getByPlaceholder('JOUW DRIVER SRL',{exact:true}).fill('Created UI company');
-   await dialog.getByPlaceholder('BE0123456789',{exact:true}).fill('BE0111111111');
-   await dialog.getByPlaceholder('0123456789',{exact:true}).fill('0111111111');
-   await dialog.getByRole('button',{name:'إنشاء الشركة',exact:true}).click();
-   await dialog.waitFor({state:'hidden'});
+   const dialog=page.getByRole('dialog',{name:'تسجيل شركة جديدة',exact:true});
+   await dialog.getByRole('checkbox',{name:'إضافة أول سائق ومركبة'}).uncheck();
+   await dialog.locator('#admin-registration-company-name').fill('Created UI company');
+   await dialog.locator('#admin-registration-company-vat_number').fill('BE0111111111');
+   await dialog.locator('#admin-registration-company-kbo_number').fill('0111111111');
+   await dialog.getByRole('button',{name:'حفظ الشركة',exact:true}).click();
+   await dialog.getByRole('link',{name:'فتح ملف الشركة'}).waitFor();
+   await dialog.getByRole('button',{name:'إغلاق',exact:true}).click();
    await page.getByRole('heading',{name:'Created UI company',exact:true}).waitFor({state:'visible'});
-   assert.equal(created.length,1);assert.equal(created[0].name,'Created UI company');assert.equal(created[0].kbo_number,'0111111111');
+   assert.equal(created.length,1);assert.equal(created[0].company.name,'Created UI company');assert.equal(created[0].company.kbo_number,'0111111111');
+   assert.equal(created[0].fleet,undefined);
    checks.push(name+': company creation dialog submits once and refreshes the company list');
    const card=page.locator('[data-slot="card"]').filter({has:page.getByRole('heading',{name:'UI fixture company',exact:true})});
    await card.getByRole('link',{name:'إعدادات الشركة',exact:true}).click();
@@ -121,8 +131,8 @@ try{
    await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));
    await page.screenshot({path:'ui-output/'+name+'-companies.png',fullPage:true});
    await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
-   await page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true}).waitFor({state:'visible'});
-   await page.getByRole('dialog',{name:'إنشاء شركة جديدة',exact:true}).getByRole('button',{name:'Close',exact:true}).click();
+   await page.getByRole('dialog',{name:'تسجيل شركة جديدة',exact:true}).waitFor({state:'visible'});
+   await page.getByRole('dialog',{name:'تسجيل شركة جديدة',exact:true}).getByRole('button',{name:'إغلاق',exact:true}).click();
    const nav=page.locator('#management-navigation');
    if(viewport.width<1024)await page.getByRole('button',{name:'فتح القائمة',exact:true}).click();
    await nav.getByRole('link',{name:'السائقون',exact:true}).click();
