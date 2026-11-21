@@ -29,12 +29,15 @@ if sys.argv[1] == 'cleanup':
 data = json.loads(os.environ['IOS_SIGNING_JSON'])
 os.umask(0o077)
 root.mkdir(mode=0o700, exist_ok=True)
-for key, filename in [('p12', 'distribution.p12'), ('profile', 'distribution.mobileprovision')]:
-    (root / filename).write_bytes(base64.b64decode(data[key], validate=True))
+(root / 'distribution.p12').write_bytes(base64.b64decode(data['p12'], validate=True))
+profile_override = os.environ.get('JD_IOS_CARPLAY_PROFILE')
+assert profile_override, 'CarPlay build requires the renewed provisioning profile'
+(root / 'distribution.mobileprovision').write_bytes(base64.b64decode(profile_override, validate=True))
 profile = plistlib.loads(run('security', 'cms', '-D', '-i', str(root / 'distribution.mobileprovision')))
 entitlements = profile['Entitlements']
 assert profile['TeamIdentifier'] == [data['team_id']], 'Unexpected signing team'
 assert entitlements['application-identifier'] == data['team_id'] + '.be.jouwdriver.driver', 'Unexpected app identifier'
+assert entitlements.get('com.apple.developer.carplay-maps') is True, 'Profile must allow CarPlay Navigation'
 assert entitlements.get('aps-environment') == 'production', 'Distribution profile must include production notifications'
 assert not entitlements.get('get-task-allow'), 'Development profile cannot upload to TestFlight'
 assert 'ProvisionedDevices' not in profile, 'Device-only profile cannot upload to TestFlight'

@@ -1,3 +1,4 @@
+import {syncCarPlayTrip} from './carplay-trip';
 import {publishNativeTripStatus} from './shift-trip';
 import {hasShiftIntent} from './native-shift-intent';
 import {AppState} from 'react-native';
@@ -68,6 +69,16 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     }).catch(() => {if (!disposed.current) setError('تعذّر فتح سجل الرحلات. لا تحذف بيانات التطبيق.');});
     return () => {disposed.current = true; engine.current = null;};
   }, [profile.driver.id]);
+  const carLatitude = trip?.navigationDestination?.lat;
+  const carLongitude = trip?.navigationDestination?.lon;
+  const carTripKey = trip?.key;
+  const carTripTitle = trip?.endAddress;
+  useEffect(() => {
+    syncCarPlayTrip(carTripKey && carTripTitle && carLatitude !== undefined && carLongitude !== undefined ? {
+      key: carTripKey, title: carTripTitle, latitude: carLatitude, longitude: carLongitude,
+    } : null);
+  }, [carTripKey, carTripTitle, carLatitude, carLongitude]);
+  useEffect(() => () => syncCarPlayTrip(null), []);
   useEffect(() => {onBlockLogout(!ready || !!trip || busy);}, [ready, trip, busy, onBlockLogout]);
   useEffect(() => {
     if (!trip) return;

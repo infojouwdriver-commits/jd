@@ -452,6 +452,13 @@ Links target the working tree, so line positions can move after changes.
 - `enableBackgroundMeter()` — [L38](../driver-app/src/background-meter.ts#L38)
 - `stopBackgroundMeter()` — [L57](../driver-app/src/background-meter.ts#L57)
 
+## [driver-app/src/carplay-trip.ts](../driver-app/src/carplay-trip.ts)
+
+- `carplay-trip.ts` — [L1](../driver-app/src/carplay-trip.ts#L1)
+- `TripTarget` — [L4](../driver-app/src/carplay-trip.ts#L4)
+- `CarPlayModule` — [L5](../driver-app/src/carplay-trip.ts#L5)
+- `syncCarPlayTrip()` — [L11](../driver-app/src/carplay-trip.ts#L11)
+
 ## [driver-app/src/completed-batch-receipt.ts](../driver-app/src/completed-batch-receipt.ts)
 
 - `completed-batch-receipt.ts` — [L1](../driver-app/src/completed-batch-receipt.ts#L1)
@@ -1018,13 +1025,13 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/useTripController.ts](../driver-app/src/useTripController.ts)
 
 - `useTripController.ts` — [L1](../driver-app/src/useTripController.ts#L1)
-- `pointOf()` — [L18](../driver-app/src/useTripController.ts#L18)
-- `currentPoint()` — [L26](../driver-app/src/useTripController.ts#L26)
-- `useTripController()` — [L34](../driver-app/src/useTripController.ts#L34)
-- `start()` — [L103](../driver-app/src/useTripController.ts#L103)
-- `end()` — [L182](../driver-app/src/useTripController.ts#L182)
-- `changeVehicle()` — [L196](../driver-app/src/useTripController.ts#L196)
-- `retrySync()` — [L209](../driver-app/src/useTripController.ts#L209)
+- `pointOf()` — [L19](../driver-app/src/useTripController.ts#L19)
+- `currentPoint()` — [L27](../driver-app/src/useTripController.ts#L27)
+- `useTripController()` — [L35](../driver-app/src/useTripController.ts#L35)
+- `start()` — [L114](../driver-app/src/useTripController.ts#L114)
+- `end()` — [L193](../driver-app/src/useTripController.ts#L193)
+- `changeVehicle()` — [L207](../driver-app/src/useTripController.ts#L207)
+- `retrySync()` — [L220](../driver-app/src/useTripController.ts#L220)
 
 ## [driver-app/src/welcome-config.ts](../driver-app/src/welcome-config.ts)
 

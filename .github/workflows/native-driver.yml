@@ -256,6 +256,7 @@ jobs:
         run: python3 scripts/ios-signing.py prepare
         env:
           IOS_SIGNING_JSON: ${{ secrets.IOS_TESTFLIGHT_SIGNING_JSON }}
+          JD_IOS_CARPLAY_PROFILE: ${{ secrets.IOS_CARPLAY_PROVISIONING_PROFILE }}
       - name: Configure distribution for this build
         run: |
           node <<'NODE'

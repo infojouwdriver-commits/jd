@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "1f54eb5ababd0dfcff2ad5117852933e9b8ade61",
+  "source_commit_context": "9c1b390b64d72c8851b39e52945c7d779d1348c0",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -29,7 +29,7 @@
     "deploy/update-customer-ui.sh": "21cdb9aa3afe3b95510bde0a05228062ef74cbb1b0d4b7638e9cf45811fda84c",
     "deploy/verify-private-owner.cjs": "620880e81187ee3418b9fa26086ad0ec2a23f8e1426dc250df6714a697c608e4",
     "driver-app/App.tsx": "676b02b35ebf9c379e3d5f7fcb3e87e8cfcd8e02dae6b5a966a7503c747e12b7",
-    "driver-app/app.config.js": "136879ea7ab46d95b43231c5d71c7a2f8902d2fa96cac4ac2b68a34309328012",
+    "driver-app/app.config.js": "d4403499be44ead0aa5189d1d9ecd1ece62b51cbbc193585c1611f03f4b8101e",
     "driver-app/package.json": "fd788895a2c07a2ea202d8d9bd0527a06fa9df8dbc3314209eb60e8dc03d6b37",
     "driver-app/src/DriverMap.tsx": "8997a91026361554e1329b13085c63451cc638e142062dbe39a41cc74f953343",
     "driver-app/src/FleetLocation.tsx": "f4376a21b1b37a6cdeb5d325304d30c9594a914f4ace53571187cf231324762b",
@@ -50,6 +50,7 @@
     "driver-app/src/app/shifts.tsx": "40586ab6bb1043bdf34377086e4101a05357cdd8064079bcddfc2b7571f46c6d",
     "driver-app/src/app/trips.tsx": "e35c73f7bd876ba0a082e83318d688aba4e8c7fa4bc955fd2c086aced328d62e",
     "driver-app/src/background-meter.ts": "4ba76ba40029c27bae371d9beb9e0edd6c27500f931c5b736f2ff82ba27b8734",
+    "driver-app/src/carplay-trip.ts": "8f0a82f375b64d05770b7d39101054c4c08d9a06a4b881ea7766ec1a67ffd47b",
     "driver-app/src/completed-batch-receipt.ts": "26fdd5e51fffaa790775cdf5442a48245c1b996fcb225babc2d72364698543d4",
     "driver-app/src/driver-balance.ts": "a1ee6618a25a7e3cf60b0e217abdbc10c15aa69f9ae3d4740cc41a64e82a9ce9",
     "driver-app/src/experience/Account.tsx": "647ceed95995ef46867134df16087fdb868b02c6e66c7168d22f08c4a27622e5",
@@ -120,7 +121,7 @@
     "driver-app/src/trip-meter.ts": "ff20cfed95dec84a53fad1b30ca7821f0cc838225ef7ceca224cd015be42af9a",
     "driver-app/src/trip-proof.ts": "e5e6ce99c0ec1d8f66a32a2e9d7dcef0021f50fe7945614bc6697d3a79dbe63e",
     "driver-app/src/trip-store.ts": "be479e6fc9501aee082f11626aa2cded8abea5007145ee6adcbcb94a3d47fef6",
-    "driver-app/src/useTripController.ts": "b87bb63c517572c323e6a66c9b3f7cf4b6840200ff3c30e83655654b4e0a5cf6",
+    "driver-app/src/useTripController.ts": "2af4343f2b638c1b09bff4b84fc58be8ccd698ad12038b8e8c65765afe7f3a9d",
     "driver-app/src/welcome-config.ts": "237ddd38fe0a7133dc2fa3823c2ae6ac01052016aa8109d4ec52c595dadaf7ef",
     "driver-app/src/welcome-loader.ts": "fd3017776500b611706faf82a7afb8dc4dbdca11b63fcd8652e152c5b5e2d896",
     "driver-app/tsconfig.json": "e5e2088483e932c0ec6cf35dee4a6e1d363a381810db3f8f7b6176526caf9fc9",
@@ -689,18 +690,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "ad89eef20ab09cf753ff185160fe215a178d7190fbee483b663c61ea83c85fac",
-    "health.json": "dd71e37450502595b68e7c7f4edf69c7432f4e64a98cd242f4809361b54f84ef",
-    "SOURCE_INDEX.md": "dd4d0e8da04a10b9d88efc30850e666ebe2592170f6bddc2ab7520d84e9ff6fa",
-    "GRAPH_REPORT.md": "1c0b63bfc2f3c725038d4c6267367344a399631e009ea03f9184af9a36133885",
-    "graph.json": "bc687d05676c8071c4b7664edf10950a97a21e0c37005280ba3d30379dfaffbf"
+    "GRAPH_TREE.html": "afbeea549b94061cbb9c707b1a71b1dbc6a0b373e0f3dfc78923308d4d6f1738",
+    "health.json": "1dceedccd64fa9dda2832e9a35cd835e3098f7b0d12dea53d6131111c048206c",
+    "SOURCE_INDEX.md": "c2df3e84a86ebe85fc63f5cd2705501a8ba1778ddf8dc5ea2c65dc1891d0523d",
+    "GRAPH_REPORT.md": "8d7523b62ffa2f7fd1d396c2b8a642fa5bc17c3e6a63c0eed563837e96b93231",
+    "graph.json": "c72a7bf8d982a2891d02c03cc9ad6b73f058929589b59c170dfc31fff52cd5d3"
   },
-  "nodes": 3895,
-  "edges": 13210,
-  "raw_edges": 13502,
-  "communities": 200,
+  "nodes": 3899,
+  "edges": 13218,
+  "raw_edges": 13510,
+  "communities": 204,
   "confidence_counts": {
-    "EXTRACTED": 13253,
+    "EXTRACTED": 13261,
     "INFERRED": 249
   }
 }
