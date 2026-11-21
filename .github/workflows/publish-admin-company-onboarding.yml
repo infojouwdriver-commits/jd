@@ -1,5 +1,8 @@
 name: Publish verified admin company onboarding
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-admin-company-onboarding.yml']
   workflow_dispatch:
     inputs:
       image:
@@ -27,6 +30,7 @@ env:
   CANDIDATE_RUN: '44955466973'
 jobs:
   publish:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Deploy verified admin company onboarding to production')
     runs-on: ubuntu-24.04
     timeout-minutes: 18
     environment: production
@@ -35,9 +39,9 @@ jobs:
         id: gates
         env:
           GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ inputs.image }}
-          ACCEPTANCE_RUN: ${{ inputs.acceptance_run }}
-          BACKUP_RUN: ${{ inputs.backup_run }}
+          IMAGE: ${{ github.event_name == 'push' && 'ghcr.io/infojouwdriver-commits/jd@sha256:e775872886f1eb468ebe08cecba4c47f7116ca169d1217754cde65542978724a' || inputs.image }}
+          ACCEPTANCE_RUN: ${{ github.event_name == 'push' && '44956800326' || inputs.acceptance_run }}
+          BACKUP_RUN: ${{ github.event_name == 'push' && '44884391662' || inputs.backup_run }}
         run: |
           node --input-type=module <<'GATE'
           import fs from 'node:fs';
@@ -141,7 +145,7 @@ jobs:
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           REGISTRY_TOKEN: ${{ github.token }}
-          IMAGE: ${{ inputs.image }}
+          IMAGE: ${{ github.event_name == 'push' && 'ghcr.io/infojouwdriver-commits/jd@sha256:e775872886f1eb468ebe08cecba4c47f7116ca169d1217754cde65542978724a' || inputs.image }}
           REVISION: ${{ env.CANDIDATE_REVISION }}
           BASELINE: ${{ steps.scope.outputs.baseline }}
           BACKUP_TAG: ${{ steps.gates.outputs.backup }}
