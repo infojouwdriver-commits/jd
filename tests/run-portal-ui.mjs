@@ -20,7 +20,7 @@ try {
     if(url.hostname==='api.mapbox.com' && url.pathname.includes('/tiles/'))return route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=','base64')});
     return url.origin===base?route.continue():route.abort();
   });
-  const accountPosts=[],tripRequests=[],created=[],pricingWrites=[],chironWrites=[],connectionTests=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
+  const accountPosts=[],tripRequests=[],created=[],cbeLookups=[],pricingWrites=[],chironWrites=[],connectionTests=[];let loggedIn=true,currentUserType='admin',chironTests=0,productionKeyConfigured=true;
   await context.route(base+'/next_api/**',async route=>{
    const request=route.request(),url=new URL(request.url());let data=[],status=200;
    if(url.pathname==='/next_api/auth/user'){if(!loggedIn){status=401;}else data=currentUserType==='admin'?{sub:'9001',email:'admin@example.invalid',isAdmin:true,userType:'admin',role:'browser'}:{sub:'9003',email:'company@example.invalid',isAdmin:false,userType:'company',role:'browser'};}
@@ -34,9 +34,18 @@ try {
     if(request.method()==='PUT'){chironWrites.push(request.postDataJSON());data={id:1};}
     else data={id:1,name:'Company One',chiron_mode:'TEST',transmissionEnabled:true,productionEnabled:false,testCredentialsConfigured:true,productionCredentialsConfigured:productionKeyConfigured,testKeyConfigured:true,productionKeyConfigured,chiron_test_client_id:'synthetic-test-id',chiron_prod_client_id:'synthetic-production-id'};
    }
+   else if(url.pathname==='/next_api/companies/cbe'){
+    cbeLookups.push(request.postDataJSON());
+    if(cbeLookups.length===1)status=503;
+    data={kbo_number:'0314595348',name:'Synced Registry Company',address:'Rue Exemple 1, 1000 Bruxelles',status:'AC',environment:'test'};
+   }
+   else if(url.pathname==='/next_api/companies/onboarding'){
+    created.push(request.postDataJSON());
+    status=created.length===1?503:201;
+    data={company_id:3,driver_id:12,vehicle_id:22};
+   }
    else if(url.pathname==='/next_api/companies'){
-    if(request.method()==='POST'){created.push(request.postDataJSON());data={id:3,...created.at(-1),portal_login_enabled:true};}
-    else if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,...pricingWrites.at(-1)};}
+    if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,...pricingWrites.at(-1)};}
     else data=[{id:1,name:'Company One',vat_number:'BE0000000001',kbo_number:'0000000001',chiron_mode:'TEST'},{id:2,name:'Company Two',vat_number:'BE0000000002',kbo_number:'0000000002',chiron_mode:'TEST'}];
    }
    else if(url.pathname==='/next_api/company-directory'){const kind=url.searchParams.get('kind');data={rows:kind==='companies'?[{id:1,name:'Company One',vat_number:'BE0000000001',kbo_number:'0000000001',chiron_mode:'TEST',subscription_status:'active'}]:kind==='drivers'?[{id:11,full_name:'Synthetic Driver',company_id:1}]:[{id:21,brand:'Synthetic',model:'Car',plate_number:'SYN-101',company_id:1}],total:1,active:1,suspended:0,offset:0,limit:25};}
@@ -54,7 +63,7 @@ try {
     if(request.method()==='PUT'){pricingWrites.push(request.postDataJSON());data={id:1,name:'Company One',tariffs:pricingWrites.at(-1).tariffs,revision:1};}
     else data={id:1,name:'Company One',revision:0,tariffs:[{code:'T1',name:'Standard',description:'',starts_on:'2026-01-01',enabled:true,base_fee:10.75,settings}]};
    }
-   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:{success:true,data})});
+   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===401?{success:false,errorCode:'TOKEN_MISSING'}:status>=500?{success:false,errorMessage:'Synthetic failure'}:{success:true,data})});
   });
   const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto(base+'/admin/account');
@@ -81,14 +90,45 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   checks.push(name+': company trip selection, driver/vehicle labels, locked price controls and responsive layout');
   await page.goto(base+'/admin/companies');await page.getByRole('button',{name:'شركة جديدة',exact:true}).click();
-  await page.locator('#new-company-name').fill('Synthetic company');await page.locator('#new-company-vat_number').fill('BE0000000003');await page.locator('#new-company-kbo_number').fill('0000000003');
-  const dialog=page.getByRole('dialog');await dialog.locator('input[type="password"]').fill('company-password-123');
-  await dialog.getByRole('button',{name:'إنشاء الشركة',exact:true}).click();await page.getByText('البريد الإلكتروني مطلوب لإنشاء حساب دخول الشركة',{exact:true}).waitFor();assert.equal(created.length,0);
-  await page.locator('#new-company-email').fill('owner@example.invalid');
-  const creation=page.waitForResponse(response=>response.url()===base+'/next_api/companies'&&response.request().method()==='POST');
-  await dialog.getByRole('button',{name:'إنشاء الشركة',exact:true}).click();await creation;await dialog.waitFor({state:'hidden'});
-  assert.equal(created.length,1);assert.equal(created[0].email,'owner@example.invalid');assert.equal(created[0].password,'company-password-123');assert.equal(errors.length,0,errors.join('\n'));
-  checks.push(name+': company identity requires email before submitting and sends the canonical credentials once');
+  const dialog=page.getByRole('dialog');
+  for(const [field,value] of Object.entries({
+    'company-name':'Synthetic company','company-vat_number':'BE0000000003','company-kbo_number':'0314.595.348',
+    'company-password':'company-password-123','driver-full_name':'Synthetic driver','driver-phone':'+32470000000',
+    'driver-password':'synthetic-driver-123','vehicle-plate_number':'SYN-150','vehicle-brand':'Synthetic','vehicle-model':'Car',
+  })) await dialog.locator('#admin-registration-'+field).fill(value);
+  const lookup=dialog.getByRole('button',{name:'بحث في BCE/KBO',exact:true});
+  await lookup.click();
+  await dialog.getByRole('status').filter({hasText:'تعذر البحث'}).waitFor();
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synthetic company');
+  await lookup.click();
+  await dialog.getByText('نتيجة BCE/KBO من البيئة التجريبية', {exact:true}).waitFor();
+  assert.deepEqual(cbeLookups,[{number:'0314.595.348',language:'fr'},{number:'0314.595.348',language:'fr'}]);
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synthetic company');
+  await dialog.getByRole('button',{name:'استخدام بيانات السجل'}).click();
+  assert.equal(await dialog.locator('#admin-registration-company-name').inputValue(),'Synced Registry Company');
+  assert.equal(await dialog.locator('#admin-registration-company-vat_number').inputValue(),'BE0000000003');
+  const save=dialog.getByRole('button',{name:'حفظ الشركة والسائق والمركبة',exact:true});
+  await save.click();
+  await dialog.getByRole('alert').filter({hasText:'أدخل البريد الإلكتروني لإنشاء حساب دخول الشركة.'}).waitFor();
+  assert.equal(created.length,0);
+  await dialog.locator('#admin-registration-company-email').fill('owner@example.invalid');
+  await save.click();
+  await dialog.getByRole('alert').filter({hasText:'تعذر تأكيد الحفظ'}).waitFor();
+  assert.equal(await dialog.locator('#admin-registration-driver-phone').getAttribute('readonly'),'');
+  await dialog.getByRole('button',{name:'إعادة محاولة الحفظ',exact:true}).click();
+  const companyLink=dialog.getByRole('link',{name:'فتح ملف الشركة',exact:true});
+  await companyLink.waitFor();
+  assert.equal(await companyLink.getAttribute('href'),'/admin/companies/3');
+  assert.deepEqual(created[0],created[1]);
+  assert.equal(created[0].company.kbo_number,'0314595348');
+  assert.equal(created[0].company.address,'Rue Exemple 1, 1000 Bruxelles');
+  assert.equal(created[0].company.email,'owner@example.invalid');
+  assert.equal(created[0].company.password,'company-password-123');
+  assert.equal(created[0].fleet.driver.phone,'+32470000000');
+  assert.equal(created[0].fleet.vehicle.plate_number,'SYN-150');
+  assert.ok(await dialog.evaluate(element=>element.scrollWidth<=element.clientWidth+1));
+  assert.equal(errors.length,0,errors.join('\n'));
+  checks.push(name+': CBE lookup, manual review, and unified onboarding retry work');
   await page.goto(base+'/admin/companies/1/settings');
   await page.getByRole('link',{name:/إعدادات التسعير/}).click();
   await page.waitForURL(base+'/admin/companies/1/pricing');

@@ -7,8 +7,14 @@ const credentials = z.object({
  email: z.string().trim().toLowerCase().email(),
  password: z.string().min(12).refine(value => Buffer.byteLength(value, 'utf8') <= 72),
 });
+export async function prepareCompanyLogin(email: unknown, password: unknown) {
+ if (password === undefined || password === '') return {};
+ const parsed = credentials.safeParse({email, password});
+ if (!parsed.success) throw new Response(JSON.stringify({success:false,errorMessage:'حساب الشركة يحتاج بريداً صالحاً وكلمة مرور من 12 حرفاً على الأقل ولا تتجاوز 72 بايت'}),{status:400,headers:{'Content-Type':'application/json'}});
+ return {email:parsed.data.email,password:await hashString(parsed.data.password),role:getAuthRoles().userRole};
+}
 export async function saveCompanyAccount(token: string, id: number | null, company: Record<string, unknown>, password?: unknown, { adminActor, syncLoginEmail = false }: { adminActor?: number; syncLoginEmail?: boolean } = {}) {
- const account: Record<string, unknown> = {};
+ let account: Record<string, unknown> = {};
  if (password !== undefined && password !== '') {
   let loginEmail = company.email;
   if (id !== null && !syncLoginEmail) {
@@ -19,11 +25,7 @@ export async function saveCompanyAccount(token: string, id: number | null, compa
     loginEmail = owner.email;
    }
   }
-  const parsed = credentials.safeParse({email: loginEmail, password});
-  if (!parsed.success) throw new Response(JSON.stringify({success:false,errorMessage:'حساب الشركة يحتاج بريداً صالحاً وكلمة مرور من 12 حرفاً على الأقل ولا تتجاوز 72 بايت'}),{status:400,headers:{'Content-Type':'application/json'}});
-  account.email = parsed.data.email;
-  account.password = await hashString(parsed.data.password);
-  account.role = getAuthRoles().userRole;
+  account = await prepareCompanyLogin(loginEmail, password);
  }
  const client=createPostgrestClient(token);
  const result = id===null&&adminActor

@@ -1,4 +1,5 @@
 'use client';
+import AdminCompanyRegistration from '@/components/operations/AdminCompanyRegistration';
 import CompanyLifecycleAction from '@/components/operations/CompanyLifecycleAction';
 import {DirectoryToolbar} from '@/components/operations/DirectoryToolbar';
 import {useCompanyDirectory} from '@/components/operations/useCompanyDirectory';
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
-  ArrowLeft, Plus, Building2, Settings, Users, Car,
+  ArrowLeft, Building2, Settings, Users, Car,
   Loader2, RefreshCw, Edit, DollarSign, FileText,
   AlertCircle, CheckCircle2, Trash2, Lock, KeyRound
 } from 'lucide-react';
@@ -22,7 +23,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -47,20 +48,15 @@ interface Company {
   portal_login_email?: string;
 }
 
-const emptyNew = { name: '', vat_number: '', kbo_number: '', address: '', email: '', phone: '', password: '' };
-
 function CompaniesPageContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const directory=useCompanyDirectory<Company>('companies',user?.isAdmin===true);
   const companies=directory.result.rows;
   const [saving, setSaving] = useState(false);
-  const loading=directory.loading && !directory.result.rows.length && !directory.error;
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [modeTarget,setModeTarget]=useState<{id:number;mode:string}|null>(null);
   const [switchingMode, setSwitchingMode] = useState<number | null>(null);
-  const [newCompany, setNewCompany] = useState(emptyNew);
   const [editCompany, setEditCompany] = useState({
     id: 0, name: '', vat_number: '', kbo_number: '',
     address: '', email: '', original_email: '', phone: '', new_password: '', login_email: '', sync_login_email: false,
@@ -72,39 +68,6 @@ function CompaniesPageContent() {
   }, [user, isLoading, router]);
 
   const fetchCompanies=directory.reload;
-
-  const handleCreateCompany = async () => {
-    if (saving) return;
-    if (!newCompany.name || !newCompany.vat_number || !newCompany.kbo_number) {
-      toast.error('اسم الشركة ورقم VAT ورقم KBO مطلوبة');
-      return;
-    }
-    if (newCompany.password && !newCompany.email.trim()) { toast.error('البريد الإلكتروني مطلوب لإنشاء حساب دخول الشركة'); return; }
-    if (newCompany.password && (newCompany.password.length < 12 || new TextEncoder().encode(newCompany.password).length > 72)) {
-      toast.error('كلمة المرور يجب أن تكون 12 حرفاً على الأقل ولا تتجاوز 72 بايت');
-      return;
-    }
-    setSaving(true);
-    try {
-      const created = await api.post<Company>('/companies', {
-        name: newCompany.name,
-        vat_number: newCompany.vat_number,
-        kbo_number: newCompany.kbo_number,
-        address: newCompany.address,
-        email: newCompany.email,
-        phone: newCompany.phone,
-        password: newCompany.password || undefined,
-      });
-      toast.success('تم إنشاء الشركة بنجاح');
-      setShowCreateDialog(false);
-      setNewCompany(emptyNew);
-      fetchCompanies();
-    } catch (error: any) {
-      toast.error(error.message || 'فشل إنشاء الشركة');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleOpenEditDialog = (company: Company) => {
     setEditCompany({
@@ -176,7 +139,7 @@ function CompaniesPageContent() {
     return <Badge className={`${s.cls} border-0`}>{s.icon}{s.label}</Badge>;
   };
 
-  if (isLoading || loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
@@ -197,52 +160,7 @@ function CompaniesPageContent() {
             إدارة الشركات
           </h1>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button className="rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
-                  <Plus className="w-5 h-5 ml-2" />شركة جديدة
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>إنشاء شركة جديدة</DialogTitle></DialogHeader>
-                <div className="space-y-4 py-4">
-                  {[
-                    { label: 'اسم الشركة *', key: 'name', placeholder: 'JOUW DRIVER SRL' },
-                    { label: 'رقم VAT *', key: 'vat_number', placeholder: 'BE0123456789' },
-                    { label: 'رقم KBO *', key: 'kbo_number', placeholder: '0123456789' },
-                    { label: 'العنوان', key: 'address', placeholder: 'Brussels, Belgium' },
-                    { label: 'البريد الإلكتروني', key: 'email', placeholder: 'info@company.be', type: 'email' },
-                    { label: 'الهاتف', key: 'phone', placeholder: '+32 2 XXX XX XX' },
-                  ].map(({ label, key, placeholder, type }) => (
-                    <div key={key}>
-                      <Label htmlFor={`new-company-${key}`}>{label}</Label>
-                      <Input
-                        id={`new-company-${key}`}
-                        type={type || 'text'}
-                        value={(newCompany as any)[key]}
-                        onChange={(e) => setNewCompany({ ...newCompany, [key]: e.target.value })}
-                        placeholder={placeholder}
-                        className="rounded-2xl"
-                      />
-                    </div>
-                  ))}
-                  <div>
-                    <Label className="flex items-center gap-2"><Lock className="w-4 h-4" />كلمة مرور لوحة التحكم</Label>
-                    <Input
-                      type="password"
-                      value={newCompany.password}
-                      onChange={(e) => setNewCompany({ ...newCompany, password: e.target.value })}
-                      placeholder="كلمة المرور للدخول إلى لوحة تحكم الشركة"
-                      className="rounded-2xl"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">اختياري — مع البريد الإلكتروني ينشئ حساب دخول للشركة؛ بدونه يُنشأ سجل الشركة فقط</p>
-                  </div>
-                  <Button disabled={saving} aria-busy={saving} onClick={handleCreateCompany} className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600">
-                    <Plus className="w-5 h-5 ml-2" />إنشاء الشركة
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <AdminCompanyRegistration onCreated={fetchCompanies} />
           </div>
         </div>
       </header>
@@ -304,10 +222,9 @@ function CompaniesPageContent() {
       </AlertDialog>
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <DirectoryToolbar kind="companies" filters={directory.filters} setFilter={directory.setFilter} total={directory.result.total} loading={directory.loading} error={directory.error} reload={directory.reload}/>
-        {!companies.length && <div className="mb-6 rounded-2xl border border-dashed p-6 text-center">
+        {!companies.length && !directory.loading && <div className="mb-6 rounded-2xl border border-dashed p-6 text-center">
           <h2 className="font-semibold">لا توجد شركات في القائمة الحالية</h2>
           <p className="mt-2 text-sm text-muted-foreground">أنشئ شركة لتظهر إعدادات التسعير والعقود والسائقين الخاصة بها.</p>
-          <Button className="mt-4" onClick={() => setShowCreateDialog(true)}><Plus className="w-4 h-4 ml-2" />إنشاء أول شركة</Button>
         </div>}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {companies.map((company) => (
