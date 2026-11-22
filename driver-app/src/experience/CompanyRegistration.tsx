@@ -3,13 +3,14 @@ import {Alert, Linking, Modal, Pressable, Text} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {randomUUID} from 'expo-crypto';
 import {API_ORIGIN, ApiError, driverApi, type CompanyRegistrationReceipt} from '../api';
-import {registrationCopy} from '../registration/copy';
+import {minimalRegistrationCopy,registrationCopy} from '../registration/copy';
 import {blankRegistration, chironPortals, companyRegistrationSchema, registrationFields, type CompanyRegistration, type RegistrationField} from '../registration/schema';
 import {SUBSCRIPTION_OFFER, subscriptionOfferCopy} from '../registration/subscription-offer';
 import {usePreferences} from './preferences';
 import {Button, Card, Field, Icon, IconButton, Label, Notice, Row, Screen} from './ui';
 
-const reviewStep = registrationFields.length;
+const steps = [registrationFields[0],registrationFields[2],registrationFields[3]];
+const reviewStep = steps.length;
 const englishOffer = {
   title: 'One-year subscription',
   price: '€50 per month, including 21% VAT',
@@ -23,10 +24,17 @@ const privateField = (name: RegistrationField) => passwordField(name) || name.in
 export default function CompanyRegistrationScreen({onClose}: {onClose: () => void}) {
   const {language, colors, animate} = usePreferences();
   const t = registrationCopy[language];
+  const m = minimalRegistrationCopy[language];
   const offer = language === 'en' ? englishOffer : subscriptionOfferCopy[language];
   const [requestId] = useState(randomUUID);
   const [step, setStep] = useState(0);
   const [values, setValues] = useState(blankRegistration);
+  const [sameCompanyPhone,setSameCompanyPhone] = useState(false);
+  const [lookupBusy,setLookupBusy] = useState(false);
+  const [lookupFailed,setLookupFailed] = useState(false);
+  const importedCompany = useRef<{name?:string;address?:string}>({});
+  const [showChiron,setShowChiron] = useState(false);
+  const titles = [t.steps[0],t.steps[2],t.steps[3],t.steps[4]];
   const [invalid, setInvalid] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [emailCode, setEmailCode] = useState('');
@@ -54,7 +62,7 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
   }
 
   function draft(): CompanyRegistration {
-    return {...values, request_id: requestId, language, subscription_offer: SUBSCRIPTION_OFFER, subscription_acknowledged: true};
+    return {...values, driver_phone:sameCompanyPhone?'':values.driver_phone,same_company_phone:sameCompanyPhone, request_id: requestId, language, subscription_offer: SUBSCRIPTION_OFFER, subscription_acknowledged: true};
   }
 
   function validate(all: boolean) {
@@ -63,24 +71,55 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
     if (Boolean(values.chiron_prod_client_id.trim()) !== Boolean(values.chiron_prod_client_secret.trim())) {
       issues.push(values.chiron_prod_client_id.trim() ? 'chiron_prod_client_secret' : 'chiron_prod_client_id');
     }
-    const fields = all ? issues : issues.filter(name => registrationFields[step]?.some(field => field === name));
+    const fields = all ? issues : issues.filter(name => steps[step]?.some(field => field === name));
     setInvalid(fields);
     if (!fields.length) return true;
     if (all) {
-      const first = registrationFields.findIndex(group => group.some(field => fields.includes(field)));
+      const first = steps.findIndex(group => group.some(field => fields.includes(field)));
       if (first >= 0) setStep(first);
+      if (fields.some(name=>name.startsWith('chiron_'))) setShowChiron(true);
     }
     setMessage(t.invalid);
     return false;
   }
 
   function change(name: RegistrationField, value: string) {
-    setValues(current => ({...current, [name]: value}));
+    if(name==='kbo_number'){
+      const imported=importedCompany.current;
+      importedCompany.current={};
+      setLookupFailed(false);
+      setValues(current=>({...current,kbo_number:value,
+        company_name:current.company_name===imported.name?'':current.company_name,
+        company_address:current.company_address===imported.address?'':current.company_address}));
+    }else{
+      setValues(current=>({...current,[name]:value}));
+      if(name==='company_name')delete importedCompany.current.name;
+      if(name==='company_address')delete importedCompany.current.address;
+    }
     setInvalid(current => current.filter(field => field !== name));
     if (name === 'company_email') {
       setEmailCode('');
       setCodeSent(false);
       setResendAt(0);
+    }
+  }
+
+  async function lookupCompany() {
+    if (lookupBusy || !values.kbo_number.trim()) return;
+    setLookupBusy(true);
+    setLookupFailed(false);
+    try {
+      const data=await driverApi.lookupCompanyRegistration(values.kbo_number,language==='nl'?'nl':'fr');
+      const name=values.company_name.trim()?'':data.name??'';
+      const address=values.company_address.trim()?'':data.address??'';
+      importedCompany.current={name:name||undefined,address:address||undefined};
+      setValues(current=>({...current,kbo_number:data.kbo_number,
+        company_name:name||current.company_name,company_address:address||current.company_address}));
+      setInvalid(current=>current.filter(field=>field!=='kbo_number'&&!(field==='company_name'&&name)&&!(field==='company_address'&&address)));
+    } catch {
+      setLookupFailed(true);
+    } finally {
+      setLookupBusy(false);
     }
   }
 
@@ -143,15 +182,18 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
     const phone = name.endsWith('_phone');
     const password = passwordField(name);
     const secret = password || name.endsWith('_client_secret');
-    const hint = password ? t.passwordHint : name === 'driver_phone' ? t.phoneHint : name === 'kbo_number' ? t.kboHint : name === 'vin' ? t.vinHint : '';
+    const hint = password ? t.passwordHint : name === 'driver_phone' ? t.phoneHint : name === 'kbo_number' ? t.kboHint : '';
     return <React.Fragment key={name}>
-      <Field label={t[name]} value={values[name]} onChangeText={value => change(name, value)} editable={!busy}
+      <Field label={name==='bestuurderspas'?m.optionalCard:name==='driver_password'?m.optionalPassword:t[name]}
+        value={name==='driver_phone'&&sameCompanyPhone?values.company_phone:values[name]}
+        onChangeText={value => change(name, value)} editable={!busy&&!lookupBusy&&!(name==='driver_phone'&&sameCompanyPhone)}
         secureTextEntry={secret} keyboardType={email ? 'email-address' : phone ? 'phone-pad' : 'default'}
         autoComplete={password ? 'new-password' : email ? 'email' : phone ? 'tel' : 'off'}
-        autoCapitalize={email || privateField(name) ? 'none' : name === 'vin' || name === 'plate_number' ? 'characters' : 'sentences'}
-        autoCorrect={false} maxLength={password ? 72 : name === 'vin' ? 17 : secret ? 2048 : name.includes('_client_id') ? 512 : 400}/>
+        autoCapitalize={email || privateField(name) ? 'none' : 'sentences'}
+        autoCorrect={false} maxLength={password ? 72 : secret ? 2048 : name.includes('_client_id') ? 512 : 400}/>
       {invalid.includes(name) ? <Label size={13} color={colors.danger}>{t.fieldError} {hint}</Label>
         : !!hint && <Label muted size={13}>{hint}</Label>}
+      {name==='driver_password'&&<Label muted size={13}>{m.passwordLater}</Label>}
     </React.Fragment>;
   }
 
@@ -169,22 +211,40 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
           <Text selectable style={{color: colors.text, writingDirection: 'ltr'}}>{receipt.request_id}</Text>
           <Button label={t.driverLogin} onPress={onClose}/>
         </Card> : <>
-          <Row><Label size={14} muted numeric>{step + 1} / {t.steps.length}</Label><Label bold size={20}>{t.steps[step]}</Label></Row>
-          {step === 0 && <Label muted size={14}>{t.intro}</Label>}
-          {step === 1 ? <>
+          <Row><Label size={14} muted numeric>{step + 1} / {titles.length}</Label><Label bold size={20}>{titles[step]}</Label></Row>
+          {step === 0 && <>
+            <Label muted size={14}>{t.intro}</Label>
+            <Button secondary label={m.social} icon="open-outline" disabled={lookupBusy}
+              onPress={()=>openReference(API_ORIGIN+'/register-company?lang='+(language==='en'?'fr':language))}/>
+          </>}
+          {step < reviewStep ? <Card>
+            {step===0&&<>
+              {field('kbo_number')}
+              <Button secondary label={m.registry} icon="search-outline" busy={lookupBusy}
+                disabled={lookupBusy||!values.kbo_number.trim()} onPress={()=>void lookupCompany()}/>
+              {lookupFailed&&<Label muted size={13}>{m.manual}</Label>}
+            </>}
+            {steps[step].filter(name=>name!=='kbo_number').map(name=>name==='driver_phone'?
+              <React.Fragment key={name}>
+                <Pressable accessibilityRole="checkbox" accessibilityLabel={m.samePhone}
+                  accessibilityState={{checked:sameCompanyPhone}}
+                  onPress={()=>{setSameCompanyPhone(value=>!value);setInvalid(current=>current.filter(field=>field!=='driver_phone'));}}>
+                  <Row style={{minHeight:44}}><Icon name={sameCompanyPhone?'checkbox-outline':'square-outline'} color={colors.icon}/>
+                    <Label size={14}>{m.samePhone}</Label></Row>
+                </Pressable>
+                {field(name)}
+              </React.Fragment>:field(name))}
+          </Card> : <>
             <Card>
-              <Label bold>{t.testTitle}</Label>
-              <Button secondary label={t.testLink} icon="open-outline" onPress={() => openReference(chironPortals.test)}/>
-              {registrationFields[1].slice(0, 2).map(field)}
+              <Button secondary label={t.steps[1]} icon="settings-outline" disabled={!!busy||uncertain}
+                onPress={()=>setShowChiron(value=>!value)}/>
+              {showChiron&&<>
+                <Label muted size={13}>{t.secretNote}</Label>
+                <Button secondary label={t.testLink} icon="open-outline" onPress={()=>openReference(chironPortals.test)}/>
+                <Button secondary label={t.prodLink} icon="open-outline" onPress={()=>openReference(chironPortals.production)}/>
+                {registrationFields[1].map(field)}
+              </>}
             </Card>
-            <Card>
-              <Label bold>{t.prodTitle}</Label>
-              <Label muted size={13}>{t.prodNote}</Label>
-              {registrationFields[1].slice(2).map(field)}
-              <Label muted size={13}>{t.secretNote}</Label>
-              <Button secondary label={t.guide} icon="open-outline" onPress={() => openReference(chironPortals.guide)}/>
-            </Card>
-          </> : step < reviewStep ? <Card>{registrationFields[step].map(field)}</Card> : <>
             <Card>
               <Label bold>{offer.title}</Label>
               <Label bold>{offer.price}</Label>
@@ -207,8 +267,8 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
                 maxLength={6} keyboardType="number-pad" autoComplete="one-time-code" editable={!busy && !uncertain}/>
             </Card>
             <Card>
-              <Label bold>{t.steps[reviewStep]}</Label>
-              {(['company_name', 'kbo_number', 'plate_number', 'driver_name'] as const).map(name =>
+              <Label bold>{titles[reviewStep]}</Label>
+              {(['company_name', 'kbo_number', 'vehicle_brand', 'vehicle_model', 'driver_name'] as const).map(name =>
                 <Row key={name} style={{flexWrap: 'wrap'}}>
                   <Label muted size={13}>{t[name]}</Label><Label size={14}>{values[name]}</Label>
                 </Row>)}
@@ -217,7 +277,7 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
           </>}
           {!!message && <Notice error>{message}</Notice>}
           <Button label={step < reviewStep ? t.next : uncertain ? t.retry : t.submit} icon="arrow-forward" busy={busy === 'submit'}
-            disabled={!!busy || (step === reviewStep && !uncertain && (!acknowledged || emailCode.length !== 6))}
+            disabled={!!busy || lookupBusy || (step === reviewStep && !uncertain && (!acknowledged || emailCode.length !== 6))}
             onPress={() => void advance()}/>
           {step > 0 && <Button secondary label={t.back} disabled={!!busy || uncertain}
             onPress={() => {setMessage(''); setInvalid([]); setStep(step - 1);}}/>}

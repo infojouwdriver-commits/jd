@@ -1,6 +1,17 @@
 /** Chiron r3.0: https://www.vlaanderen.be/mobiliteit-en-openbare-werken/taxi/rittendatabank-chiron */
 export class ChironError extends Error {
- constructor(message:string,public status=422,public code='CHIRON_CONFIGURATION',public uncertain=false,public receipt?:{httpStatus:number; errors:string[]}){super(message);}
+ status:number;
+ code:string;
+ uncertain:boolean;
+ receipt?:{httpStatus:number;errors:string[]};
+
+ constructor(message:string,status=422,code='CHIRON_CONFIGURATION',uncertain=false,receipt?:{httpStatus:number;errors:string[]}){
+  super(message);
+  this.status=status;
+  this.code=code;
+  this.uncertain=uncertain;
+  this.receipt=receipt;
+ }
 }
 /** Accept both persisted legacy uppercase values and the canonical event values. */
 export function canonicalChironEnvironment(value:unknown):'test'|'production' {
@@ -24,6 +35,10 @@ export function rideMessage(status:'vertrek'|'aankomst',company:any,driver:any,v
  const kbo=String(company.kbo_number||'').replace(/[.\s]/g,'');
  const driverPass=(String(driver.bestuurderspas_number||'').trim()||String(driver.capacity_certificate_number||'').trim()).replace(/[\s-]+/g,'');
  const name=String(company.name||'').trim(),plate=String(vehicle.plate_number||'').trim().replace(/[\s-]+/g,'').toUpperCase();
+ const submittedPass=departure?.rit.uitvoerder?.bestuurderspasnummer??driverPass;
+ if(String(submittedPass).replace(/[\s-]+/g,'')==='12345'||(!departure&&driver.bestuurderspas_unverified===true)){
+  throw new ChironError('أضف رقم بطاقة السائق الرسمي قبل الإرسال إلى Chiron',422,'CHIRON_DRIVER_CARD_REQUIRED');
+ }
  if(!departure&&(!/^\d{10}$/.test(kbo)||!name||!/^[A-Za-z0-9]+$/.test(driverPass)||!/^[A-Z0-9]{7,}$/.test(plate)||!trip.ritnummer||String(trip.ritnummer).length>100))throw new ChironError('أكمل رقم KBO وبطاقة السائق ولوحة المركبة ومعرّف الرحلة');
  if(!departure&&(String(driver.company_id)!==String(company.id)||String(vehicle.company_id)!==String(company.id)))throw new ChironError('السائق والمركبة يجب أن يتبعا الشركة نفسها');
  const rit:any=departure ? {...departure.rit} : {taxibedrijf:{aanbieder:{registratie:kbo,naam:name}},voertuig:{nummerplaat:plate},uitvoerder:{bestuurderspasnummer:driverPass},vertrektijdstip:timestamp(trip.start_time),vertrekpunt:{lengtegraad:numeric(trip.start_lon,-180,180,5,'خط طول الانطلاق'),breedtegraad:numeric(trip.start_lat,-90,90,5,'خط عرض الانطلاق')}};
@@ -42,6 +57,9 @@ export function rideMessage(status:'vertrek'|'aankomst',company:any,driver:any,v
 // Chiron validates decimal places in JSON coordinates (CH1204/1205/1207/1208).
 // Standard JSON.stringify drops trailing zeroes even after a numeric round.
 export function serializeRideMessage(message:ReturnType<typeof rideMessage>):string {
+ if(String(message.rit.uitvoerder?.bestuurderspasnummer??'').replace(/[\s-]+/g,'')==='12345'){
+  throw new ChironError('أضف رقم بطاقة السائق الرسمي قبل الإرسال إلى Chiron',422,'CHIRON_DRIVER_CARD_REQUIRED');
+ }
  const rawNumber=(JSON as typeof JSON & {rawJSON:(source:string)=>unknown}).rawJSON;
  return JSON.stringify(message,(key,value)=>{
   if((key==='lengtegraad'||key==='breedtegraad')&&typeof value==='number'&&Number.isFinite(value))

@@ -4,6 +4,7 @@ import { requestMiddleware, validateRequestBody } from '@/lib/api-utils';
 import { createSuccessResponse, createErrorResponse } from '@/lib/create-response';
 import { generateAdminUserToken } from '@/lib/auth';
 import CrudOperations from '@/lib/crud-operations';
+import {unverifiedBestuurderspas} from '@/lib/company-registration';
 
 // GET - جلب بيانات السائق الكاملة مع مركبته وشركته وجميع مركباته
 export const GET = requestMiddleware(async (request: NextRequest, context) => {
@@ -63,7 +64,7 @@ export const GET = requestMiddleware(async (request: NextRequest, context) => {
         phone: driver.phone,
         national_id: driver.national_id,
         driver_license: driver.driver_license,
-        bestuurderspas_number: driver.bestuurderspas_number,
+        bestuurderspas_number: driver.bestuurderspas_unverified || driver.bestuurderspas_number === unverifiedBestuurderspas ? null : driver.bestuurderspas_number,
         status: driver.status,
         registration_status: driver.registration_status,
         preferred_language: driver.preferred_language,

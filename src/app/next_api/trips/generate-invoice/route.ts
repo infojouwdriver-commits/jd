@@ -77,6 +77,9 @@ export const POST = requestMiddleware(async (request, context) => {
       driver?.bestuurderspas_number ||
       driver?.capacity_certificate_number ||
       null;
+    if (String(dienstnummer ?? '').replace(/[\s-]+/g, '') === '12345') {
+      return createErrorResponse({errorMessage:'Complete the driver card before issuing the receipt', errorCode:'DRIVER_CARD_REQUIRED',status:409});
+    }
     const identificatiecode = vehicle?.chiron_vehicle_id || null;
 
     let toegepastTarief: string;
