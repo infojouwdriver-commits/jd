@@ -51,7 +51,7 @@ export default function CompanyRegistrationDialog({open,onClose,social}:{open:bo
  try{const r=await fetch('/next_api/company-registrations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'same-origin',signal:controller.signal});if(!r.ok){if([400,403,409,429].includes(r.status)){sent.current=null;setUncertain(false);throw new Error(r.status===403?(verifiedEmail?w.failed:t.codeError):r.status===409?t.duplicate:r.status===429?t.rateLimit:t.invalid);}throw Error(t.serverError);}const result=await r.json();if(result.success!==true||result.data?.request_id!==requestId||!['pending','approved','rejected'].includes(result.data.status))throw Error(t.serverError);if(alive.current){setReceipt(result.data);setValues(blank());setEmailCode('');sent.current=null;setUncertain(false);}}
  catch(e){if(alive.current){if(sent.current)setUncertain(true);setError(e instanceof Error&&new Set<string>([t.duplicate,t.rateLimit,t.invalid,t.codeError,w.failed]).has(e.message)?e.message:t.serverError);}}finally{clearTimeout(timer);flight.current=false;if(alive.current)setBusy(false);}
  }
- const importedCompany=useRef<Pick<Partial<RegistryCompany>,'name'|'address'>>({});
+ const importedCompany=useRef<Pick<Partial<RegistryCompany>,'name'|'address'>&{vat?:string}>({});
  function applyRegistryCompany(number:string,company:RegistryCompany){
   if(values.kbo_number!==number)return;
   const updated={
@@ -59,12 +59,14 @@ export default function CompanyRegistrationDialog({open,onClose,social}:{open:bo
    name:!values.company_name.trim()?company.name:undefined,
    address:!values.company_address.trim()?company.address:undefined,
   };
+  const vat=values.vat_number.trim()?'':'BE'+company.kbo_number;
+  if(vat)importedCompany.current.vat=vat;
   if(updated.name)importedCompany.current.name=updated.name;
   if(updated.address)importedCompany.current.address=updated.address;
   setValues(old=>({...old,kbo_number:updated.kbo_number,company_name:updated.name??old.company_name,
-   company_address:updated.address??old.company_address}));
+   company_address:updated.address??old.company_address,vat_number:vat||old.vat_number}));
   setErrors(old=>({...old,kbo_number:'',company_name:updated.name?'':old.company_name,
-   company_address:updated.address?'':old.company_address}));
+   company_address:updated.address?'':old.company_address,vat_number:vat?'':old.vat_number}));
  }
  function changeField(name:Field,value:string){
   if(name==='kbo_number'){
@@ -72,9 +74,11 @@ export default function CompanyRegistrationDialog({open,onClose,social}:{open:bo
    importedCompany.current={};
    setValues(old=>({...old,kbo_number:value,
     company_name:old.company_name===imported.name?'':old.company_name,
+    vat_number:old.vat_number===imported.vat?'':old.vat_number,
     company_address:old.company_address===imported.address?'':old.company_address}));
   }else{
    setValues(old=>({...old,[name]:value}));
+   if(name==='vat_number')delete importedCompany.current.vat;
    if(name==='company_name')delete importedCompany.current.name;
    if(name==='company_address')delete importedCompany.current.address;
   }
