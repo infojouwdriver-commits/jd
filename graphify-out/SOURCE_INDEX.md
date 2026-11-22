@@ -537,11 +537,11 @@ Links target the working tree, so line positions can move after changes.
 - `draft()` — [L64](../driver-app/src/experience/CompanyRegistration.tsx#L64)
 - `validate()` — [L68](../driver-app/src/experience/CompanyRegistration.tsx#L68)
 - `change()` — [L86](../driver-app/src/experience/CompanyRegistration.tsx#L86)
-- `lookupCompany()` — [L107](../driver-app/src/experience/CompanyRegistration.tsx#L107)
-- `sendCode()` — [L126](../driver-app/src/experience/CompanyRegistration.tsx#L126)
-- `advance()` — [L145](../driver-app/src/experience/CompanyRegistration.tsx#L145)
-- `field()` — [L180](../driver-app/src/experience/CompanyRegistration.tsx#L180)
-- `openReference()` — [L200](../driver-app/src/experience/CompanyRegistration.tsx#L200)
+- `lookupCompany()` — [L109](../driver-app/src/experience/CompanyRegistration.tsx#L109)
+- `sendCode()` — [L129](../driver-app/src/experience/CompanyRegistration.tsx#L129)
+- `advance()` — [L148](../driver-app/src/experience/CompanyRegistration.tsx#L148)
+- `field()` — [L183](../driver-app/src/experience/CompanyRegistration.tsx#L183)
+- `openReference()` — [L203](../driver-app/src/experience/CompanyRegistration.tsx#L203)
 
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
@@ -4165,7 +4165,7 @@ Links target the working tree, so line positions can move after changes.
 - `validate()` — [L49](../src/components/registration/CompanyRegistrationDialog.tsx#L49)
 - `submit()` — [L50](../src/components/registration/CompanyRegistrationDialog.tsx#L50)
 - `applyRegistryCompany()` — [L55](../src/components/registration/CompanyRegistrationDialog.tsx#L55)
-- `changeField()` — [L69](../src/components/registration/CompanyRegistrationDialog.tsx#L69)
+- `changeField()` — [L71](../src/components/registration/CompanyRegistrationDialog.tsx#L71)
 
 ## [src/components/registration/CompanyRegistryLookup.tsx](../src/components/registration/CompanyRegistryLookup.tsx)
 

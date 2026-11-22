@@ -60,7 +60,7 @@
     "driver-app/src/experience/BillingReminder.tsx": "d06c97110ffaab595cd9b3e854f9f1d906af1e7dc915d37629329b34c5d04a2d",
     "driver-app/src/experience/BrandMark.tsx": "d1676d8b84bc24fe2060bf4e7fdd831d1cc2f70e22b41f6be3d96ba2cccaa4fb",
     "driver-app/src/experience/ClassicFare.tsx": "7260f86f56a876c2f8f2951a01903858341daf2e1c175ea13da7a537128f77d5",
-    "driver-app/src/experience/CompanyRegistration.tsx": "f0c35e2b9ee2fd85a39e3f6c0784719a19ae9b3ce538da6a304b0e238634f3a7",
+    "driver-app/src/experience/CompanyRegistration.tsx": "858fd4cd3c8fe997efa92816362024255eb1e87cd8b9bbfc94938ba691fb2d9a",
     "driver-app/src/experience/Home.tsx": "595eb78326da6156c742449e11c4f6d017afd7444d970f1fe7fb4311dd76aac4",
     "driver-app/src/experience/JourneyLoading.tsx": "ba5f1d0a2a87066e4fd86449764790b1b0c501ba9cee5476fb23f746af0ded32",
     "driver-app/src/experience/Messages.tsx": "7bb68cadfd793a9e998de14fd88879a1c4c701c492633ef687bb2b172eee048c",
@@ -521,7 +521,7 @@
     "src/components/public/ContactPanel.tsx": "f6f0147cfabc2dafc54a414bc6a4456a38c9b94c35b3aa4cfa330a70eea718d7",
     "src/components/public/PublicInfo.tsx": "d9831c83d553e5a3c4effdd2ab80002e2f0ad80d1dbf64581718866d618198ad",
     "src/components/registration/CompanyRegistrationApprovals.tsx": "6cbd164c495bb1f814e967ace73b96382b7b9decb7400c62756f000fe6bc0488",
-    "src/components/registration/CompanyRegistrationDialog.tsx": "bbf9342f1476280612f4b377390741402b3e57046396ecb02aedc55df5c1c1be",
+    "src/components/registration/CompanyRegistrationDialog.tsx": "fe6e197c1ccef6ee306b28d05fdb73242cb1da19587f9f0cf28f248cfab143c0",
     "src/components/registration/CompanyRegistryLookup.tsx": "2ce4b058fe2e82c658a2f1c2c6ee24eced642531103938703830e6260d89a0c5",
     "src/components/registration/CompanySignInOptions.tsx": "2064509aa68cdbb86e14eb7c5d458f243d3671a7fff16075b3c0e3b7e49c83e0",
     "src/components/registration/copy.ts": "bc5b32e66038ccd3a8829f291e156de08fe2ccfd51015b839bf7ea9b0b7c2ce8",
@@ -704,9 +704,9 @@
   "artifacts": {
     "GRAPH_TREE.html": "33e104973ba329e4a64a84ab0300c6ae407638ab64f109d807b4b05576df42e7",
     "health.json": "03a4c9b02a929801d23578ba1827c944c55a3d2f123583acdc373db69dc7b96d",
-    "SOURCE_INDEX.md": "c5c994abc235b5d8a6492d0b1eef218a65c7e3b29d2236af3099445b8b04230b",
-    "GRAPH_REPORT.md": "5a3f56745ceeb71e50fed19149fd75f8ed334f31919c5630b67c011859a2ef09",
-    "graph.json": "d07e14bb41d67115b725edb1dd4e494233e496358182ff80139243190217962c"
+    "SOURCE_INDEX.md": "b09b9dad146bc293bb8057d53aa575b94b8d49f8060abd468ec17a31674a6394",
+    "GRAPH_REPORT.md": "732677c3548c356d7ceaf17845ea59f0f714fa6b3acd44de70d6de3dd1f1e488",
+    "graph.json": "172e1d11a1bc3cbda6820138c0cb5c497c09d1729a70ae20431b8bf0bfb1bc10"
   },
   "nodes": 4012,
   "edges": 13521,
