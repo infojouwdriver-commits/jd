@@ -1,5 +1,8 @@
 name: Publish verified company registration and BCE Open Data
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-company-registration-open-data.yml']
   workflow_dispatch:
     inputs:
       image:
@@ -27,9 +30,59 @@ env:
   BUILD_RUN: '45045116972'
   DATA_SHA: 0590153316a5c077b0031d88f0da2a06c9e57b487b1b5ab90c52d88df96ffa44
   DATA_NAME: JOUW-DRIVER-BCE-KBO-2026-11-21.sqlite.gz
+  AUTOMATIC_IMAGE: ghcr.io/infojouwdriver-commits/jd@sha256:99ba8c73a3bd7693954ea9bf8e0fcc43b3b8d13ca10c7cefd9456907c4fdc6e5
+  AUTOMATIC_BACKUP: '45001127074'
 jobs:
+  accept:
+    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Queue verified BCE registration production rollout')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      acceptance_run: ${{ steps.run.outputs.acceptance_run }}
+    steps:
+      - name: Dispatch and await the existing exact-image acceptance
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'ACCEPT_JOB'
+          import fs from 'node:fs';
+          import {setTimeout} from 'node:timers/promises';
+          const {GITHUB_REPOSITORY,GITHUB_SHA,GH_TOKEN,AUTOMATIC_IMAGE,BUILD_RUN}=process.env;
+          const headers={Authorization:'Bearer '+GH_TOKEN,Accept:'application/vnd.github+json','Content-Type':'application/json'};
+          const base='https://api.github.com/repos/'+GITHUB_REPOSITORY;
+          const api=async (path,options={})=>{
+            const response=await fetch(base+path,{...options,headers,signal:AbortSignal.timeout(20000)});
+            if(!response.ok) throw Error('Image acceptance request failed: HTTP '+response.status);
+            return response;
+          };
+          const workflow='/actions/workflows/verify-domain-image.yml';
+          const createdAfter=Date.now()-1000;
+          await api(workflow+'/dispatches',{method:'POST',body:JSON.stringify({ref:'main',inputs:{image:AUTOMATIC_IMAGE,release_run:BUILD_RUN}})});
+          let runId;
+          for(let attempt=0;attempt<70;attempt++){
+            const query=await api(workflow+'/runs?branch=main&event=workflow_dispatch&head_sha='+GITHUB_SHA+'&per_page=10');
+            const {workflow_runs:runs}=await query.json();
+            const run=runId?runs.find(r=>r.id===runId):runs.find(r=>Date.parse(r.created_at)>=createdAfter);
+            if(run){
+              runId=run.id;
+              if(run.status==='completed'){
+                if(run.conclusion!=='success')throw Error('Exact-image acceptance failed: '+run.html_url);
+                fs.appendFileSync(process.env.GITHUB_OUTPUT,'acceptance_run='+run.id+'\n');
+                console.log('Verified candidate with acceptance run '+run.id);
+                break;
+              }
+            }
+            if(attempt===69)throw Error('Timed out waiting for exact-image acceptance');
+            await setTimeout(10000);
+          }
+          ACCEPT_JOB
   publish:
-    if: github.ref == 'refs/heads/main'
+    needs: accept
+    if: always() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.accept.result == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
@@ -42,9 +95,9 @@ jobs:
         id: verified
         env:
           GH_TOKEN: ${{ github.token }}
-          IMAGE: ${{ inputs.image }}
-          ACCEPTANCE_RUN: ${{ inputs.acceptance_run }}
-          BACKUP_RUN: ${{ inputs.backup_run }}
+          IMAGE: ${{ github.event_name == 'push' && env.AUTOMATIC_IMAGE || inputs.image }}
+          ACCEPTANCE_RUN: ${{ github.event_name == 'push' && needs.accept.outputs.acceptance_run || inputs.acceptance_run }}
+          BACKUP_RUN: ${{ github.event_name == 'push' && env.AUTOMATIC_BACKUP || inputs.backup_run }}
         run: |
           node --input-type=module <<'GATE'
           import fs from 'node:fs';
@@ -96,7 +149,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          IMAGE: ${{ inputs.image }}
+          IMAGE: ${{ github.event_name == 'push' && env.AUTOMATIC_IMAGE || inputs.image }}
           BACKUP: ${{ steps.verified.outputs.backup }}
           BUILD_ATTEMPT: ${{ steps.verified.outputs.build_attempt }}
           ASSET: ${{ steps.verified.outputs.asset }}
