@@ -9,14 +9,14 @@ permissions:
   actions: read
   packages: read
 env:
-  REVISION: caf83bcc0e4afb8e7bf58de138d429ed05735cfb
-  BASELINE: d9daeb8cc8cc548c8c1f8b2336bdff868a44202d
-  BUILD_RUN: '45072806379'
+  REVISION: 32cad64d18567da23186597940e49f1c3d6a74ce
+  BASELINE: caf83bcc0e4afb8e7bf58de138d429ed05735cfb
+  BUILD_RUN: '45075961852'
 jobs:
   accept:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     permissions:
       actions: write
       contents: read
@@ -33,7 +33,11 @@ jobs:
           set -euo pipefail
           export DOCKER_CONFIG="$(mktemp -d)"
           trap 'rm -rf "$DOCKER_CONFIG"' EXIT
-          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN")
+          for attempt_wait in $(seq 1 100); do
+            run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN")
+            if jq -e '.status == "completed"' <<<"$run" >/dev/null; then break; fi
+            sleep 15
+          done
           jq -e --arg revision "$REVISION" '.head_sha == $revision and .status == "completed" and .conclusion == "success" and .path == ".github/workflows/release-domain-candidate.yml"' <<<"$run" >/dev/null
           attempt=$(jq -r '.run_attempt' <<<"$run")
           [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
