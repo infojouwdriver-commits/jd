@@ -1,7 +1,7 @@
 # Graph Report - JOUW DRIVER  (2026-11-22)
 
 ## Corpus Check
-- 695 files · ~294,143 words
+- 695 files · ~294,142 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
