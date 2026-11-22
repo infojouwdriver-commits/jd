@@ -9,14 +9,14 @@ permissions:
   actions: read
   packages: read
 env:
-  REVISION: caf83bcc0e4afb8e7bf58de138d429ed05735cfb
-  BASELINE: d9daeb8cc8cc548c8c1f8b2336bdff868a44202d
-  BUILD_RUN: '45072806379'
+  REVISION: 6fe9ac448d38755e4a11f6a7c6f9fb9d59964c06
+  BASELINE: caf83bcc0e4afb8e7bf58de138d429ed05735cfb
+  BUILD_RUN: '45075551037'
 jobs:
   accept:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 35
     permissions:
       actions: write
       contents: read
@@ -33,6 +33,7 @@ jobs:
           set -euo pipefail
           export DOCKER_CONFIG="$(mktemp -d)"
           trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          gh run watch "$BUILD_RUN" --exit-status --interval 15
           run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$BUILD_RUN")
           jq -e --arg revision "$REVISION" '.head_sha == $revision and .status == "completed" and .conclusion == "success" and .path == ".github/workflows/release-domain-candidate.yml"' <<<"$run" >/dev/null
           attempt=$(jq -r '.run_attempt' <<<"$run")
