@@ -15,6 +15,9 @@ test('public read cannot authorize anonymous writes', () => {
  assert.equal(publicEndpoint('/next_api/gdpr/privacy-policy','POST'),false);
  assert.equal(publicEndpoint('/next_api/stats','GET'),false);
  assert.equal(publicEndpoint('/next_api/companies','GET'),false);
+ assert.equal(publicEndpoint('/next_api/company-registrations/company-lookup','POST'),true);
+ assert.equal(publicEndpoint('/next_api/company-registrations/company-lookup','GET'),false);
+ assert.equal(publicEndpoint('/next_api/companies/cbe','POST'),false);
 });
 test('driver cannot enter admin paths, manager cannot edit platform settings', () => {
  assert.equal(memberEndpoint('/next_api/companies','PUT','driver'),false);

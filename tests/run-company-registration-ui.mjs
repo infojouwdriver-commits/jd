@@ -13,12 +13,31 @@ try{
  browser=await chromium.launch({headless:true});
  for(const language of ['ar','fr','nl'])for(const viewport of [{width:360,height:640},{width:1280,height:900}]){
   const context=await browser.newContext({viewport,reducedMotion:'reduce',serviceWorkers:'block'});await context.addInitScript(l=>{localStorage.setItem('driver_language',l);localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));},language);
-  const page=await context.newPage(),errors=[],posts=[];let fail=true;page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage(),errors=[],posts=[];let fail=true,cbeUnavailable=false;page.on('pageerror',e=>errors.push(e.message));
+  await context.route(base+'/next_api/company-registrations/company-lookup',route=>{
+   assert.deepEqual(route.request().postDataJSON(),{number:cbeUnavailable?'1000000021':'BE 0314.595.348',language:language==='nl'?'nl':'fr'});
+   return cbeUnavailable?route.fulfill({status:503,json:{errorCode:'unavailable'}}):
+    route.fulfill({status:200,json:{data:{kbo_number:'0314595348',name:'Registry Company',address:'Registry Street 12'}}});
+  });
   await context.route(base+'/next_api/auth/send-verification',route=>route.fulfill({status:200,json:{success:true,data:{data:true}}}));
   await context.route(base+'/next_api/company-registrations',async route=>{posts.push(route.request().postDataJSON());if(fail){fail=false;return route.fulfill({status:503,json:{success:false}});}await new Promise(r=>setTimeout(r,100));return route.fulfill({status:201,json:{success:true,data:{request_id:posts.at(-1).request_id,status:'pending'}}});});
   await page.goto(base+'/'+language);await page.waitForFunction(l=>document.querySelector('.jd')?.getAttribute('dir')===(l==='ar'?'rtl':'ltr'),language);await page.locator('.jd-header-register').click();
   const dialog=page.locator('.cr-dialog');await dialog.waitFor();assert.equal(await dialog.getAttribute('dir'),language==='ar'?'rtl':'ltr');
-  await dialog.locator('button[type=submit]').click();assert.ok(await dialog.locator('[aria-invalid=true]').count()>0);await page.waitForFunction(()=>document.activeElement?.id==='registration-company_name',null,{timeout:5000}).catch(async e=>{await page.screenshot({path:output+'/focus-failure.png'});throw e;});
+  await dialog.locator('button[type=submit]').click();assert.ok(await dialog.locator('[aria-invalid=true]').count()>0);await page.waitForFunction(()=>document.activeElement?.id==='registration-kbo_number',null,{timeout:5000}).catch(async e=>{await page.screenshot({path:output+'/focus-failure.png'});throw e;});
+  const lookup=dialog.getByRole('button',{name:/بحث في السجل البلجيكي|Rechercher dans la BCE|Zoeken in de KBO/});
+  const kbo=dialog.locator('#registration-kbo_number'),address=dialog.locator('#registration-company_address');
+  await kbo.fill('BE 0314.595.348');await lookup.click();
+  await dialog.locator('#registration-cbe-status').filter({hasText:/تم العثور|Entreprise trouvée|Onderneming gevonden/}).waitFor();
+  assert.equal(await kbo.inputValue(),'0314595348');
+  assert.equal(await dialog.locator('#registration-company_name').inputValue(),'Registry Company');
+  assert.equal(await address.inputValue(),'Registry Street 12');
+  await address.fill('Address entered by customer');
+  await kbo.fill('1000000021');
+  assert.equal(await dialog.locator('#registration-company_name').inputValue(),'');
+  assert.equal(await address.inputValue(),'Address entered by customer');
+  cbeUnavailable=true;await lookup.click();
+  await dialog.locator('#registration-cbe-status').filter({hasText:/يدويًا|manuellement|handmatig/}).waitFor();
+  assert.equal(await address.inputValue(),'Address entered by customer');
   for(let step=0;step<3;step++){
    for(const input of await dialog.locator('input').all()){const name=await input.getAttribute('name');await input.fill(values[name]);}
    if(step===0){await page.keyboard.press('Escape');const confirm=page.getByRole('alertdialog');await confirm.waitFor();await confirm.locator('button').first().click();await confirm.waitFor({state:'hidden'});assert.equal(await dialog.locator('#registration-company_name').inputValue(),values.company_name);}

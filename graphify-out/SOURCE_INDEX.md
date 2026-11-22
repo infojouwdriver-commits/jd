@@ -2664,6 +2664,14 @@ Links target the working tree, so line positions can move after changes.
 - `PUT` — [L3](../src/app/next_api/company-portal/vehicles/route.ts#L3)
 - `DELETE` — [L4](../src/app/next_api/company-portal/vehicles/route.ts#L4)
 
+## [src/app/next_api/company-registrations/company-lookup/route.ts](../src/app/next_api/company-registrations/company-lookup/route.ts)
+
+- `company-lookup/route.ts` — [L1](../src/app/next_api/company-registrations/company-lookup/route.ts#L1)
+- `input` — [L6](../src/app/next_api/company-registrations/company-lookup/route.ts#L6)
+- `headers` — [L7](../src/app/next_api/company-registrations/company-lookup/route.ts#L7)
+- `unavailable()` — [L9](../src/app/next_api/company-registrations/company-lookup/route.ts#L9)
+- `POST` — [L13](../src/app/next_api/company-registrations/company-lookup/route.ts#L13)
+
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
@@ -4125,15 +4133,26 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
 - `CompanyRegistrationDialog.tsx` — [L1](../src/components/registration/CompanyRegistrationDialog.tsx#L1)
-- `SocialRegistration` — [L19](../src/components/registration/CompanyRegistrationDialog.tsx#L19)
-- `webSteps` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
-- `steps` — [L25](../src/components/registration/CompanyRegistrationDialog.tsx#L25)
-- `RegistrationField()` — [L29](../src/components/registration/CompanyRegistrationDialog.tsx#L29)
-- `CompanyRegistrationDialog()` — [L33](../src/components/registration/CompanyRegistrationDialog.tsx#L33)
-- `sendEmailCode()` — [L38](../src/components/registration/CompanyRegistrationDialog.tsx#L38)
-- `close()` — [L44](../src/components/registration/CompanyRegistrationDialog.tsx#L44)
-- `validate()` — [L45](../src/components/registration/CompanyRegistrationDialog.tsx#L45)
-- `submit()` — [L46](../src/components/registration/CompanyRegistrationDialog.tsx#L46)
+- `SocialRegistration` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
+- `webSteps` — [L21](../src/components/registration/CompanyRegistrationDialog.tsx#L21)
+- `steps` — [L26](../src/components/registration/CompanyRegistrationDialog.tsx#L26)
+- `RegistrationField()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
+- `CompanyRegistrationDialog()` — [L34](../src/components/registration/CompanyRegistrationDialog.tsx#L34)
+- `sendEmailCode()` — [L39](../src/components/registration/CompanyRegistrationDialog.tsx#L39)
+- `close()` — [L45](../src/components/registration/CompanyRegistrationDialog.tsx#L45)
+- `validate()` — [L46](../src/components/registration/CompanyRegistrationDialog.tsx#L46)
+- `submit()` — [L47](../src/components/registration/CompanyRegistrationDialog.tsx#L47)
+- `applyRegistryCompany()` — [L52](../src/components/registration/CompanyRegistrationDialog.tsx#L52)
+- `changeField()` — [L66](../src/components/registration/CompanyRegistrationDialog.tsx#L66)
+
+## [src/components/registration/CompanyRegistryLookup.tsx](../src/components/registration/CompanyRegistryLookup.tsx)
+
+- `CompanyRegistryLookup.tsx` — [L1](../src/components/registration/CompanyRegistryLookup.tsx#L1)
+- `copy` — [L7](../src/components/registration/CompanyRegistryLookup.tsx#L7)
+- `RegistryCompany` — [L31](../src/components/registration/CompanyRegistryLookup.tsx#L31)
+- `Result` — [L32](../src/components/registration/CompanyRegistryLookup.tsx#L32)
+- `CompanyRegistryLookup()` — [L34](../src/components/registration/CompanyRegistryLookup.tsx#L34)
+- `search()` — [L53](../src/components/registration/CompanyRegistryLookup.tsx#L53)
 
 ## [src/components/registration/CompanySignInOptions.tsx](../src/components/registration/CompanySignInOptions.tsx)
 
