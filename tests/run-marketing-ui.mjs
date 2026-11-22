@@ -328,9 +328,9 @@ try {
         const stepNumbersFit = await dialog.locator(".cr-steps li > span").evaluateAll((steps) => {
           const box = document.querySelector(".cr-dialog").getBoundingClientRect();
           const rects = steps.map((step) => step.getBoundingClientRect());
-          return rects.length === 5 && rects.every((r, i) => r.left >= box.left && r.right <= box.right && rects.every((other, j) => i === j || r.right <= other.left + 1 || other.right <= r.left + 1));
+          return rects.length === 4 && rects.every((r, i) => r.left >= box.left && r.right <= box.right && rects.every((other, j) => i === j || r.right <= other.left + 1 || other.right <= r.left + 1));
         });
-        assert.ok(stepNumbersFit, "All five registration steps remain visible and separate");
+        assert.ok(stepNumbersFit, "All four registration steps remain visible and separate");
         await p.screenshot({ path: output + "/registration-" + lang + "-" + width + ".png" });
         await p.keyboard.press("Escape");
         await dialog.waitFor({ state: "hidden" });

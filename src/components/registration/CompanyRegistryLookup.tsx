@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 
 const copy = {
   ar: {
+    source: 'المصدر BCE/KBO Open Data',
     search: 'بحث في السجل البلجيكي',
     invalid: 'أدخل رقم شركة بلجيكيًا صالحًا للبحث.',
     found: 'تم العثور على الشركة. راجع الاسم والعنوان وأكمل الحقول الناقصة.',
@@ -13,6 +14,7 @@ const copy = {
     unavailable: 'البحث غير متاح حاليًا. يمكنك متابعة التسجيل بإدخال البيانات يدويًا.',
   },
   fr: {
+    source: 'Source BCE/KBO Open Data',
     search: 'Rechercher dans la BCE',
     invalid: 'Saisissez un numéro d’entreprise belge valide.',
     found: 'Entreprise trouvée. Vérifiez le nom et l’adresse, puis complétez les champs manquants.',
@@ -20,6 +22,7 @@ const copy = {
     unavailable: 'La recherche est indisponible. Vous pouvez poursuivre en saisissant les données manuellement.',
   },
   nl: {
+    source: 'Bron BCE/KBO Open Data',
     search: 'Zoeken in de KBO',
     invalid: 'Voer een geldig Belgisch ondernemingsnummer in.',
     found: 'Onderneming gevonden. Controleer de naam en het adres en vul de ontbrekende velden in.',
@@ -28,7 +31,7 @@ const copy = {
   },
 };
 
-export type RegistryCompany = { kbo_number: string; name: string | null; address: string | null };
+export type RegistryCompany = { kbo_number: string; name: string | null; address: string | null; snapshot_date?: string };
 type Result = 'invalid' | 'found' | 'missing' | 'unavailable';
 
 export function CompanyRegistryLookup({ children, disabled, language, number, onFound }: {
@@ -43,7 +46,7 @@ export function CompanyRegistryLookup({ children, disabled, language, number, on
   const apply = useRef(onFound);
   useEffect(() => { apply.current = onFound; }, [onFound]);
   const [busyNumber, setBusyNumber] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ number: string; result: Result } | null>(null);
+  const [feedback, setFeedback] = useState<{ number: string; result: Result; snapshotDate?: string } | null>(null);
   const busy = busyNumber === number;
 
   useEffect(() => () => {
@@ -76,7 +79,7 @@ export function CompanyRegistryLookup({ children, disabled, language, number, on
       const { data } = await response.json() as { data: RegistryCompany };
       if (controller.signal.aborted) return;
       apply.current(number, data);
-      setFeedback({ number: data.kbo_number, result: 'found' });
+      setFeedback({ number: data.kbo_number, result: 'found', snapshotDate: data.snapshot_date });
     } catch {
       if (!controller.signal.aborted) setFeedback({ number, result: 'unavailable' });
     } finally {
@@ -95,7 +98,9 @@ export function CompanyRegistryLookup({ children, disabled, language, number, on
       {t.search}
     </Button>
     <p className="cr-hint" id="registration-cbe-status" role="status">
-      {feedback?.number === number ? t[feedback.result] : ''}
+      {feedback?.number === number && <>
+        {t[feedback.result]}{feedback.snapshotDate && <> · {t.source} <bdi>{feedback.snapshotDate}</bdi></>}
+      </>}
     </p>
   </div>;
 }

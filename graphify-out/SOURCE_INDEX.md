@@ -1834,6 +1834,16 @@ Links target the working tree, so line positions can move after changes.
 - `repository` — [L9](../scripts/export-schema.mjs#L9)
 - `exportSchema()` — [L10](../scripts/export-schema.mjs#L10)
 
+## [scripts/import-cbe-open-data.py](../scripts/import-cbe-open-data.py)
+
+- `import-cbe-open-data.py` — [L1](../scripts/import-cbe-open-data.py#L1)
+- `Build a read-only lookup index from an official CBE Open Data full ZIP.` — [L2](../scripts/import-cbe-open-data.py#L2)
+- `rows()` — [L15](../scripts/import-cbe-open-data.py#L15)
+- `number()` — [L20](../scripts/import-cbe-open-data.py#L20)
+- `address()` — [L27](../scripts/import-cbe-open-data.py#L27)
+- `build_database()` — [L40](../scripts/import-cbe-open-data.py#L40)
+- `main()` — [L87](../scripts/import-cbe-open-data.py#L87)
+
 ## [scripts/import-staging.mjs](../scripts/import-staging.mjs)
 
 - `import-staging.mjs` — [L1](../scripts/import-staging.mjs#L1)
@@ -2559,9 +2569,9 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/companies/cbe/route.ts](../src/app/next_api/companies/cbe/route.ts)
 
 - `cbe/route.ts` — [L1](../src/app/next_api/companies/cbe/route.ts#L1)
-- `query` — [L7](../src/app/next_api/companies/cbe/route.ts#L7)
-- `errors` — [L8](../src/app/next_api/companies/cbe/route.ts#L8)
-- `POST` — [L19](../src/app/next_api/companies/cbe/route.ts#L19)
+- `query` — [L8](../src/app/next_api/companies/cbe/route.ts#L8)
+- `errors` — [L9](../src/app/next_api/companies/cbe/route.ts#L9)
+- `POST` — [L20](../src/app/next_api/companies/cbe/route.ts#L20)
 
 ## [src/app/next_api/companies/onboarding/route.ts](../src/app/next_api/companies/onboarding/route.ts)
 
@@ -2667,10 +2677,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-registrations/company-lookup/route.ts](../src/app/next_api/company-registrations/company-lookup/route.ts)
 
 - `company-lookup/route.ts` — [L1](../src/app/next_api/company-registrations/company-lookup/route.ts#L1)
-- `input` — [L6](../src/app/next_api/company-registrations/company-lookup/route.ts#L6)
-- `headers` — [L7](../src/app/next_api/company-registrations/company-lookup/route.ts#L7)
-- `unavailable()` — [L9](../src/app/next_api/company-registrations/company-lookup/route.ts#L9)
-- `POST` — [L13](../src/app/next_api/company-registrations/company-lookup/route.ts#L13)
+- `input` — [L7](../src/app/next_api/company-registrations/company-lookup/route.ts#L7)
+- `headers` — [L8](../src/app/next_api/company-registrations/company-lookup/route.ts#L8)
+- `unavailable()` — [L10](../src/app/next_api/company-registrations/company-lookup/route.ts#L10)
+- `POST` — [L14](../src/app/next_api/company-registrations/company-lookup/route.ts#L14)
 
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
@@ -3956,21 +3966,22 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/operations/AdminCompanyRegistration.tsx](../src/components/operations/AdminCompanyRegistration.tsx)
 
 - `AdminCompanyRegistration.tsx` — [L1](../src/components/operations/AdminCompanyRegistration.tsx#L1)
-- `Field` — [L15](../src/components/operations/AdminCompanyRegistration.tsx#L15)
-- `kboField` — [L23](../src/components/operations/AdminCompanyRegistration.tsx#L23)
-- `companyFields` — [L24](../src/components/operations/AdminCompanyRegistration.tsx#L24)
-- `driverFields` — [L34](../src/components/operations/AdminCompanyRegistration.tsx#L34)
-- `vehicleFields` — [L42](../src/components/operations/AdminCompanyRegistration.tsx#L42)
-- `cbeStatus` — [L50](../src/components/operations/AdminCompanyRegistration.tsx#L50)
-- `Receipt` — [L54](../src/components/operations/AdminCompanyRegistration.tsx#L54)
-- `fieldValues()` — [L56](../src/components/operations/AdminCompanyRegistration.tsx#L56)
-- `fieldsFor()` — [L63](../src/components/operations/AdminCompanyRegistration.tsx#L63)
-- `AdminCompanyRegistration()` — [L77](../src/components/operations/AdminCompanyRegistration.tsx#L77)
-- `changeOpen()` — [L93](../src/components/operations/AdminCompanyRegistration.tsx#L93)
-- `clearLookup()` — [L105](../src/components/operations/AdminCompanyRegistration.tsx#L105)
-- `searchCbe()` — [L113](../src/components/operations/AdminCompanyRegistration.tsx#L113)
-- `applyCbeCompany()` — [L146](../src/components/operations/AdminCompanyRegistration.tsx#L146)
-- `submit()` — [L157](../src/components/operations/AdminCompanyRegistration.tsx#L157)
+- `CbeCompany` — [L13](../src/components/operations/AdminCompanyRegistration.tsx#L13)
+- `Field` — [L16](../src/components/operations/AdminCompanyRegistration.tsx#L16)
+- `kboField` — [L24](../src/components/operations/AdminCompanyRegistration.tsx#L24)
+- `companyFields` — [L25](../src/components/operations/AdminCompanyRegistration.tsx#L25)
+- `driverFields` — [L35](../src/components/operations/AdminCompanyRegistration.tsx#L35)
+- `vehicleFields` — [L43](../src/components/operations/AdminCompanyRegistration.tsx#L43)
+- `cbeStatus` — [L51](../src/components/operations/AdminCompanyRegistration.tsx#L51)
+- `Receipt` — [L55](../src/components/operations/AdminCompanyRegistration.tsx#L55)
+- `fieldValues()` — [L57](../src/components/operations/AdminCompanyRegistration.tsx#L57)
+- `fieldsFor()` — [L64](../src/components/operations/AdminCompanyRegistration.tsx#L64)
+- `AdminCompanyRegistration()` — [L78](../src/components/operations/AdminCompanyRegistration.tsx#L78)
+- `changeOpen()` — [L94](../src/components/operations/AdminCompanyRegistration.tsx#L94)
+- `clearLookup()` — [L106](../src/components/operations/AdminCompanyRegistration.tsx#L106)
+- `searchCbe()` — [L114](../src/components/operations/AdminCompanyRegistration.tsx#L114)
+- `applyCbeCompany()` — [L147](../src/components/operations/AdminCompanyRegistration.tsx#L147)
+- `submit()` — [L158](../src/components/operations/AdminCompanyRegistration.tsx#L158)
 
 ## [src/components/operations/BillingPanel.tsx](../src/components/operations/BillingPanel.tsx)
 
@@ -4149,10 +4160,10 @@ Links target the working tree, so line positions can move after changes.
 
 - `CompanyRegistryLookup.tsx` — [L1](../src/components/registration/CompanyRegistryLookup.tsx#L1)
 - `copy` — [L7](../src/components/registration/CompanyRegistryLookup.tsx#L7)
-- `RegistryCompany` — [L31](../src/components/registration/CompanyRegistryLookup.tsx#L31)
-- `Result` — [L32](../src/components/registration/CompanyRegistryLookup.tsx#L32)
-- `CompanyRegistryLookup()` — [L34](../src/components/registration/CompanyRegistryLookup.tsx#L34)
-- `search()` — [L53](../src/components/registration/CompanyRegistryLookup.tsx#L53)
+- `RegistryCompany` — [L34](../src/components/registration/CompanyRegistryLookup.tsx#L34)
+- `Result` — [L35](../src/components/registration/CompanyRegistryLookup.tsx#L35)
+- `CompanyRegistryLookup()` — [L37](../src/components/registration/CompanyRegistryLookup.tsx#L37)
+- `search()` — [L56](../src/components/registration/CompanyRegistryLookup.tsx#L56)
 
 ## [src/components/registration/CompanySignInOptions.tsx](../src/components/registration/CompanySignInOptions.tsx)
 
@@ -4841,6 +4852,14 @@ Links target the working tree, so line positions can move after changes.
 - `brevoProviderId()` — [L10](../src/lib/brevo-mail.ts#L10)
 - `brevoWebhookAuthorized()` — [L18](../src/lib/brevo-mail.ts#L18)
 - `brevoMailEvent()` — [L22](../src/lib/brevo-mail.ts#L22)
+
+## [src/lib/cbe-open-data.ts](../src/lib/cbe-open-data.ts)
+
+- `Database` — [L1](../src/lib/cbe-open-data.ts#L1)
+- `cbe-open-data.ts` — [L1](../src/lib/cbe-open-data.ts#L1)
+- `Sqlite` — [L5](../src/lib/cbe-open-data.ts#L5)
+- `OpenDataCompany` — [L7](../src/lib/cbe-open-data.ts#L7)
+- `lookupOpenDataCompany()` — [L16](../src/lib/cbe-open-data.ts#L16)
 
 ## [src/lib/cbe-public-search.ts](../src/lib/cbe-public-search.ts)
 

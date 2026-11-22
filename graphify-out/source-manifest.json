@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "9cf5e3f188f3d861cbd5cdfb497b515e3fe6230d",
+  "source_commit_context": "1126041365c069d56564b86d16b7585f0af86ea9",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -185,6 +185,7 @@
     "scripts/database-readiness.mjs": "066d20969c3bfb0f5feb4fa077a9429f6b6ba2d2949144617c703a7257f6559a",
     "scripts/enroll-admin-mfa.mjs": "715f6bc7f7ddd4f42e4b155a3af2ba938a774d8610b8a75699469b9c9e4e7496",
     "scripts/export-schema.mjs": "2d665d8b124a79a4e3cf5d477160be89184c51d33c41b97be3397b48a365f27c",
+    "scripts/import-cbe-open-data.py": "6ad7e54021c4ca38632b9f5492a736d674fe8b3885de7d58b4b5b8d09fd760c4",
     "scripts/import-staging.mjs": "d1cc517c3ba4c032a628430b6a94efb3f7ded98cb04ec29aa2820d4adb766422",
     "scripts/independent-schema.mjs": "0c8ef25a4cf0158c8919cedfcd8c0fa02564f8e5bddabd643a77996aa6514b51",
     "scripts/migrate-secrets.mjs": "6e505a54211be84d579bd44c5e8fd824a4ca040a33693b44c15daf112020e69b",
@@ -291,7 +292,7 @@
     "src/app/next_api/chiron/sync/route.ts": "80d3c952220ee059caa9bb9ce9809738482b008b3b23faca746694252b08df2c",
     "src/app/next_api/companies/[id]/pricing/documents/route.ts": "4c82d1e93eec3cfc87ea7315c3ecb2fd03fc8eefc5c862319c38b406b639b59e",
     "src/app/next_api/companies/[id]/pricing/route.ts": "f224c7cc9d7884c8219b771b1530366dccc5c95b68d482a5e73a53af85bd78dd",
-    "src/app/next_api/companies/cbe/route.ts": "8005587b12a2a863a2e2e8da490402cddb90536c4b3e4440858cc79b8a63b696",
+    "src/app/next_api/companies/cbe/route.ts": "6f728188af29f36be7667e9da8ec8dc9e84ba0b9709c2adec6f7b7c00b918dbc",
     "src/app/next_api/companies/onboarding/route.ts": "0056919c926e666b79d6f223336d0b842700ff522e310b5572ea041463073083",
     "src/app/next_api/companies/route.ts": "f1cef8ed79f90917ba95ca7c62f053f9bfc51fcfaa6e562eb3b9b67832504f12",
     "src/app/next_api/company-changes/route.ts": "1772c9e2754a68927080b2691269feaea0ed04b2a4cdc0d8ed241f55646e07d8",
@@ -310,7 +311,7 @@
     "src/app/next_api/company-portal/set-password/route.ts": "a90703cbd0a8688eb10c537adecf43e2cfbc9542d654d203e24d362fed8c38fb",
     "src/app/next_api/company-portal/staff/route.ts": "9554d8418de9152ef4f23ea5e2d7254e0bc66082a27914a79af0d7bece476792",
     "src/app/next_api/company-portal/vehicles/route.ts": "cc3f96a76c40d4670dbc2e60a8bb72da4a0be44de0617a9aece66c6023ae610f",
-    "src/app/next_api/company-registrations/company-lookup/route.ts": "350863beee3de0fad637ac707b7c897ac3b3f7ab2433a86c947d8d8a878baae7",
+    "src/app/next_api/company-registrations/company-lookup/route.ts": "8a8b2a1f07afa49a14535e3200da9f5197ed63366857bb0ba049b055438c3a20",
     "src/app/next_api/company-registrations/route.ts": "171182f8a85907eb503257328d576898982c968fa14c64e22ddf3ccb734c1ce4",
     "src/app/next_api/company-registrations/service/route.ts": "714dbbe095db84c5f3c445694a83d6a1278d43772891e6d8fc8e6466dc874cd9",
     "src/app/next_api/company-staff/route.ts": "9554d8418de9152ef4f23ea5e2d7254e0bc66082a27914a79af0d7bece476792",
@@ -497,7 +498,7 @@
     "src/components/landing/platform.css": "4f83e775ab69c9dc4c011d0261c2080be7001a1535961326ccf5e8e76e4232cb",
     "src/components/navigation/ManagementShell.tsx": "fcdf934cb5270df3076a8c7d4c49222bdd74bc4dc29e10f1a08cb2ca27feaf0a",
     "src/components/navigation/management-menu.ts": "417cb29f745326f5ff833a5748f346f1f33444a54583f4172a04b667f8795905",
-    "src/components/operations/AdminCompanyRegistration.tsx": "8209b11a382f976250ee164a8d1ef57c4c33e06ebebe39dae2d1652e258e3905",
+    "src/components/operations/AdminCompanyRegistration.tsx": "edbbdac8e787cea3efd074e0ca4d45785bbe731edb39fbe35487f53d8382c043",
     "src/components/operations/BillingPanel.tsx": "b4887fe8a9a0f9b42114c965003a5da55357648c2eeb2f9cbc9b3c788f6c49df",
     "src/components/operations/CompanyChangesPanel.tsx": "493d58d840808616f4c2b238c070527b42c93b1fb6486dde2ddf086cf1f00f85",
     "src/components/operations/CompanyLifecycleAction.tsx": "ca2f4e840d6782ae2c98ffd06c6db39e9786a73054c5c8250778aac43b5532e1",
@@ -520,7 +521,7 @@
     "src/components/public/PublicInfo.tsx": "d9831c83d553e5a3c4effdd2ab80002e2f0ad80d1dbf64581718866d618198ad",
     "src/components/registration/CompanyRegistrationApprovals.tsx": "3691d246d3cdd563a97244e5224af35a7d35157d871731cef5de213ab1934e89",
     "src/components/registration/CompanyRegistrationDialog.tsx": "635715820940b7a9f95876a053029b45a76901d141a519dbe0e5924606aedd00",
-    "src/components/registration/CompanyRegistryLookup.tsx": "17cdcd16b2249b390b22e12c438c80782579157dc3bd7365cee89f0e97afe820",
+    "src/components/registration/CompanyRegistryLookup.tsx": "2ce4b058fe2e82c658a2f1c2c6ee24eced642531103938703830e6260d89a0c5",
     "src/components/registration/CompanySignInOptions.tsx": "2064509aa68cdbb86e14eb7c5d458f243d3671a7fff16075b3c0e3b7e49c83e0",
     "src/components/registration/copy.ts": "bc5b32e66038ccd3a8829f291e156de08fe2ccfd51015b839bf7ea9b0b7c2ce8",
     "src/components/registration/registration.css": "adebd3e297caf9cc78e1203756045aa6cf72266d160b47d4ee1e9dc10db7dc95",
@@ -597,6 +598,7 @@
     "src/lib/approval-mail-scheduler.ts": "d8db900b022f60ef8b762c227cae0bb9618b3f78c5b6e399812f6f83ec4b6c94",
     "src/lib/auth.ts": "f7ec20261dbe0760a80f6f4622921260c7c174f411342bf88f6d72000f442ccb",
     "src/lib/brevo-mail.ts": "c75d775c0df6c07ff909bfaa1a2339421344fb7dd91d27f89f9ee66e320aa220",
+    "src/lib/cbe-open-data.ts": "67d7663edbe3752167d6911d43133a874142dacf5b3ce84bfb985982d2241e59",
     "src/lib/cbe-public-search.ts": "dee556e784ab16b16714533c2f30e2e2c4cabd7645e48c9ef74687187c8ff282",
     "src/lib/chiron-protocol.ts": "27d91ce87a34f3e244fc4d0e37e86dcbf15962701d66ca8d7f318d30a794e288",
     "src/lib/chiron-retry.ts": "c865f4c35fc5d1cceb93edf05f227af2b9a31e6059292f5a6cafa5a2280f581c",
@@ -699,18 +701,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "c87d1db17e3020fb103aceb471c0cfe37f44c331a046be9a7dea0e3c3e8a3e1c",
-    "health.json": "4a1ab506b7cc2ef4298a7059ffe3ec7c6268cf9eebfa9e69ecab57107cc34168",
-    "SOURCE_INDEX.md": "e20423a166d60a8b64648646c972fdc913917177225fa31321f2969687f0f401",
-    "GRAPH_REPORT.md": "e859e872b181e2dbfbcb76eea087b4b45b01c2f63f422fc0330cd3ed97806b9d",
-    "graph.json": "72a2544b516973d40c8645be587fd68fb8ac2cb96940af4d7c6f1b98e3705fdf"
+    "GRAPH_TREE.html": "0281e817dc5c9a960f5c43504fa860b1e054f50bd82e4a3ad15cba873efb756e",
+    "health.json": "3837fc41bc7aa3ba3456d15d317e89ef25612c7853b02d7c0d43ad4f2fbd9e7c",
+    "SOURCE_INDEX.md": "be9aa65c2fc4fa75c9b811fa10bf9a9b767d5c2339cc5654a5065d71c2a4be93",
+    "GRAPH_REPORT.md": "250bd37b191a4cd28e73e1ad4d15bb7e0a9a8805f52e0a53570dc4b05f9091bc",
+    "graph.json": "248c3ddc6e88683c5c2ff9f44631244dabac58d794521b3cfe29689d9d916e5f"
   },
-  "nodes": 3983,
-  "edges": 13460,
-  "raw_edges": 13755,
-  "communities": 209,
+  "nodes": 4001,
+  "edges": 13501,
+  "raw_edges": 13796,
+  "communities": 205,
   "confidence_counts": {
-    "EXTRACTED": 13506,
+    "EXTRACTED": 13547,
     "INFERRED": 249
   }
 }

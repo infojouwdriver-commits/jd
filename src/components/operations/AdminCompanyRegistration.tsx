@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ApiError, api } from '@/lib/api-client';
-import type { CbeCompany } from '@/lib/cbe-public-search';
+import type { CbeCompany as WebserviceCompany } from '@/lib/cbe-public-search';
+type CbeCompany = WebserviceCompany & { snapshot_date?: string };
 import { useLanguage } from '@/contexts/LanguageContext';
 
 type Field = {
@@ -240,7 +241,7 @@ export default function AdminCompanyRegistration({onCreated}: {onCreated: () => 
               {cbeMessage && <p role="status" className="text-sm text-muted-foreground">{cbeMessage}</p>}
               {cbeCompany && <div className="space-y-2 rounded-lg border bg-muted/40 p-3" aria-live="polite">
                 <p className="text-sm font-semibold">
-                  {cbeCompany.environment === 'test' ? 'نتيجة BCE/KBO من البيئة التجريبية' : 'البيانات المسجّلة في BCE/KBO'}
+                  {cbeCompany.snapshot_date ? <span>BCE/KBO Open Data · <bdi>{cbeCompany.snapshot_date}</bdi></span> : cbeCompany.environment === 'test' ? 'نتيجة BCE/KBO من البيئة التجريبية' : 'البيانات المسجّلة في BCE/KBO'}
                 </p>
                 <p className="text-sm">حالة المؤسسة: {cbeStatus[cbeCompany.status]}</p>
                 {cbeCompany.name && <p className="break-words font-medium" dir="auto">{cbeCompany.name}</p>}
