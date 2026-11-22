@@ -214,7 +214,7 @@
     "src/app/admin/companies/[id]/settings/page.tsx": "ff921c6b122af4d872f967bda3de5437ef4dbc02ff7f492570e6334a0122c7ff",
     "src/app/admin/companies/page.tsx": "fd330c338010aa7c34550319272d99d6d268692363c5b3382d1fd980f8798c68",
     "src/app/admin/distributors/page.tsx": "4cc04e792aab726a8398e15b6e98786513bbfc8823fa52ee88542117719df146",
-    "src/app/admin/drivers/page.tsx": "18d2edeae456eac13e2a94f5ee9594a72465028deb8a4cd867b20b68e5e81d94",
+    "src/app/admin/drivers/page.tsx": "44db6ac7133ade036396dc3b9e12a4bcf2b66738cfbd6749ead6f93dae99ddc8",
     "src/app/admin/email-templates/page.tsx": "b613680b4ce043347840fc9be03e96171bd5b501240ae107fcfa59532f49e8c7",
     "src/app/admin/fleet/page.tsx": "f72c7893dd90f097076ebc4d4a755969ce3f8f5627d9cb54605129a65b4d8bbd",
     "src/app/admin/gdpr/page.tsx": "e838bd818aac28b57eba54bb716a9b3cb1f4da9cc02a8784f138950e883211a2",
@@ -334,7 +334,7 @@
     "src/app/next_api/drivers/billing-notice/route.ts": "b01cbbeec1fb506c9840df4e4441073061cd63c793506692c1638e5911bc9c29",
     "src/app/next_api/drivers/me/route.ts": "ce17d5869c7d920fba891549a850e15bc5e876c130906ed0cb6f2caa38dc8435",
     "src/app/next_api/drivers/pricing/route.ts": "1395512c28f16d2feb03161334bb247f7db754640dc8d37b6be04b8ae2ac7ebd",
-    "src/app/next_api/drivers/profile/route.ts": "4ec74a733a4eee873fbe09093875bf25e6057eec35a21be5637d5c77882b3f6f",
+    "src/app/next_api/drivers/profile/route.ts": "f840c19373424258cc150e07584e85155395e0cd90767b4c52634164dad2a22b",
     "src/app/next_api/drivers/route.ts": "cebe2b0e432901bc88d9f5236ba430b1509165ac7ed6e8017f465715deeb099b",
     "src/app/next_api/drivers/shifts/pdf/route.ts": "f27162080b8a2e0e907b1b3d9eb737a406f00455945e0691f3e0ad5653125444",
     "src/app/next_api/drivers/shifts/route.ts": "5c1fd765d9a11be1ff7290b707c0515eb6fdd01b6c688c3fa6df753093c9da21",
@@ -703,17 +703,17 @@
   },
   "artifacts": {
     "GRAPH_TREE.html": "33e104973ba329e4a64a84ab0300c6ae407638ab64f109d807b4b05576df42e7",
-    "health.json": "d8ba99253b5f3d2b4e58cc114e07149ddb37b57cca3ebcf2f04a96d78fc7725e",
-    "SOURCE_INDEX.md": "dbc0c381ae71c187776cea692e05305685bec8e5a395f4b06cc14e24908c7917",
-    "GRAPH_REPORT.md": "9d99d890009bf93ee9b5496de79ce9cefee4a9771ce6bfd94c726653f72c70ed",
-    "graph.json": "fbf7a2c909961fbe6982bdba76641bc38d1f91d79e41ca11f41068f946f0493c"
+    "health.json": "03a4c9b02a929801d23578ba1827c944c55a3d2f123583acdc373db69dc7b96d",
+    "SOURCE_INDEX.md": "c5c994abc235b5d8a6492d0b1eef218a65c7e3b29d2236af3099445b8b04230b",
+    "GRAPH_REPORT.md": "16c861b4e343571e9adff48f7c135f7803d654a119b6107177759c17dcb733ac",
+    "graph.json": "d07e14bb41d67115b725edb1dd4e494233e496358182ff80139243190217962c"
   },
   "nodes": 4012,
-  "edges": 13517,
-  "raw_edges": 13813,
+  "edges": 13521,
+  "raw_edges": 13817,
   "communities": 216,
   "confidence_counts": {
-    "EXTRACTED": 13565,
+    "EXTRACTED": 13569,
     "INFERRED": 248
   }
 }
