@@ -15,7 +15,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useLanguage, type AppLanguage } from "@/contexts/LanguageContext";
-import CompanyRegistrationDialog from "@/components/registration/CompanyRegistrationDialog";
+import CompanyRegistrationDialog, { type SocialRegistration } from "@/components/registration/CompanyRegistrationDialog";
 import CookiePreferencesButton from "@/components/gdpr/CookiePreferencesButton";
 import { portalHref, registrationHandoff } from "@/lib/portal-origin";
 import { subscriptionOfferCopy } from "@/lib/subscription-offer";
@@ -34,7 +34,8 @@ const downloadCopy = {
 export default function PlatformLanding({
   startRegistration = false,
   locale,
-}: { startRegistration?: boolean; locale?: AppLanguage } = {}) {
+  socialRegistration,
+}: { startRegistration?: boolean; locale?: AppLanguage; socialRegistration?: SocialRegistration } = {}) {
   const context = useLanguage();
   const setLanguageRef = useRef(context.setLanguage);
   setLanguageRef.current = context.setLanguage;
@@ -315,6 +316,7 @@ export default function PlatformLanding({
         <CompanyRegistrationDialog
           open={registration}
           onClose={closeRegistration}
+          social={socialRegistration}
         />
       )}
     </div>

@@ -1117,7 +1117,7 @@ Links target the working tree, so line positions can move after changes.
 - `"schema".company_registrations` — [L4](../migrations/20261017_company_registration.sql#L4)
 - `company_registrations_status_time` — [L9](../migrations/20261017_company_registration.sql#L9)
 - `"schema".security_submit_company_registration()` — [L15](../migrations/20261017_company_registration.sql#L15)
-- `"schema".security_review_company_registration()` — [L49](../migrations/20261017_company_registration.sql#L49)
+- `"schema".security_review_company_registration()` — [L50](../migrations/20261017_company_registration.sql#L50)
 
 ## [migrations/20261018_company_lifecycle.sql](../migrations/20261018_company_lifecycle.sql)
 
@@ -1407,6 +1407,12 @@ Links target the working tree, so line positions can move after changes.
 
 - `20261121_admin_company_onboarding.sql` — [source](../migrations/20261121_admin_company_onboarding.sql#)
 - `"schema".admin_company_onboarding` — [L3](../migrations/20261121_admin_company_onboarding.sql#L3)
+
+## [migrations/20261122_company_social_registration.sql](../migrations/20261122_company_social_registration.sql)
+
+- `20261122_company_social_registration.sql` — [source](../migrations/20261122_company_social_registration.sql#)
+- `company_social_identity_unique` — [L6](../migrations/20261122_company_social_registration.sql#L6)
+- `"schema".security_submit_social_company_subscription()` — [L11](../migrations/20261122_company_social_registration.sql#L11)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -2115,6 +2121,16 @@ Links target the working tree, so line positions can move after changes.
 - `VehiclesPageContent()` — [L62](../src/app/admin/vehicles/page.tsx#L62)
 - `VehiclesPage()` — [L487](../src/app/admin/vehicles/page.tsx#L487)
 
+## [src/app/company-access/[provider]/callback/route.ts](../src/app/company-access/%5Bprovider%5D/callback/route.ts)
+
+- `callback/route.ts` — [L1](../src/app/company-access/%5Bprovider%5D/callback/route.ts#L1)
+- `callback()` — [L14](../src/app/company-access/%5Bprovider%5D/callback/route.ts#L14)
+
+## [src/app/company-access/[provider]/start/route.ts](../src/app/company-access/%5Bprovider%5D/start/route.ts)
+
+- `[provider]/start/route.ts` — [L1](../src/app/company-access/%5Bprovider%5D/start/route.ts#L1)
+- `GET()` — [L5](../src/app/company-access/%5Bprovider%5D/start/route.ts#L5)
+
 ## [src/app/company/dashboard/page.tsx](../src/app/company/dashboard/page.tsx)
 
 - `company/dashboard/page.tsx` — [L1](../src/app/company/dashboard/page.tsx#L1)
@@ -2367,7 +2383,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `login/page.tsx` — [L1](../src/app/login/page.tsx#L1)
 - `dynamic` — [L3](../src/app/login/page.tsx#L3)
-- `LoginPage()` — [L7](../src/app/login/page.tsx#L7)
+- `LoginPage()` — [L8](../src/app/login/page.tsx#L8)
 
 ## [src/app/next_api/admin/users/route.ts](../src/app/next_api/admin/users/route.ts)
 
@@ -2651,10 +2667,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
-- `POST` — [L14](../src/app/next_api/company-registrations/route.ts#L14)
-- `GET` — [L29](../src/app/next_api/company-registrations/route.ts#L29)
-- `review` — [L36](../src/app/next_api/company-registrations/route.ts#L36)
-- `PUT` — [L37](../src/app/next_api/company-registrations/route.ts#L37)
+- `POST` — [L15](../src/app/next_api/company-registrations/route.ts#L15)
+- `GET` — [L39](../src/app/next_api/company-registrations/route.ts#L39)
+- `review` — [L46](../src/app/next_api/company-registrations/route.ts#L46)
+- `PUT` — [L47](../src/app/next_api/company-registrations/route.ts#L47)
 
 ## [src/app/next_api/company-registrations/service/route.ts](../src/app/next_api/company-registrations/service/route.ts)
 
@@ -3131,7 +3147,7 @@ Links target the working tree, so line positions can move after changes.
 
 ## [src/app/next_api/trips/start/route.ts](../src/app/next_api/trips/start/route.ts)
 
-- `start/route.ts` — [L1](../src/app/next_api/trips/start/route.ts#L1)
+- `trips/start/route.ts` — [L1](../src/app/next_api/trips/start/route.ts#L1)
 - `POST` — [L13](../src/app/next_api/trips/start/route.ts#L13)
 
 ## [src/app/next_api/trips/summary/route.ts](../src/app/next_api/trips/summary/route.ts)
@@ -3204,8 +3220,8 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/register-company/page.tsx](../src/app/register-company/page.tsx)
 
 - `register-company/page.tsx` — [L1](../src/app/register-company/page.tsx#L1)
-- `metadata` — [L2](../src/app/register-company/page.tsx#L2)
-- `RegistrationPage()` — [L3](../src/app/register-company/page.tsx#L3)
+- `metadata` — [L5](../src/app/register-company/page.tsx#L5)
+- `RegistrationPage()` — [L7](../src/app/register-company/page.tsx#L7)
 
 ## [src/app/robots.ts](../src/app/robots.ts)
 
@@ -3472,15 +3488,15 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/auth/LoginPageClient.tsx](../src/components/auth/LoginPageClient.tsx)
 
 - `LoginPageClient.tsx` — [L1](../src/components/auth/LoginPageClient.tsx#L1)
-- `ModeEnum` — [L14](../src/components/auth/LoginPageClient.tsx#L14)
-- `LOGIN` — [L15](../src/components/auth/LoginPageClient.tsx#L15)
-- `REGISTER` — [L16](../src/components/auth/LoginPageClient.tsx#L16)
-- `RESET` — [L17](../src/components/auth/LoginPageClient.tsx#L17)
-- `PortalEnum` — [L20](../src/components/auth/LoginPageClient.tsx#L20)
-- `ADMIN` — [L21](../src/components/auth/LoginPageClient.tsx#L21)
-- `COMPANY` — [L22](../src/components/auth/LoginPageClient.tsx#L22)
-- `LoginPageContent()` — [L25](../src/components/auth/LoginPageClient.tsx#L25)
-- `LoginPageClient()` — [L160](../src/components/auth/LoginPageClient.tsx#L160)
+- `ModeEnum` — [L16](../src/components/auth/LoginPageClient.tsx#L16)
+- `LOGIN` — [L17](../src/components/auth/LoginPageClient.tsx#L17)
+- `REGISTER` — [L18](../src/components/auth/LoginPageClient.tsx#L18)
+- `RESET` — [L19](../src/components/auth/LoginPageClient.tsx#L19)
+- `PortalEnum` — [L22](../src/components/auth/LoginPageClient.tsx#L22)
+- `ADMIN` — [L23](../src/components/auth/LoginPageClient.tsx#L23)
+- `COMPANY` — [L24](../src/components/auth/LoginPageClient.tsx#L24)
+- `LoginPageContent()` — [L27](../src/components/auth/LoginPageClient.tsx#L27)
+- `LoginPageClient()` — [L162](../src/components/auth/LoginPageClient.tsx#L162)
 
 ## [src/components/auth/PasswordInput.tsx](../src/components/auth/PasswordInput.tsx)
 
@@ -3791,8 +3807,8 @@ Links target the working tree, so line positions can move after changes.
 - `PlatformLanding.tsx` — [L1](../src/components/landing/PlatformLanding.tsx#L1)
 - `downloadCopy` — [L28](../src/components/landing/PlatformLanding.tsx#L28)
 - `PlatformLanding()` — [L34](../src/components/landing/PlatformLanding.tsx#L34)
-- `openRegistration()` — [L71](../src/components/landing/PlatformLanding.tsx#L71)
-- `closeRegistration()` — [L85](../src/components/landing/PlatformLanding.tsx#L85)
+- `openRegistration()` — [L72](../src/components/landing/PlatformLanding.tsx#L72)
+- `closeRegistration()` — [L86](../src/components/landing/PlatformLanding.tsx#L86)
 
 ## [src/components/landing/StatCounter.tsx](../src/components/landing/StatCounter.tsx)
 
@@ -4109,12 +4125,21 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
 - `CompanyRegistrationDialog.tsx` — [L1](../src/components/registration/CompanyRegistrationDialog.tsx#L1)
-- `RegistrationField()` — [L16](../src/components/registration/CompanyRegistrationDialog.tsx#L16)
-- `CompanyRegistrationDialog()` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
-- `sendEmailCode()` — [L24](../src/components/registration/CompanyRegistrationDialog.tsx#L24)
-- `close()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
-- `validate()` — [L31](../src/components/registration/CompanyRegistrationDialog.tsx#L31)
-- `submit()` — [L32](../src/components/registration/CompanyRegistrationDialog.tsx#L32)
+- `SocialRegistration` — [L19](../src/components/registration/CompanyRegistrationDialog.tsx#L19)
+- `webSteps` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
+- `steps` — [L25](../src/components/registration/CompanyRegistrationDialog.tsx#L25)
+- `RegistrationField()` — [L29](../src/components/registration/CompanyRegistrationDialog.tsx#L29)
+- `CompanyRegistrationDialog()` — [L33](../src/components/registration/CompanyRegistrationDialog.tsx#L33)
+- `sendEmailCode()` — [L38](../src/components/registration/CompanyRegistrationDialog.tsx#L38)
+- `close()` — [L44](../src/components/registration/CompanyRegistrationDialog.tsx#L44)
+- `validate()` — [L45](../src/components/registration/CompanyRegistrationDialog.tsx#L45)
+- `submit()` — [L46](../src/components/registration/CompanyRegistrationDialog.tsx#L46)
+
+## [src/components/registration/CompanySignInOptions.tsx](../src/components/registration/CompanySignInOptions.tsx)
+
+- `CompanySignInOptions.tsx` — [L1](../src/components/registration/CompanySignInOptions.tsx#L1)
+- `captions` — [L7](../src/components/registration/CompanySignInOptions.tsx#L7)
+- `CompanySignInOptions()` — [L13](../src/components/registration/CompanySignInOptions.tsx#L13)
 
 ## [src/components/registration/copy.ts](../src/components/registration/copy.ts)
 
@@ -4929,6 +4954,27 @@ Links target the working tree, so line positions can move after changes.
 
 - `company-registration.ts` — [L1](../src/lib/company-registration.ts#L1)
 
+## [src/lib/company-social.ts](../src/lib/company-social.ts)
+
+- `company-social.ts` — [L1](../src/lib/company-social.ts#L1)
+- `CompanyProvider` — [L5](../src/lib/company-social.ts#L5)
+- `provider` — [L6](../src/lib/company-social.ts#L6)
+- `identityFields` — [L7](../src/lib/company-social.ts#L7)
+- `flowFields` — [L8](../src/lib/company-social.ts#L8)
+- `Flow` — [L13](../src/lib/company-social.ts#L13)
+- `companySocialProofCookie` — [L14](../src/lib/company-social.ts#L14)
+- `companySocialFlowCookie` — [L15](../src/lib/company-social.ts#L15)
+- `googleKeys` — [L16](../src/lib/company-social.ts#L16)
+- `appleKeys` — [L17](../src/lib/company-social.ts#L17)
+- `companySocialConfig()` — [L19](../src/lib/company-social.ts#L19)
+- `signingKey()` — [L33](../src/lib/company-social.ts#L33)
+- `seal()` — [L39](../src/lib/company-social.ts#L39)
+- `unseal()` — [L44](../src/lib/company-social.ts#L44)
+- `companySocialIdentity` — [L51](../src/lib/company-social.ts#L51)
+- `makeCompanyProof()` — [L56](../src/lib/company-social.ts#L56)
+- `createCompanySocialFlow()` — [L60](../src/lib/company-social.ts#L60)
+- `exchangeCompanySocialCode()` — [L76](../src/lib/company-social.ts#L76)
+
 ## [src/lib/company-staff.ts](../src/lib/company-staff.ts)
 
 - `company-staff.ts` — [L1](../src/lib/company-staff.ts#L1)
@@ -5661,6 +5707,12 @@ Links target the working tree, so line positions can move after changes.
 
 - `utils.ts` — [L1](../src/lib/utils.ts#L1)
 - `cn()` — [L4](../src/lib/utils.ts#L4)
+
+## [src/lib/web-company-registration.ts](../src/lib/web-company-registration.ts)
+
+- `web-company-registration.ts` — [L1](../src/lib/web-company-registration.ts#L1)
+- `optionalChiron()` — [L4](../src/lib/web-company-registration.ts#L4)
+- `webCompanyRegistrationSchema` — [L6](../src/lib/web-company-registration.ts#L6)
 
 ## [src/lib/web-trip-chiron.ts](../src/lib/web-trip-chiron.ts)
 
