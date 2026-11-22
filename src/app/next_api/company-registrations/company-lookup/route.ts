@@ -24,7 +24,7 @@ export const POST = requestMiddleware(async request => {
   if (limited) return limited;
 
   const indexed = lookupOpenDataCompany(number, parsed.data.language);
-  if (indexed) return Response.json({ data: indexed }, { headers });
+  if (indexed) return Response.json({ success: true, data: indexed }, { headers });
   if (indexed === null) {
     return Response.json({ errorCode: 'no_active_record' }, { status: 404, headers });
   }
@@ -39,7 +39,7 @@ export const POST = requestMiddleware(async request => {
       return Response.json({ errorCode: 'no_active_record' }, { status: 404, headers });
     }
     const { kbo_number, name, address } = company;
-    return Response.json({ data: { kbo_number, name, address } }, { headers });
+    return Response.json({ success: true, data: { kbo_number, name, address } }, { headers });
   } catch (error) {
     if (!(error instanceof CbeSearchError)) throw error;
     if (['not_found', 'cancelled', 'not_yet_active'].includes(error.code)) {

@@ -26,3 +26,11 @@ export const registrationCopy={
   stay:'Continue registration', discard:'Close and discard', privacy:'Privacy policy', login:'Company sign-in', driverLogin:'Driver sign-in', retry:'Retry to confirm submission',
  },
 } as const;
+
+
+export const minimalRegistrationCopy = {
+ ar:{samePhone:'استخدام رقم هاتف الشركة', optionalCard:'رقم بطاقة السائق (اختياري)', optionalPassword:'كلمة مرور السائق (اختيارية)', passwordLater:'يمكن للإدارة تعيين كلمة مرور السائق بعد التسجيل.', registry:'بحث في السجل البلجيكي', manual:'يمكنك إكمال بيانات الشركة يدويًا.', social:'التسجيل باستخدام Google أو Apple عبر الموقع'},
+ fr:{samePhone:'Utiliser le téléphone de l’entreprise', optionalCard:'N° de carte chauffeur (facultatif)', optionalPassword:'Mot de passe chauffeur (facultatif)', passwordLater:'L’administration peut définir le mot de passe du chauffeur après l’inscription.', registry:'Rechercher dans la BCE', manual:'Vous pouvez renseigner les données de l’entreprise manuellement.', social:'S’inscrire avec Google ou Apple sur le site'},
+ nl:{samePhone:'Telefoonnummer van het bedrijf gebruiken', optionalCard:'Bestuurderspasnummer (optioneel)', optionalPassword:'Wachtwoord chauffeur (optioneel)', passwordLater:'Het beheer kan het wachtwoord van de chauffeur na registratie instellen.', registry:'Zoeken in de KBO', manual:'U kunt de bedrijfsgegevens handmatig invullen.', social:'Registreren met Google of Apple via de website'},
+ en:{samePhone:'Use the company phone number', optionalCard:'Driver card number (optional)', optionalPassword:'Driver password (optional)', passwordLater:'An administrator can set the driver password after registration.', registry:'Search the Belgian company register', manual:'You can fill in company details manually.', social:'Register with Google or Apple on the website'},
+};

@@ -205,6 +205,10 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       if (!current.vehicles.some(vehicle => vehicle.id === current.profile.driver.current_vehicle_id)) throw Error('اختر مركبة نشطة من سيارات شركتك قبل بدء الرحلة.');
       return current.profile;
     },
+    lookupCompanyRegistration(number: string, language: 'fr' | 'nl') {
+      return requestOnce<{kbo_number:string;name:string|null;address:string|null}>(
+        '/next_api/company-registrations/company-lookup', {number, language}, 'POST', undefined, 'omit');
+    },
     async sendCompanyRegistrationCode(details: {email:string;request_id:string;language:CompanyRegistration['language']}) {
       const result=await requestOnce<{data:boolean}>('/next_api/auth/send-verification',
         {...details,type:'company-registration'},'POST',undefined,'omit');

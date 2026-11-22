@@ -40,6 +40,16 @@ try{
   assert.equal(await address.inputValue(),'Address entered by customer');
   for(let step=0;step<3;step++){
    for(const input of await dialog.locator('input').all()){const name=await input.getAttribute('name');await input.fill(values[name]);}
+   if(step===1)assert.equal(await dialog.locator('input').count(),2);
+   if(step===2){
+    const phone=dialog.locator('#registration-driver_phone'),reuse=dialog.locator('#registration-same-phone');
+    assert.equal(await dialog.locator('#registration-driver_license').count(),0);
+    await reuse.click();assert.equal(await phone.inputValue(),values.company_phone);assert.equal(await phone.isDisabled(),true);
+    await reuse.click();assert.equal(await phone.inputValue(),values.driver_phone);assert.equal(await phone.isEnabled(),true);
+    await reuse.click();
+    await dialog.locator('#registration-bestuurderspas').fill('');
+    await dialog.locator('#registration-driver_password').fill('');
+   }
    if(step===0){await page.keyboard.press('Escape');const confirm=page.getByRole('alertdialog');await confirm.waitFor();await confirm.locator('button').first().click();await confirm.waitFor({state:'hidden'});assert.equal(await dialog.locator('#registration-company_name').inputValue(),values.company_name);}
    const submit=dialog.locator('button[type=submit]');await submit.scrollIntoViewIfNeeded();assert.ok(await submit.isVisible());await submit.click();await page.waitForFunction(n=>Number(document.querySelector('.cr-steps li[aria-current=step] span')?.textContent)===n,step+2,{timeout:5000}).catch(async error=>{console.error('Registration transition failed',JSON.stringify({language,viewport,fromStep:step+1,currentStep:await dialog.locator('.cr-steps li[aria-current=step] span').textContent(),invalidFields:await dialog.locator('[aria-invalid=true]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('name')||node.id)),alerts:await dialog.locator('.cr-error').allTextContents()}));await page.screenshot({path:output+'/transition-failure.png'});throw error;});console.log('PASS registration transition',language,viewport.width,step+1,'to',step+2);
   }
@@ -53,7 +63,7 @@ try{
   await page.screenshot({path:output+'/review-state.png'});assert.equal(await dialog.locator('input:not([type=checkbox]):not(#registration-email-code)').count(),0);assert.equal((await dialog.innerText()).includes('synthetic-secret'),false);assert.equal((await dialog.innerText()).includes(values.company_password),false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));const box=await dialog.boundingBox();assert.ok(box.y>=0&&box.y+box.height<=viewport.height+1,'Dialog stays inside short viewport');
   await page.screenshot({path:`${output}/registration-${language}-${viewport.width}.png`});
-  await dialog.locator('button[type=submit]').click();await dialog.locator('.cr-error').waitFor();assert.equal(posts.length,1);await dialog.locator('button[type=submit]').click();await dialog.locator('.cr-success').waitFor();assert.equal(posts.length,2);assert.equal(posts[0].chiron_test_client_id,'');assert.equal(posts[0].chiron_test_client_secret,'');assert.deepEqual(posts[0],posts[1]);assert.equal(await dialog.locator('input:not([type=checkbox]):not(#registration-email-code)').count(),0);assert.ok((await dialog.locator('.cr-success').innerText()).includes(posts[0].request_id));assert.equal(page.url(),base+'/'+language);
+  await dialog.locator('button[type=submit]').click();await dialog.locator('.cr-error').waitFor();assert.equal(posts.length,1);await dialog.locator('button[type=submit]').click();await dialog.locator('.cr-success').waitFor();assert.equal(posts.length,2);assert.equal(posts[0].chiron_test_client_id,'');assert.equal(posts[0].chiron_test_client_secret,'');assert.equal(posts[0].same_company_phone,true);assert.equal(posts[0].driver_phone,'');assert.equal(posts[0].bestuurderspas,'');assert.equal(posts[0].driver_password,'');assert.deepEqual(posts[0],posts[1]);assert.equal(await dialog.locator('input:not([type=checkbox]):not(#registration-email-code)').count(),0);assert.ok((await dialog.locator('.cr-success').innerText()).includes(posts[0].request_id));assert.equal(page.url(),base+'/'+language);
   const persisted=await page.evaluate(()=>JSON.stringify({...localStorage}));assert.equal(persisted.includes(values.company_password),false);assert.equal(persisted.includes(values.chiron_test_client_secret),false);assert.deepEqual(errors,[]);console.log(`PASS ${language} ${viewport.width}: validation, discard, Chiron links, secret handling, uncertain retry, pending receipt`);await context.close();
  }
  const adminContext=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce',serviceWorkers:'block'});await adminContext.addInitScript(()=>{localStorage.setItem('driver_language','ar');localStorage.setItem('gdpr_cookie_consent',JSON.stringify({version:'1.0',timestamp:new Date().toISOString(),categories:{essential:true,analytics:false,marketing:false}}));});

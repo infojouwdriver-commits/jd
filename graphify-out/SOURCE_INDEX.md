@@ -392,7 +392,7 @@ Links target the working tree, so line positions can move after changes.
 - `vehicles()` — [L89](../driver-app/src/api.ts#L89)
 - `tripAssignmentBody()` — [L97](../driver-app/src/api.ts#L97)
 - `startTrip()` — [L101](../driver-app/src/api.ts#L101)
-- `driverApi` — [L326](../driver-app/src/api.ts#L326)
+- `driverApi` — [L330](../driver-app/src/api.ts#L330)
 
 ## [driver-app/src/app-origin.ts](../driver-app/src/app-origin.ts)
 
@@ -528,18 +528,20 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/CompanyRegistration.tsx](../driver-app/src/experience/CompanyRegistration.tsx)
 
 - `CompanyRegistration.tsx` — [L1](../driver-app/src/experience/CompanyRegistration.tsx#L1)
-- `englishOffer` — [L13](../driver-app/src/experience/CompanyRegistration.tsx#L13)
-- `passwordField()` — [L20](../driver-app/src/experience/CompanyRegistration.tsx#L20)
-- `privateField()` — [L21](../driver-app/src/experience/CompanyRegistration.tsx#L21)
-- `CompanyRegistrationScreen()` — [L23](../driver-app/src/experience/CompanyRegistration.tsx#L23)
-- `close()` — [L48](../driver-app/src/experience/CompanyRegistration.tsx#L48)
-- `draft()` — [L56](../driver-app/src/experience/CompanyRegistration.tsx#L56)
-- `validate()` — [L60](../driver-app/src/experience/CompanyRegistration.tsx#L60)
-- `change()` — [L77](../driver-app/src/experience/CompanyRegistration.tsx#L77)
-- `sendCode()` — [L87](../driver-app/src/experience/CompanyRegistration.tsx#L87)
-- `advance()` — [L106](../driver-app/src/experience/CompanyRegistration.tsx#L106)
-- `field()` — [L141](../driver-app/src/experience/CompanyRegistration.tsx#L141)
-- `openReference()` — [L158](../driver-app/src/experience/CompanyRegistration.tsx#L158)
+- `steps` — [L12](../driver-app/src/experience/CompanyRegistration.tsx#L12)
+- `englishOffer` — [L14](../driver-app/src/experience/CompanyRegistration.tsx#L14)
+- `passwordField()` — [L21](../driver-app/src/experience/CompanyRegistration.tsx#L21)
+- `privateField()` — [L22](../driver-app/src/experience/CompanyRegistration.tsx#L22)
+- `CompanyRegistrationScreen()` — [L24](../driver-app/src/experience/CompanyRegistration.tsx#L24)
+- `close()` — [L56](../driver-app/src/experience/CompanyRegistration.tsx#L56)
+- `draft()` — [L64](../driver-app/src/experience/CompanyRegistration.tsx#L64)
+- `validate()` — [L68](../driver-app/src/experience/CompanyRegistration.tsx#L68)
+- `change()` — [L86](../driver-app/src/experience/CompanyRegistration.tsx#L86)
+- `lookupCompany()` — [L107](../driver-app/src/experience/CompanyRegistration.tsx#L107)
+- `sendCode()` — [L126](../driver-app/src/experience/CompanyRegistration.tsx#L126)
+- `advance()` — [L145](../driver-app/src/experience/CompanyRegistration.tsx#L145)
+- `field()` — [L180](../driver-app/src/experience/CompanyRegistration.tsx#L180)
+- `openReference()` — [L200](../driver-app/src/experience/CompanyRegistration.tsx#L200)
 
 ## [driver-app/src/experience/Home.tsx](../driver-app/src/experience/Home.tsx)
 
@@ -874,6 +876,7 @@ Links target the working tree, so line positions can move after changes.
 
 - `registrationCopy` — [L1](../driver-app/src/registration/copy.ts#L1)
 - `src/registration/copy.ts` — [L1](../driver-app/src/registration/copy.ts#L1)
+- `minimalRegistrationCopy` — [L31](../driver-app/src/registration/copy.ts#L31)
 
 ## [driver-app/src/registration/schema.ts](../driver-app/src/registration/schema.ts)
 
@@ -881,12 +884,15 @@ Links target the working tree, so line positions can move after changes.
 - `text()` — [L3](../driver-app/src/registration/schema.ts#L3)
 - `password` — [L4](../driver-app/src/registration/schema.ts#L4)
 - `optional` — [L5](../driver-app/src/registration/schema.ts#L5)
-- `companyRegistrationSchema` — [L6](../driver-app/src/registration/schema.ts#L6)
-- `CompanyRegistration` — [L13](../driver-app/src/registration/schema.ts#L13)
-- `chironPortals` — [L14](../driver-app/src/registration/schema.ts#L14)
-- `RegistrationField` — [L16](../driver-app/src/registration/schema.ts#L16)
-- `registrationFields` — [L17](../driver-app/src/registration/schema.ts#L17)
-- `blankRegistration()` — [L24](../driver-app/src/registration/schema.ts#L24)
+- `normalizeCompanyDriverPhone()` — [L6](../driver-app/src/registration/schema.ts#L6)
+- `phone` — [L10](../driver-app/src/registration/schema.ts#L10)
+- `unverifiedBestuurderspas` — [L12](../driver-app/src/registration/schema.ts#L12)
+- `companyRegistrationSchema` — [L13](../driver-app/src/registration/schema.ts#L13)
+- `CompanyRegistration` — [L28](../driver-app/src/registration/schema.ts#L28)
+- `chironPortals` — [L29](../driver-app/src/registration/schema.ts#L29)
+- `RegistrationField` — [L31](../driver-app/src/registration/schema.ts#L31)
+- `registrationFields` — [L32](../driver-app/src/registration/schema.ts#L32)
+- `blankRegistration()` — [L39](../driver-app/src/registration/schema.ts#L39)
 
 ## [driver-app/src/registration/subscription-offer.ts](../driver-app/src/registration/subscription-offer.ts)
 
@@ -1413,6 +1419,11 @@ Links target the working tree, so line positions can move after changes.
 - `20261122_company_social_registration.sql` — [source](../migrations/20261122_company_social_registration.sql#)
 - `company_social_identity_unique` — [L6](../migrations/20261122_company_social_registration.sql#L6)
 - `"schema".security_submit_social_company_subscription()` — [L11](../migrations/20261122_company_social_registration.sql#L11)
+
+## [migrations/20261122_minimal_company_registration.sql](../migrations/20261122_minimal_company_registration.sql)
+
+- `20261122_minimal_company_registration.sql` — [source](../migrations/20261122_minimal_company_registration.sql#)
+- `"schema".security_shift_document_profile()` — [L9](../migrations/20261122_minimal_company_registration.sql#L9)
 
 ## [mobile/config.mjs](../mobile/config.mjs)
 
@@ -2685,10 +2696,10 @@ Links target the working tree, so line positions can move after changes.
 ## [src/app/next_api/company-registrations/route.ts](../src/app/next_api/company-registrations/route.ts)
 
 - `company-registrations/route.ts` — [L1](../src/app/next_api/company-registrations/route.ts#L1)
-- `POST` — [L15](../src/app/next_api/company-registrations/route.ts#L15)
-- `GET` — [L39](../src/app/next_api/company-registrations/route.ts#L39)
-- `review` — [L46](../src/app/next_api/company-registrations/route.ts#L46)
-- `PUT` — [L47](../src/app/next_api/company-registrations/route.ts#L47)
+- `POST` — [L16](../src/app/next_api/company-registrations/route.ts#L16)
+- `GET` — [L41](../src/app/next_api/company-registrations/route.ts#L41)
+- `review` — [L48](../src/app/next_api/company-registrations/route.ts#L48)
+- `PUT` — [L49](../src/app/next_api/company-registrations/route.ts#L49)
 
 ## [src/app/next_api/company-registrations/service/route.ts](../src/app/next_api/company-registrations/service/route.ts)
 
@@ -4144,17 +4155,17 @@ Links target the working tree, so line positions can move after changes.
 ## [src/components/registration/CompanyRegistrationDialog.tsx](../src/components/registration/CompanyRegistrationDialog.tsx)
 
 - `CompanyRegistrationDialog.tsx` — [L1](../src/components/registration/CompanyRegistrationDialog.tsx#L1)
-- `SocialRegistration` — [L20](../src/components/registration/CompanyRegistrationDialog.tsx#L20)
-- `webSteps` — [L21](../src/components/registration/CompanyRegistrationDialog.tsx#L21)
-- `steps` — [L26](../src/components/registration/CompanyRegistrationDialog.tsx#L26)
-- `RegistrationField()` — [L30](../src/components/registration/CompanyRegistrationDialog.tsx#L30)
-- `CompanyRegistrationDialog()` — [L34](../src/components/registration/CompanyRegistrationDialog.tsx#L34)
-- `sendEmailCode()` — [L39](../src/components/registration/CompanyRegistrationDialog.tsx#L39)
-- `close()` — [L45](../src/components/registration/CompanyRegistrationDialog.tsx#L45)
-- `validate()` — [L46](../src/components/registration/CompanyRegistrationDialog.tsx#L46)
-- `submit()` — [L47](../src/components/registration/CompanyRegistrationDialog.tsx#L47)
-- `applyRegistryCompany()` — [L52](../src/components/registration/CompanyRegistrationDialog.tsx#L52)
-- `changeField()` — [L66](../src/components/registration/CompanyRegistrationDialog.tsx#L66)
+- `SocialRegistration` — [L21](../src/components/registration/CompanyRegistrationDialog.tsx#L21)
+- `webSteps` — [L22](../src/components/registration/CompanyRegistrationDialog.tsx#L22)
+- `steps` — [L27](../src/components/registration/CompanyRegistrationDialog.tsx#L27)
+- `RegistrationField()` — [L31](../src/components/registration/CompanyRegistrationDialog.tsx#L31)
+- `CompanyRegistrationDialog()` — [L35](../src/components/registration/CompanyRegistrationDialog.tsx#L35)
+- `sendEmailCode()` — [L42](../src/components/registration/CompanyRegistrationDialog.tsx#L42)
+- `close()` — [L48](../src/components/registration/CompanyRegistrationDialog.tsx#L48)
+- `validate()` — [L49](../src/components/registration/CompanyRegistrationDialog.tsx#L49)
+- `submit()` — [L50](../src/components/registration/CompanyRegistrationDialog.tsx#L50)
+- `applyRegistryCompany()` — [L55](../src/components/registration/CompanyRegistrationDialog.tsx#L55)
+- `changeField()` — [L69](../src/components/registration/CompanyRegistrationDialog.tsx#L69)
 
 ## [src/components/registration/CompanyRegistryLookup.tsx](../src/components/registration/CompanyRegistryLookup.tsx)
 
@@ -4890,13 +4901,13 @@ Links target the working tree, so line positions can move after changes.
 
 - `chiron-protocol.ts` — [L1](../src/lib/chiron-protocol.ts#L1)
 - `ChironError` — [L2](../src/lib/chiron-protocol.ts#L2)
-- `.constructor()` — [L3](../src/lib/chiron-protocol.ts#L3)
-- `canonicalChironEnvironment()` — [L6](../src/lib/chiron-protocol.ts#L6)
-- `chironDestination()` — [L11](../src/lib/chiron-protocol.ts#L11)
-- `numeric()` — [L18](../src/lib/chiron-protocol.ts#L18)
-- `timestamp()` — [L22](../src/lib/chiron-protocol.ts#L22)
-- `rideMessage()` — [L23](../src/lib/chiron-protocol.ts#L23)
-- `serializeRideMessage()` — [L44](../src/lib/chiron-protocol.ts#L44)
+- `.constructor()` — [L8](../src/lib/chiron-protocol.ts#L8)
+- `canonicalChironEnvironment()` — [L17](../src/lib/chiron-protocol.ts#L17)
+- `chironDestination()` — [L22](../src/lib/chiron-protocol.ts#L22)
+- `numeric()` — [L29](../src/lib/chiron-protocol.ts#L29)
+- `timestamp()` — [L33](../src/lib/chiron-protocol.ts#L33)
+- `rideMessage()` — [L34](../src/lib/chiron-protocol.ts#L34)
+- `serializeRideMessage()` — [L59](../src/lib/chiron-protocol.ts#L59)
 
 ## [src/lib/chiron-retry.ts](../src/lib/chiron-retry.ts)
 
@@ -5749,8 +5760,7 @@ Links target the working tree, so line positions can move after changes.
 ## [src/lib/web-company-registration.ts](../src/lib/web-company-registration.ts)
 
 - `web-company-registration.ts` — [L1](../src/lib/web-company-registration.ts#L1)
-- `optionalChiron()` — [L4](../src/lib/web-company-registration.ts#L4)
-- `webCompanyRegistrationSchema` — [L6](../src/lib/web-company-registration.ts#L6)
+- `webCompanyRegistrationSchema` — [L4](../src/lib/web-company-registration.ts#L4)
 
 ## [src/lib/web-trip-chiron.ts](../src/lib/web-trip-chiron.ts)
 
