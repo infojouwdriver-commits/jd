@@ -29,18 +29,26 @@ try{
   await kbo.fill('BE 0314.595.348');await lookup.click();
   await dialog.locator('#registration-cbe-status').filter({hasText:/تم العثور|Entreprise trouvée|Onderneming gevonden/}).waitFor();
   assert.equal(await kbo.inputValue(),'0314595348');
+  assert.equal(await dialog.locator('#registration-vat_number').inputValue(),'BE0314595348');
   assert.equal(await dialog.locator('#registration-company_name').inputValue(),'Registry Company');
   assert.equal(await address.inputValue(),'Registry Street 12');
   await address.fill('Address entered by customer');
   await kbo.fill('1000000021');
   assert.equal(await dialog.locator('#registration-company_name').inputValue(),'');
+  assert.equal(await dialog.locator('#registration-vat_number').inputValue(),'');
   assert.equal(await address.inputValue(),'Address entered by customer');
   cbeUnavailable=true;await lookup.click();
   await dialog.locator('#registration-cbe-status').filter({hasText:/يدويًا|manuellement|handmatig/}).waitFor();
   assert.equal(await address.inputValue(),'Address entered by customer');
   for(let step=0;step<3;step++){
    for(const input of await dialog.locator('input[name]').all()){const name=await input.getAttribute('name');await input.fill(values[name]);}
-   if(step===1)assert.equal(await dialog.locator('input').count(),2);
+   if(step===1){
+    assert.equal(await dialog.locator('input').count(),3);
+    await dialog.locator('#registration-plate_number').fill('');
+    await dialog.locator('button[type=submit]').click();
+    assert.equal(await dialog.locator('#registration-plate_number').getAttribute('aria-invalid'),'true');
+    await dialog.locator('#registration-plate_number').fill(values.plate_number);
+   }
    if(step===2){
     const phone=dialog.locator('#registration-driver_phone'),reuse=dialog.locator('#registration-same-phone');
     assert.equal(await dialog.locator('#registration-driver_license').count(),0);

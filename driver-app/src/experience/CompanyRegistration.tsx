@@ -32,7 +32,7 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
   const [sameCompanyPhone,setSameCompanyPhone] = useState(false);
   const [lookupBusy,setLookupBusy] = useState(false);
   const [lookupFailed,setLookupFailed] = useState(false);
-  const importedCompany = useRef<{name?:string;address?:string}>({});
+  const importedCompany = useRef<{name?:string;address?:string;vat?:string}>({});
   const [showChiron,setShowChiron] = useState(false);
   const titles = [t.steps[0],t.steps[2],t.steps[3],t.steps[4]];
   const [invalid, setInvalid] = useState<string[]>([]);
@@ -90,9 +90,11 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
       setLookupFailed(false);
       setValues(current=>({...current,kbo_number:value,
         company_name:current.company_name===imported.name?'':current.company_name,
+        vat_number:current.vat_number===imported.vat?'':current.vat_number,
         company_address:current.company_address===imported.address?'':current.company_address}));
     }else{
       setValues(current=>({...current,[name]:value}));
+      if(name==='vat_number')delete importedCompany.current.vat;
       if(name==='company_name')delete importedCompany.current.name;
       if(name==='company_address')delete importedCompany.current.address;
     }
@@ -112,10 +114,11 @@ export default function CompanyRegistrationScreen({onClose}: {onClose: () => voi
       const data=await driverApi.lookupCompanyRegistration(values.kbo_number,language==='nl'?'nl':'fr');
       const name=values.company_name.trim()?'':data.name??'';
       const address=values.company_address.trim()?'':data.address??'';
-      importedCompany.current={name:name||undefined,address:address||undefined};
+      const vat=values.vat_number.trim()?'':'BE'+data.kbo_number;
+      importedCompany.current={vat:vat||undefined,name:name||undefined,address:address||undefined};
       setValues(current=>({...current,kbo_number:data.kbo_number,
-        company_name:name||current.company_name,company_address:address||current.company_address}));
-      setInvalid(current=>current.filter(field=>field!=='kbo_number'&&!(field==='company_name'&&name)&&!(field==='company_address'&&address)));
+        company_name:name||current.company_name,company_address:address||current.company_address,vat_number:vat||current.vat_number}));
+      setInvalid(current=>current.filter(field=>field!=='kbo_number'&&!(field==='vat_number'&&vat)&&!(field==='company_name'&&name)&&!(field==='company_address'&&address)));
     } catch {
       setLookupFailed(true);
     } finally {
