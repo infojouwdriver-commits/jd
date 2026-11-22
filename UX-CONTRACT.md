@@ -130,7 +130,8 @@ and login recovery remain reachable after the real request settles.
 | Locale and direction | LanguageContext + registration/copy.ts | Arabic RTL, French/Dutch LTR; labels stay visible |
 | Fields and actions | ui/Input, Label, Button | Mask secrets; inline validation; single-flight submission |
 | Dialog and discard | ui/Dialog + ui/AlertDialog | Trapped focus, Escape guards dirty data, confirmation above form |
-| Registration | CompanyRegistrationDialog + company-registrations POST | Five steps; review excludes secrets; no storage or URL credentials |
+| Registration | CompanyRegistrationDialog + company-registrations POST | Four steps; optional Chiron; review excludes secrets; no storage or URL credentials |
+| Belgian company lookup | CompanyRegistryLookup + registration company-lookup POST | One number per lookup; signed-out applicants may prefill blank fields from the production CBE service; manual continuation stays available |
 | Pending lifecycle | security_submit_company_registration | One atomic record group, inactive accounts/vehicle/subscription until review |
 | Retry | request UUID + server HMAC fingerprint | Uncertain response freezes payload; same request safely retries |
 | Administration | CompanyRegistrationApprovals + authenticated GET/PUT | Admin MFA authority; filters/pagination; explicit approve/reject with notes |

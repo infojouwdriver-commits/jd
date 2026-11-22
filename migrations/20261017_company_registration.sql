@@ -24,8 +24,9 @@ BEGIN
   IF prior.fingerprint IS DISTINCT FROM p_fingerprint THEN RAISE EXCEPTION 'Conflicting request' USING ERRCODE='23505';END IF;
   RETURN jsonb_build_object('request_id',prior.request_id,'status',prior.status);
  END IF;
- IF p_fingerprint !~ '^[a-f0-9]{64}$' OR co->>'chiron_test_client_secret' NOT LIKE 'enc:v1:%'
- OR (co->>'chiron_prod_client_secret'<>'' AND co->>'chiron_prod_client_secret' NOT LIKE 'enc:v1:%')
+ IF p_fingerprint !~ '^[a-f0-9]{64}$'
+ OR (nullif(co->>'chiron_test_client_secret','') IS NOT NULL AND co->>'chiron_test_client_secret' NOT LIKE 'enc:v1:%')
+ OR (nullif(co->>'chiron_prod_client_secret','') IS NOT NULL AND co->>'chiron_prod_client_secret' NOT LIKE 'enc:v1:%')
  OR p_data->>'manager_hash' NOT LIKE '$2%' OR p_data->>'driver_hash' NOT LIKE '$2%' OR nullif(p_data->>'user_role','') IS NULL
  THEN RAISE EXCEPTION 'Invalid protected registration' USING ERRCODE='22023';END IF;
  IF contact_email=digits||'@driver.local' OR EXISTS(SELECT FROM companies WHERE upper(regexp_replace(vat_number,'[ .-]','','g'))=co->>'vat_number' OR regexp_replace(kbo_number,'[ .-]','','g')=co->>'kbo_number')
@@ -34,7 +35,7 @@ BEGIN
  OR EXISTS(SELECT FROM drivers WHERE regexp_replace(drivers.phone,'[^0-9]','','g') IN(digits,'00'||digits,CASE WHEN left(digits,2)='32' THEN '0'||substring(digits FROM 3) ELSE digits END))
  THEN RAISE EXCEPTION 'Registration identity already exists' USING ERRCODE='23505';END IF;
  INSERT INTO companies(name,email,phone,address,vat_number,kbo_number,subscription_status,chiron_mode,chiron_test_client_id,chiron_test_client_secret,chiron_prod_client_id,chiron_prod_client_secret)
- VALUES(co->>'name',contact_email,co->>'phone',co->>'address',co->>'vat_number',co->>'kbo_number','pending_approval','TEST',co->>'chiron_test_client_id',co->>'chiron_test_client_secret',nullif(co->>'chiron_prod_client_id',''),nullif(co->>'chiron_prod_client_secret','')) RETURNING * INTO c;
+ VALUES(co->>'name',contact_email,co->>'phone',co->>'address',co->>'vat_number',co->>'kbo_number','pending_approval','TEST',nullif(co->>'chiron_test_client_id',''),nullif(co->>'chiron_test_client_secret',''),nullif(co->>'chiron_prod_client_id',''),nullif(co->>'chiron_prod_client_secret','')) RETURNING * INTO c;
  INSERT INTO users(email,password,role,user_type,display_name,is_active) VALUES(contact_email,p_data->>'manager_hash',p_data->>'user_role','manager',c.name,false) RETURNING id INTO manager_id;
  INSERT INTO company_users(company_id,user_id,role) VALUES(c.id,manager_id,'portal_owner');
  INSERT INTO users(email,password,role,user_type,display_name,is_active) VALUES(digits||'@driver.local',p_data->>'driver_hash',p_data->>'user_role','driver',dr->>'full_name',false) RETURNING id INTO driver_uid;
@@ -43,7 +44,7 @@ BEGIN
  VALUES(driver_uid,c.id,dr->>'full_name',phone,dr->>'driver_license',dr->>'bestuurderspas_number',dr->>'preferred_language','pending',clock_timestamp(),'inactive',v.id) RETURNING * INTO d;
  INSERT INTO driver_credentials(driver_id,phone,password_hash,is_active,vehicle_id,company_id,preferred_language) VALUES(d.id,phone,p_data->>'driver_hash',false,v.id,c.id,dr->>'preferred_language');
  INSERT INTO company_registrations(request_id,fingerprint,company_id,driver_id,vehicle_id,manager_user_id,driver_user_id,company_name,company_email,company_phone,vat_number,kbo_number,company_address,driver_name,driver_phone,driver_license,bestuurderspas,plate_number,vehicle_brand,vehicle_model,vin,language,test_configured,production_configured)
- VALUES(p_request,p_fingerprint,c.id,d.id,v.id,manager_id,driver_uid,c.name,contact_email,c.phone,c.vat_number,c.kbo_number,c.address,d.full_name,phone,d.driver_license,d.bestuurderspas_number,v.plate_number,v.brand,v.model,v.vin,dr->>'preferred_language',true,nullif(co->>'chiron_prod_client_secret','') IS NOT NULL);
+ VALUES(p_request,p_fingerprint,c.id,d.id,v.id,manager_id,driver_uid,c.name,contact_email,c.phone,c.vat_number,c.kbo_number,c.address,d.full_name,phone,d.driver_license,d.bestuurderspas_number,v.plate_number,v.brand,v.model,v.vin,dr->>'preferred_language',nullif(co->>'chiron_test_client_secret','') IS NOT NULL,nullif(co->>'chiron_prod_client_secret','') IS NOT NULL);
  RETURN jsonb_build_object('request_id',p_request,'status','pending');
 END $$;
 CREATE OR REPLACE FUNCTION :"schema".security_review_company_registration(p_request uuid,p_action text,p_notes text,p_reviewer bigint)

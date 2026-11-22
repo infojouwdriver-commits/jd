@@ -171,7 +171,7 @@ reveals; both respect reduced motion and pause when the document is hidden.
 Illustrative journeys remain explicitly labeled demo data. No invented prices,
 customer counts, certifications or Chiron acceptance claims are published.
 
-Registration is an operational five-step dialog, not a decorative contact form.
+Registration uses a four-step dialog. The company step offers a lookup by Belgian enterprise number.
 Its canonical web owners are ui/Dialog, AlertDialog, Button, Input and Label;
 LanguageContext owns Arabic/French/Dutch. registration.css owns its scoped
 layout tokens. The administrator widget reuses those same web primitives.

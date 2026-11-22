@@ -10,6 +10,8 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 import { CompanyLoginForm } from "@/components/auth/CompanyLoginForm";
+import { CompanySignInOptions } from "@/components/registration/CompanySignInOptions";
+import type { CompanyProvider } from "@/lib/company-social";
 
 enum ModeEnum {
   LOGIN = "LOGIN",
@@ -22,7 +24,7 @@ enum PortalEnum {
   COMPANY = "COMPANY",
 }
 
-function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
+function LoginPageContent({emailEnabled,providers}: {emailEnabled: boolean;providers:CompanyProvider[]}) {
   const [mode, setMode] = useState<ModeEnum>(ModeEnum.LOGIN);
   const searchParams = useSearchParams();
   const [portal, setPortal] = useState<PortalEnum>(searchParams.get("portal") === "company" ? PortalEnum.COMPANY : PortalEnum.ADMIN);
@@ -149,7 +151,7 @@ function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
           </>
         )}
 
-        {portal === PortalEnum.COMPANY && (mode === ModeEnum.RESET ? <ResetPasswordForm onBack={()=>setMode(ModeEnum.LOGIN)} onSuccess={()=>setMode(ModeEnum.LOGIN)} /> : <CompanyLoginForm onSuccess={handleSuccess} onForgotPassword={emailEnabled?()=>setMode(ModeEnum.RESET):undefined} />)}
+        {portal === PortalEnum.COMPANY && (mode === ModeEnum.RESET ? <ResetPasswordForm onBack={()=>setMode(ModeEnum.LOGIN)} onSuccess={()=>setMode(ModeEnum.LOGIN)} /> : <><CompanySignInOptions providers={providers} intent="login"/><CompanyLoginForm onSuccess={handleSuccess} onForgotPassword={emailEnabled?()=>setMode(ModeEnum.RESET):undefined} /></>)}
         {!emailEnabled && <p dir="rtl" className="mt-5 text-center text-sm text-slate-200">لإنشاء حساب أو استعادة الوصول، تواصل مع إدارة شركتك.</p>}
         <p className="mt-4 text-center text-sm text-slate-200"><Link href="/privacy-policy" className="underline">الخصوصية · Confidentialité</Link></p>
       </div>
@@ -157,10 +159,10 @@ function LoginPageContent({emailEnabled}: {emailEnabled: boolean}) {
   );
 }
 
-export function LoginPageClient({emailEnabled = false}: {emailEnabled?: boolean}) {
+export function LoginPageClient({emailEnabled = false,providers=[]}: {emailEnabled?: boolean;providers?:CompanyProvider[]}) {
   return (
     <Suspense fallback={null}>
-      <LoginPageContent emailEnabled={emailEnabled} />
+      <LoginPageContent emailEnabled={emailEnabled} providers={providers} />
     </Suspense>
   );
 }

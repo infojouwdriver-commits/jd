@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { createHash } from 'node:crypto';
+import { companySocialIdentity, createCompanySocialFlow, exchangeCompanySocialCode, makeCompanyProof } from '../src/lib/company-social.ts';
+
+test('social registration proof is signed and distinct from OAuth flow state', async () => {
+ process.env.APP_ORIGIN='https://app.example.invalid';
+ process.env.JWT_SECRET='synthetic-test-only-'+'x'.repeat(36);
+ process.env.COMPANY_GOOGLE_CLIENT_ID='synthetic-google-client';
+ process.env.COMPANY_GOOGLE_CLIENT_SECRET='synthetic-google-secret';
+ const flow=await createCompanySocialFlow('google','nl','register');
+ assert.equal(flow.url.origin,'https://accounts.google.com');
+ assert.equal(flow.url.searchParams.get('redirect_uri'),'https://app.example.invalid/company-access/google/callback');
+ assert.equal(flow.url.searchParams.get('code_challenge_method'),'S256');
+ const flowPayload=JSON.parse(Buffer.from(flow.cookie.split('.')[1],'base64url'));
+ assert.equal(flow.url.searchParams.get('code_challenge'),createHash('sha256').update(flowPayload.verifier).digest('base64url'));
+ assert.equal(await companySocialIdentity(flow.cookie),null);
+ assert.equal(await exchangeCompanySocialCode('google',flow.cookie,'wrong-state','demo'),null);
+ process.env.COMPANY_APPLE_SERVICES_ID='invalid.example.service';
+ process.env.COMPANY_APPLE_TEAM_ID='TEAMTEST';
+ process.env.COMPANY_APPLE_KEY_ID='KEYTEST';
+ process.env.COMPANY_APPLE_PRIVATE_KEY='fixture-for-authorization-url-only';
+ const apple=await createCompanySocialFlow('apple','ar','login');
+ assert.equal(apple.url.origin,'https://appleid.apple.com');
+ assert.equal(apple.url.searchParams.get('response_mode'),'form_post');
+ assert.equal(apple.url.searchParams.get('nonce')?.length,43);
+ assert.equal(apple.url.searchParams.get('redirect_uri'),'https://app.example.invalid/company-access/apple/callback');
+ assert.equal(await exchangeCompanySocialCode('google',apple.cookie,apple.url.searchParams.get('state'),'demo'),null);
+ const identity={provider:'apple',subject:'synthetic-apple-id',email:'test@example.invalid'};
+ const proof=await makeCompanyProof(identity);
+ assert.deepEqual(await companySocialIdentity(proof),identity);
+ const pieces=proof.split('.');
+ pieces[2]=(pieces[2][0]==='a'?'b':'a')+pieces[2].slice(1);
+ assert.equal(await companySocialIdentity(pieces.join('.')),null);
+});

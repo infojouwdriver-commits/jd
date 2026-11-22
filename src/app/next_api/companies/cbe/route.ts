@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { requestMiddleware, validateRequestBody } from '@/lib/api-utils';
 import { CbeSearchError, configuredCbeSearch, normalizeCbeNumber, readCbeCompany } from '@/lib/cbe-public-search';
 import { createErrorResponse } from '@/lib/create-response';
+import { lookupOpenDataCompany } from '@/lib/cbe-open-data';
 import { consumeRateLimit } from '@/lib/rate-limit';
 
 const query = z.object({ number: z.string().max(50), language: z.enum(['fr', 'nl']).default('fr') }).strict();
@@ -20,11 +21,16 @@ export const POST = requestMiddleware(async (request, context) => {
   if (!context.payload?.isAdmin) return createErrorResponse({ status: 403, errorMessage: 'صلاحية الإدارة مطلوبة' });
   const input = query.safeParse(await validateRequestBody(request));
   try {
-    if (!input.success || !normalizeCbeNumber(input.data.number)) throw new CbeSearchError('invalid_number');
-    const config = configuredCbeSearch();
-    if (!config) throw new CbeSearchError('not_configured');
+    const number = input.success ? normalizeCbeNumber(input.data.number) : null;
+    if (!input.success || !number) throw new CbeSearchError('invalid_number');
     const limited = await consumeRateLimit(`cbe-search:${context.payload.sub}`, 10);
     if (limited) return limited;
+    const indexed = lookupOpenDataCompany(number, input.data.language);
+    if (indexed) return Response.json({ success: true, data: { ...indexed, status: 'AC', environment: 'production' } }, { headers: { 'Cache-Control': 'no-store' } });
+    if (indexed === null) throw new CbeSearchError('not_found');
+
+    const config = configuredCbeSearch();
+    if (!config) throw new CbeSearchError('not_configured');
     const company = await readCbeCompany(config, input.data.number, input.data.language);
     return Response.json({ success: true, data: company }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
