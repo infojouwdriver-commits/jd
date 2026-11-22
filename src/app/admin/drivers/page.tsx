@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from '@/components/ui/label';
+import { unverifiedBestuurderspas } from '@/lib/company-registration';
 import {
   Select,
   SelectContent,
@@ -67,6 +68,7 @@ interface Driver {
   national_id: string;
   driver_license: string;
   capacity_certificate_number: string;
+  bestuurderspas_number?: string | null;
   phone: string;
   status: string;
   created_at: string;
@@ -118,6 +120,7 @@ function AdminDriversPageContent() {
     national_id: '',
     driver_license: '',
     capacity_certificate_number: '',
+    bestuurderspas_number: '',
     phone: '',
     status: '',
     password: ''
@@ -211,6 +214,7 @@ function AdminDriversPageContent() {
       national_id: driver?.national_id || '',
       driver_license: driver?.driver_license || '',
       capacity_certificate_number: driver?.capacity_certificate_number || '',
+      bestuurderspas_number: driver.bestuurderspas_number === unverifiedBestuurderspas ? '' : driver.bestuurderspas_number || '',
       phone: driver?.phone || '',
       status: driver.status,
       password: ''
@@ -230,6 +234,14 @@ function AdminDriversPageContent() {
     if (editDriver.password && (editDriver.password.length < 12 || new TextEncoder().encode(editDriver.password).length > 72)) {
       toast.error('استخدم كلمة مرور من 12 حرفاً على الأقل، بحد أقصى 72 بايت'); return;
     }
+    const originalCard = selectedDriver.bestuurderspas_number || '';
+    const card = editDriver.bestuurderspas_number.trim();
+    const updateCard = card !== (originalCard === unverifiedBestuurderspas ? '' : originalCard);
+    const normalizedCard = card.replace(/[\s-]+/g, '');
+    if (updateCard && card && (!/^[A-Za-z0-9]{3,80}$/.test(normalizedCard) || normalizedCard === unverifiedBestuurderspas)) {
+      toast.error('أدخل رقم بطاقة السائق الرسمي');
+      return;
+    }
     setSaving(true);
     try {
       const updateData: any = {
@@ -240,6 +252,8 @@ function AdminDriversPageContent() {
         phone: editDriver.phone || null,
         status: editDriver.status
       };
+
+      if (updateCard) updateData.bestuurderspas_number = card || null;
 
       if (editDriver.password && editDriver.password.trim() !== '') {
         updateData.password = editDriver.password;
@@ -700,6 +714,15 @@ function AdminDriversPageContent() {
                 className="rounded-2xl mt-2"
                 placeholder="أدخل رقم الشهادة"
               />
+            </div>
+            <div>
+              <Label htmlFor="admin-driver-card">رقم بطاقة السائق (Bestuurderspas)</Label>
+              <Input id="admin-driver-card" dir="ltr" maxLength={80}
+                value={editDriver.bestuurderspas_number}
+                onChange={e => setEditDriver({...editDriver,bestuurderspas_number:e.target.value})}
+                className="rounded-2xl mt-2"/>
+              {selectedDriver?.bestuurderspas_number === unverifiedBestuurderspas &&
+                <p className="mt-2 text-sm text-muted-foreground">أدخل الرقم الرسمي لإكمال بيانات السائق لاستخدام Chiron.</p>}
             </div>
             <div>
               <Label>الحالة *</Label>
