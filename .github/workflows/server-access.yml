@@ -1,194 +1,65 @@
-name: Verify server access
+name: Bootstrap dedicated ECC host
 on:
   workflow_dispatch:
-    inputs:
-      inspect_domain_runtime:
-        type: boolean
-        default: false
-        description: Read-only domain runtime inventory; no private values or production records
-      recover_aborted_gateway_transaction:
-        type: boolean
-        default: false
-        description: Release only an old aborted gateway transaction blocking other requests; preserve committed records
-      repair_shift_conflict_codes:
-        type: boolean
-        default: false
-        description: Apply the tested shift conflict SQL patch without changing business records
-      release_looping_shift_requests:
-        type: boolean
-        default: false
-        description: Stop only the ten observed looping shift request backends after applying the fix
-      reclaim_reproducible_cache:
-        type: boolean
-        default: false
-        description: Reclaim old build cache and unused JD images, preserving live and rollback images
 permissions:
   contents: read
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
 jobs:
-  verify:
+  bootstrap:
+    if: github.ref == 'refs/heads/ecc-host-key-bootstrap'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     environment: production
     steps:
-      - name: Verify pinned SSH connection and server prerequisites
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          REPAIR_SHIFTS: ${{ inputs.repair_shift_conflict_codes }}
-          RELEASE_SHIFTS: ${{ inputs.release_looping_shift_requests }}
-          RECOVER_ABORTED: ${{ inputs.recover_aborted_gateway_transaction }}
-          RECLAIM_CACHE: ${{ inputs.reclaim_reproducible_cache }}
-          INSPECT_DOMAIN: ${{ inputs.inspect_domain_runtime }}
+      - name: Install the dedicated public key on the separately provisioned ECC instance
         shell: bash
+        env:
+          ACCESS_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SEALED_PLAN: 'hcsAr4Tf7qkmEYD3aduhQPShfqawVKe/zK9LcBCRxkzb8hQDD0ppB72JmJgz7t/h0oUx2fRPkQNLUvDJw433PHPNor8OkDD5EJukLqBqJMwhS99bANLeBSRMGm5BHx/myzObzTrAPzO9cO0PfPRg5U17EgCQgdjFpeNPyeLn7VW27oI9icFT2hzN1YlUjc9ChK+FUm9WqCAps62O5+E3NvbqartCJb2ng+ApWI9+MQwyZyJ9UjcDr8XrbUI2U8Mt7e4fho6neusaM9oZMJBvEAWaKl/ZQWbuNo3fV7hb17qIhICuj80t6qMuc1+65rgFG//R9g/3mfLTo0RAYAqCPltJDQZt8Z1dCYYXMfQYBQcAQkdJodVTh5th7dK/ULTAx4TZsYOa7uw81CYxEcQahgYmqTjgoL9ImehzqA6jDo51tCubPei91ljgzCkEwZju'
         run: |
           set -euo pipefail
-          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
-          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
-          test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
           umask 077
-          keydir=$(mktemp -d)
-          trap 'rm -f "$keydir/key" "$keydir/known_hosts"; rmdir "$keydir"' EXIT
-          printf '%s\n' "$DEPLOY_KEY" > "$keydir/key"
-          printf '%s\n' "$KNOWN_HOSTS" > "$keydir/known_hosts"
-          [[ "$RECLAIM_CACHE" = true || "$RECLAIM_CACHE" = false ]]
-          [[ "$INSPECT_DOMAIN" = true || "$INSPECT_DOMAIN" = false ]]
-          ssh -i "$keydir/key" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$keydir/known_hosts" -o ConnectTimeout=20 "$DEPLOY_USER@$DEPLOY_HOST" "bash -s -- '$RECLAIM_CACHE' '$INSPECT_DOMAIN' '$RECOVER_ABORTED' '$REPAIR_SHIFTS' '$RELEASE_SHIFTS'" <<'REMOTE'
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          printf '%s\n' "$ACCESS_KEY" > "$tmp/access_key"
+          unset ACCESS_KEY
+          python3 -m venv "$tmp/venv"
+          "$tmp/venv/bin/python" -m pip --quiet install 'PyNaCl==1.6.2' 'cryptography==46.0.3'
+          "$tmp/venv/bin/python" - "$tmp" <<'PY'
+          import ipaddress, json, os, pathlib, re, sys, base64
+          from cryptography.hazmat.primitives.serialization import load_ssh_private_key, Encoding, PrivateFormat, NoEncryption
+          from nacl.signing import SigningKey
+          from nacl.public import SealedBox
+          root = pathlib.Path(sys.argv[1])
+          key = load_ssh_private_key((root/"access_key").read_bytes(), password=None)
+          raw = key.private_bytes(Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+          plan = json.loads(SealedBox(SigningKey(raw).to_curve25519_private_key()).decrypt(base64.b64decode(os.environ["SEALED_PLAN"])))
+          ip = ipaddress.IPv4Address(plan["host"])
+          assert ip.is_global
+          for name in ("known_host", "add_key"):
+              assert re.fullmatch(r"ssh-ed25519 [A-Za-z0-9+/=]+(?: [A-Za-z0-9._-]+)?", plan[name])
+          assert re.fullmatch(r"[0-9a-f-]{36}", plan["server_uuid"])
+          (root/"host").write_text(str(ip))
+          (root/"known_hosts").write_text(str(ip)+" "+plan["known_host"]+"\n")
+          (root/"instance").write_text(plan["server_uuid"])
+          (root/"add_key").write_text("restrict "+plan["add_key"])
+          PY
+          host=$(cat "$tmp/host")
+          instance=$(cat "$tmp/instance")
+          add_key=$(cat "$tmp/add_key")
+          ssh -F /dev/null -i "$tmp/access_key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=12 \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$tmp/known_hosts" "ubuntu@$host" \
+            "bash -s -- '$instance' '$add_key'" <<'REMOTE'
           set -euo pipefail
-          printf 'SSH identity verified\n'
-          uname -sr
-          whoami
-          sudo -n true
-          printf 'sudo access verified\n'
-          command -v docker || true
-          command -v node || true
-          df -h /
-          df -i /
-          docker system df
-          if test "$1" = true; then
-            # Reproducible cache only; never remove volumes, backups or application files.
-            # No build cache exists on this pull-only host; avoid buildx creating
-            # client configuration while the filesystem is already full.
-            node --input-type=module <<'RECLAIM'
-          import fs from 'node:fs';
-          import {execFileSync} from 'node:child_process';
-          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8'}).trim();
-          const state=JSON.parse(fs.readFileSync('/srv/jouw-driver/foundation/runtime-mode.json'));
-          const release=JSON.parse(fs.readFileSync('/srv/jouw-driver/release.json'));
-          if(state.mode!=='public'||state.image!==release.image)throw Error('Runtime state mismatch');
-          const protectedIds=new Set();
-          for(const ref of [state.image,state.previousImage,release.image,release.previousImage].filter(Boolean)){
-            protectedIds.add(JSON.parse(docker('image','inspect',ref))[0].Id);
-          }
-          const containers=docker('ps','--all','--quiet').split('\n').filter(Boolean);
-          for(const container of containers)protectedIds.add(JSON.parse(docker('container','inspect',container))[0].Image);
-          const source='https://github.com/infojouwdriver-commits/jd';
-          const ids=[...new Set(docker('image','ls','--quiet','--no-trunc','--filter','label=org.opencontainers.image.source='+source).split('\n').filter(Boolean))];
-          for(const id of ids){
-            const image=JSON.parse(docker('image','inspect',id))[0];
-            if(protectedIds.has(id)||image.Config.Labels?.['org.opencontainers.image.source']!==source||Date.now()-Date.parse(image.Created)<48*60*60*1000)continue;
-            // No force: Docker also refuses to remove images referenced by a container.
-            console.log(docker('image','rm',id));
-          }
-          console.log('Live/rollback images and every container image preserved.');
-          RECLAIM
-            df -h /
-            docker system df
+          test "$(hostname -s)" = jouw-driver-ecc
+          test "$(cat /var/lib/cloud/data/instance-id)" = "$1"
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          touch "$HOME/.ssh/authorized_keys"
+          chmod 700 "$HOME/.ssh"
+          chmod 600 "$HOME/.ssh/authorized_keys"
+          if ! grep -Fqx -- "$2" "$HOME/.ssh/authorized_keys"; then
+            printf '%s\n' "$2" >> "$HOME/.ssh/authorized_keys"
           fi
-          free -h
-          test ! -e /srv/jouw-driver/.env || printf 'Server configuration already exists; preserve it\n'
-          if test "$2" = true; then
-            cd /srv/jouw-driver/foundation
-            node --input-type=module - "$3" "$4" "$5" <<'DOMAIN_INVENTORY'
-          import fs from 'node:fs';
-          import {createHash} from 'node:crypto';
-          import {execFileSync} from 'node:child_process';
-          const read=p=>fs.readFileSync(p,'utf8');
-          const state=JSON.parse(read('runtime-mode.json'));
-          const release=JSON.parse(read('/srv/jouw-driver/release.json'));
-          const caddy=read('Caddyfile'),compose=read('private-app.yaml');
-          const env=new Map(read('.app-staging.env').split(/\r?\n/).filter(x=>x&&!x.startsWith('#')).map(x=>{const i=x.indexOf('=');return [x.slice(0,i),x.slice(i+1)];}));
-          const known=['https://jouw-driver.duckdns.org','https://app.jouww.com'];
-          const imagePattern=/^ghcr\.io\/infojouwdriver-commits\/jd@sha256:[a-f0-9]{64}$/;
-          if(!imagePattern.test(state.image)||!/^[a-f0-9]{40}$/.test(state.revision))throw Error('Unexpected runtime metadata; values withheld');
-          const report={readOnly:true,mode:state.mode==='public'?'public':'other',image:state.image,revision:state.revision,releaseAgreement:state.image===release.image&&state.revision===release.revision,composeImageAgreement:compose.includes(state.image),caddySha256:createHash('sha256').update(caddy).digest('hex'),configuredHosts:Object.fromEntries(['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com'].map(h=>[h,caddy.includes(h)])),appOrigin:known.includes(env.get('APP_ORIGIN'))?env.get('APP_ORIGIN'):'other-or-missing',requiredKeyPresence:Object.fromEntries(['JWT_SECRET','DATA_ENCRYPTION_KEY','HASH_SALT_KEY','RATE_LIMIT_SECRET','POSTGREST_URL'].map(k=>[k,Boolean(env.get(k))])),trustedOrigins:env.has('TRUSTED_ORIGINS')?'configured-values-withheld':'absent'};
-          const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:35000}).trim();
-          const ids=docker('ps','--quiet').split('\n').filter(Boolean);
-          report.proxy=ids.map(id=>JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id))).filter(x=>/^caddy(?::|@)/.test(x));
-          report.proxyMounts=[];
-          for(const id of ids){const img=JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id));if(/^caddy(?::|@)/.test(img)){const mounts=JSON.parse(docker('inspect','--format','{{json .Mounts}}',id));report.proxyMounts=mounts.map(m=>({destination:m.Destination,readOnly:!m.RW}));}}
-          // Metadata only: no environment values, customer rows or private filenames.
-          report.proxyDetails=[];
-          for(const id of ids){
-            const image=JSON.parse(docker('inspect','--format','{{json .Config.Image}}',id));
-            if(!/^caddy(?::|@)/.test(image))continue;
-            const imageId=docker('inspect','--format','{{.Image}}',id);
-            const info=JSON.parse(docker('image','inspect',imageId))[0];
-            report.proxyDetails.push({version:docker('exec',id,'caddy','version'),imageId,digests:info.RepoDigests,ports:JSON.parse(docker('inspect','--format','{{json .HostConfig.PortBindings}}',id)),certificateStorageWritable:JSON.parse(docker('inspect','--format','{{json .Mounts}}',id)).some(m=>m.Destination==='/data'&&m.RW)});
-          }
-          report.diskBytes={};
-          for(const path of ['/srv/jouw-driver','/srv/jouw-driver/backups','/srv/jouw-driver/releases','/var/lib/docker','/var/log','/home','/tmp']){
-            try{report.diskBytes[path]=Number(execFileSync('sudo',['-n','du','-sx','--block-size=1',path],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000}).split(/\s+/)[0]);}catch{report.diskBytes[path]='unavailable';}
-          }
-          report.dockerStorageBytes={};
-          for(const path of ['/var/lib/docker/containers','/var/lib/docker/overlay2','/var/lib/docker/image','/var/lib/docker/volumes','/var/lib/docker/buildkit','/var/lib/containerd']){
-            try{report.dockerStorageBytes[path]=Number(execFileSync('sudo',['-n','du','-sx','--block-size=1',path],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:30000}).split(/\s+/)[0]);}catch{report.dockerStorageBytes[path]='unavailable';}
-          }
-          report.containerLogMetadata=[];
-          for(const id of docker('ps','--all','--quiet').split('\n').filter(Boolean)){
-            const info=JSON.parse(docker('container','inspect',id))[0];
-            let bytes;try{bytes=Number(execFileSync('sudo',['-n','stat','--format=%s',info.LogPath],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:5000}).trim());}catch{bytes='unavailable';}
-            const service=info.Config.Labels?.['com.docker.compose.service'];
-            report.containerLogMetadata.push({service:['app','edge','db','postgrest'].includes(service)?service:'other',running:info.State.Running,driver:info.HostConfig.LogConfig?.Type,rotationConfigured:Boolean(info.HostConfig.LogConfig?.Config?.['max-size']),bytes});
-          }
-          report.eligibleUnusedImages=[];
-          const protectedIds=new Set(ids.map(id=>docker('inspect','--format','{{.Image}}',id)));
-          for(const ref of [state.image,state.previousImage,release.image,release.previousImage].filter(Boolean))protectedIds.add(JSON.parse(docker('image','inspect',ref))[0].Id);
-          for(const id of [...new Set(docker('image','ls','--quiet','--no-trunc','--filter','label=org.opencontainers.image.source=https://github.com/infojouwdriver-commits/jd').split('\n').filter(Boolean))]){
-            const info=JSON.parse(docker('image','inspect',id))[0];
-            if(!protectedIds.has(id)&&Date.now()-Date.parse(info.Created)>48*60*60*1000)report.eligibleUnusedImages.push({id,size:info.Size,created:info.Created});
-          }
-          report.httpsChecks={};
-          for(const host of ['jouw-driver.duckdns.org','jouww.com','www.jouww.com','app.jouww.com']){try{report.httpsChecks[host]=execFileSync('curl',['--proto','=https','--tlsv1.2','--resolve',host+':443:127.0.0.1','--max-time','10','--silent','--fail','--output','/dev/null','--write-out','%{http_code}','https://'+host+'/privacy-policy'],{encoding:'utf8',stdio:['ignore','pipe','pipe'],timeout:12000});}catch(e){report.httpsChecks[host]='unavailable-exit-'+e.status;}}
-          console.log(JSON.stringify(report,null,2));
-          const all=docker('ps','--all','--quiet').split('\n').filter(Boolean).map(id=>JSON.parse(docker('inspect',id))[0]);
-          console.log(JSON.stringify({services:all.map(i=>({service:i.Config.Labels?.['com.docker.compose.service'],status:i.State.Status,health:i.State.Health?.Status,restarts:i.RestartCount,oom:i.State.OOMKilled}))}));
-          const recover=process.argv[2]==='true';
-          const db=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='db'&&i.State.Running);
-          if(db){console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"BEGIN READ ONLY;SET LOCAL statement_timeout='5s';SELECT json_build_object('recovery',pg_is_in_recovery(),'readonly',current_setting('default_transaction_read_only'),'security_table',to_regclass('public.security_rate_limits') IS NOT NULL,'rate_function',to_regprocedure('public.security_rate_limit(text,integer)') IS NOT NULL);SELECT json_build_object('state',state,'wait',wait_event_type,'count',count(*)) FROM pg_stat_activity GROUP BY state,wait_event_type;COMMIT;"));}
-          if(db){
-            const sql="BEGIN READ ONLY;SET LOCAL statement_timeout='5s';SELECT json_build_object('pid',a.pid,'state',a.state,'role',a.usename,'application',a.application_name,'seconds',extract(epoch from clock_timestamp()-a.state_change)::int,'blockers',pg_blocking_pids(a.pid),'blocked_count',(SELECT count(*) FROM pg_stat_activity b WHERE a.pid=ANY(pg_blocking_pids(b.pid))),'operation',CASE WHEN a.query ILIKE '%security_record_driver_shift%' THEN 'shift_declaration' WHEN a.query ILIKE '%security_rate_limit%' THEN 'rate_limit' WHEN a.query ILIKE '%rollback%' THEN 'rollback' ELSE 'other' END) FROM pg_stat_activity a WHERE a.datname='jouw_driver' AND a.pid<>pg_backend_pid();COMMIT;";
-            console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',sql));
-            if(recover){
-              if(state.revision!=='79a1ec6f6e14299778582b609b73340f644f43c3')throw Error('Live revision changed; recovery refused');
-              const fix="SET statement_timeout='5s';SELECT json_build_object('released_aborted_gateway',pg_terminate_backend(a.pid)) FROM pg_stat_activity a WHERE a.datname='jouw_driver' AND a.usename='jouw_gateway' AND a.state='idle in transaction (aborted)' AND a.state_change<clock_timestamp()-interval '60 seconds' AND EXISTS(SELECT FROM pg_stat_activity b WHERE a.pid=ANY(pg_blocking_pids(b.pid))) AND (SELECT count(*) FROM pg_stat_activity c WHERE c.datname='jouw_driver' AND c.usename='jouw_gateway' AND c.state='idle in transaction (aborted)')=1;";
-              console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',fix));
-            }
-          }
-          if(process.argv[3]==='true'){
-            if(!db||state.revision!=='79a1ec6f6e14299778582b609b73340f644f43c3')throw Error('Shift repair live baseline mismatch');
-            const before=docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"SELECT pg_get_functiondef(p.oid) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN ('security_record_driver_shift','security_shift_status','security_guard_shift_work') ORDER BY p.proname;");
-            if(!before.includes('security_record_driver_shift')||!before.includes('security_shift_status')||!before.includes('security_guard_shift_work'))throw Error('Shift function baseline missing');
-            const backup='/srv/jouw-driver/shift-functions-before-'+Date.now()+'.sql';
-            fs.writeFileSync(backup,'BEGIN;\n'+before+'\nCOMMIT;\n',{mode:0o600,flag:'wx'});
-            console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',"-- Business conflicts must not trigger PostgREST's serialization retry loop.\n-- 23505 is already handled as HTTP 409 by the deployed shift endpoint.\n-- Replace only the three shift functions; preserve their owners and ACLs.\nBEGIN;\nSET LOCAL lock_timeout='5s';\nSET LOCAL statement_timeout='15s';\nSET LOCAL search_path=\"public\",pg_catalog;\nDO $$\nDECLARE f record; changed text;\nBEGIN\n FOR f IN SELECT p.oid,pg_get_functiondef(p.oid) definition\n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace\n WHERE n.nspname=current_schema() AND p.proname IN\n ('security_record_driver_shift','security_shift_status','security_guard_shift_work')\n LOOP\n  changed=replace(f.definition,'''40001''','''23505''');\n  IF changed<>f.definition THEN EXECUTE changed; END IF;\n END LOOP;\nEND $$;\nNOTIFY pgrst,'reload schema';\nCOMMIT;\n"));
-            const check=docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-c',"SELECT count(*)=3 AND bool_and(position(chr(39)||'40001'||chr(39) IN pg_get_functiondef(p.oid))=0) AND bool_and(position(chr(39)||'23505'||chr(39) IN pg_get_functiondef(p.oid))>0) AND bool_and(NOT has_function_privilege('jouw_app_user',p.oid,'EXECUTE')) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN ('security_record_driver_shift','security_shift_status','security_guard_shift_work');");
-            if(check!=='t')throw Error('Shift function verification failed; private rollback available');
-            console.log('Three shift functions patched; existing access controls preserved');
-            if(process.argv[4]==='true'){
-              const stop="SET statement_timeout='5s';SELECT json_build_object('stopped_looping_shift_pid',a.pid,'terminated',pg_terminate_backend(a.pid)) FROM pg_stat_activity a WHERE a.pid IN (511940,514276,526849,514571,514676,525867,514207,526890,514667,512730) AND a.datname='jouw_driver' AND a.usename='jouw_gateway' AND a.application_name='PostgREST 13.0.8' AND a.backend_start<'2026-10-27T17:08:28Z'::timestamptz AND a.query ILIKE '%security_record_driver_shift%';";
-              console.log(docker('exec',db.Id,'psql','-U','postgres','-d','jouw_driver','-Atq','-v','ON_ERROR_STOP=1','-c',stop));
-            }
-          } else if(process.argv[4]==='true'){throw Error('Loop recovery requires the conflict patch');}
-          const app=all.find(i=>i.Config.Labels?.['com.docker.compose.service']==='app'&&i.State.Running);
-          if(app){
-            const probe=String.raw`const {createHmac}=await import('node:crypto');const e=process.env;const b=x=>Buffer.from(JSON.stringify(x)).toString('base64url');const now=Math.floor(Date.now()/1000);const unsigned=b({alg:'HS256',typ:'JWT'})+'.'+b({sub:'0',role:e.SCHEMA_ADMIN_USER,aud:'jouw-driver',iat:now,exp:now+60});const token=unsigned+'.'+createHmac('sha256',e.JWT_SECRET).update(unsigned).digest('base64url');for(const path of ['/?select=none','/security_rate_limits?select=bucket_key&limit=0']){try{const r=await fetch(e.POSTGREST_URL+path,{headers:{Authorization:'Bearer '+token,'Accept-Profile':e.POSTGREST_SCHEMA||'public'},signal:AbortSignal.timeout(10000)});let data;try{data=await r.json()}catch{}console.log(JSON.stringify({probe:path,status:r.status,code:data?.code,message:typeof data?.message==='string'?data.message.replace(/postgres(?:ql)?:\/\/[^ ]+/g,'[redacted]').slice(0,180):undefined}));}catch(err){console.log(JSON.stringify({probe:path,error:err.cause?.code||err.name}));}}`;
-            try{console.log(docker('exec',app.Id,'node','--input-type=module','-e',probe));}catch{console.log('Internal API probe timed out');}
-          }
-          DOMAIN_INVENTORY
-          fi
+          grep -Fqx -- "$2" "$HOME/.ssh/authorized_keys"
+          printf '%s\n' 'Dedicated ECC deployment key verified on the new host.'
           REMOTE
