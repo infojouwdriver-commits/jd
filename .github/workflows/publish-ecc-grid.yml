@@ -18,7 +18,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ECC_DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          BUNDLE_SHA256: 8a1a161006a6061627b80d7527f973dfb73d3be0dd78e6c03254b8c076523909
+          BUNDLE_SHA256: a273adb238ed01e9892485a41ae9df266a2f7b09e160245ab55cba27721ed968
         run: |
           set -euo pipefail
           umask 077
