@@ -1,0 +1,62 @@
+name: Provision the private ECC PostgreSQL reader
+on:
+  workflow_dispatch:
+    inputs:
+      provision_reader:
+        description: Apply the approved read-only PostgreSQL link to the separate ECC server
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  provision:
+    if: github.ref == 'refs/heads/main' && inputs.provision_reader
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    environment: production
+    steps:
+      - name: Provision scoped production reader and check the private SSH stream
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROD_SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          PROD_SSH_USER: ${{ secrets.DEPLOY_USER }}
+          PROD_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          BUNDLE_SHA256: 18218b6e5cb621451d9596e236c6a658a9669b0a39b4d40e6d9c842c034dcec4
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$GITHUB_REF" = refs/heads/main
+          test -n "$PROD_SSH_KEY" && test -n "$PROD_KNOWN_HOSTS"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          printf '%s\n' "$PROD_SSH_KEY" > "$tmp/prod.key"
+          printf '%s\n' "$PROD_KNOWN_HOSTS" > "$tmp/prod.known"
+          unset PROD_SSH_KEY PROD_KNOWN_HOSTS
+          printf '%s\n' '141.94.2.5 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAGerEd8rI8M08uoDCP9G70IBaxVij+D68/sB0AVN77b' > "$tmp/ecc.known"
+          branch=ecc-read-provision-inbox
+          fetch() {
+            gh api "repos/$GITHUB_REPOSITORY/contents/$1?ref=$branch" --jq '.content' | base64 -d
+          }
+          fetch .ecc-read-provision/bundle.txt | base64 -d > "$tmp/bundle.tar"
+          printf '%s  %s\n' "$BUNDLE_SHA256" "$tmp/bundle.tar" | sha256sum --check --status
+          mkdir "$tmp/bundle"
+          tar -xf "$tmp/bundle.tar" -C "$tmp/bundle" --no-same-owner
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$tmp/transport.pem" 2>/dev/null
+          pub=$(openssl pkey -in "$tmp/transport.pem" -pubout -outform DER | base64 -w0)
+          printf '::notice title=ECC transport public key::%s\n' "$pub"
+          path=".ecc-read-provision/envelope-$GITHUB_RUN_ID.txt"
+          for attempt in {1..75}; do
+            if fetch "$path" > "$tmp/envelope" 2>/dev/null && test -s "$tmp/envelope"; then break; fi
+            sleep 5
+          done
+          test -s "$tmp/envelope"
+          python3 -m venv "$tmp/venv"
+          "$tmp/venv/bin/python" -m pip --quiet install cryptography==46.0.3
+          "$tmp/venv/bin/python" "$tmp/bundle/unseal-bootstrap.py" "$tmp/transport.pem" "$tmp/envelope" "$tmp/ecc.key"
+          ssh-keygen -y -f "$tmp/ecc.key" >/dev/null
+          bash "$tmp/bundle/ecc-run-two-hosts.sh" "$tmp" "$PROD_SSH_HOST" "$PROD_SSH_USER"
