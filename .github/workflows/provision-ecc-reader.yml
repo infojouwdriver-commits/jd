@@ -26,7 +26,7 @@ jobs:
           PROD_SSH_USER: ${{ secrets.DEPLOY_USER }}
           PROD_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           PROD_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          BUNDLE_SHA256: 18218b6e5cb621451d9596e236c6a658a9669b0a39b4d40e6d9c842c034dcec4
+          BUNDLE_SHA256: e82e0e4bf08c82e1b2d4d8de3645cfd5c1bf65f2fe17cd438a92a93f5a8881e5
         run: |
           set -euo pipefail
           umask 077
