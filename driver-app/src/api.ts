@@ -24,9 +24,11 @@ export interface ActivityPage {driver_id:number;trips:ActivityTrip[];total:numbe
 export interface RevenueSummary {driver_id:number;from:string;to:string;total_trips:number;total_revenue:number;total_distance:number;total_duration:number;average_trip_value:number;platform_stats:Record<string,{count:number;revenue:number}>;payment_stats:Record<string,{count:number;revenue:number}>;daily_stats:Record<string,{count:number;revenue:number}>;basis:'completed_gross_eur'}
 export class ApiError extends Error {
   readonly status: number;
-  constructor(status: number) {
+  readonly errorCode?: string;
+  constructor(status: number, errorCode?: string) {
     super(status === 408 ? 'انتهت مهلة الطلب. تحقق من حالة العملية قبل إعادة المحاولة.' : status===0 ? 'تعذّر الوصول إلى الخادم؛ لا يمكن تأكيد انقطاع الإنترنت.' : status>=500 ? 'الخادم غير متاح أو أعاد استجابة غير صالحة.' : status === 401 ? 'انتهت الجلسة أو بيانات الدخول غير صحيحة.' : status === 403 ? 'ليس لديك صلاحية لهذا الإجراء.' : 'تعذّر الاتصال بالخادم. حاول مجدداً.');
     this.status = status;
+    this.errorCode = errorCode;
   }
 }
 export function apiConnectionKey(error:unknown){return error instanceof ApiError?(error.status===408?'requestTimeout':error.status===0?'requestTransport':error.status>=500?'requestServer':error.status===401?'signInAgain':'error'):'error';}
@@ -39,13 +41,17 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     const timer = setTimeout(() => controller.abort(), credentials === 'omit' ? 20000 : 15000);
     try {
       const params = new URLSearchParams();
-      for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) || (typeof value==='number'?(!Number.isSafeInteger(value)||value<0):value.length>64)) throw new ApiError(400); params.set(key,String(value));}
+      for (const [key,value] of Object.entries(query ?? {})) {if (!/^[a-z_]+$/.test(key) && !(path==='/next_api/drivers/shifts'&&key==='startReading') || (typeof value==='number'?(!Number.isSafeInteger(value)||value<0):value.length>64)) throw new ApiError(400); params.set(key,String(value));}
       const response = await transport(API_ORIGIN + path + (params.size ? `?${params}` : ''), {
         method, credentials, redirect: 'error',
         headers: {Origin: API_ORIGIN, Accept: 'application/json', ...(body ? {'Content-Type': 'application/json'} : {})},
         ...(body ? {body: JSON.stringify(body)} : {}), signal: controller.signal,
       }).catch(() => {throw new ApiError(controller.signal.aborted ? 408 : 0);});
-      if (!response.ok) throw new ApiError(response.status);
+      if (!response.ok) {
+        const failure = path==='/next_api/drivers/shifts' && response.status<500
+          ? await response.json().catch(() => null) as {errorCode?:unknown}|null : null;
+        throw new ApiError(response.status, typeof failure?.errorCode==='string' && /^SHIFT_[A-Z_]{1,40}$/.test(failure.errorCode) ? failure.errorCode : undefined);
+      }
       const result = await response.json().catch(() => {throw new ApiError(502);});
       if (result.success !== true) throw new ApiError(502);
       return result.data as T;
@@ -134,6 +140,17 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     },
     reportRoadIssue(point:{lat:number;lon:number},command:{kind:RoadKind}|{id:number;present:boolean}) {
       return request<{id:number}>('/next_api/drivers/road-reports',{...point,...command});
+    },
+    async shiftStartReading(owner:number,vehicle:number) {
+      const current=await profile();
+      if(current.driver.id!==owner)throw new ApiError(403);
+      if(current.driver.current_vehicle_id!==vehicle)throw new ApiError(409);
+      const result=await ownerRead<{plate:string;odometer:number|null}|null>(owner,'/next_api/drivers/shifts',{startReading:1});
+      if(result===null)return null;
+      if(!result||typeof result.plate!=='string'||!result.plate.trim()||result.odometer!==null&&
+        (!Number.isFinite(result.odometer)||result.odometer<0||result.odometer>9999999.99||Math.abs(Math.round(result.odometer*100)-result.odometer*100)>.00001))throw new ApiError(502);
+      if(result.plate.length>64)throw new ApiError(502);
+      return result;
     },
     async shifts(owner:number,query:{offset?:number;id?:string}={}) {
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);

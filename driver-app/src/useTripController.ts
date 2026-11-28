@@ -1,3 +1,4 @@
+import {syncCarPlayTrip} from './carplay-trip';
 import {publishNativeTripStatus} from './shift-trip';
 import {hasShiftIntent} from './native-shift-intent';
 import {AppState} from 'react-native';
@@ -17,7 +18,9 @@ import type {NativeAddress} from './native-addresses';
 const api = driverApi;
 function pointOf(value: Location.LocationObject): MeterPoint {
   if (value.mocked) throw Error('قياس الموقع المحاكى غير مقبول.');
-  const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity, speed: value.coords.speed};
+  const {latitude, longitude, accuracy, speed, heading} = value.coords;
+  const point: MeterPoint = {lat: latitude, lon: longitude, timestamp: value.timestamp, accuracy: accuracy ?? Infinity, speed};
+  if (heading !== null && Number.isFinite(heading) && heading >= 0 && heading <= 360) point.heading = heading % 360;
   if (!validPoint(point)) throw Error('انتظر موقع GPS حديثاً ودقيقاً.');
   return point;
 }
@@ -66,6 +69,16 @@ export function useTripController({profile, onProfile, sessionBusy, actionGate, 
     }).catch(() => {if (!disposed.current) setError('تعذّر فتح سجل الرحلات. لا تحذف بيانات التطبيق.');});
     return () => {disposed.current = true; engine.current = null;};
   }, [profile.driver.id]);
+  const carLatitude = trip?.navigationDestination?.lat;
+  const carLongitude = trip?.navigationDestination?.lon;
+  const carTripKey = trip?.key;
+  const carTripTitle = trip?.endAddress;
+  useEffect(() => {
+    syncCarPlayTrip(carTripKey && carTripTitle && carLatitude !== undefined && carLongitude !== undefined ? {
+      key: carTripKey, title: carTripTitle, latitude: carLatitude, longitude: carLongitude,
+    } : null);
+  }, [carTripKey, carTripTitle, carLatitude, carLongitude]);
+  useEffect(() => () => syncCarPlayTrip(null), []);
   useEffect(() => {onBlockLogout(!ready || !!trip || busy);}, [ready, trip, busy, onBlockLogout]);
   useEffect(() => {
     if (!trip) return;

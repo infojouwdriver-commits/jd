@@ -10,6 +10,12 @@ import {fetchNativeRoute,navigationUrl,routeBounds,trackRouteFix,type RouteTrack
 import type {RoadReport} from './road-alerts';
 const token=process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim();
 if(token?.startsWith('pk.'))Mapbox.setAccessToken(token);
+const taxiImages = { 'driver-taxi': require('../assets/map-taxi.png') };
+const navigationStyleURL = 'mapbox://styles/mapbox/standard';
+const navigationBasemap = {
+ theme: 'faded', show3dObjects: false, showPointOfInterestLabels: false,
+ showTransitLabels: false, showRoadLabels: true,
+} as const;
 interface DriverMapProps {reports?:RoadReport[]; onRoute?:(route:NativeRoute|null)=>void; onSelectReport?:(report:RoadReport)=>void; alternateRequested?:number;fullScreen?: {top:number;bottom:number}; navigationDestination?:RouteCoordinate|null; onRouteStatus?:(status:RouteStatus)=>void; compact?:boolean;autoPreview?:boolean; showLocate?:boolean; onPreview?:(value:{start:RouteCoordinate;end:RouteCoordinate;route:NativeRoute})=>void;position?:MeterPoint|null;previewStart?:RouteCoordinate|null;initialDestination?:RouteCoordinate|null;onDestinationChange?:(point:RouteCoordinate)=>void}
 export type RouteStatus = 'idle'|'waitingGps'|'routing'|'ready'|'failed';
 export default function DriverMap(props:DriverMapProps){return <DriverMapView key={`${props.previewStart?.lat}:${props.previewStart?.lon}:${props.initialDestination?.lat}:${props.initialDestination?.lon}:${props.navigationDestination?.lat}:${props.navigationDestination?.lon}`} {...props}/>;}
@@ -122,15 +128,19 @@ function DriverMapView({position,previewStart,initialDestination,onDestinationCh
  return <View style={[styles.panel,guided&&{flex:1}]}>
   {!guided&&<><Text style={styles.heading}>{t('map')}</Text>{!compact&&<Text style={styles.note}>{t('mapHint')}</Text>}</>}
   <View style={[styles.wrapper,guided&&{flex:1,height:undefined,borderRadius:0}]}>
-   <Mapbox.MapView style={styles.map} styleURL={isDark?Mapbox.StyleURL.Dark:Mapbox.StyleURL.Street}
+   <Mapbox.MapView style={styles.map} styleURL={guided?navigationStyleURL:isDark?Mapbox.StyleURL.Dark:Mapbox.StyleURL.Street}
     surfaceView={!guided}
     attributionPosition={fullScreen?{bottom:fullScreen.bottom,left:12}:undefined}
-    logoPosition={fullScreen?{bottom:fullScreen.bottom,right:12}:undefined}
+    logoPosition={fullScreen?{bottom:fullScreen.bottom+25,left:12}:undefined}
     compassPosition={fullScreen?{top:fullScreen.top,right:12}:undefined}
     scaleBarEnabled={!guided}
     onCameraChanged={guided?state=>{if(state.gestures.isGestureActive)setFollowing(false);}:undefined}
     onLongPress={compact?undefined:feature=>chooseDestination(feature.geometry.coordinates)}
     onMapLoadingError={()=>{setError('mapError');if(guided)onRouteStatus?.('failed');}}>
+    {guided&&<Mapbox.StyleImport id="basemap" existing config={{...navigationBasemap,
+     lightPreset:isDark?'night':'day',
+     ...(isDark?{colorLand:'#172334',colorRoads:'#40546c',colorMotorways:'#63748d'}:{}),
+    }}/>}
     <Mapbox.Camera ref={camera} defaultSettings={{centerCoordinate:displayPoint??(target?[target.lon,target.lat]:[4.3517,50.8503]),zoomLevel:guided&&displayPoint?15:11}}
      centerCoordinate={following?displayPoint:undefined} zoomLevel={following&&displayPoint?15:undefined} padding={padding} animationDuration={animationDuration}/>
     {guided&&showTraffic&&<Mapbox.VectorSource id="live-traffic" url="mapbox://mapbox.mapbox-traffic-v1">
@@ -142,20 +152,23 @@ function DriverMapView({position,previewStart,initialDestination,onDestinationCh
     </Mapbox.ShapeSource>}
     {route&&<Mapbox.ShapeSource id="trip-route" shape={{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:route.coordinates}}}>
      {[
-      ...(guided ? [<Mapbox.LineLayer key="edge" id="trip-route-edge" style={{lineColor:colors.hero,lineWidth:9,lineCap:'round',lineJoin:'round'}}/>] : []),
-      <Mapbox.LineLayer key="line" id="trip-route-line" style={{lineColor:guided?colors.accent:'#367cff',lineWidth:guided?6:5,lineCap:'round',lineJoin:'round'}}/>,
+      ...(guided ? [<Mapbox.LineLayer key="edge" id="trip-route-edge" style={{lineColor:'#172130',lineWidth:8,lineCap:'round',lineJoin:'round',lineEmissiveStrength:1}}/>] : []),
+      <Mapbox.LineLayer key="line" id="trip-route-line" style={{lineColor:guided?(isDark?'#ffd266':'#d98a13'):'#367cff',lineWidth:5,lineCap:'round',lineJoin:'round',lineEmissiveStrength:guided?1:0}}/>,
      ]}
     </Mapbox.ShapeSource>}
     {origin&&<Mapbox.PointAnnotation id="preview-origin" coordinate={[origin.lon,origin.lat]}><View style={[styles.point,{backgroundColor:'#fff'}]}/></Mapbox.PointAnnotation>}
-    {displayPoint&&<Mapbox.PointAnnotation id="driver-location" coordinate={displayPoint}>
-     {guided?<View style={{width:42,height:42,borderRadius:21,borderWidth:3,borderColor:colors.hero,backgroundColor:colors.accent,alignItems:'center',justifyContent:'center'}}><Ionicons name="car-sport" size={26} color={colors.accentText}/></View>:<View style={styles.point}/>}
-    </Mapbox.PointAnnotation>}
     {guided&&reports?.map(report=><Mapbox.PointAnnotation key={String(report.id)} id={`road-report-${report.id}`} coordinate={[report.lon,report.lat]} onSelected={()=>onSelectReport?.(report)}>
      <View style={{backgroundColor:'#a51e3c',width:34,height:34,borderRadius:17,alignItems:'center',justifyContent:'center',borderColor:'#fff',borderWidth:2}}>
       <Ionicons name={report.kind==='closure'?'ban-outline':report.kind==='collision'?'car-outline':report.kind==='congestion'?'speedometer-outline':'warning-outline'} size={18} color="#fff"/>
      </View>
     </Mapbox.PointAnnotation>)}
     {target&&<Mapbox.PointAnnotation id="route-destination" coordinate={[target.lon,target.lat]}><View style={[styles.point,{backgroundColor:'#a8e86c'}]}/></Mapbox.PointAnnotation>}
+    {guided&&<Mapbox.Images images={taxiImages}/>}
+    {displayPoint&&(guided?<Mapbox.ShapeSource id="driver-taxi-location" shape={{type:'Feature',properties:{},geometry:{type:'Point',coordinates:displayPoint}}}>
+     <Mapbox.SymbolLayer id="driver-taxi-pin" aboveLayerID={route?'trip-route-line':undefined}
+      style={{iconImage:'driver-taxi',iconAllowOverlap:true,iconIgnorePlacement:true,iconEmissiveStrength:1,
+       iconRotationAlignment:'map',iconPitchAlignment:'viewport',iconRotate:gps?.heading??0}}/>
+    </Mapbox.ShapeSource>:<Mapbox.PointAnnotation id="driver-location" coordinate={displayPoint}><View style={styles.point}/></Mapbox.PointAnnotation>)}
    </Mapbox.MapView>
    {showLocate&&<View style={guided?{position:'absolute',right:14,bottom:(fullScreen?.bottom??0)+31,gap:8}:undefined}>
     {guided&&<Pressable accessibilityRole="switch" accessibilityLabel={trafficLabel} accessibilityState={{checked:showTraffic}} onPress={()=>setShowTraffic(value=>!value)} style={[styles.button,{backgroundColor:showTraffic?colors.accent:colors.surface,minWidth:48,minHeight:48}]}><Ionicons name="layers-outline" size={20} color={showTraffic?colors.accentText:colors.text}/></Pressable>}

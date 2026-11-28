@@ -23,7 +23,16 @@ function useShiftState(){
   if(trip.trip||trip.pending>0){setError('blocked');return;}
   if(!s.actionGate.acquire())return;flight.current=true;++generation.current;setBusy(true);setSaved(false);setError('');
   try{const next=await intent.submit(command);if(!alive.current)return;setPending(null);setData(old=>({active:next.ended_at?null:next,shifts:[next,...(old?.shifts||[]).filter(row=>row.id!==next.id)].slice(0,25)}));setSaved(true);void refresh();return true;}
-  catch(e){if(alive.current){setPending(intent.current());setError(e instanceof ApiError&&e.status===409?'conflict':e instanceof ApiError&&e.status===400?'invalid':'failed');}}
+  catch(e){if(alive.current){
+   setPending(intent.current());
+   if(e instanceof ApiError){
+    if(e.errorCode==='SHIFT_SUBSCRIPTION_PAYMENT_REQUIRED'){setError('payment');return;}
+    if(e.errorCode==='SHIFT_VEHICLE_REQUIRED'){setError('selectVehicle');return;}
+    if(e.status===409){setError('conflict');return;}
+    if(e.status===400){setError('invalid');return;}
+   }
+   setError('failed');
+  }}
   finally{flight.current=false;s.actionGate.release();if(alive.current)setBusy(false);}
  }
  return {data,active:data?.active||null,pending,busy,loading,error,saved,refresh,submit,ready:restored&&!!data,blocked:!trip.ready||!!trip.trip||trip.pending>0||s.busy};

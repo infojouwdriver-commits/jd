@@ -1,7 +1,7 @@
 node_modules/
 .expo/
 android/
-ios/
+/ios/
 dist/
 *.tsbuildinfo
 .env*
