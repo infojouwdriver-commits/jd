@@ -67,6 +67,7 @@ try {
  // Existing operational tenant predates rollout; new onboarding below must still wait for first payment.
  await psql("INSERT INTO companies(id,name) VALUES(1,'Synthetic acceptance company') ON CONFLICT(id) DO NOTHING;");
  for(const file of ['deploy/setup-gateway.sql','migrations/20261009_security.sql','migrations/20261010_release.sql','migrations/20261010_admin_mfa.sql','migrations/20261010_driver_lifecycle.sql','migrations/20261010_trip_invoice.sql','migrations/20261012_accounts_messages.sql','migrations/20261013_company_pricing.sql','migrations/20261013_mail_delivery.sql','migrations/20261016_native_push.sql','migrations/20261017_company_registration.sql','migrations/20261018_company_lifecycle.sql','migrations/20261018_subscription_billing.sql','migrations/20261018_subscription_mail.sql','migrations/20261018_company_staff.sql','migrations/20261018_operations_centre.sql','migrations/20261018_web_change_approvals.sql','migrations/20261018_web_billing.sql','migrations/20261018_contract_billing.sql','migrations/20261019_email_identity.sql','migrations/20261019_driver_shifts.sql','migrations/20261019_shift_activity.sql','migrations/20261023_app_experience.sql','migrations/20261024_contract_email_signing.sql','migrations/20261024_stripe_billing.sql','migrations/20261026_manual_invoices.sql','migrations/20261026_signature_billing_conflict.sql','migrations/20261026_invoice_bank_qr.sql','migrations/20261026_invoice_checkout.sql','migrations/20261027_shift_conflict_retry.sql','migrations/20261028_receipt_email.sql','migrations/20261104_company_tariffs.sql','migrations/20261109_chiron_realtime.sql','migrations/20261114_email_templates.sql','migrations/20261115_contact_approval_alerts.sql','migrations/20261115_chiron_onboarding.sql','migrations/20261115_account_deletion.sql','migrations/20261119_driver_work_on_approval.sql','migrations/20261120_company_email_sync.sql','migrations/20261121_admin_company_onboarding.sql','migrations/20261122_company_social_registration.sql','migrations/20261122_minimal_company_registration.sql','migrations/20261010_gateway_lockdown.sql','deploy/setup-gateway.sql']){try{await psql(deploymentSql(file));}catch(error){throw Error(`${file}: ${error.message}`);}}
+ await psql(deploymentSql('migrations/20261128_road_reports.sql'));
  checks.push('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL');
  // Exercise the exporter against real pg_dump, not the historical app.sql source.
  schemaExportWork=fs.mkdtempSync(path.join(os.tmpdir(),'jd-live-schema-'));
@@ -191,6 +192,23 @@ try {
  const cookie=cookies.map(c=>c.split(';')[0]).join('; ');const access=decodeURIComponent(cookies.find(c=>c.startsWith('auth-token=')).split(';')[0].slice('auth-token='.length));
  const claims=(await jwtVerify(access,new TextEncoder().encode(jwtSecret))).payload;assert.equal(claims.sub,'2');assert.equal(claims.role,'jd_browser');checks.push('Real application phone login validates bcrypt and issues secure cookies with browser role');
  const profile=await appApi('/next_api/auth/user','GET',undefined,cookie);assert.equal(profile.status,200);assert.equal(profile.data.data.isAdmin,false);assert.equal(profile.data.data.sub,'2');checks.push('Cookie session resolves authenticated driver through real database');
+ const roadPath='/next_api/drivers/road-reports';
+ const location={lat:50.85,lon:4.35};
+ assert.equal((await appApi(roadPath,'POST',{...location,kind:'congestion'},cookie)).status,200);
+ const report=await appApi(roadPath+'?lat=50.85&lon=4.35','GET',undefined,cookie);
+ assert.equal(report.status,200);
+ const congestion=report.data.data.reports.find(item=>item.kind==='congestion');
+ assert.ok(congestion);
+ assert.equal(Object.hasOwn(congestion,'reporter'),false);
+ await denied('/road_reports',browser);
+ const accountPdf='/next_api/gdpr/export/pdf?lang=fr';
+ assert.equal((await appApi(accountPdf)).status,401);
+ const pdf=await appApi(accountPdf,'GET',undefined,cookie);
+ assert.equal(pdf.status,200);
+ assert.match(pdf.response.headers.get('content-type'),/^application\/pdf/);
+ assert.match(pdf.response.headers.get('cache-control'),/no-store/);
+ assert.equal((await pdf.response.text()).slice(0,5),'%PDF-');
+ checks.push('Road reporting and authenticated account PDF verified against native PostgreSQL');
  // Domain conflicts must return promptly through real PostgREST, leaving login usable.
  const shiftId=randomUUID();
  const shiftStart={request_id:randomUUID(),shift_id:shiftId,action:'start',expected_version:0,odometer:100,passenger_km:0,work_status:'available'};
