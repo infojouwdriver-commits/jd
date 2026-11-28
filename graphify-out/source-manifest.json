@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "86b0f44458ecf326581bf58a0f6988e8d61073a4",
+  "source_commit_context": "7e56b386e98adf1c768a34a9d1b3bbc8df14d637",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -440,7 +440,7 @@
     "src/components/app-experience/copy.ts": "6be39057b577b8b2dfcb431cab61563f356ed2a7da438c648e08e15718a757a5",
     "src/components/app-experience/prepare-image.ts": "d4e0748bde4c29174cde96f3dc8f9ab26dc3e962e841df099267a7f8fc823298",
     "src/components/app-experience/welcome-preview.css": "a3423422ea0602c4f3e8ffed618c6ed25f0a091e4dfb77ac7714c963571f7541",
-    "src/components/auth/AuthProvider.tsx": "3b09064cd650282b9163e4c97ffa52aa68ccee3c549ec609d73b1004b5e0ee44",
+    "src/components/auth/AuthProvider.tsx": "8c0cdecb3269b26a08cb1a06cd369aacdfe68082299d28eee6db5db7e8082aec",
     "src/components/auth/CompanyLoginForm.tsx": "547e1513282019a4976174e67dce4af73982172ad72effecb90b31dae44a69f2",
     "src/components/auth/DriverRegisterForm.tsx": "0d4a59adffbcda1490de73038c10ec1173aab0258e0eb3f5811c0310277b8ef0",
     "src/components/auth/GoogleLoginButton.tsx": "912d2568d3f630000b3afb75d74acb6f357e9ae8b44db42018fdcd190b6a4dce",
@@ -586,7 +586,7 @@
     "src/components/ui/tooltip.tsx": "f7c8c4c7c66c61c74c88527189e9a228cd1f26c6f142709e739fdb09b5f456dd",
     "src/config/auth-config.ts": "171a652e85531d606167d15c97f8443330a774c5daa5743ed87785336af157a7",
     "src/constants/auth.ts": "1d9293ec032458cf3e55bed4ba6c6f8ba3a1f513a59730c61c79c71419494f31",
-    "src/contexts/LanguageContext.tsx": "dd74c42454538f5cb5ffc9bd11f9c224acc9cf668ad90760d9e4181d3da507ae",
+    "src/contexts/LanguageContext.tsx": "5517196d82180d3dbf29f257d56e979ac56abc16d13b3bbbcdefec0a4063bc2f",
     "src/hooks/use-mobile.tsx": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b",
     "src/hooks/use-toast.ts": "84edcc32415da33979b2926e5c5c51271ef800c65cb1553fde7b88a63c153317",
     "src/hooks/useAddressSearch.ts": "f51b0b09c21eb55d0db2f71c46621c46b78002db817ce519f043bc4abb1e7b0a",
@@ -715,8 +715,8 @@
     "GRAPH_TREE.html": "7117e4c22a6bea8b29086e13b776615ceefc545b5877f4f5ef48ba242d8dcce3",
     "health.json": "bc8333956c815e5ea51532b913c36e26f3d095914a797c70174fcab4d0b37b13",
     "SOURCE_INDEX.md": "502f9a76e323c24d648330ce27051da6dfe947051fd9cbe0cf6a9227719dfc8d",
-    "GRAPH_REPORT.md": "abcb2f283842d25e0d3eeed60e710957b33688c3e75ae9febb3bacb0192b6243",
-    "graph.json": "41b1e43e41af1969f269060d40138895cb0b12842d86a90d28e23bf57bdbb6e1"
+    "GRAPH_REPORT.md": "448aca56e67964b32b1e3c11cb211b244fb72327920fc525c9cef7441b298543",
+    "graph.json": "7267fd8d3b0b259731018bc33523a30c12f46af3fce1fc1b930c7c013a515905"
   },
   "nodes": 4076,
   "edges": 13711,
