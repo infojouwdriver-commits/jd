@@ -1,3 +1,4 @@
+import type {AirportNotice,RoadKind,RoadReport} from './road-alerts';
 import {validShift,shiftUuid,type ShiftList,type ShiftDetail,type DriverShift,type ShiftCommand} from './shift-model.ts';
 import type {CompanyRegistration} from './registration/schema.ts';
 import type {MeterPoint} from './trip-meter';
@@ -113,9 +114,27 @@ export function createDriverApi(transport: typeof fetch = fetch) {
       !['accepted','pending','review'].includes(receipt.chiron_delivery)) throw new ApiError(502);
     return receipt;
   }
+  async function downloadPdf(path:string) {
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+    try {
+      const response=await transport(API_ORIGIN+path,{method:'GET',credentials:'include',redirect:'error',headers:{Origin:API_ORIGIN,Accept:'application/pdf'},signal:controller.signal})
+        .catch(()=>{throw new ApiError(controller.signal.aborted?408:0);});
+      if(!response.ok) throw new ApiError(response.status);
+      if(!response.headers.get('content-type')?.toLowerCase().startsWith('application/pdf')||Number(response.headers.get('content-length'))>8000000) throw new ApiError(502);
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      if(bytes.length<5||bytes.length>8000000||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-') throw new ApiError(502);
+      return bytes;
+    } finally {clearTimeout(timer);}
+  }
   return {
     profile,
     vehicles,
+    roadReports(lat:number,lon:number) {
+      return request<{reports:RoadReport[];airport:AirportNotice[]}>('/next_api/drivers/road-reports',undefined,'GET',{lat:lat.toFixed(3),lon:lon.toFixed(3)});
+    },
+    reportRoadIssue(point:{lat:number;lon:number},command:{kind:RoadKind}|{id:number;present:boolean}) {
+      return request<{id:number}>('/next_api/drivers/road-reports',{...point,...command});
+    },
     async shifts(owner:number,query:{offset?:number;id?:string}={}) {
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);
       if(query.id&&!shiftUuid(query.id)||query.offset!==undefined&&(!Number.isSafeInteger(query.offset)||query.offset<0||query.offset>100000))throw new ApiError(400);
@@ -135,11 +154,11 @@ export function createDriverApi(transport: typeof fetch = fetch) {
     },
     async shiftPdf(owner:number,id:string){
       if(!shiftUuid(id))throw new ApiError(400);if((await profile()).driver.id!==owner)throw new ApiError(403);
-      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
-      try{const response=await transport(API_ORIGIN+'/next_api/drivers/shifts/pdf?id='+encodeURIComponent(id),{method:'GET',credentials:'include',redirect:'error',headers:{Origin:API_ORIGIN,Accept:'application/pdf'},signal:controller.signal}).catch(()=>{throw new ApiError(controller.signal.aborted?408:0);});
-        if(!response.ok)throw new ApiError(response.status);if(!response.headers.get('content-type')?.toLowerCase().startsWith('application/pdf')||Number(response.headers.get('content-length'))>8000000)throw new ApiError(502);
-        const bytes=new Uint8Array(await response.arrayBuffer());if(bytes.length<5||bytes.length>8000000||String.fromCharCode(...bytes.subarray(0,5))!=='%PDF-')throw new ApiError(502);return bytes;
-      }finally{clearTimeout(timer);}
+      return downloadPdf('/next_api/drivers/shifts/pdf?id='+encodeURIComponent(id));
+    },
+    async accountExportPdf(owner:number,language:'fr'|'nl'|'ar') {
+      if((await profile()).driver.id!==owner) throw new ApiError(403);
+      return downloadPdf('/next_api/gdpr/export/pdf?lang='+language);
     },
     async billingNotice(owner:number){
       const current=await profile();if(current.driver.id!==owner)throw new ApiError(403);

@@ -517,8 +517,8 @@ function TaximeterWorkspace() {
 
   const replayingForEndRef = useRef(false);
   const { location: currentLocation, error: gpsError, permissionState: gpsPermissionState, isLocating: gpsIsLocating, accuracy: gpsAccuracy, getLocation, startWatching, stopWatching, replayWatching } = useGeolocation({ language });
-  const startSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
-  const endSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 300, currentLocation });
+  const startSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 450, currentLocation, language });
+  const endSearch = useAddressSearch({ countryCode: 'be', limit: 8, debounceMs: 450, currentLocation, language });
 
   useEffect(() => { if (!authLoading && !user) router.push('/driver-login'); }, [user, authLoading, router]);
 
@@ -618,9 +618,10 @@ function TaximeterWorkspace() {
 
   const handleGpsLocationFound = async (lat: number, lon: number) => {
     const address = await reverseGeocode(lat, lon);
+    setSelectedStartCoords({ lat, lon });
+    setStartAddress(address || `${lat.toFixed(5)}, ${lon.toFixed(5)}`);
+    startSearch.clear(); setShowStartSuggestions(false);
     if (address) {
-      setSelectedStartCoords({ lat, lon });
-      setStartAddress(address); startSearch.clear(); setShowStartSuggestions(false);
       toast.success(language === 'nl' ? 'Huidige locatie gebruikt' : language === 'ar' ? 'تم استخدام الموقع الحالي' : 'Localisation actuelle utilisée');
     } else {
       toast.error(language === 'nl' ? 'Adres ophalen mislukt' : language === 'ar' ? 'فشل جلب العنوان' : "Échec de la récupération de l'adresse");
@@ -1183,7 +1184,7 @@ function TaximeterWorkspace() {
                               style={{ color: 'rgba(255,255,255,0.9)' }}
                             >
                               <div className="flex justify-between items-center gap-2">
-                                <span className="flex-1 truncate">{addr.display_name}</span>
+                                <span className="min-w-0 space-y-1"><strong className="block">{addr.title || addr.display_name}</strong>{addr.subtitle && <span className="block text-xs text-slate-300">{addr.subtitle}</span>}</span>
                                 {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(240,200,124,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
                               </div>
                             </button>
@@ -1218,7 +1219,7 @@ function TaximeterWorkspace() {
                               style={{ color: 'rgba(255,255,255,0.9)' }}
                             >
                               <div className="flex justify-between items-center gap-2">
-                                <span className="flex-1 truncate">{addr.display_name}</span>
+                                <span className="min-w-0 space-y-1"><strong className="block">{addr.title || addr.display_name}</strong>{addr.subtitle && <span className="block text-xs text-slate-300">{addr.subtitle}</span>}</span>
                                 {addr.distance !== undefined && <span className="text-xs shrink-0" style={{ color: 'rgba(240,200,124,0.7)' }}>{addr.distance.toFixed(1)} km</span>}
                               </div>
                             </button>

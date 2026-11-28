@@ -1,13 +1,15 @@
-import React,{useState} from 'react';
+import React,{useMemo,useState} from 'react';
 import {Linking,Modal,ScrollView,StyleSheet,Text,View,useWindowDimensions} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {router} from 'expo-router';
 import DriverMap,{type RouteStatus} from '../DriverMap';
-import {navigationUrl,type RouteCoordinate} from '../native-route';
+import {navigationUrl,type RouteCoordinate,type NativeRoute} from '../native-route';
 import type {MeterPoint} from '../trip-meter';
 import type {NativeTrip} from '../trip-engine';
 import AddressField from './AddressField';
 import {usePreferences} from './preferences';
+import {nextRouteAlert,type RoadReport} from '../road-alerts';
+import {useRoadReports} from './useRoadReports';
 import {design} from './tokens';
 import {Button,Card,Field,Icon,IconButton,Label,Notice,Row,RouteStops,Screen} from './ui';
 
@@ -18,6 +20,18 @@ const guidance = {
  nl:{details:'Ritdetails',close:'Sluiten',waitingGps:'Wachten op een nauwkeurige gps-positie',routing:'Route wordt bijgewerkt…',ready:'Route beschikbaar',failed:'Route niet beschikbaar. Nieuwe poging zodra je positie wordt bijgewerkt.',idle:'Kies een bestemming voor de route'},
 } as const;
 
+const roadCopy = {
+ ar:{report:'إبلاغ عن الطريق',collision:'حادث',hazard:'خطر على الطريق',closure:'طريق مغلق',ahead:'أمامك',stopped:'استخدم الإبلاغ بعد التوقف، مع إشارة GPS حديثة.',failed:'تعذّر إرسال البلاغ. تحقّق من الموقع والاتصال وحاول مجددًا.',present:'ما زال موجودًا',gone:'انتهى',eta:'وقت الوصول',alternate:'اختر الطريق البديل',faster:'أسرع بـ',slower:'أبطأ بـ',same:'وقت مماثل',sent:'تم تسجيل البلاغ'},
+ fr:{report:'Signaler sur la route',collision:'Accident',hazard:'Danger sur la route',closure:'Route fermée',ahead:'devant vous',stopped:'Signalez à l’arrêt, avec une position GPS récente.',failed:'Signalement impossible. Vérifiez votre position et votre connexion, puis réessayez.',present:'Toujours présent',gone:'Terminé',eta:'Arrivée estimée',alternate:'Choisir l’itinéraire alternatif',faster:'plus rapide de',slower:'plus lent de',same:'durée similaire',sent:'Signalement enregistré'},
+ nl:{report:'Melden op de weg',collision:'Ongeval',hazard:'Gevaar op de weg',closure:'Weg afgesloten',ahead:'voor u',stopped:'Meld terwijl u stilstaat en met een recente gps-positie.',failed:'Melding mislukt. Controleer uw locatie en verbinding en probeer opnieuw.',present:'Nog aanwezig',gone:'Voorbij',eta:'Verwachte aankomst',alternate:'Kies de alternatieve route',faster:'sneller met',slower:'trager met',same:'vergelijkbare reistijd',sent:'Melding opgeslagen'},
+ en:{report:'Report a road issue',collision:'Collision',hazard:'Road hazard',closure:'Road closed',ahead:'ahead',stopped:'Report while stopped, with a recent GPS fix.',failed:'Could not send your report. Check GPS and your connection and try again.',present:'Still there',gone:'Cleared',eta:'Estimated arrival',alternate:'Choose alternate route',faster:'faster by',slower:'slower by',same:'similar time',sent:'Report saved'},
+} as const;
+const airportCopy = {
+ ar:{meeting_changed:'تغيير نقطة الالتقاء',taxi_entrance_closed:'مدخل موقف التاكسي مغلق'},
+ fr:{meeting_changed:'Point de rencontre modifié',taxi_entrance_closed:'Accès taxi fermé'},
+ nl:{meeting_changed:'Ontmoetingspunt gewijzigd',taxi_entrance_closed:'Taxitoegang afgesloten'},
+ en:{meeting_changed:'Meeting point changed',taxi_entrance_closed:'Taxi entrance closed'},
+} as const;
 interface Props {
  trip: NativeTrip;
  position: MeterPoint|null;
@@ -38,6 +52,12 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
  const insets=useSafeAreaInsets();
  const {height}=useWindowDimensions();
  const words=guidance[language];
+ const roadWords=roadCopy[language];
+ const [route,setRoute]=useState<NativeRoute|null>(null);
+ const [alternateRequested,setAlternateRequested]=useState(0);
+ const [reportPicker,setReportPicker]=useState(false);
+ const [selectedReport,setSelectedReport]=useState<RoadReport|null>(null);
+ const [reportSent,setReportSent]=useState(false);
  const [routeState,setRouteState]=useState<RouteStatus>('idle');
  const [destination,setDestination]=useState<(RouteCoordinate & {label:string})|null>(()=>trip.navigationDestination?{...trip.navigationDestination,label:trip.endAddress}:null);
  const [destinationText,setDestinationText]=useState(trip.endAddress);
@@ -48,9 +68,16 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
  const currency=new Intl.NumberFormat(`${language}-BE`,{style:'currency',currency:'EUR'});
  const distance=new Intl.NumberFormat(`${language}-BE`,{maximumFractionDigits:2}).format(trip.meter.distanceKm);
  const lastPosition=position??trip.meter.lastPoint??trip.start;
+ const roads=useRoadReports(lastPosition);
+ const alert=useMemo(()=>lastPosition&&route ? nextRouteAlert(lastPosition,route,[...(route.alerts??[]),...roads.reports]) : null,[lastPosition,route,roads.reports]);
+ const alternateDifference=route?.alternative?Math.round((route.alternative.durationSeconds-route.durationSeconds)/60):null;
+ const alternateNote=alternateDifference===null?null:alternateDifference===0?roadWords.same:`${alternateDifference<0?roadWords.faster:roadWords.slower} ${Math.abs(alternateDifference)} ${t('minute')}`;
+ const chooseAlternative=()=>{setAlternateRequested(value=>value+1);setDetails(false);};
+ const stopped=lastPosition.speed!=null&&lastPosition.speed>=0&&lastPosition.speed<=0.5;
  const destinationLabel=destination?.label??trip.endAddress;
  function selectMapDestination(point:RouteCoordinate){
   const label=`${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}`;
+  setRoute(null);
   setDestination({...point,label});
   setDestinationText(label);
  }
@@ -67,7 +94,9 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
   <View style={StyleSheet.absoluteFill}>
    <DriverMap fullScreen={{top:Math.min(insets.top+topHeight+16,height*.32),bottom:Math.min(insets.bottom+bottomHeight+12,height*.57)}}
     position={lastPosition} navigationDestination={destination}
-    onDestinationChange={selectMapDestination} onRouteStatus={setRouteState}/>
+    onDestinationChange={selectMapDestination} onRouteStatus={setRouteState} onRoute={setRoute}
+    alternateRequested={alternateRequested} reports={roads.reports}
+    onSelectReport={report=>{roads.clearError();setSelectedReport(report);setReportPicker(true);}}/>
   </View>
   <View pointerEvents="box-none" style={[styles.overlay,{top:insets.top+8,left:Math.max(12,insets.left),right:Math.max(12,insets.right)}]}
    onLayout={event=>setTopHeight(event.nativeEvent.layout.height)}>
@@ -81,6 +110,11 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
      </View>
      <IconButton label={words.details} icon="ellipsis-horizontal" onPress={()=>setDetails(true)}/>
     </Row>
+    {route&&<Label muted size={13}>{roadWords.eta} · {Math.ceil(route.durationSeconds/60)} {t('minute')}</Label>}
+    {alert&&<Notice error>{roadWords[alert.kind]} · {alert.distance} m {roadWords.ahead}</Notice>}
+    {roads.airport[0]&&<Notice>Brussels Airport · {airportCopy[language][roads.airport[0].kind]} · {roads.airport[0].detail}</Notice>}
+    {alternateDifference!==null&&alternateDifference<0&&<Button secondary label={`${roadWords.alternate} · ${alternateNote}`} icon="git-compare-outline" onPress={chooseAlternative}/>}
+    {reportSent&&<Notice>{roadWords.sent}</Notice>}
     {routeState!=='ready'&&<Text accessibilityLiveRegion="polite" style={{color:colors.muted,fontFamily:design.font.body,fontSize:12,textAlign:rtl?'right':'left'}}>{words[routeState]}</Text>}
    </Card>
   </View>
@@ -108,9 +142,24 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
      {!!error&&<Notice error>{error}</Notice>}
      {departure==='review'&&departureLabel&&<Notice>{departureLabel}</Notice>}
     </ScrollView>
+    <Row>
+     <Button secondary label={roadWords.report} icon="warning-outline" onPress={()=>{roads.clearError();setReportSent(false);setSelectedReport(null);setReportPicker(true);}}/>
+    </Row>
     <Button danger label={t(busy?'endBusy':'end')} icon="stop-circle-outline" busy={busy} disabled={endDisabled} onPress={onEnd}/>
    </Card>
   </View>
+  <Modal visible={reportPicker} onRequestClose={()=>setReportPicker(false)} animationType="none">
+   <Screen title={roadWords.report} action={<IconButton label={words.close} icon="close" onPress={()=>setReportPicker(false)}/>}>
+    <Notice>{roadWords.stopped}</Notice>
+    {selectedReport?<Card>
+     <Label bold>{roadWords[selectedReport.kind]}</Label>
+     {([true,false] as const).map(present=><Button key={String(present)} secondary label={present?roadWords.present:roadWords.gone} disabled={!stopped||roads.busy} onPress={()=>{void roads.submit({id:selectedReport.id,present}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
+    </Card>:<Card>
+     {(['collision','hazard','closure'] as const).map(kind=><Button key={kind} secondary label={roadWords[kind]} disabled={!stopped||roads.busy} onPress={()=>{void roads.submit({kind}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
+    </Card>}
+    {roads.failed&&<Notice error>{roadWords.failed}</Notice>}
+   </Screen>
+  </Modal>
   <Modal visible={details} onRequestClose={()=>setDetails(false)} animationType="none">
    <Screen title={words.details} action={<IconButton label={words.close} icon="close" onPress={()=>setDetails(false)}/>}>
     <Card>
@@ -120,9 +169,10 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
      <Label muted size={12}>{t(background?'background':'foreground')}</Label>
      {departureLabel&&<Notice>{departureLabel}</Notice>}
     </Card>
+    {alternateNote&&<Card><Button secondary label={`${roadWords.alternate} · ${alternateNote}`} icon="git-compare-outline" onPress={chooseAlternative}/></Card>}
     <Card><RouteStops from={trip.startAddress} to={trip.endAddress}/>
      <AddressField label={t('destination')} value={destinationText} position={lastPosition} disabled={busy}
-      onChange={setDestinationText} onSelect={point=>{setDestinationText(point.label);setDestination({lat:point.lat,lon:point.lon,label:point.label});setDetails(false);}}/>
+      onChange={setDestinationText} onSelect={point=>{setRoute(null);setDestinationText(point.label);setDestination({lat:point.lat,lon:point.lon,label:point.label});setDetails(false);}}/>
      {destination&&<Row style={{flexWrap:'wrap'}}>
       <Button secondary label="Waze" icon="navigate-outline" onPress={()=>void openNavigation('waze')}/>
       <Button secondary label="Google Maps" icon="map-outline" onPress={()=>void openNavigation('google')}/>

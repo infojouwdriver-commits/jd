@@ -136,7 +136,7 @@ export default function DriverGdprSection() {
 
       <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(212,175,55,0.08)" }}>
         <p className="text-xs leading-relaxed" style={{ color: "rgba(212,175,55,0.65)" }}>{t.desc}</p>
-        <Link href="/privacy-policy" className="inline-flex items-center gap-1 mt-2 text-xs font-medium" style={{ color: "#d4af37" }}>
+        <Link href={`/${language}/legal/privacy`} className="inline-flex items-center gap-1 mt-2 text-xs font-medium" style={{ color: "#d4af37" }}>
           {t.privacyPolicy} →
         </Link>
       </div>

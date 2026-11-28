@@ -24,7 +24,7 @@ TaskManager.defineTask<{locations: Location.LocationObject[]}>(TASK, async ({dat
   let latest: MeterPoint | null = null;
   for (const value of [...data.locations].sort((a, b) => a.timestamp - b.timestamp)) {
     if (value.mocked) continue;
-    const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity};
+    const point = {lat: value.coords.latitude, lon: value.coords.longitude, timestamp: value.timestamp, accuracy: value.coords.accuracy ?? Infinity, speed: value.coords.speed};
     // Delayed batches are rejected instead of billing an invented gap.
     if (validPoint(point)) {
       const active = await engine.point(point, current.key);

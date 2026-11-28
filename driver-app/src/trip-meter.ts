@@ -1,4 +1,4 @@
-export interface MeterPoint { lat: number; lon: number; timestamp: number; accuracy?: number; }
+export interface MeterPoint { lat: number; lon: number; timestamp: number; accuracy?: number; speed?: number | null; }
 export interface MeterState { distanceKm: number; lastPoint: MeterPoint | null; rejectedPoints: number; }
 export const emptyMeter = (): MeterState => ({ distanceKm: 0, lastPoint: null, rejectedPoints: 0 });
 
