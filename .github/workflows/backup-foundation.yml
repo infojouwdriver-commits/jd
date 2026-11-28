@@ -32,7 +32,7 @@ jobs:
           POSTGRES_PASSWORD: restore-verification-only
         ports: ['127.0.0.1:5432:5432']
         options: >-
-          --health-cmd pg_isready --health-interval 5s
+          --health-cmd "pg_isready -U postgres -d restore_sandbox" --health-interval 5s
           --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
@@ -111,8 +111,29 @@ jobs:
           for(const [file,key]of [['database.dump','databaseDumpSha256'],['roles.sql','rolesSha256']])if(createHash('sha256').update(fs.readFileSync(root+'/'+file)).digest('hex')!==m[key])throw Error('Backup content integrity failed');
           console.log('Encrypted archive and private database/role file integrity verified.');
           VERIFY
-          # Restore roles needed by policies without using live passwords here.
-          psql --no-psqlrc -v ON_ERROR_STOP=1 -q -c 'CREATE ROLE jouw_app_user; CREATE ROLE jouw_service; CREATE ROLE jouw_gateway;' >/dev/null
+          # Recreate names referenced by restored policies as login-disabled roles.
+          ROLES_SQL="$keydir/restore/roles.sql" node --input-type=module <<'ROLES' > "$keydir/restore-role-names.sql"
+          import fs from 'node:fs';
+          const names = new Set();
+          for (const line of fs.readFileSync(process.env.ROLES_SQL,'utf8').split('\n')) {
+            if (!line.startsWith('CREATE ROLE ')) continue;
+            const match = /^CREATE ROLE ("(?:[^"]|"")*"|[a-z_][a-z0-9_$]*);$/.exec(line);
+            if (!match) throw Error('Unexpected role declaration in the authenticated archive');
+            const identifier = match[1];
+            names.add(identifier.startsWith('"') ? identifier.slice(1,-1).replaceAll('""','"') : identifier);
+          }
+          if (!['jouw_app_user','jouw_service','jouw_gateway'].every(name => names.has(name))) {
+            throw Error('Expected foundation roles are absent from the archive');
+          }
+          for (const name of names) {
+            if (name === 'postgres' || name.startsWith('pg_')) continue;
+            console.log('CREATE ROLE "'+name.replaceAll('"','""')+'" NOLOGIN;');
+          }
+          ROLES
+          if ! psql --no-psqlrc -v ON_ERROR_STOP=1 -q < "$keydir/restore-role-names.sql" > /dev/null 2> "$keydir/restore-role-errors"; then
+            printf 'Isolated restore could not recreate required role names.\n' >&2
+            exit 1
+          fi
           if ! docker exec -i -e PGHOST -e PGPORT -e PGDATABASE -e PGUSER -e PGPASSWORD "$RESTORE_DB_CONTAINER" pg_restore --no-owner --no-privileges --exit-on-error --dbname "$PGDATABASE" < "$keydir/restore/database.dump" 2> "$keydir/restore-errors"; then
             printf 'Native PostgreSQL restore failed; private diagnostics were not logged.\n' >&2
             exit 1
