@@ -2,7 +2,7 @@ BEGIN;
 SET LOCAL search_path TO :"schema", pg_catalog;
 CREATE TABLE IF NOT EXISTS :"schema".road_reports (
  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
- kind text NOT NULL CHECK (kind IN ('collision','hazard','closure')),
+ kind text NOT NULL CHECK (kind IN ('collision','hazard','closure','congestion')),
  lat double precision NOT NULL CHECK (lat BETWEEN -90 AND 90),
  lon double precision NOT NULL CHECK (lon BETWEEN -180 AND 180),
  reporter bigint NOT NULL REFERENCES :"schema".users(id) ON DELETE CASCADE,
@@ -40,7 +40,7 @@ BEGIN
   END IF;
   RETURN target;
  END IF;
- IF p_kind IS NULL OR p_kind NOT IN ('collision','hazard','closure') OR p_lat IS NULL OR p_lon IS NULL
+ IF p_kind IS NULL OR p_kind NOT IN ('collision','hazard','closure','congestion') OR p_lat IS NULL OR p_lon IS NULL
   OR p_lat NOT BETWEEN -90 AND 90 OR p_lon NOT BETWEEN -180 AND 180 THEN
   RAISE EXCEPTION 'Invalid report' USING ERRCODE='22023';
  END IF;

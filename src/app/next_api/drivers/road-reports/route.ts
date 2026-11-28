@@ -6,7 +6,7 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/create-respons
 
 const coordinates = {lat:z.number().min(49.49).max(51.52),lon:z.number().min(2.50).max(6.42)};
 const command = z.union([
- z.object({...coordinates,kind:z.enum(['collision','hazard','closure'])}).strict(),
+ z.object({...coordinates,kind:z.enum(['collision','hazard','closure','congestion'])}).strict(),
  z.object({...coordinates,id:z.number().int().positive(),present:z.boolean()}).strict(),
 ]);
 async function driverClient(subject: string | undefined) {

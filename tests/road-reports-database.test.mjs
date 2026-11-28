@@ -30,6 +30,8 @@ test('road reports deduplicate, protect writes, expire by vote and retain airpor
   assert.equal((await db.query('SELECT count(*) AS count FROM road_reports WHERE expires_at>now()')).rows[0].count,1);
   await vote(3);
   assert.equal((await db.query('SELECT count(*) AS count FROM road_reports WHERE expires_at>now()')).rows[0].count,0);
+  await db.query("SELECT road_report_command(1,'congestion',50.85,4.35,NULL,NULL)");
+  assert.equal((await db.query("SELECT count(*) AS count FROM road_reports WHERE kind='congestion' AND expires_at>now()")).rows[0].count,1);
   await db.query("INSERT INTO airport_road_notices(kind,detail,expires_at) VALUES('meeting_changed','Parking P1',now()+interval '1 hour')");
   assert.equal((await db.query('SELECT kind FROM airport_road_notices')).rows[0].kind,'meeting_changed');
  }finally{await db.close();}

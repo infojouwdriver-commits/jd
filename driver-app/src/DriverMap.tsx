@@ -152,7 +152,7 @@ function DriverMapView({position,previewStart,initialDestination,onDestinationCh
     </Mapbox.PointAnnotation>}
     {guided&&reports?.map(report=><Mapbox.PointAnnotation key={String(report.id)} id={`road-report-${report.id}`} coordinate={[report.lon,report.lat]} onSelected={()=>onSelectReport?.(report)}>
      <View style={{backgroundColor:'#a51e3c',width:34,height:34,borderRadius:17,alignItems:'center',justifyContent:'center',borderColor:'#fff',borderWidth:2}}>
-      <Ionicons name={report.kind==='closure'?'ban-outline':report.kind==='collision'?'car-outline':'warning-outline'} size={18} color="#fff"/>
+      <Ionicons name={report.kind==='closure'?'ban-outline':report.kind==='collision'?'car-outline':report.kind==='congestion'?'speedometer-outline':'warning-outline'} size={18} color="#fff"/>
      </View>
     </Mapbox.PointAnnotation>)}
     {target&&<Mapbox.PointAnnotation id="route-destination" coordinate={[target.lon,target.lat]}><View style={[styles.point,{backgroundColor:'#a8e86c'}]}/></Mapbox.PointAnnotation>}

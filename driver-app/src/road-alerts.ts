@@ -1,6 +1,6 @@
 import type {NativeRoute,RouteCoordinate} from './native-route';
 
-export type RoadKind = 'collision'|'hazard'|'closure';
+export type RoadKind = 'collision'|'hazard'|'closure'|'congestion';
 export interface RoadReport extends RouteCoordinate {id:number;kind:RoadKind;expires_at:string}
 export interface AirportNotice {id:number;kind:'meeting_changed'|'taxi_entrance_closed';detail:string;expires_at:string}
 export interface RouteAlert extends RouteCoordinate {kind: RoadKind}
