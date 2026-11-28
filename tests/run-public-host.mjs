@@ -27,12 +27,27 @@ try {
     assert.ok(r.body.includes('href="https://jouww.com'+path+'"'), 'Resource canonical missing: '+path);
    }
   }
-  for(const path of ['/about','/contact','/privacy-policy']) {
+  for(const path of ['/about','/contact']) {
    const r=await send(path,host);
    assert.equal(r.status,200);
    for(const locale of ['fr','nl','en','ar']) assert.ok(r.body.includes('value="'+locale+'"'),'Locale available on '+host+path);
    for(const link of ['/about','/contact','/privacy-policy']) assert.ok(r.body.includes('href="'+link+'"'),'Navigation available on '+host+path);
   }
+  const documents=['terms','privacy','cookies','distance-sales'];
+  for(const locale of ['fr','nl','ar']){
+   for(const slug of documents){
+    const path=`/${locale}/legal/${slug}`;
+    const legal=await send(path,host);
+    assert.equal(legal.status,200);
+    assert.match(legal.body,/0799\.499\.833/);
+    assert.ok(legal.body.includes('href="https://jouww.com'+path+'"'),'Legal canonical '+path);
+    for(const document of documents) assert.ok(legal.body.includes(`href="/${locale}/legal/${document}"`),'Legal navigation '+path);
+   }
+  }
+  const legacy=await send('/privacy-policy?lang=en',host);
+  assert.equal(legacy.status,200);
+  assert.match(legacy.body,/<h1[^>]*>Privacy policy<\/h1>/);
+  for(const path of ['/about','/contact','/ar/legal/privacy','/nl/legal/privacy']) assert.ok(legacy.body.includes(`href="${path}"`));
   const r=await send('/fr/solutions?utm_source=test&view=all',host,{'x-forwarded-proto':'https'});
   assert.equal(r.status,307);assert.equal(r.headers.get('location'),'https://'+host+'/fr/solutions?view=all');
   assert.equal(r.headers.get('cache-control'),'no-store');

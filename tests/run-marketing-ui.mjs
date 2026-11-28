@@ -398,7 +398,7 @@ try {
     const context = await browser.newContext({viewport: {width, height: 900}});
     await consent(context);
     const page = await context.newPage();
-    for (const route of ['/about', '/contact', '/privacy-policy']) {
+    for (const route of ['/about', '/contact']) {
       const response = await page.goto(base + route);
       assert.equal(response.status(), 200);
       const language = page.getByRole('combobox', {name: 'Language'});
@@ -418,12 +418,7 @@ try {
         labels.add(await about.textContent());
         assert.equal(await main.getAttribute('dir'), locale === 'ar' ? 'rtl' : 'ltr');
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-        if (route === '/privacy-policy') {
-          const topic = main.getByRole('button', {pressed: false}).first();
-          const topicName = (await topic.textContent()).trim();
-          await topic.click();
-          assert.equal(await main.getByRole('button', {name: topicName, exact: true}).getAttribute('aria-pressed'), 'true');
-        }
+
       }
       assert.equal(labels.size, 4);
       assert.equal(await main.locator('form').count(), route === '/contact' ? 1 : 0);
@@ -450,6 +445,18 @@ try {
       ]);
       report.push({publicInfo: route, width, locales: 4, pass: true});
     }
+    await page.goto(base+'/privacy-policy?lang=en');
+    await page.getByRole('heading',{name:'Privacy policy',exact:true}).waitFor();
+    for(const [language,locale] of [['Nederlands','nl'],['العربية','ar'],['Français','fr']]){
+      await page.getByRole('link',{name:language,exact:true}).click();
+      await page.waitForURL(base+'/'+locale+'/legal/privacy');
+      assert.equal(await page.locator('main').first().getAttribute('dir'),locale==='ar'?'rtl':'ltr');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    }
+    await page.getByRole('link',{name:'Politique relative aux cookies',exact:true}).click();
+    await page.waitForURL(base+'/fr/legal/cookies');
+    await page.getByRole('heading',{name:'Politique relative aux cookies',exact:true}).waitFor();
+    report.push({publicInfo:'/privacy-policy',width,locales:4,pass:true});
     await context.close();
   }
   const fail = await browser.newContext();

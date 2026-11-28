@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   const allowed = originAllowed(origin, appOrigin, process.env.TRUSTED_ORIGINS);
   const nonce = btoa(crypto.randomUUID());
   const hostname = request.nextUrl.hostname.toLowerCase();
-  const marketingLocale = request.nextUrl.pathname.match(/^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/)?.[1];
+  const marketingLocale = request.nextUrl.pathname.match(/^\/(fr|nl|ar)(?:\/(?:solutions|legal)(?:\/|$)|\/?$)/)?.[1];
   // Referral parameters can be inserted by third-party chat or campaign apps.
   // Strip them on public marketing routes so visitors only see our own clean URL.
   // Never touch login, payment, signed-document or application URLs.
@@ -17,7 +17,8 @@ export function middleware(request: NextRequest) {
   // forwarded-host input must never choose a redirect destination.
   const publicHost = (request.headers.get('host') || hostname).toLowerCase().replace(/:443$/, '');
   const marketingHost = publicHost === 'jouww.com' || publicHost === 'www.jouww.com';
-  const publicMarketingPath = request.nextUrl.pathname === '/' ||
+  const legalPage = /^\/(fr|nl|ar)\/legal\/(terms|privacy|cookies|distance-sales)\/?$/.test(request.nextUrl.pathname);
+  const publicMarketingPath = request.nextUrl.pathname === '/' || legalPage ||
     /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
     ['/about', '/contact', '/privacy-policy'].includes(request.nextUrl.pathname);
   if (marketingHost && publicMarketingPath && (request.method === 'GET' || request.method === 'HEAD')) {
@@ -36,7 +37,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const csp = "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.mapbox.com https://nominatim.openstreetmap.org https://api.bigdatacloud.net; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+  const csp = "default-src 'self'; script-src 'self' 'nonce-" + nonce + "'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.mapbox.com https://nominatim.openstreetmap.org https://photon.komoot.io https://api.bigdatacloud.net; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
   const forwarded = new Headers(request.headers);
   forwarded.delete('x-marketing-locale');
   forwarded.set('Content-Security-Policy', csp);
@@ -62,7 +63,7 @@ export function middleware(request: NextRequest) {
   if (api || request.nextUrl.pathname==='/contact/submit' || /^\/(admin|driver|company|distributor|invoice|documents|sign-contract|contract-print|pay)(\/|$)/.test(request.nextUrl.pathname)) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
   // Never index authenticated workflows, tokenized documents or the
   // legacy/application hosts even if a crawler ignores robots.txt.
-  const publicMarketingRoute = request.nextUrl.pathname === '/' ||
+  const publicMarketingRoute = request.nextUrl.pathname === '/' || legalPage ||
     /^\/(fr|nl|ar)(?:\/solutions(?:\/|$)|\/?$)/.test(request.nextUrl.pathname) ||
     ['/about', '/contact', '/privacy-policy'].includes(request.nextUrl.pathname);
   if (!publicMarketingRoute || hostname === 'app.jouww.com' || hostname === 'jouw-driver.duckdns.org') {

@@ -80,7 +80,7 @@ fixtures.api=fixtures.api.replace('export const driverApi={','export const drive
  await locate.waitFor();
  assert.equal(reverseRequests,0,'Opening the trip form must not request location');
  const inputBox=await pickup.boundingBox(), locateBox=await locate.boundingBox();
- assert.ok(Math.min(Math.abs(locateBox.x+locateBox.width-inputBox.x),Math.abs(inputBox.x+inputBox.width-locateBox.x))<=12&&Math.abs(locateBox.y-inputBox.y)<4,'GPS control is next to the RTL pickup field');
+ assert.ok(locateBox.y>=inputBox.y+inputBox.height&&locateBox.y-inputBox.y-inputBox.height<=14&&locateBox.width>150,'Labeled GPS action remains directly below the RTL pickup field');
  await locate.click();
  await page.waitForFunction(()=>document.querySelector('input[aria-label="من أين؟"]')?.value==='Demo nearest');
  await page.screenshot({path:path.join(output,'pickup-gps-ar-dark.png')});

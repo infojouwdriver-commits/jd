@@ -1,9 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {ActivityIndicator, Pressable, View} from 'react-native';
+import {View} from 'react-native';
 import * as Location from 'expo-location';
 import {freshSearchPoint, reverseBelgianAddress, type NativeAddress} from '../native-addresses';
 import {usePreferences} from './preferences';
-import {Icon, Label, Notice} from './ui';
+import {Button, Notice} from './ui';
 
 const messages = {
  ar:{label:'استخدم موقعي الحالي للانطلاق', hint:'يُستخدم موقعك لتحويل نقطة الانطلاق إلى عنوان.', off:'فعّل خدمات الموقع ثم أعد المحاولة.', denied:'اسمح بالوصول إلى الموقع أثناء استخدام التطبيق أو اكتب العنوان.', failed:'تعذّر تحديد الموقع. أعد المحاولة أو اكتب العنوان.', accuracy:'دقة الموقع غير كافية. أعد المحاولة في مكان مفتوح.', timeout:'انتهت مهلة تحديد الموقع. أعد المحاولة أو اكتب العنوان.', address:'تعذّر العثور على عنوان. عُرضت الإحداثيات ويمكنك كتابة العنوان.', retry:'إعادة المحاولة'},
@@ -17,7 +17,7 @@ export default function PickupLocation({enabled, value, disabled, onSelect, chil
  enabled:boolean; value:string; disabled:boolean;
  onSelect:(address:NativeAddress)=>void; children:(accessory?:React.ReactNode)=>React.ReactNode;
 }) {
- const {language, colors} = usePreferences();
+ const {language} = usePreferences();
  const copy = messages[language];
  const request = useRef<AbortController | null>(null);
  const [busy, setBusy] = useState(false);
@@ -73,12 +73,9 @@ export default function PickupLocation({enabled, value, disabled, onSelect, chil
 
  if (!enabled) return children();
  return <View style={{gap:8}}>
-  {children(<Pressable accessibilityRole="button" accessibilityLabel={copy.label} accessibilityHint={copy.hint}
-   accessibilityState={{busy, disabled:disabled||busy}} disabled={disabled||busy} onPress={() => void locate()}
-   style={({pressed}) => ({width:54,height:54,borderRadius:16,borderWidth:1,borderColor:colors.line,alignItems:'center',justifyContent:'center',backgroundColor:pressed?colors.raised:colors.surface,opacity:disabled?.5:1})}>
-   {busy ? <ActivityIndicator color={colors.icon}/> : <Icon name="locate-outline" color={colors.icon}/>}
-  </Pressable>)}
+  {children()}
+  <Button secondary label={copy.label} icon="locate-outline" busy={busy} disabled={disabled||busy} onPress={() => void locate()}/>
   {failure?.value===value && <Notice error>{copy[failure.kind]}</Notice>}
-  {failure?.value===value && <Pressable accessibilityRole="button" disabled={disabled||busy} onPress={() => void locate()} style={{minHeight:44,justifyContent:'center'}}><Label>{copy.retry}</Label></Pressable>}
+
  </View>;
 }

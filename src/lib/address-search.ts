@@ -1,5 +1,7 @@
 export interface AddressSuggestion {
   display_name: string;
+  title?: string;
+  subtitle?: string;
   lat: string;
   lon: string;
   distance?: number;

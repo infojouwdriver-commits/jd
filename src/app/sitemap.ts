@@ -1,3 +1,4 @@
+import { legalSlugs } from '@/lib/public-legal';
 import { resourceHref, resourcePages } from '@/lib/marketing-resources';
 import type { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
@@ -10,6 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (host !== 'jouww.com' && host !== 'www.jouww.com' && host !== 'localhost') return [];
   return [
     { url: marketingOrigin + '/', changeFrequency: 'weekly', priority: 1 },
+    ...marketingLocales.flatMap(locale => legalSlugs.map(slug => ({url: marketingOrigin + `/${locale}/legal/${slug}`}))),
     ...marketingLocales.map((locale) => ({ url: marketingOrigin + '/' + locale, changeFrequency: 'weekly' as const, priority: 0.9 })),
     ...marketingLocales.map((locale) => ({
       url: marketingOrigin + hubHref(locale), changeFrequency: 'monthly' as const, priority: 0.8,

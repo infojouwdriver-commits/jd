@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import AccountDeletion from './AccountDeletion';
 import { useEffect, useState } from 'react';
 import { tripJournal } from '@/lib/trip-journal';
@@ -58,6 +59,7 @@ export default function AccountSettings() {
    {sent?<div className="space-y-2"><Label htmlFor="account-code">{t.code}</Label><Input id="account-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={event=>setCode(event.target.value)} /><Button type="button" disabled={busy||code.length!==6} onClick={()=>void submit('update_email')}>{t.change}</Button></div>:null}
   </div>
   {user && !user.isAdmin && <div className="border-t pt-3"><AccountDeletion/></div>}
+  <div className="border-t pt-3"><Link className="underline text-sm" href="/privacy-center">{ {ar:'طلب معلوماتي وتنزيل PDF',fr:'Obtenir mes données en PDF',nl:'Mijn gegevens als PDF downloaden'}[language] }</Link></div>
   <div className="border-t pt-3"><CookiePreferencesButton /></div>
   <Button type="button" variant="outline" disabled={busy} onClick={()=>void logout()}>{t.logout}</Button>
  </CardContent></Card>;

@@ -1,4 +1,5 @@
 "use client";
+import {legalSlugs, legalTitles} from '@/lib/public-legal';
 import { resourceHref } from '@/lib/marketing-resources';
 import "./cinematic/cinematic.css";
 import { useEffect, useRef, useState } from "react";
@@ -307,7 +308,10 @@ export default function PlatformLanding({
           <p>{t.footer}</p>
         </div>
         <div>
-          <Link href="/privacy-policy">{t.privacy}</Link>
+          {legalSlugs.map((slug, index) => {
+            const legalLocale = language === "ar" || language === "nl" ? language : "fr";
+            return <Link key={slug} href={`/${legalLocale}/legal/${slug}`}>{legalTitles[legalLocale][index]}</Link>;
+          })}
           <CookiePreferencesButton />
         </div>
         <small>© {new Date().getFullYear()} JOUW DRIVER</small>
