@@ -19,6 +19,10 @@ on:
         description: Produce an APK signed with the existing Android release key
         type: boolean
         default: false
+      publish_maps_release:
+        description: Publish the signed APK after the verified web rollout
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -136,6 +140,53 @@ jobs:
           path: ${{ runner.temp }}/JOUW-DRIVER-Android-0.3.3.apk
           if-no-files-found: error
           retention-days: 14
+  android-publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_maps_release && github.ref == 'refs/heads/codex/native-legal-driver-maps'
+    needs: [android-release]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: write
+    concurrency:
+      group: public-android-signing
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: driver-android-release-${{ github.sha }}
+          path: ${{ runner.temp }}/android-release
+      - name: Wait for the verified web API, then publish the signed direct download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEB_ROLLOUT: '46138558000'
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 75); do
+            status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$WEB_ROLLOUT" --jq '.status')
+            if [[ "$status" == completed ]]; then break; fi
+            sleep 15
+          done
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$WEB_ROLLOUT" |
+            jq -e '.status=="completed" and .conclusion=="success" and .path==".github/workflows/publish-legal-driver-maps.yml"' >/dev/null
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          mkdir "$work/previous" "$work/next"
+          cp "$RUNNER_TEMP/android-release/JOUW-DRIVER-Android-0.3.3.apk" "$work/next/jouw-driver.apk"
+          tag=android-direct
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern jouw-driver.apk --dir "$work/previous"
+          download() {
+            curl --fail --silent --show-error --location --retry 2 --max-time 90 \
+              -H 'Cache-Control: no-cache' \
+              "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/jouw-driver.apk?run=$GITHUB_RUN_ID" --output "$work/public.apk"
+          }
+          if ! gh release upload "$tag" "$work/next/jouw-driver.apk" --repo "$GITHUB_REPOSITORY" --clobber ||
+             ! download || ! cmp "$work/public.apk" "$work/next/jouw-driver.apk"; then
+            gh release upload "$tag" "$work/previous/jouw-driver.apk" --repo "$GITHUB_REPOSITORY" --clobber
+            exit 1
+          fi
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --title 'JOUW DRIVER Android · 0.3.3 (15)'
+          sha256sum "$work/public.apk"
   visual-review:
     if: github.ref != 'refs/heads/release/ios-unified-20261115' && (github.event_name != 'workflow_dispatch' || !inputs.upload_testflight || inputs.sign_android)
     # Playwright 1.56.1 supports Ubuntu 24.04.
@@ -226,6 +277,9 @@ jobs:
           retention-days: 14
 
   ios-testflight:
+    permissions:
+      actions: read
+      contents: read
     if: (github.event_name == 'workflow_dispatch' && inputs.upload_testflight) || (github.event_name == 'push' && github.ref == 'refs/heads/release/ios-unified-20261115')
     runs-on: macos-latest
     timeout-minutes: 60
@@ -279,6 +333,21 @@ jobs:
         run: >-
           xcodebuild -exportArchive -archivePath build/ios/JOUWDRIVER.xcarchive
           -exportOptionsPlist "$JD_IOS_SIGNING_DIR/ExportOptions.plist" -exportPath build/ios/export
+      - name: Confirm the web API rollout before uploading this release
+        if: inputs.publish_maps_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WEB_ROLLOUT: '46138558000'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$WEB_ROLLOUT" --jq '.status')
+            if [[ "$status" == completed ]]; then break; fi
+            sleep 15
+          done
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$WEB_ROLLOUT" |
+            jq -e '.status=="completed" and .conclusion=="success" and .path==".github/workflows/publish-legal-driver-maps.yml"' >/dev/null
       - name: Upload signed application to TestFlight
         run: >-
           xcrun altool --upload-app --type ios --file build/ios/export/JOUWDRIVER.ipa
