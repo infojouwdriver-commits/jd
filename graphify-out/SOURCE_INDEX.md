@@ -486,9 +486,9 @@ Links target the working tree, so line positions can move after changes.
 - `airportCopy` — [L29](../driver-app/src/experience/ActiveTripMap.tsx#L29)
 - `Props` — [L35](../driver-app/src/experience/ActiveTripMap.tsx#L35)
 - `ActiveTripMap()` — [L50](../driver-app/src/experience/ActiveTripMap.tsx#L50)
-- `selectMapDestination()` — [L78](../driver-app/src/experience/ActiveTripMap.tsx#L78)
-- `openNavigation()` — [L86](../driver-app/src/experience/ActiveTripMap.tsx#L86)
-- `styles` — [L189](../driver-app/src/experience/ActiveTripMap.tsx#L189)
+- `selectMapDestination()` — [L77](../driver-app/src/experience/ActiveTripMap.tsx#L77)
+- `openNavigation()` — [L85](../driver-app/src/experience/ActiveTripMap.tsx#L85)
+- `styles` — [L188](../driver-app/src/experience/ActiveTripMap.tsx#L188)
 
 ## [driver-app/src/experience/ActivityFilters.tsx](../driver-app/src/experience/ActivityFilters.tsx)
 
@@ -792,8 +792,8 @@ Links target the working tree, so line positions can move after changes.
 ## [driver-app/src/experience/useRoadReports.ts](../driver-app/src/experience/useRoadReports.ts)
 
 - `useRoadReports.ts` — [L1](../driver-app/src/experience/useRoadReports.ts#L1)
-- `useRoadReports()` — [L7](../driver-app/src/experience/useRoadReports.ts#L7)
-- `submit()` — [L39](../driver-app/src/experience/useRoadReports.ts#L39)
+- `useRoadReports()` — [L8](../driver-app/src/experience/useRoadReports.ts#L8)
+- `submit()` — [L42](../driver-app/src/experience/useRoadReports.ts#L42)
 
 ## [driver-app/src/journal-bytes.ts](../driver-app/src/journal-bytes.ts)
 

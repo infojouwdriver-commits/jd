@@ -73,7 +73,6 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
  const alternateDifference=route?.alternative?Math.round((route.alternative.durationSeconds-route.durationSeconds)/60):null;
  const alternateNote=alternateDifference===null?null:alternateDifference===0?roadWords.same:`${alternateDifference<0?roadWords.faster:roadWords.slower} ${Math.abs(alternateDifference)} ${t('minute')}`;
  const chooseAlternative=()=>{setAlternateRequested(value=>value+1);setDetails(false);};
- const stopped=lastPosition.speed!=null&&lastPosition.speed>=0&&lastPosition.speed<=0.5;
  const destinationLabel=destination?.label??trip.endAddress;
  function selectMapDestination(point:RouteCoordinate){
   const label=`${point.lat.toFixed(5)}, ${point.lon.toFixed(5)}`;
@@ -153,9 +152,9 @@ export default function ActiveTripMap({trip,position,clock,fare,fareInput,onFare
     <Notice>{roadWords.stopped}</Notice>
     {selectedReport?<Card>
      <Label bold>{roadWords[selectedReport.kind]}</Label>
-     {([true,false] as const).map(present=><Button key={String(present)} secondary label={present?roadWords.present:roadWords.gone} disabled={!stopped||roads.busy} onPress={()=>{void roads.submit({id:selectedReport.id,present}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
+     {([true,false] as const).map(present=><Button key={String(present)} secondary label={present?roadWords.present:roadWords.gone} disabled={roads.busy} busy={roads.busy} onPress={()=>{void roads.submit({id:selectedReport.id,present}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
     </Card>:<Card>
-     {(['collision','hazard','closure'] as const).map(kind=><Button key={kind} secondary label={roadWords[kind]} disabled={!stopped||roads.busy} onPress={()=>{void roads.submit({kind}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
+     {(['collision','hazard','closure'] as const).map(kind=><Button key={kind} secondary label={roadWords[kind]} disabled={roads.busy} busy={roads.busy} onPress={()=>{void roads.submit({kind}).then(ok=>{if(ok){setReportPicker(false);setReportSent(true);}});}}/>)}
     </Card>}
     {roads.failed&&<Notice error>{roadWords.failed}</Notice>}
    </Screen>

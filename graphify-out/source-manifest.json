@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "496c182d3e35e13d4e2f4aa53e7231816c8fe9d0",
+  "source_commit_context": "9ac6a88cfe6c06f26e2b450df3460b20e0ac814b",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -54,7 +54,7 @@
     "driver-app/src/experience/Account.tsx": "647ceed95995ef46867134df16087fdb868b02c6e66c7168d22f08c4a27622e5",
     "driver-app/src/experience/AccountDeletion.tsx": "ef7e8c820d851e318bf095e0ad5422c7a9c0f7cbbff4caef637cd4deef1b647e",
     "driver-app/src/experience/ActiveTrip.tsx": "f872cbf0baa7e314d5f459c48690bde19581f4bee4239e23c3201cce904a7006",
-    "driver-app/src/experience/ActiveTripMap.tsx": "2e3011c32e6116190d607cc2e413f4720a0f6ead6df3ba9be72396d65b03b761",
+    "driver-app/src/experience/ActiveTripMap.tsx": "02a3c801a3322b10497a0e6c21d9a0d32b2a8699ce9f59d0f73f69fe3fbd5712",
     "driver-app/src/experience/ActivityFilters.tsx": "2100eb055abb9c5fe506d744fa7f7fac5ebdec713c2ff1a8597a039cd23554a3",
     "driver-app/src/experience/AddressField.tsx": "f61e2673c865146751420781d951e7fecacd23b5c82e2c0fb83ae30fe3a64f58",
     "driver-app/src/experience/BillingReminder.tsx": "d06c97110ffaab595cd9b3e854f9f1d906af1e7dc915d37629329b34c5d04a2d",
@@ -93,7 +93,7 @@
     "driver-app/src/experience/shift-state.tsx": "89d36a51c1461058b5be121d8e39cea2b6077c567e264411bca271a688e3d261",
     "driver-app/src/experience/tokens.ts": "da9636c082a9fb20bff7185d63b70ef22e88cb0a3616b700e0515c70b35ce6a7",
     "driver-app/src/experience/ui.tsx": "2f803c8e5de0a028b5c5ac19529dff7a9bbad531937a9e9f47b93c878b297286",
-    "driver-app/src/experience/useRoadReports.ts": "7d08f89c7f957dc47739677b6ce3e3a34b76ccb03acfaf44a9088d5f8ddb40ba",
+    "driver-app/src/experience/useRoadReports.ts": "2d89db38d52ee71b1d24a109ee890f5d7c8cdc5d30a4929bb3863d1c220aa07f",
     "driver-app/src/journal-bytes.ts": "efc294953e8a8ef4b084b51e519a9fede8900fc33502674cef30996aa0d4d906",
     "driver-app/src/mapbox-error.ts": "869f43ad278c36b96ecfd6e605a930ebc18a5604d896e38c190fd707a175e27e",
     "driver-app/src/native-addresses.ts": "11f3ed09f6e8362a9ac7cf3751a09b2e4dad69d2c9613bc1c078bd763aca31fa",
@@ -679,7 +679,7 @@
     "src/lib/public-contact.ts": "ebd7e49ae099ce211b037b53d43f45547ef85850a2f1c3c236b4d0d55e08019a",
     "src/lib/public-driver-settlement-pdf.ts": "9f66acb037a62ec584244c974bf43d3949e1bc121878fb2ad60c28e560e1dad6",
     "src/lib/public-driver-settlement.ts": "696cdae95bea188a22ab49b91f73db07446b3036012d07c12c5e1250d73c531a",
-    "src/lib/public-legal.ts": "27237f04b86ebb5f5d048aeae02949365160168440ab2f8cd19e0f0f3cf27191",
+    "src/lib/public-legal.ts": "5115648b49528252bbd335d303b4e105caa38faf68d351e54262c92ce8fadaf0",
     "src/lib/rate-limit.ts": "455d0ce713b2da3a7fc9c994abf1b348bf7cfc0f49e4825fe1008c4099dfc4bc",
     "src/lib/receipt-email-model.ts": "01aef1ad18759294242e3ec8be5df7ca7e97ecdf29cc31a9bce85b8ed611cf41",
     "src/lib/sanitize-html.ts": "ecb1a3a60a5bbc804df90637acd99efc6471666f9363cb4c842d7dfa4b7f846c",
@@ -712,18 +712,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "c5c01caeeba4f5d3d37f2736e11d780096f0f057defddb5216a752fb9cb858c4",
-    "health.json": "ac5ce9192c17268ccfac855127c934542544ebcfe3c6729f448637b2f86ebde5",
-    "SOURCE_INDEX.md": "83cb43bd1f10dc0e09b0bb410a7fdc927283feb42670941142c14aec9b4f2b17",
-    "GRAPH_REPORT.md": "df1ce3f0f18e924c5edd08ed275889fb7252fafdf79d0776a57158c8137ae45c",
-    "graph.json": "3f63cb0d618494695514eb6986662500e917f362991acc4a3261b15ad13fe2d2"
+    "GRAPH_TREE.html": "f0f976b5a432d96da84c448c06eb60e8cd1bcdd964d6ec53e1fd8ef17e5c82c3",
+    "health.json": "9f1e4a796b301bcf7d0489ff62710c2b3992e689c96ae8ba4cab2c1a8f3ba46e",
+    "SOURCE_INDEX.md": "98502a87ce4f2ac215a67978ebe5dfcfc4bd954397645f6aa4cdd83005cd8868",
+    "GRAPH_REPORT.md": "52e84041a9b82549e3eb3b3166454a65dce0541000cd68673fc0839a1bffd62c",
+    "graph.json": "8c40150f14727bc3e4d5ae276d41b119373f33dd511cd0ad1bf2fb2b2005b4e0"
   },
   "nodes": 4075,
-  "edges": 13707,
-  "raw_edges": 14009,
-  "communities": 213,
+  "edges": 13709,
+  "raw_edges": 14011,
+  "communities": 214,
   "confidence_counts": {
-    "EXTRACTED": 13760,
+    "EXTRACTED": 13762,
     "INFERRED": 249
   }
 }
