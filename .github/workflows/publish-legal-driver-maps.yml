@@ -42,7 +42,7 @@ jobs:
           attempt=$(jq -r '.run_attempt' <<<"$run")
           [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
           gh api "repos/$GITHUB_REPOSITORY/compare/$REVISION...${GITHUB_SHA}" |
-            jq -e '.status == "ahead" and ([.files[].filename] == [".github/workflows/publish-legal-driver-maps.yml"])' >/dev/null
+            jq -e '.status == "ahead" and ([.files[].filename] | sort) == [".github/workflows/publish-legal-driver-maps.yml","tests/run-database-stack.mjs"]' >/dev/null
           printf '%s\n' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
           tag="ghcr.io/${GITHUB_REPOSITORY,,}:jouww-sha-$REVISION-run-$BUILD_RUN-$attempt"
           docker pull "$tag"
@@ -86,7 +86,8 @@ jobs:
                 fs.writeFileSync(zip,Buffer.from(await (await api('/actions/artifacts/'+proof.id+'/zip')).arrayBuffer()),{mode:0o600});
                 const result=JSON.parse(execFileSync('unzip',['-p',zip,'candidate-native-proof.json'],{encoding:'utf8'}));
                 if(result.candidateImage!==IMAGE||result.passed!==result.checks?.length||
-                   !result.checks.includes('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL')){
+                   !result.checks.includes('Reconstructed schema and full deployment migration sequence applied on native PostgreSQL')||
+                   !result.checks.includes('Road reporting and authenticated account PDF verified against native PostgreSQL')){
                   throw Error('Exact image and native PostgreSQL acceptance are required');
                 }
                 console.log('Verified candidate with acceptance run '+run.id);
