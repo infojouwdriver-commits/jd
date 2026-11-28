@@ -1,6 +1,6 @@
 {
   "graphify_version": "0.9.92",
-  "source_commit_context": "9ac6a88cfe6c06f26e2b450df3460b20e0ac814b",
+  "source_commit_context": "86b0f44458ecf326581bf58a0f6988e8d61073a4",
   "scope": "tracked allowlisted source only; no semantic extraction",
   "input_tokens": 0,
   "output_tokens": 0,
@@ -411,7 +411,7 @@
     "src/app/page.tsx": "d999b2b31edc237a71fe2dc71abcea23b3796daab00188be8f2d7f279ca4b874",
     "src/app/pay/invoice/page.tsx": "5754f125f1f52c910ff50a778980a872374e668fb6a6da43c1e134236f677ba6",
     "src/app/privacy-center/page.tsx": "3394fec3811abc95cc0ca79c5ac7799c08927dae5323208286c7383ae7d337f0",
-    "src/app/privacy-policy/page.tsx": "fe4e656a59d0b9e8770c6e88e1e7793e98d38a907b9e634c03eaf435e408736c",
+    "src/app/privacy-policy/page.tsx": "bf1208ad11d2bd74396c9b62f9e0b23a238a57f89290866170d6dd1f27a8e7fd",
     "src/app/register-company/page.tsx": "52ae6c98221aa21bbd72e66bce758c6360831151fc271af24bbf3b23b920852e",
     "src/app/robots.ts": "a6b6f2900ef84f757539733e3a0604421d9b8d75372fb27cdf3831e979dbeee5",
     "src/app/sign-contract/[token]/page.tsx": "d6c028c317b5b3421b884ea9e2a2f1aa71ab61fa5010189d876fbfefb8f52d17",
@@ -526,7 +526,7 @@
     "src/components/operations/useCompanyDirectory.ts": "69e4f17d1706e322c803f2099bec4307517d937b90fa02191d7f1c7be54eda4d",
     "src/components/operations/useOperationData.ts": "9454e0f03ea390c3969aea1b242c877408638413078b7426e24886b941b31529",
     "src/components/public/ContactPanel.tsx": "f6f0147cfabc2dafc54a414bc6a4456a38c9b94c35b3aa4cfa330a70eea718d7",
-    "src/components/public/LegalDocument.tsx": "f55da79ebf5a55e6fbcfae0fc53acb08c397a0c71af856a204a8c8b9b9d9a360",
+    "src/components/public/LegalDocument.tsx": "0b6e24522c9b9012937f266c0dff264e1c7d067cf2b1a37407d0484dc0f6b4e2",
     "src/components/public/PublicInfo.tsx": "d9831c83d553e5a3c4effdd2ab80002e2f0ad80d1dbf64581718866d618198ad",
     "src/components/registration/CompanyRegistrationApprovals.tsx": "6cbd164c495bb1f814e967ace73b96382b7b9decb7400c62756f000fe6bc0488",
     "src/components/registration/CompanyRegistrationDialog.tsx": "fe6e197c1ccef6ee306b28d05fdb73242cb1da19587f9f0cf28f248cfab143c0",
@@ -679,7 +679,7 @@
     "src/lib/public-contact.ts": "ebd7e49ae099ce211b037b53d43f45547ef85850a2f1c3c236b4d0d55e08019a",
     "src/lib/public-driver-settlement-pdf.ts": "9f66acb037a62ec584244c974bf43d3949e1bc121878fb2ad60c28e560e1dad6",
     "src/lib/public-driver-settlement.ts": "696cdae95bea188a22ab49b91f73db07446b3036012d07c12c5e1250d73c531a",
-    "src/lib/public-legal.ts": "5115648b49528252bbd335d303b4e105caa38faf68d351e54262c92ce8fadaf0",
+    "src/lib/public-legal.ts": "82796c4fab75b44ee89db13e395661eb7da20367a2a04917fc5bf5b08c3cd755",
     "src/lib/rate-limit.ts": "455d0ce713b2da3a7fc9c994abf1b348bf7cfc0f49e4825fe1008c4099dfc4bc",
     "src/lib/receipt-email-model.ts": "01aef1ad18759294242e3ec8be5df7ca7e97ecdf29cc31a9bce85b8ed611cf41",
     "src/lib/sanitize-html.ts": "ecb1a3a60a5bbc804df90637acd99efc6471666f9363cb4c842d7dfa4b7f846c",
@@ -712,18 +712,18 @@
     "tsconfig.json": "9e7819d5701d7e03174511be8be1e0e6da6006406df28ccdd588b50b61b80175"
   },
   "artifacts": {
-    "GRAPH_TREE.html": "f0f976b5a432d96da84c448c06eb60e8cd1bcdd964d6ec53e1fd8ef17e5c82c3",
-    "health.json": "9f1e4a796b301bcf7d0489ff62710c2b3992e689c96ae8ba4cab2c1a8f3ba46e",
-    "SOURCE_INDEX.md": "98502a87ce4f2ac215a67978ebe5dfcfc4bd954397645f6aa4cdd83005cd8868",
-    "GRAPH_REPORT.md": "52e84041a9b82549e3eb3b3166454a65dce0541000cd68673fc0839a1bffd62c",
-    "graph.json": "8c40150f14727bc3e4d5ae276d41b119373f33dd511cd0ad1bf2fb2b2005b4e0"
+    "GRAPH_TREE.html": "7117e4c22a6bea8b29086e13b776615ceefc545b5877f4f5ef48ba242d8dcce3",
+    "health.json": "bc8333956c815e5ea51532b913c36e26f3d095914a797c70174fcab4d0b37b13",
+    "SOURCE_INDEX.md": "502f9a76e323c24d648330ce27051da6dfe947051fd9cbe0cf6a9227719dfc8d",
+    "GRAPH_REPORT.md": "abcb2f283842d25e0d3eeed60e710957b33688c3e75ae9febb3bacb0192b6243",
+    "graph.json": "41b1e43e41af1969f269060d40138895cb0b12842d86a90d28e23bf57bdbb6e1"
   },
-  "nodes": 4075,
-  "edges": 13709,
-  "raw_edges": 14011,
-  "communities": 214,
+  "nodes": 4076,
+  "edges": 13711,
+  "raw_edges": 14013,
+  "communities": 215,
   "confidence_counts": {
-    "EXTRACTED": 13762,
+    "EXTRACTED": 13764,
     "INFERRED": 249
   }
 }

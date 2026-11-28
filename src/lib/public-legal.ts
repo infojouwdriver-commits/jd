@@ -80,3 +80,12 @@ export const legalSections: Record<LegalLocale, Record<LegalSlug, [string, strin
   ],
  },
 };
+
+
+export const legacyEnglishPrivacy: [string, string][] = [
+ ['Accounts and activity', 'We use account and professional details, trips and billing data to provide the service, or our legitimate interest in administering access and requested operations when your company is the customer. We use security controls to protect accounts and process legally required data to meet those obligations. Details may come from your fleet operator. The relevant feature requires its account or trip information.'],
+ ['Location and recipients', 'Trip features use device location with permission. Map features can send requests to Mapbox, Photon/OpenStreetMap, Nominatim or BigDataCloud. Configured services may send declarations to Chiron, deliver email or open a payment with Stripe. Fleet operators and authorized staff have role-based access. OVHcloud provides hosting.'],
+ ['Road reports', 'When you submit or respond to a report, we use your location and account ID to place the report, process confirmations and prevent abuse. Nearby drivers see the report type, location and expiry time. Your identity is kept private from those drivers. Reports expire after 30 to 90 minutes. Expired records are purged in batches when new reports are processed.'],
+ ['Documents and retention', 'Signature evidence may include the declared identity, email, timestamp, IP address and document fingerprint. We keep account data while it is in use and afterward according to the purpose, legal duties and the time needed to defend legal claims. Ask us about safeguards for any transfer outside the EEA.'],
+ ['Your rights', 'You can request access, correction, erasure, restriction, objection or portability under the applicable GDPR conditions. You can withdraw consent and complain to the Belgian Data Protection Authority. The privacy centre provides your account report and a way to submit a request.'],
+];

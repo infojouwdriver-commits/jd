@@ -5645,6 +5645,7 @@ Links target the working tree, so line positions can move after changes.
 - `LegalLocale` — [L4](../src/lib/public-legal.ts#L4)
 - `legalTitles` — [L6](../src/lib/public-legal.ts#L6)
 - `legalSections` — [L12](../src/lib/public-legal.ts#L12)
+- `legacyEnglishPrivacy` — [L85](../src/lib/public-legal.ts#L85)
 
 ## [src/lib/rate-limit.ts](../src/lib/rate-limit.ts)
 
