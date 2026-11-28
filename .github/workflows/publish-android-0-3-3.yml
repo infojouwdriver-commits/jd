@@ -48,6 +48,7 @@ jobs:
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -Eeuo pipefail
+          trap 'printf "APK signing stopped at line %s\n" "$LINENO" >&2' ERR
           umask 077
           [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
           test -n "$DEPLOY_KEY" && test -n "$KNOWN_HOSTS"
@@ -64,6 +65,7 @@ jobs:
           preview="$RUNNER_TEMP/android-preview/app-release.apk"
           output="$RUNNER_TEMP/JOUW-DRIVER-Android-0.3.3.apk"
           package_id=$("$(dirname "$tool")/aapt" dump badging "$preview" | sed -n '1p')
+          printf 'Candidate %s\n' "$package_id"
           [[ "$package_id" == "package: name='be.jouwdriver.driver' versionCode='15' versionName='0.3.3'"* ]]
           "$tool" verify "$preview"
           signing=/srv/jouw-driver/android-release-signing
@@ -73,14 +75,53 @@ jobs:
             "https://github.com/$GITHUB_REPOSITORY/releases/download/android-direct/jouw-driver.apk" \
             --output "$work/published.apk"
           certificate() {
-            "$tool" verify --print-certs "$1" | awk -F ': ' '/certificate SHA-256 digest:/ {print $2}'
+            "$tool" verify "$1"
+            python3 - "$1" <<'CERT'
+          import hashlib, struct, sys
+          from pathlib import Path
+
+          def certificate(path):
+              apk = Path(path).read_bytes()
+              eocd = apk.rfind(b'PK\x05\x06')
+              directory = struct.unpack_from('<I', apk, eocd + 16)[0]
+              if apk[directory - 16:directory] != b'APK Sig Block 42':
+                  raise ValueError('APK signature block missing')
+              end = directory - 24
+              offset = directory - struct.unpack_from('<Q', apk, end)[0]
+
+              def read_field(data, start=0):
+                  size = struct.unpack_from('<I', data, start)[0]
+                  stop = start + 4 + size
+                  return data[start + 4:stop], stop
+
+              while offset < end:
+                  size, block_id = struct.unpack_from('<QI', apk, offset)
+                  block = apk[offset + 12:offset + 8 + size]
+                  offset += 8 + size
+                  if block_id == 0x7109871a:
+                      signers, _ = read_field(block)
+                      signer, stop = read_field(signers)
+                      if stop != len(signers):
+                          raise ValueError('Expected a single Android release signer')
+                      signed_data, _ = read_field(signer)
+                      _, offset = read_field(signed_data)
+                      certificates, _ = read_field(signed_data, offset)
+                      certificate, _ = read_field(certificates)
+                      return hashlib.sha256(certificate).hexdigest()
+              raise ValueError('APK v2 signature missing')
+
+          print(certificate(sys.argv[1]))
+          CERT
           }
           published_cert=$(certificate "$work/published.apk")
+          printf 'Published certificate %s\n' "$published_cert"
           [[ "$published_cert" =~ ^[a-f0-9]{64}$ ]]
           "$tool" sign --ks "$work/release.p12" --ks-type PKCS12 --ks-pass "file:$work/password" \
             --ks-key-alias jouw-driver-android --v2-signing-enabled true --v4-signing-enabled false \
             --out "$output" "$preview"
-          test "$(certificate "$output")" = "$published_cert"
+          signed_cert=$(certificate "$output")
+          printf 'Candidate certificate %s\n' "$signed_cert"
+          test "$signed_cert" = "$published_cert"
           python3 - "$preview" "$output" <<'PYCODE'
           import hashlib, re, sys, zipfile
 
